@@ -10,6 +10,13 @@ class TitleSeq extends Component
   @override
   Future<void> onLoad() async {
     addAll([
+      // 背景
+      RectangleComponent(
+        size: BoxPusherGame.baseSize,
+        paint: Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill,
+      ),
       TextComponent(
         text: "箱推し",
         size: Vector2(150.0, 45.0),

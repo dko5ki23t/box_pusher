@@ -57,15 +57,11 @@ class GameSeq extends Component
   bool isPushingL = false;
   bool isPushingR = false;
 
-  /// 一手戻すボタンが押されているかどうあk
-  bool isPushUndo = false;
-
   late final Image stageImg;
   late final Image playerControllArrowImg;
   late final Image undoImg;
   late final Image settingsImg;
   final List<String> stageStrs = [];
-  GameSpriteButton? undoButton;
 
   @override
   Future<void> onLoad() async {
@@ -83,7 +79,6 @@ class GameSeq extends Component
 
   // 初期化（というよりリセット）
   void initialize() {
-    undoButton = null;
     removeAll(children);
 
     // フリック入力のトリガー状態をリセット
@@ -92,16 +87,13 @@ class GameSeq extends Component
     stage = Stage(stageImg);
     switch (game.gameMode) {
       case GameMode.quest:
-        stage.setDefault(addAll);
-        //stage.setFromText(stageStrs[game.gameLevel - 1]);
+        stage.setDefault(game.world, game.camera);
         break;
       case GameMode.endless:
-        //ret = stage.setRandom(7, 7, 3);
+        stage.setDefault(game.world, game.camera);
         break;
       case GameMode.debug:
-        stage.setDefault(addAll);
-        //ret = stage.setRandom(
-        //    game.debugStageWidth, game.debugStageHeight, game.debugStageBoxNum);
+        stage.setDefault(game.world, game.camera);
         break;
     }
 
@@ -177,6 +169,12 @@ class GameSeq extends Component
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2,
         children: [
+          RectangleComponent(
+            size: menuButtonAreaSize,
+            paint: Paint()
+              ..color = Colors.white
+              ..style = PaintingStyle.fill,
+          ),
           AlignComponent(
             alignment: Anchor.center,
             child: TextComponent(
@@ -192,17 +190,6 @@ class GameSeq extends Component
         ],
       ));
     }
-    // 一手戻すボタン領域
-    undoButton = GameSpriteButton(
-      onPressed: () => isPushUndo = true,
-      onReleased: () => isPushUndo = false,
-      onCancelled: () => isPushUndo = false,
-      enabled: stage.moveHistory.isNotEmpty,
-      size: undoButtonAreaSize,
-      position: Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y),
-      sprite: Sprite(undoImg),
-    );
-    add(undoButton!);
     // メニューボタン領域
     add(GameSpriteButton(
       size: settingsButtonAreaSize,
@@ -216,10 +203,6 @@ class GameSeq extends Component
   void reset() {
     // ステージ情報初期化
     stage.reset();
-    // 一手戻すボタンの有効/無効切り替え
-    undoButton!.enabled = false;
-    // 無効になったなら一手戻すボタン押されたかフラグをオフに
-    isPushUndo = false;
   }
 
   @override
@@ -228,7 +211,7 @@ class GameSeq extends Component
     // クリア済みならに何もしない
     if (stage.isClear()) return;
     Move moveInput = Move.none;
-    bool inputUndo = false;
+    //bool inputUndo = false;
     if (game.isTriggeredL || isPushingL) {
       moveInput = Move.left;
     } else if (game.isTriggeredR || isPushingR) {
@@ -237,16 +220,8 @@ class GameSeq extends Component
       moveInput = Move.up;
     } else if (game.isTriggeredD || isPushingD) {
       moveInput = Move.down;
-    } else if (isPushUndo && stage.moveHistory.isNotEmpty) {
-      inputUndo = true;
     }
-    stage.update(dt, moveInput, inputUndo, addAll);
-    // 一手戻すボタンの有効/無効切り替え
-    undoButton!.enabled = stage.moveHistory.isNotEmpty;
-    // 無効になったなら一手戻すボタン押されたかフラグをオフに
-    if (stage.moveHistory.isEmpty) {
-      isPushUndo = false;
-    }
+    stage.update(dt, moveInput, game.world, game.camera);
     // 今回のupdateでクリアしたらクリア画面に移行
     if (stage.isClear()) {
       game.router.pushNamed('clear');

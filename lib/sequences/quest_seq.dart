@@ -8,6 +8,13 @@ class QuestSeq extends Component with HasGameReference<BoxPusherGame> {
   @override
   Future<void> onLoad() async {
     addAll([
+      // 背景
+      RectangleComponent(
+        size: BoxPusherGame.baseSize,
+        paint: Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill,
+      ),
       TextComponent(
         text: "レベル選択",
         size: Vector2(320.0, 45.0),

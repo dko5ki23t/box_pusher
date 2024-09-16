@@ -31,16 +31,19 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
   bool triggeredU = false;
   bool triggeredD = false;
   // ゲームの画面サイズに合わせてスケールを変える
-  final _content = RectangleComponent(
+  /*final _content = RectangleComponent(
     size: baseSize,
-  );
+  );*/
 
   /// ゲーム開始時の情報（GameSeqのinitialize()で参照する）
   GameMode gameMode = GameMode.quest;
   int gameLevel = 1;
   int gameStageNum = 1;
 
-  BoxPusherGame({this.testMode = false});
+  BoxPusherGame({this.testMode = false})
+      : super(
+            camera: CameraComponent.withFixedResolution(
+                width: baseSize.x, height: baseSize.y));
 
   // 背景色
   @override
@@ -51,9 +54,10 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
     super.onLoad();
 
     // ゲームの画面サイズに合わせてスケールを変える領域を追加
-    add(_content);
+    /*add(_content);*/
     // 各シーケンス（ルート）を追加
-    _content.add(
+    /*_content.add(*/
+    camera.viewport.add(
       router = RouterComponent(
         routes: {
           'title': Route(TitleSeq.new),
@@ -74,6 +78,7 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
     );
   }
 
+  /*
   @override
   void onGameResize(Vector2 size) {
     contentScale = size.y / _content.size.y;
@@ -85,6 +90,7 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
     );
     super.onGameResize(size);
   }
+  */
 
   @override
   void onRemove() {
