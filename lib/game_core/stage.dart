@@ -1,31 +1,17 @@
 import 'dart:math';
 
+import 'package:box_pusher/game_core/stage_objs/box.dart';
+import 'package:box_pusher/game_core/stage_objs/floor.dart';
+import 'package:box_pusher/game_core/stage_objs/player.dart';
+import 'package:box_pusher/game_core/stage_objs/spike.dart';
+import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:box_pusher/game_core/stage_objs/wall.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:logger/logger.dart';
-
-/// ステージ上オブジェクトの種類
-enum StageObjType {
-  none,
-  wall,
-  goal,
-  box,
-  boxOnGoal,
-  player,
-  playerOnGoal,
-  reservedFloor, // 何もない床確定
-  spike, // とげの敵
-}
-
-class StageObjTypeLevel {
-  StageObjType type;
-  int level;
-
-  StageObjTypeLevel({required this.type, this.level = 1});
-}
 
 /// 移動
 enum Move {
@@ -34,6 +20,40 @@ enum Move {
   right,
   up,
   down,
+}
+
+extension MoveExtent on Move {
+  /// 対応する座標
+  Point get point {
+    switch (this) {
+      case Move.none:
+        return Point(0, 0);
+      case Move.left:
+        return Point(-1, 0);
+      case Move.right:
+        return Point(1, 0);
+      case Move.up:
+        return Point(0, -1);
+      case Move.down:
+        return Point(0, 1);
+    }
+  }
+
+  /// 対応するベクトル
+  Vector2 get vector {
+    switch (this) {
+      case Move.none:
+        return Vector2(0, 0);
+      case Move.left:
+        return Vector2(-1.0, 0);
+      case Move.right:
+        return Vector2(1.0, 0);
+      case Move.up:
+        return Vector2(0, -1.0);
+      case Move.down:
+        return Vector2(0, 1.0);
+    }
+  }
 }
 
 /// 移動履歴
@@ -62,33 +82,46 @@ class StageObjFactory {
       priority = Stage.dynamicPriority;
     }
 
-    return StageObj(
-        typeLevel: typeLevel,
-        sprite: SpriteComponent(
-          sprite: stageSprites[typeLevel.type],
-          priority: priority,
-          children: [
-            if (typeLevel.level > 1)
-              AlignComponent(
-                alignment: Anchor.center,
-                child: TextComponent(
-                  text: typeLevel.level.toString(),
-                  textRenderer: TextPaint(
-                    style: const TextStyle(
-                      fontFamily: 'Aboreto',
-                      color: Color(0xff000000),
-                    ),
-                  ),
+    final sprite = SpriteComponent(
+      sprite: stageSprites[typeLevel.type],
+      priority: priority,
+      children: [
+        if (typeLevel.level > 1)
+          AlignComponent(
+            alignment: Anchor.center,
+            child: TextComponent(
+              text: typeLevel.level.toString(),
+              textRenderer: TextPaint(
+                style: const TextStyle(
+                  fontFamily: 'Aboreto',
+                  color: Color(0xff000000),
                 ),
               ),
-          ],
-          size: Stage.cellSize,
-          anchor: Anchor.center,
-          position: (/*offset +*/
-              Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-                  Stage.cellSize / 2),
-        ),
-        pos: pos);
+            ),
+          ),
+      ],
+      size: Stage.cellSize,
+      anchor: Anchor.center,
+      position: (/*offset +*/
+          Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+              Stage.cellSize / 2),
+    );
+
+    switch (typeLevel.type) {
+      case StageObjType.none:
+      case StageObjType.goal: // TODO:goalは消す予定
+        return Floor(sprite: sprite, pos: pos);
+      case StageObjType.box:
+      case StageObjType.boxOnGoal: // TODO: goalは消す予定
+        return Box(sprite: sprite, pos: pos);
+      case StageObjType.player:
+      case StageObjType.playerOnGoal: // TODO: goalは消す予定
+        return Player(sprite: sprite, pos: pos);
+      case StageObjType.wall:
+        return Wall(sprite: sprite, pos: pos);
+      case StageObjType.spike:
+        return Spike(sprite: sprite, pos: pos);
+    }
   }
 
   Sprite getSprite(StageObjType type) => stageSprites[type]!;
@@ -100,21 +133,6 @@ class StageObjFactory {
             Stage.cellSize / 2 +
             pixel;
   }
-}
-
-class StageObj {
-  StageObjTypeLevel typeLevel;
-  Point pos; // 現在位置
-  bool valid;
-  SpriteComponent sprite;
-  Move moving = Move.none; // 移動中の向き
-
-  StageObj({
-    required this.typeLevel,
-    required this.sprite,
-    this.valid = true,
-    required this.pos,
-  });
 }
 
 class Point {
@@ -175,7 +193,7 @@ class Stage {
   final Image stageImg;
 
   /// プレイヤーの位置
-  Point playerPos = Point(-1, -1);
+  //Point playerPos = Point(-1, -1);
 
   late StageObjFactory objFactory;
 
@@ -192,19 +210,19 @@ class Stage {
   late StageObj player;
 
   /// プレイヤーが移動中かどうか
-  bool isPlayerMoving = false;
+  //bool isPlayerMoving = false;
 
   /// 箱が移動中かどうか
-  bool isBoxMoving = false;
+  //bool isBoxMoving = false;
 
   /// 移動中の箱
-  StageObj? movingBox;
+  //StageObj? movingBox;
 
   /// 移動量
-  double movingAmount = 0.0;
+  //double movingAmount = 0.0;
 
   /// 移動中の方向
-  Move movingTo = Move.none;
+  //Move movingTo = Move.none;
 
   /// ステージの左上座標(プレイヤーの動きにつれて拡張されていく)
   Point stageLT = Point(0, 0);
@@ -234,18 +252,17 @@ class Stage {
   void setDefault(World gameWorld, CameraComponent camera) {
     stageLT = Point(-6, -20);
     stageRB = Point(6, 20);
-    playerPos = Point(0, 0);
+    //playerPos = Point(0, 0);
     _drawWithObjsInfo(gameWorld, camera);
   }
 
   /// 初期化
   void initialize(void Function() removeAll) {
-    isPlayerMoving = false;
-    isBoxMoving = false;
-    movingAmount = 0;
-    movingTo = Move.none;
+    // TODO: 合ってる？
+    player.moving = Move.none;
+    player.pushing = null;
+    player.movingAmount = 0;
     boxes.clear();
-    //moveHistory.clear();
     removeAll();
   }
 
@@ -267,36 +284,9 @@ class Stage {
     objFactory.setPosition(player);
 
     // 各種変数初期化
-    movingBox = null;
-    //moveHistory.clear();
-    isPlayerMoving = false;
-    //isUndoing = false;
-    isBoxMoving = false;
-    movingAmount = 0;
-    movingTo = Move.none;
-  }
-
-  String symboleToStr(StageObjType s) {
-    switch (s) {
-      case StageObjType.none:
-        return ' ';
-      case StageObjType.wall:
-        return '#';
-      case StageObjType.goal:
-        return '.';
-      case StageObjType.box:
-        return 'o';
-      case StageObjType.boxOnGoal:
-        return 'O';
-      case StageObjType.player:
-        return 'p';
-      case StageObjType.playerOnGoal:
-        return 'P';
-      case StageObjType.reservedFloor:
-        return 'f';
-      case StageObjType.spike:
-        return 's';
-    }
+    player.pushing = null;
+    player.moving = Move.none;
+    player.movingAmount = 0;
   }
 
   void logInitialStage() {
@@ -375,7 +365,7 @@ class Stage {
       // プレイヤーの位置から2以上離れている場合、1/2の確率、最大1匹で敵が出現
       final appearEnemy = Random().nextBool();
       if (appearEnemy &&
-          (playerPos - boxAppear).distance() > 1 &&
+          (player.pos - boxAppear).distance() > 1 &&
           !hasAppearedEnemy) {
         adding.add(objFactory.create(
             typeLevel: StageObjTypeLevel(type: StageObjType.spike, level: 1),
@@ -447,7 +437,6 @@ class Stage {
           case StageObjType.none:
           case StageObjType.box:
           case StageObjType.player:
-          case StageObjType.reservedFloor:
           case StageObjType.spike:
             staticObjs[Point(x, y)] = objFactory.create(
                 typeLevel: StageObjTypeLevel(
@@ -489,7 +478,7 @@ class Stage {
 
     player = objFactory.create(
         typeLevel: StageObjTypeLevel(type: StageObjType.player, level: 1),
-        pos: playerPos);
+        pos: Point(0, 0));
     gameWorld.addAll([player.sprite]);
     camera.follow(player.sprite);
   }
@@ -498,305 +487,71 @@ class Stage {
       double dt, Move moveInput, World gameWorld, CameraComponent camera) {
     // クリア済みなら何もしない
     if (isClear()) return;
-    if (!isPlayerMoving) {
-      // 移動中でない場合
-      Point to = playerPos.copy();
-      Point toTo = playerPos.copy();
-      Move move = moveInput;
-
-      switch (moveInput) {
-        case Move.left:
-          to.x--;
-          toTo.x = to.x - 1;
-          break;
-        case Move.right:
-          to.x++;
-          toTo.x = to.x + 1;
-          break;
-        case Move.up:
-          to.y--;
-          toTo.y = to.y - 1;
-          break;
-        case Move.down:
-          to.y++;
-          toTo.y = to.y + 1;
-          break;
-        default:
-          break;
-      }
-      if (moveInput == Move.none) {
-        return;
-      }
-
-      final toObj = get(to);
-      final toToObj = get(toTo);
-
-      // 壁にぶつかるか
-      if (toObj.type == StageObjType.wall) {
-        return;
-      }
-
-      // 荷物があるか
-      if (toObj.type == StageObjType.box ||
-          toObj.type == StageObjType.boxOnGoal) {
-        if (toToObj.type != StageObjType.none &&
-            toToObj.type != StageObjType.goal &&
-            toToObj.type != StageObjType.box) {
-          return;
-        }
-        if (toToObj.type == StageObjType.box && toToObj.level != toObj.level) {
-          return;
-        }
-        movingBox = boxes.firstWhere((element) => element.pos == to);
-        isBoxMoving = true;
-      }
-      isPlayerMoving = true;
-      movingTo = move;
-      movingAmount = 0.0;
-      // 敵の移動を決定する
-      for (final enemy in enemies) {
-        final List<Move> cand = [];
-        for (final move in Move.values) {
-          Point eTo = enemy.pos.copy();
-          if (move == Move.none) continue;
-          switch (move) {
-            case Move.left:
-              eTo.x--;
-              break;
-            case Move.right:
-              eTo.x++;
-              break;
-            case Move.up:
-              eTo.y--;
-              break;
-            case Move.down:
-              eTo.y++;
-            default:
-              break;
-          }
-          final eToObj = get(eTo);
-          if (eToObj.type == StageObjType.wall ||
-              eToObj.type == StageObjType.box ||
-              eToObj.type == StageObjType.spike) {
-            continue;
-          }
-          cand.add(move);
-        }
-        if (cand.isNotEmpty) {
-          enemy.moving = cand.sample(1).first;
-        }
-      }
+    Move before = player.moving;
+    final List<Point> prohibitedPoints = [];
+    // プレイヤー更新
+    player.update(
+        dt, moveInput, gameWorld, camera, this, false, prohibitedPoints);
+    // 敵更新
+    bool playerStartMoving = before == Move.none && player.moving != Move.none;
+    for (final enemy in enemies) {
+      enemy.update(dt, player.moving, gameWorld, camera, this,
+          playerStartMoving, prohibitedPoints);
     }
 
-    if (isPlayerMoving) {
-      // 移動中の場合(このフレームで移動開始した場合を含む)
-      // 移動量加算
-      movingAmount += dt * playerSpeed;
-      if (movingAmount >= Stage.cellSize.x) {
-        movingAmount = Stage.cellSize.x;
+    // 移動完了時
+    if (before != Move.none && player.moving == Move.none) {
+      // 移動によって新たな座標が見えそうなら追加する
+      // 左端
+      if (camera.canSee(staticObjs[Point(stageLT.x, player.pos.y)]!.sprite)) {
+        stageLT.x--;
+        for (int y = stageLT.y; y <= stageRB.y; y++) {
+          final adding = objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.wall,
+              ),
+              pos: Point(stageLT.x, y));
+          staticObjs[Point(stageLT.x, y)] = adding;
+          gameWorld.add(adding.sprite);
+        }
       }
-
-      // ※※※画像の移動ここから※※※
-      // 移動中の場合は画素も考慮
-      Vector2 offset = Vector2.zero();
-
-      switch (movingTo) {
-        case Move.left:
-          offset.x = -1 * movingAmount;
-          break;
-        case Move.right:
-          offset.x = movingAmount;
-          break;
-        case Move.up:
-          offset.y = -1 * movingAmount;
-          break;
-        case Move.down:
-          offset.y = movingAmount;
-          break;
-        default:
-          break;
+      // 右端
+      if (camera.canSee(staticObjs[Point(stageRB.x, player.pos.y)]!.sprite)) {
+        stageRB.x++;
+        for (int y = stageLT.y; y <= stageRB.y; y++) {
+          final adding = objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.wall,
+              ),
+              pos: Point(stageRB.x, y));
+          staticObjs[Point(stageRB.x, y)] = adding;
+          gameWorld.add(adding.sprite);
+        }
       }
-      // プレイヤー位置変更
-      objFactory.setPosition(player, offset: offset);
-      if (isBoxMoving) {
-        // 押している箱の位置変更
-        objFactory.setPosition(movingBox!, offset: offset);
+      // 上端
+      if (camera.canSee(staticObjs[Point(player.pos.x, stageLT.y)]!.sprite)) {
+        stageLT.y--;
+        for (int x = stageLT.x; x <= stageRB.x; x++) {
+          final adding = objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.wall,
+              ),
+              pos: Point(x, stageLT.y));
+          staticObjs[Point(x, stageLT.y)] = adding;
+          gameWorld.add(adding.sprite);
+        }
       }
-      // 敵の位置変更
-      for (final enemy in enemies) {
-        Vector2 eOffset = Vector2.zero();
-        if (enemy.moving == Move.none) continue;
-        switch (enemy.moving) {
-          case Move.left:
-            eOffset.x = -1 * movingAmount;
-            break;
-          case Move.right:
-            eOffset.x = movingAmount;
-            break;
-          case Move.up:
-            eOffset.y = -1 * movingAmount;
-            break;
-          case Move.down:
-            eOffset.y = movingAmount;
-            break;
-          default:
-            break;
-        }
-        objFactory.setPosition(enemy, offset: eOffset);
-      }
-      // ※※※画像の移動ここまで※※※
-
-      // 次のマスに移っていたら移動終了
-      if (movingAmount >= Stage.cellSize.x) {
-        Point to = playerPos.copy();
-        Point toTo = playerPos.copy();
-
-        switch (movingTo) {
-          case Move.left:
-            to.x--;
-            toTo.x = to.x - 1;
-            break;
-          case Move.right:
-            to.x++;
-            toTo.x = to.x + 1;
-            break;
-          case Move.up:
-            to.y--;
-            toTo.y = to.y - 1;
-            break;
-          case Move.down:
-            to.y++;
-            toTo.y = to.y + 1;
-            break;
-          default:
-            return;
-        }
-
-        // プレーヤー位置更新
-        // ※explode()より前で更新することで、敵出現位置を、プレイヤーの目前にさせない
-        playerPos = to.copy();
-        player.pos = to.copy();
-        objFactory.setPosition(player);
-
-        // 荷物位置更新
-        if (isBoxMoving) {
-          switch (get(toTo).type) {
-            case StageObjType.none:
-              setType(toTo, StageObjType.box,
-                  level: movingBox!.typeLevel.level);
-              break;
-            case StageObjType.goal:
-              setType(toTo, StageObjType.boxOnGoal,
-                  level: movingBox!.typeLevel.level);
-              break;
-            case StageObjType.box:
-              explode(toTo, movingBox!, gameWorld);
-              setType(toTo, StageObjType.box,
-                  level: movingBox!.typeLevel.level);
-              break;
-            default:
-              // ありえない
-              //HALT("fatal error");
-              break;
-          }
-          switch (get(to).type) {
-            case StageObjType.box:
-              setType(to, StageObjType.none);
-              break;
-            case StageObjType.boxOnGoal:
-              setType(to, StageObjType.goal);
-              break;
-            default:
-              // ありえない
-              //HALT("fatal error");
-              break;
-          }
-          movingBox!.pos = toTo;
-          objFactory.setPosition(movingBox!);
-          movingBox = null;
-        }
-
-        // 敵位置更新
-        for (final enemy in enemies) {
-          if (enemy.moving == Move.none) continue;
-          switch (enemy.moving) {
-            case Move.left:
-              enemy.pos += Point(-1, 0);
-              break;
-            case Move.right:
-              enemy.pos += Point(1, 0);
-              break;
-            case Move.up:
-              enemy.pos += Point(0, -1);
-              break;
-            case Move.down:
-              enemy.pos += Point(0, 1);
-              break;
-            default:
-              break;
-          }
-          enemy.moving = Move.none;
-        }
-
-        // 各種移動中変数初期化
-        isPlayerMoving = false;
-        //isUndoing = false;
-        isBoxMoving = false;
-        movingAmount = 0;
-        movingTo = Move.none;
-
-        // 移動によって新たな座標が見えそうなら追加する
-        // 左端
-        if (camera.canSee(staticObjs[Point(stageLT.x, playerPos.y)]!.sprite)) {
-          stageLT.x--;
-          for (int y = stageLT.y; y <= stageRB.y; y++) {
-            final adding = objFactory.create(
-                typeLevel: StageObjTypeLevel(
-                  type: StageObjType.wall,
-                ),
-                pos: Point(stageLT.x, y));
-            staticObjs[Point(stageLT.x, y)] = adding;
-            gameWorld.add(adding.sprite);
-          }
-        }
-        // 右端
-        if (camera.canSee(staticObjs[Point(stageRB.x, playerPos.y)]!.sprite)) {
-          stageRB.x++;
-          for (int y = stageLT.y; y <= stageRB.y; y++) {
-            final adding = objFactory.create(
-                typeLevel: StageObjTypeLevel(
-                  type: StageObjType.wall,
-                ),
-                pos: Point(stageRB.x, y));
-            staticObjs[Point(stageRB.x, y)] = adding;
-            gameWorld.add(adding.sprite);
-          }
-        }
-        // 上端
-        if (camera.canSee(staticObjs[Point(playerPos.x, stageLT.y)]!.sprite)) {
-          stageLT.y--;
-          for (int x = stageLT.x; x <= stageRB.x; x++) {
-            final adding = objFactory.create(
-                typeLevel: StageObjTypeLevel(
-                  type: StageObjType.wall,
-                ),
-                pos: Point(x, stageLT.y));
-            staticObjs[Point(x, stageLT.y)] = adding;
-            gameWorld.add(adding.sprite);
-          }
-        }
-        // 下端
-        if (camera.canSee(staticObjs[Point(playerPos.x, stageRB.y)]!.sprite)) {
-          stageRB.y++;
-          for (int x = stageLT.x; x <= stageRB.x; x++) {
-            final adding = objFactory.create(
-                typeLevel: StageObjTypeLevel(
-                  type: StageObjType.wall,
-                ),
-                pos: Point(x, stageRB.y));
-            staticObjs[Point(x, stageRB.y)] = adding;
-            gameWorld.add(adding.sprite);
-          }
+      // 下端
+      if (camera.canSee(staticObjs[Point(player.pos.x, stageRB.y)]!.sprite)) {
+        stageRB.y++;
+        for (int x = stageLT.x; x <= stageRB.x; x++) {
+          final adding = objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.wall,
+              ),
+              pos: Point(x, stageRB.y));
+          staticObjs[Point(x, stageRB.y)] = adding;
+          gameWorld.add(adding.sprite);
         }
       }
     }
