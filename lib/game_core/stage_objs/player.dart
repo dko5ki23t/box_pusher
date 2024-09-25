@@ -41,19 +41,16 @@ class Player extends StageObj {
         return;
       }
 
-      // 荷物があるか
-      if (toObj.type == StageObjType.box ||
-          toObj.type == StageObjType.boxOnGoal) {
-        if (toToObj.type != StageObjType.none &&
-            toToObj.type != StageObjType.goal &&
-            toToObj.type != StageObjType.box) {
+      // 押すオブジェクトがあるか
+      if (toObj.type == StageObjType.box || toObj.type == StageObjType.trap) {
+        if (toToObj.type != StageObjType.none && toToObj.type != toObj.type) {
           return;
         }
-        if (toToObj.type == StageObjType.box && toToObj.level != toObj.level) {
+        if (toToObj.type == toObj.type && toToObj.level != toObj.level) {
           return;
         }
         pushing = stage.boxes.firstWhere((element) => element.pos == to);
-        // 箱の移動先は、他のオブジェクトの移動先にならないようにする
+        // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
         prohibitedPoints.add(toTo);
       }
       moving = moveInput;
@@ -94,17 +91,13 @@ class Player extends StageObj {
         if (pushing != null) {
           switch (stage.get(toTo).type) {
             case StageObjType.none:
-              stage.setType(toTo, StageObjType.box,
-                  level: pushing!.typeLevel.level);
               break;
-            case StageObjType.goal:
-              stage.setType(toTo, StageObjType.boxOnGoal,
-                  level: pushing!.typeLevel.level);
-              break;
+            // TODO: trapのとき
             case StageObjType.box:
-              stage.explode(toTo, pushing!, gameWorld);
-              stage.setType(toTo, StageObjType.box,
-                  level: pushing!.typeLevel.level);
+            case StageObjType.trap:
+              if (pushing?.typeLevel.type == stage.get(toTo).type) {
+                stage.explode(toTo, pushing!, gameWorld);
+              }
               break;
             default:
               // ありえない
@@ -113,10 +106,8 @@ class Player extends StageObj {
           }
           switch (stage.get(to).type) {
             case StageObjType.box:
-              stage.setType(to, StageObjType.none);
-              break;
-            case StageObjType.boxOnGoal:
-              stage.setType(to, StageObjType.goal);
+            case StageObjType.trap:
+              stage.setStaticType(to, StageObjType.none);
               break;
             default:
               // ありえない

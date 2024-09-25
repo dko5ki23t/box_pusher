@@ -3,6 +3,8 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
+import 'package:flame/layout.dart';
+import 'package:flutter/material.dart';
 
 class Spike extends StageObj {
   final EnemyMovePattern movePattern = EnemyMovePattern.walkRandomOrStop;
@@ -32,27 +34,33 @@ class Spike extends StageObj {
       // 移動し始めのフレームの場合
       // 移動を決定する
       final List<Move> cand = [];
-      for (final move in Move.values) {
-        Point eTo = pos + move.point;
-        if (move == Move.none) {
-          if (movePattern == EnemyMovePattern.walkRandomOrStop) {
-            cand.add(move);
+      // 今プレイヤーの移動先にいるなら移動しない
+      if (pos == stage.player.pos + stage.player.moving.point) {
+        cand.add(Move.none);
+      } else {
+        for (final move in Move.values) {
+          Point eTo = pos + move.point;
+          if (move == Move.none) {
+            if (movePattern == EnemyMovePattern.walkRandomOrStop) {
+              cand.add(move);
+            }
+            continue;
           }
-          continue;
+          final eToObj = stage.get(eTo);
+          if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
+              stage.player.pushing?.pos == eTo) {
+            // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+          } else if (eToObj.type == StageObjType.wall ||
+              eToObj.type == StageObjType.box ||
+              (eToObj.type == StageObjType.spike &&
+                  eToObj.level != typeLevel.level)) {
+            continue;
+          }
+          if (prohibitedPoints.contains(eTo)) {
+            continue;
+          }
+          cand.add(move);
         }
-        final eToObj = stage.get(eTo);
-        if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
-            stage.player.pushing?.pos == eTo) {
-          // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-        } else if (eToObj.type == StageObjType.wall ||
-            eToObj.type == StageObjType.box ||
-            eToObj.type == StageObjType.spike) {
-          continue;
-        }
-        if (prohibitedPoints.contains(eTo)) {
-          continue;
-        }
-        cand.add(move);
       }
       if (cand.isNotEmpty) {
         moving = cand.sample(1).first;

@@ -1,14 +1,35 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
-import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:flame/components.dart';
+import 'package:flame/layout.dart';
 //import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 
 class TitleSeq extends Component
     with /*TapCallbacks,*/ HasGameReference<BoxPusherGame> {
+  late final TextComponent highScreText;
+  late final GameTextButton continueButton;
+
   @override
   Future<void> onLoad() async {
+    highScreText = TextComponent(
+      text: "High Score : ${game.highScore}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          color: Color(0xff000000),
+        ),
+      ),
+    );
+    continueButton = GameTextButton(
+      size: Vector2(120.0, 30.0),
+      position: Vector2(180.0, 380.0),
+      anchor: Anchor.center,
+      text: "つづきから",
+      enabled: game.stageData.isNotEmpty,
+      onReleased: () => game.pushAndInitGame(),
+    );
+
     addAll([
       // 背景
       RectangleComponent(
@@ -34,16 +55,10 @@ class TitleSeq extends Component
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 330.0),
         anchor: Anchor.center,
-        text: "クエスト",
-        onReleased: () => game.router.pushNamed('quest'),
+        text: "はじめから",
+        onReleased: () => game.pushAndInitGame(),
       ),
-      GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 380.0),
-        anchor: Anchor.center,
-        text: "エンドレス",
-        onReleased: () => game.pushAndInitGame(mode: GameMode.endless),
-      ),
+      continueButton,
       if (game.testMode)
         GameTextButton(
           size: Vector2(120.0, 30.0),
@@ -54,11 +69,25 @@ class TitleSeq extends Component
             game.router.pushOverlay('debug_dialog');
           },
         ),
+      RectangleComponent(
+        size: Vector2(120.0, 30.0),
+        position: Vector2(180.0, 480.0),
+        anchor: Anchor.center,
+        children: [
+          AlignComponent(
+            alignment: Anchor.center,
+            child: highScreText,
+          ),
+        ],
+      ),
     ]);
   }
 
   @override
-  void update(double dt) {}
+  void update(double dt) {
+    highScreText.text = "High Score : ${game.highScore}";
+    continueButton.enabled = game.stageData.isNotEmpty;
+  }
 
   // TapCallbacks実装時には必要(PositionComponentでは不要)
 //  @override

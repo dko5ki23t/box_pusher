@@ -5,34 +5,32 @@ import 'package:flame/components.dart';
 enum StageObjType {
   none,
   wall,
-  goal,
+  trap,
   box,
-  boxOnGoal,
   player,
-  playerOnGoal,
   spike, // とげの敵
 }
 
 extension StageObjTypeExtent on StageObjType {
-  String get str {
-    switch (this) {
-      case StageObjType.none:
-        return ' ';
-      case StageObjType.wall:
-        return '#';
-      case StageObjType.goal:
-        return '.';
-      case StageObjType.box:
-        return 'o';
-      case StageObjType.boxOnGoal:
-        return 'O';
-      case StageObjType.player:
-        return 'p';
-      case StageObjType.playerOnGoal:
-        return 'P';
-      case StageObjType.spike:
-        return 's';
+  static Map<StageObjType, String> strMap = {
+    StageObjType.none: ' ',
+    StageObjType.wall: '#',
+    StageObjType.trap: '.',
+    StageObjType.box: 'o',
+    StageObjType.player: 'p',
+    StageObjType.spike: 's',
+  };
+
+  String get str => strMap[this]!;
+
+  static StageObjType fromStr(String str) {
+    for (final entry in strMap.entries) {
+      if (entry.value == str) {
+        return entry.key;
+      }
     }
+    assert(false, 'invalid str');
+    return StageObjType.none;
   }
 }
 
@@ -41,6 +39,17 @@ class StageObjTypeLevel {
   int level;
 
   StageObjTypeLevel({required this.type, this.level = 1});
+
+  Map<String, dynamic> encode() {
+    return {'type': type.str, 'level': level};
+  }
+
+  static decode(Map<String, dynamic> src) {
+    return StageObjTypeLevel(
+      type: StageObjTypeExtent.fromStr(src['type']),
+      level: src['level'],
+    );
+  }
 }
 
 /// ステージ上オブジェクト
@@ -69,4 +78,8 @@ abstract class StageObj {
     bool playerStartMoving,
     List<Point> prohibitedPoints, // 今は移動可能だが、他のオブジェクトが同時期に移動してくるため移動不可な座標のリスト
   );
+
+  Map<String, dynamic> encode() {
+    return {'typeLevel': typeLevel.encode(), 'pos': pos.encode()};
+  }
 }

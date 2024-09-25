@@ -1,10 +1,12 @@
+import 'dart:math';
+
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 
-class MenuSeq extends Component with HasGameReference<BoxPusherGame> {
+class GameoverSeq extends Component with HasGameReference<BoxPusherGame> {
   @override
   Future<void> onLoad() async {
     addAll([
@@ -19,7 +21,7 @@ class MenuSeq extends Component with HasGameReference<BoxPusherGame> {
         ),
       ),
       TextComponent(
-        text: "メニュー",
+        text: "ゲームオーバー",
         size: Vector2(320.0, 45.0),
         position: Vector2(180.0, 180.0),
         anchor: Anchor.center,
@@ -34,40 +36,25 @@ class MenuSeq extends Component with HasGameReference<BoxPusherGame> {
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 300.0),
         anchor: Anchor.center,
-        text: "ゲームに戻る",
-        // TODO: ここだけonPressedなのは、onReleasedだとこの後ボタンが表示されなくなるから。原因究明求む
-        onPressed: () => game.router.pop(),
+        text: "次のレベルへ",
+        enabled: game.gameLevel < 30,
+        onReleased: () =>
+            game.pushAndInitGame(level: min(game.gameLevel + 1, 30)),
       ),
       GameTextButton(
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 350.0),
         anchor: Anchor.center,
-        text: "最初から",
-        // TODO: ここだけonPressedなのは、onReleasedだとこの後ボタンが表示されなくなるから。原因究明求む
-        onPressed: () {
-          game.resetGame();
-          game.router.pop();
-        },
+        text: "レベル選択へ",
+        onReleased: () => game.router.pushNamed('quest'),
       ),
       GameTextButton(
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 400.0),
         anchor: Anchor.center,
-        text: "一時中断する",
-        onReleased: () async {
-          await game.setAndSaveStageData();
-          game.router.pushNamed('title');
-        },
+        text: "タイトルへ",
+        onReleased: () => game.router.pushNamed('title'),
       ),
-      GameTextButton(
-          size: Vector2(120.0, 30.0),
-          position: Vector2(180.0, 450.0),
-          anchor: Anchor.center,
-          text: "あきらめる",
-          onReleased: () async {
-            await game.clearAndSaveStageData();
-            game.router.pushNamed('title');
-          }),
     ]);
   }
 }

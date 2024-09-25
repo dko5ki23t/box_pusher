@@ -1,10 +1,12 @@
 import 'dart:math';
 
+import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage_objs/box.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/wall.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
@@ -77,6 +79,7 @@ class StageObjFactory {
   StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
     int priority = Stage.staticPriority;
     if (typeLevel.type == StageObjType.box ||
+        typeLevel.type == StageObjType.trap ||
         typeLevel.type == StageObjType.player ||
         typeLevel.type == StageObjType.spike) {
       priority = Stage.dynamicPriority;
@@ -102,26 +105,30 @@ class StageObjFactory {
       ],
       size: Stage.cellSize,
       anchor: Anchor.center,
-      position: (/*offset +*/
-          Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-              Stage.cellSize / 2),
+      position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+          Stage.cellSize / 2),
     );
 
     switch (typeLevel.type) {
       case StageObjType.none:
-      case StageObjType.goal: // TODO:goalは消す予定
-        return Floor(sprite: sprite, pos: pos);
+        return Floor(sprite: sprite, pos: pos, level: typeLevel.level);
       case StageObjType.box:
-      case StageObjType.boxOnGoal: // TODO: goalは消す予定
-        return Box(sprite: sprite, pos: pos);
+        return Box(sprite: sprite, pos: pos, level: typeLevel.level);
+      case StageObjType.trap:
+        return Trap(sprite: sprite, pos: pos, level: typeLevel.level);
       case StageObjType.player:
-      case StageObjType.playerOnGoal: // TODO: goalは消す予定
-        return Player(sprite: sprite, pos: pos);
+        return Player(sprite: sprite, pos: pos, level: typeLevel.level);
       case StageObjType.wall:
-        return Wall(sprite: sprite, pos: pos);
+        return Wall(sprite: sprite, pos: pos, level: typeLevel.level);
       case StageObjType.spike:
-        return Spike(sprite: sprite, pos: pos);
+        return Spike(sprite: sprite, pos: pos, level: typeLevel.level);
     }
+  }
+
+  StageObj createFromMap(Map<String, dynamic> src) {
+    return create(
+        typeLevel: StageObjTypeLevel.decode(src['typeLevel']),
+        pos: Point.decode(src['pos']));
   }
 
   Sprite getSprite(StageObjType type) => stageSprites[type]!;
@@ -170,6 +177,15 @@ class Point {
   int distance() {
     return (x.abs() + y.abs());
   }
+
+  String encode() {
+    return "$x,$y";
+  }
+
+  static Point decode(String str) {
+    final xy = str.split(',');
+    return Point(int.parse(xy[0]), int.parse(xy[1]));
+  }
 }
 
 class MovePath {
@@ -209,20 +225,8 @@ class Stage {
   /// プレイヤー
   late StageObj player;
 
-  /// プレイヤーが移動中かどうか
-  //bool isPlayerMoving = false;
-
-  /// 箱が移動中かどうか
-  //bool isBoxMoving = false;
-
-  /// 移動中の箱
-  //StageObj? movingBox;
-
-  /// 移動量
-  //double movingAmount = 0.0;
-
-  /// 移動中の方向
-  //Move movingTo = Move.none;
+  /// ゲームオーバーになったかどうか
+  bool isGameover = false;
 
   /// ステージの左上座標(プレイヤーの動きにつれて拡張されていく)
   Point stageLT = Point(0, 0);
@@ -230,13 +234,16 @@ class Stage {
   /// ステージの右下座標(プレイヤーの動きにつれて拡張されていく)
   Point stageRB = Point(0, 0);
 
+  /// スコア
+  int score = 0;
+
   Stage(this.stageImg) {
     final Map<StageObjType, Sprite> stageSprites = {};
     stageSprites[StageObjType.none] =
         Sprite(stageImg, srcPosition: Vector2(0, 0), srcSize: cellSize);
     stageSprites[StageObjType.wall] =
         Sprite(stageImg, srcPosition: Vector2(160, 0), srcSize: cellSize);
-    stageSprites[StageObjType.goal] =
+    stageSprites[StageObjType.trap] =
         Sprite(stageImg, srcPosition: Vector2(32, 0), srcSize: cellSize);
     stageSprites[StageObjType.box] =
         Sprite(stageImg, srcPosition: Vector2(96, 0), srcSize: cellSize);
@@ -249,11 +256,39 @@ class Stage {
   }
 
   /// デフォルトのステージを生成する
-  void setDefault(World gameWorld, CameraComponent camera) {
-    stageLT = Point(-6, -20);
-    stageRB = Point(6, 20);
-    //playerPos = Point(0, 0);
-    _drawWithObjsInfo(gameWorld, camera);
+  void setDefault(
+      World gameWorld, CameraComponent camera, Map<String, dynamic> stageData) {
+    // 前回のステージ情報が保存されているなら
+    if (stageData.containsKey('score')) {
+      score = stageData['score'];
+      stageLT = Point.decode(stageData['stageLT']);
+      stageRB = Point.decode(stageData['stageRB']);
+      staticObjs.clear();
+      for (final entry
+          in (stageData['staticObjs'] as Map<String, dynamic>).entries) {
+        staticObjs[Point.decode(entry.key)] =
+            objFactory.createFromMap(entry.value);
+      }
+      boxes = [
+        for (final e in stageData['boxes'] as List<dynamic>)
+          objFactory.createFromMap(e)
+      ];
+      enemies = [
+        for (final e in stageData['enemies'] as List<dynamic>)
+          objFactory.createFromMap(e)
+      ];
+      gameWorld.addAll([for (final e in staticObjs.values) e.sprite]);
+      gameWorld.addAll([for (final e in boxes) e.sprite]);
+      gameWorld.addAll([for (final e in enemies) e.sprite]);
+      player = objFactory.createFromMap(stageData['player']);
+      gameWorld.addAll([player.sprite]);
+      camera.follow(player.sprite);
+    } else {
+      stageLT = Point(-6, -20);
+      stageRB = Point(6, 20);
+      //playerPos = Point(0, 0);
+      _drawWithObjsInfo(gameWorld, camera);
+    }
   }
 
   /// 初期化
@@ -262,6 +297,8 @@ class Stage {
     player.moving = Move.none;
     player.pushing = null;
     player.movingAmount = 0;
+    score = 0;
+    isGameover = false;
     boxes.clear();
     removeAll();
   }
@@ -287,6 +324,30 @@ class Stage {
     player.pushing = null;
     player.moving = Move.none;
     player.movingAmount = 0;
+    score = 0;
+    isGameover = false;
+  }
+
+  Map<String, dynamic> getStageData() {
+    final Map<String, dynamic> ret = {};
+    ret['score'] = score;
+    ret['stageLT'] = stageLT.encode();
+    ret['stageRB'] = stageRB.encode();
+    final Map<String, dynamic> staticObjsMap = {};
+    for (final entry in staticObjs.entries) {
+      staticObjsMap[entry.key.encode()] = entry.value.encode();
+    }
+    ret['staticObjs'] = staticObjsMap;
+    final List<Map<String, dynamic>> boxesList = [
+      for (final e in boxes) e.encode()
+    ];
+    ret['boxes'] = boxesList;
+    final List<Map<String, dynamic>> enemiesList = [
+      for (final e in enemies) e.encode()
+    ];
+    ret['enemies'] = enemiesList;
+    ret['player'] = player.encode();
+    return ret;
   }
 
   void logInitialStage() {
@@ -340,7 +401,7 @@ class Stage {
   }
 
   void explode(Point pos, StageObj box, World gameWorld) {
-    // 引数位置を中心として周囲を爆破する
+    // 引数位置を中心として周囲のブロックを爆破する
     final List<Point> breaked = [];
     for (int y = pos.y - 1; y < pos.y + 2; y++) {
       for (int x = pos.x - 1; x < pos.x + 2; x++) {
@@ -350,42 +411,82 @@ class Stage {
         if (p == pos) continue;
         if (get(p).type == StageObjType.wall &&
             get(p).level <= box.typeLevel.level) {
-          setType(p, StageObjType.none);
+          setStaticType(p, StageObjType.none);
           staticObjs[p]!.sprite.sprite =
               objFactory.getSprite(StageObjType.none);
           breaked.add(p);
         }
       }
     }
-    // 破壊した壁の数/2(切り上げ)個の箱/敵を出現させる
-    final boxAppears = breaked.sample((breaked.length / 2).ceil());
-    final List<StageObj> adding = [];
-    bool hasAppearedEnemy = false;
-    for (final boxAppear in boxAppears) {
-      // プレイヤーの位置から2以上離れている場合、1/2の確率、最大1匹で敵が出現
-      final appearEnemy = Random().nextBool();
-      if (appearEnemy &&
-          (player.pos - boxAppear).distance() > 1 &&
-          !hasAppearedEnemy) {
-        adding.add(objFactory.create(
-            typeLevel: StageObjTypeLevel(type: StageObjType.spike, level: 1),
-            pos: boxAppear));
-        enemies.add(adding.last);
-        hasAppearedEnemy = true;
-      } else {
-        setType(boxAppear, StageObjType.box, level: 1);
-        adding.add(objFactory.create(
-            typeLevel: StageObjTypeLevel(type: StageObjType.box, level: 1),
-            pos: boxAppear));
-        boxes.add(adding.last);
+    // 引数位置を元に、どういうオブジェクトが出現するか決定
+    final distance = pos.distance();
+    ObjInBlock pattern = ObjInBlock.jewel1_2;
+    int jewelLevel = 1;
+    for (final objInBlock in SettingVariables.objInBlockMap.entries) {
+      if (objInBlock.key <= distance) {
+        pattern = objInBlock.value;
       }
     }
+    for (final level in SettingVariables.jewelLevelInBlockMap.entries) {
+      if (level.key <= distance) {
+        jewelLevel = level.value;
+      }
+    }
+    final List<StageObj> adding = [];
+    switch (pattern) {
+      case ObjInBlock.jewel1_2:
+        // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
+        final jewelAppears = breaked.sample((breaked.length / 2).ceil());
+        for (final jewelAppear in jewelAppears) {
+          adding.add(objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.box,
+                level: jewelLevel,
+              ),
+              pos: jewelAppear));
+          boxes.add(adding.last);
+        }
+        break;
+      case ObjInBlock.jewel1_2SpikeOrTrap1:
+        // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
+        final jewelAppears = breaked.sample((breaked.length / 2).ceil());
+        final breakedRemain = [...breaked];
+        breakedRemain.removeWhere((element) => jewelAppears.contains(element));
+        for (final jewelAppear in jewelAppears) {
+          adding.add(objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.box,
+                level: jewelLevel,
+              ),
+              pos: jewelAppear));
+          boxes.add(adding.last);
+        }
+        // 宝石出現以外の位置に最大1個の敵/罠を出現させる
+        if (breakedRemain.isNotEmpty) {
+          int spikeOrTrap = Random().nextInt(4);
+          final appear = breakedRemain.sample(1).first;
+          if (spikeOrTrap == 0) {
+            adding.add(objFactory.create(
+                typeLevel:
+                    StageObjTypeLevel(type: StageObjType.spike, level: 1),
+                pos: appear));
+            enemies.add(adding.last);
+          } else if (spikeOrTrap == 1) {
+            adding.add(objFactory.create(
+                typeLevel: StageObjTypeLevel(type: StageObjType.trap, level: 1),
+                pos: appear));
+            boxes.add(adding.last);
+          }
+        }
+        break;
+    }
     gameWorld.addAll([for (final e in adding) e.sprite]);
-    // 当該位置の箱を消す
-    final mergedBox = boxes.firstWhere((element) => element.pos == pos);
-    gameWorld.remove(mergedBox.sprite);
-    boxes.remove(mergedBox);
-    // 移動した箱のレベルを上げる
+
+    // 当該位置のオブジェクトを消す
+    final merged = boxes.firstWhere((element) => element.pos == pos);
+    gameWorld.remove(merged.sprite);
+    boxes.remove(merged);
+    // 移動したオブジェクトのレベルを上げる
     box.sprite.removeAll(box.sprite.children);
     box.sprite.add(
       AlignComponent(
@@ -393,14 +494,18 @@ class Stage {
         child: TextComponent(
           text: (++box.typeLevel.level).toString(),
           textRenderer: TextPaint(
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Aboreto',
-              color: Color(0xff000000),
+              color: box.typeLevel.type == StageObjType.trap
+                  ? Colors.white
+                  : Colors.black,
             ),
           ),
         ),
       ),
     );
+    // スコア加算
+    score += box.typeLevel.level * 100;
   }
 
   StageObjTypeLevel get(Point p) {
@@ -413,16 +518,17 @@ class Stage {
     } else {
       return staticObjs[p]!.typeLevel;
     }
-    //return objsInfo[p.y][p.x];
   }
 
-  void setType(Point p, StageObjType type, {int? level}) {
+  void setStaticType(Point p, StageObjType type, {int? level}) {
     staticObjs[p]!.typeLevel.type = type;
     if (level != null) staticObjs[p]!.typeLevel.level = level;
   }
 
   void _drawWithObjsInfo(World gameWorld, CameraComponent camera) {
     staticObjs.clear();
+    boxes.clear();
+    enemies.clear();
     for (int y = stageLT.y; y <= stageRB.y; y++) {
       for (int x = stageLT.x; x <= stageRB.x; x++) {
         StageObjTypeLevel objType = StageObjTypeLevel(type: StageObjType.wall);
@@ -436,6 +542,7 @@ class Stage {
         switch (objType.type) {
           case StageObjType.none:
           case StageObjType.box:
+          case StageObjType.trap:
           case StageObjType.player:
           case StageObjType.spike:
             staticObjs[Point(x, y)] = objFactory.create(
@@ -449,20 +556,16 @@ class Stage {
                     type: StageObjType.wall, level: objType.level),
                 pos: Point(x, y));
             break;
-          case StageObjType.goal:
-          case StageObjType.boxOnGoal:
-          case StageObjType.playerOnGoal:
-            staticObjs[Point(x, y)] = objFactory.create(
-                typeLevel: StageObjTypeLevel(
-                    type: StageObjType.goal, level: objType.level),
-                pos: Point(x, y));
-            break;
         }
-        if (objType.type == StageObjType.box ||
-            objType.type == StageObjType.boxOnGoal) {
+        if (objType.type == StageObjType.box) {
           boxes.add(objFactory.create(
               typeLevel: StageObjTypeLevel(
                   type: StageObjType.box, level: objType.level),
+              pos: Point(x, y)));
+        } else if (objType.type == StageObjType.trap) {
+          boxes.add(objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                  type: StageObjType.trap, level: objType.level),
               pos: Point(x, y)));
         } else if (objType.type == StageObjType.spike) {
           enemies.add(objFactory.create(
@@ -497,6 +600,54 @@ class Stage {
     for (final enemy in enemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, prohibitedPoints);
+    }
+    {
+      // 同じレベルの敵同士が同じ位置になったらマージしてレベルアップ
+      // TODO: 敵がお互いにすれ違ってマージしない場合あり
+      final List<Point> mergingPosList = [];
+      final List<StageObj> mergedEnemies = [];
+      for (final enemy in enemies) {
+        if (mergingPosList.contains(enemy.pos)) {
+          continue;
+        }
+        final t = enemies.where((element) =>
+            element != enemy &&
+            element.pos == enemy.pos &&
+            element.typeLevel.type == StageObjType.spike &&
+            element.typeLevel.level == enemy.typeLevel.level);
+        if (t.isNotEmpty) {
+          mergingPosList.add(enemy.pos);
+          mergedEnemies.add(enemy);
+          // マージされた敵を削除
+          gameWorld.remove(enemy.sprite);
+          // レベルを上げる
+          t.first.sprite.removeAll(t.first.sprite.children);
+          t.first.sprite.add(
+            AlignComponent(
+              alignment: Anchor.center,
+              child: TextComponent(
+                text: (++t.first.typeLevel.level).toString(),
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: 'Aboreto',
+                    color: Color(0xff000000),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+      }
+      // マージされた敵を削除
+      for (final enemy in mergedEnemies) {
+        enemies.remove(enemy);
+      }
+    }
+    // オブジェクト更新(罠：敵を倒す)
+    // TODO: これらは他オブジェクトの移動完了時のみ動かせばよい
+    for (final box in boxes) {
+      box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
+          prohibitedPoints);
     }
 
     // 移動完了時
@@ -553,6 +704,13 @@ class Stage {
           staticObjs[Point(x, stageRB.y)] = adding;
           gameWorld.add(adding.sprite);
         }
+      }
+    }
+
+    // ゲームオーバー判定
+    for (final enemy in enemies) {
+      if (player.pos == enemy.pos) {
+        isGameover = true;
       }
     }
   }

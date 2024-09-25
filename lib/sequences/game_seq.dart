@@ -61,6 +61,7 @@ class GameSeq extends Component
   late final Image playerControllArrowImg;
   late final Image undoImg;
   late final Image settingsImg;
+  late TextComponent scoreText;
   final List<String> stageStrs = [];
 
   @override
@@ -80,6 +81,7 @@ class GameSeq extends Component
   // 初期化（というよりリセット）
   void initialize() {
     removeAll(children);
+    game.world.removeAll(game.world.children);
 
     // フリック入力のトリガー状態をリセット
     game.resetTriggered();
@@ -87,13 +89,13 @@ class GameSeq extends Component
     stage = Stage(stageImg);
     switch (game.gameMode) {
       case GameMode.quest:
-        stage.setDefault(game.world, game.camera);
+        stage.setDefault(game.world, game.camera, game.stageData);
         break;
       case GameMode.endless:
-        stage.setDefault(game.world, game.camera);
+        stage.setDefault(game.world, game.camera, game.stageData);
         break;
       case GameMode.debug:
-        stage.setDefault(game.world, game.camera);
+        stage.setDefault(game.world, game.camera, game.stageData);
         break;
     }
 
@@ -161,6 +163,15 @@ class GameSeq extends Component
         onReleased: stage.logCurrentStage,
       ));
     } else {
+      scoreText = TextComponent(
+        text: "${stage.score}",
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            fontFamily: 'Aboreto',
+            color: Color(0xff000000),
+          ),
+        ),
+      );
       add(RectangleComponent(
         size: menuButtonAreaSize,
         position: Vector2(0, 640.0 - menuButtonAreaSize.y),
@@ -177,15 +188,7 @@ class GameSeq extends Component
           ),
           AlignComponent(
             alignment: Anchor.center,
-            child: TextComponent(
-              text: "ステージX",
-              textRenderer: TextPaint(
-                style: const TextStyle(
-                  fontFamily: 'Aboreto',
-                  color: Color(0xff000000),
-                ),
-              ),
-            ),
+            child: scoreText,
           ),
         ],
       ));
@@ -208,8 +211,10 @@ class GameSeq extends Component
   @override
   void update(double dt) {
     super.update(dt);
-    // クリア済みならに何もしない
+    // クリア済みなら何もしない
     if (stage.isClear()) return;
+    // ゲームオーバー済みなら何もしない
+    if (stage.isGameover) return;
     Move moveInput = Move.none;
     //bool inputUndo = false;
     if (game.isTriggeredL || isPushingL) {
@@ -222,9 +227,19 @@ class GameSeq extends Component
       moveInput = Move.down;
     }
     stage.update(dt, moveInput, game.world, game.camera);
+    // スコア表示更新
+    scoreText.text = "${stage.score}";
     // 今回のupdateでクリアしたらクリア画面に移行
     if (stage.isClear()) {
       game.router.pushNamed('clear');
+    }
+    // 今回のupdateでゲームオーバーになったらゲームオーバー画面に移行
+    if (stage.isGameover) {
+      // ハイスコア更新
+      if (stage.score > game.highScore) {
+        game.setAndSaveHighScore(stage.score);
+      }
+      game.router.pushNamed('gameover');
     }
   }
 

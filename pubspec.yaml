@@ -38,6 +38,7 @@ dependencies:
   collection:
   google_mobile_ads:
   logger: ^2.4.0
+  path_provider: 2.0.15
 
 dev_dependencies:
   flutter_test:
