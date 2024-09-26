@@ -7,8 +7,22 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 
 class GameoverSeq extends Component with HasGameReference<BoxPusherGame> {
+  late final TextComponent scoreText;
+
   @override
   Future<void> onLoad() async {
+    scoreText = TextComponent(
+      text: "スコア：${game.getCurrentScore()}",
+      size: Vector2(320.0, 45.0),
+      position: Vector2(180.0, 250.0),
+      anchor: Anchor.center,
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          fontSize: 30,
+        ),
+      ),
+    );
     addAll([
       // 背景をボタンにする(しかし押しても何も起きない)にすることで、背後のゲーム画面での操作を不可能にする
       ButtonComponent(
@@ -32,6 +46,7 @@ class GameoverSeq extends Component with HasGameReference<BoxPusherGame> {
           ),
         ),
       ),
+      scoreText,
       GameTextButton(
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 300.0),
@@ -56,5 +71,10 @@ class GameoverSeq extends Component with HasGameReference<BoxPusherGame> {
         onReleased: () => game.router.pushNamed('title'),
       ),
     ]);
+  }
+
+  @override
+  void update(double dt) {
+    scoreText.text = "スコア：${game.getCurrentScore()}";
   }
 }

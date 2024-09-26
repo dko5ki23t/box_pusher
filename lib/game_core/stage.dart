@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage_objs/box.dart';
+import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
@@ -78,11 +79,17 @@ class StageObjFactory {
 
   StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
     int priority = Stage.staticPriority;
-    if (typeLevel.type == StageObjType.box ||
-        typeLevel.type == StageObjType.trap ||
-        typeLevel.type == StageObjType.player ||
-        typeLevel.type == StageObjType.spike) {
-      priority = Stage.dynamicPriority;
+    switch (typeLevel.type) {
+      case StageObjType.box:
+      case StageObjType.trap:
+      case StageObjType.drill:
+      case StageObjType.player:
+      case StageObjType.spike:
+        priority = Stage.dynamicPriority;
+        break;
+      case StageObjType.none:
+      case StageObjType.wall:
+        priority = Stage.staticPriority;
     }
 
     final sprite = SpriteComponent(
@@ -122,6 +129,8 @@ class StageObjFactory {
         return Wall(sprite: sprite, pos: pos, level: typeLevel.level);
       case StageObjType.spike:
         return Spike(sprite: sprite, pos: pos, level: typeLevel.level);
+      case StageObjType.drill:
+        return Drill(sprite: sprite, pos: pos, level: typeLevel.level);
     }
   }
 
@@ -251,6 +260,8 @@ class Stage {
         Sprite(stageImg, srcPosition: Vector2(128, 0), srcSize: cellSize);
     stageSprites[StageObjType.spike] =
         Sprite(stageImg, srcPosition: Vector2(192, 0), srcSize: cellSize);
+    stageSprites[StageObjType.drill] =
+        Sprite(stageImg, srcPosition: Vector2(224, 0), srcSize: cellSize);
 
     objFactory = StageObjFactory(stageSprites: stageSprites);
   }
@@ -412,8 +423,6 @@ class Stage {
         if (get(p).type == StageObjType.wall &&
             get(p).level <= box.typeLevel.level) {
           setStaticType(p, StageObjType.none);
-          staticObjs[p]!.sprite.sprite =
-              objFactory.getSprite(StageObjType.none);
           breaked.add(p);
         }
       }
@@ -479,6 +488,33 @@ class Stage {
           }
         }
         break;
+      case ObjInBlock.jewel1_2Drill1:
+        // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
+        final jewelAppears = breaked.sample((breaked.length / 2).ceil());
+        final breakedRemain = [...breaked];
+        breakedRemain.removeWhere((element) => jewelAppears.contains(element));
+        for (final jewelAppear in jewelAppears) {
+          adding.add(objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.box,
+                level: jewelLevel,
+              ),
+              pos: jewelAppear));
+          boxes.add(adding.last);
+        }
+        // 宝石出現以外の位置に最大1個のドリルを出現させる
+        if (breakedRemain.isNotEmpty) {
+          bool drill = Random().nextBool();
+          final appear = breakedRemain.sample(1).first;
+          if (drill) {
+            adding.add(objFactory.create(
+                typeLevel:
+                    StageObjTypeLevel(type: StageObjType.drill, level: 1),
+                pos: appear));
+            boxes.add(adding.last);
+          }
+        }
+        break;
     }
     gameWorld.addAll([for (final e in adding) e.sprite]);
 
@@ -523,6 +559,7 @@ class Stage {
   void setStaticType(Point p, StageObjType type, {int? level}) {
     staticObjs[p]!.typeLevel.type = type;
     if (level != null) staticObjs[p]!.typeLevel.level = level;
+    staticObjs[p]!.sprite.sprite = objFactory.getSprite(type);
   }
 
   void _drawWithObjsInfo(World gameWorld, CameraComponent camera) {
@@ -545,6 +582,7 @@ class Stage {
           case StageObjType.trap:
           case StageObjType.player:
           case StageObjType.spike:
+          case StageObjType.drill:
             staticObjs[Point(x, y)] = objFactory.create(
                 typeLevel: StageObjTypeLevel(
                     type: StageObjType.none, level: objType.level),
@@ -566,6 +604,11 @@ class Stage {
           boxes.add(objFactory.create(
               typeLevel: StageObjTypeLevel(
                   type: StageObjType.trap, level: objType.level),
+              pos: Point(x, y)));
+        } else if (objType.type == StageObjType.drill) {
+          boxes.add(objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                  type: StageObjType.drill, level: objType.level),
               pos: Point(x, y)));
         } else if (objType.type == StageObjType.spike) {
           enemies.add(objFactory.create(

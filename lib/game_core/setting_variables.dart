@@ -12,6 +12,9 @@ enum ObjInBlock {
 
   /// 破壊した数/2(切り上げ)個の宝石、敵/罠いずれかが1個以下出現
   jewel1_2SpikeOrTrap1,
+
+  /// 破壊した数/2(切り上げ)個の宝石、ドリルが1個以下出現
+  jewel1_2Drill1,
 }
 
 class SettingVariables {
@@ -26,7 +29,7 @@ class SettingVariables {
   /// 中心(ゲーム開始地点)からの距離->ブロック破壊時の出現オブジェクトのマップ
   static Map<int, ObjInBlock> objInBlockMap = {
     0: ObjInBlock.jewel1_2,
-    6: ObjInBlock.jewel1_2SpikeOrTrap1
+    6: ObjInBlock.jewel1_2Drill1,
   };
 
   /// 中心(ゲーム開始地点)からの距離->ブロック破壊時の出現宝石のレベル

@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:box_pusher/components/debug_dialog.dart';
-import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
@@ -132,6 +130,15 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
       'stageData': _stageData,
     });
     await saveDataFile.writeAsString(jsonText);
+  }
+
+  int getCurrentScore() {
+    if (router.routes['game']!.firstChild() != null) {
+      final gameSeq = router.routes['game']!.firstChild() as GameSeq;
+      return gameSeq.stage.score;
+    } else {
+      return 0;
+    }
   }
 
   @override

@@ -14,6 +14,10 @@ class Player extends StageObj {
           ),
         );
 
+  /// 押しているオブジェクトを「行使」しているかどうか
+  /// ex.) ドリルによるブロックの破壊
+  bool executing = false;
+
   @override
   void update(
     double dt,
@@ -42,12 +46,31 @@ class Player extends StageObj {
       }
 
       // 押すオブジェクトがあるか
-      if (toObj.type == StageObjType.box || toObj.type == StageObjType.trap) {
-        if (toToObj.type != StageObjType.none && toToObj.type != toObj.type) {
-          return;
-        }
-        if (toToObj.type == toObj.type && toToObj.level != toObj.level) {
-          return;
+      if (toObj.type == StageObjType.box ||
+          toObj.type == StageObjType.trap ||
+          toObj.type == StageObjType.drill) {
+        if (toObj.type == StageObjType.drill) {
+          // ドリルの場合はまた別
+          if (toToObj.type != StageObjType.none &&
+              toToObj.type != StageObjType.wall &&
+              toToObj.type != toObj.type) {
+            return;
+          }
+          if (toToObj.type == toObj.type && toToObj.level != toObj.level) {
+            return;
+          }
+          // 押した先がブロックなら即座に破壊
+          if (toToObj.type == StageObjType.wall) {
+            stage.setStaticType(toTo, StageObjType.none);
+            executing = true;
+          }
+        } else {
+          if (toToObj.type != StageObjType.none && toToObj.type != toObj.type) {
+            return;
+          }
+          if (toToObj.type == toObj.type && toToObj.level != toObj.level) {
+            return;
+          }
         }
         pushing = stage.boxes.firstWhere((element) => element.pos == to);
         // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
@@ -92,9 +115,10 @@ class Player extends StageObj {
           switch (stage.get(toTo).type) {
             case StageObjType.none:
               break;
-            // TODO: trapのとき
             case StageObjType.box:
             case StageObjType.trap:
+            case StageObjType.drill:
+              // マージ
               if (pushing?.typeLevel.type == stage.get(toTo).type) {
                 stage.explode(toTo, pushing!, gameWorld);
               }
@@ -104,18 +128,19 @@ class Player extends StageObj {
               //HALT("fatal error");
               break;
           }
-          switch (stage.get(to).type) {
-            case StageObjType.box:
-            case StageObjType.trap:
-              stage.setStaticType(to, StageObjType.none);
-              break;
-            default:
-              // ありえない
-              //HALT("fatal error");
-              break;
-          }
+          // 押したものの位置を設定
           pushing!.pos = toTo;
           stage.objFactory.setPosition(pushing!);
+          if (pushing!.typeLevel.type == StageObjType.drill && executing) {
+            // ドリル使用時
+            // ドリルのオブジェクトレベルダウン、0になったら消す
+            pushing!.typeLevel.level--;
+            if (pushing!.typeLevel.level <= 0) {
+              gameWorld.remove(pushing!.sprite);
+              stage.boxes.remove(pushing);
+            }
+          }
+          // 押しているものをnullにする
           pushing = null;
         }
 

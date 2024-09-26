@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flame/layout.dart';
 //import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
+//import 'package:share_plus/share_plus.dart';
 
 class TitleSeq extends Component
     with /*TapCallbacks,*/ HasGameReference<BoxPusherGame> {
@@ -80,6 +81,15 @@ class TitleSeq extends Component
           ),
         ],
       ),
+      // TODO: 例外発生 -> MissingPluginException (MissingPluginException(No implementation found for method share on channel dev.fluttercommunity.plus/share))
+      // 当面必要ないと思うのでコメントアウト
+      /*GameTextButton(
+        size: Vector2(120.0, 30.0),
+        position: Vector2(180.0, 530.0),
+        anchor: Anchor.center,
+        text: "シェア",
+        onReleased: () => Share.share("共有のテスト"),
+      ),*/
     ]);
   }
 
