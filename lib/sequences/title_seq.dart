@@ -1,5 +1,6 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
+import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
 import 'package:flame/components.dart';
 import 'package:flame/layout.dart';
 //import 'package:flame/events.dart';
@@ -57,7 +58,13 @@ class TitleSeq extends Component
         position: Vector2(180.0, 330.0),
         anchor: Anchor.center,
         text: "はじめから",
-        onReleased: () => game.pushAndInitGame(),
+        onReleased: () {
+          if (game.stageData.isNotEmpty) {
+            game.router.pushOverlay('confirm_delete_stage_data_dialog');
+          } else {
+            game.pushAndInitGame();
+          }
+        },
       ),
       continueButton,
       if (game.testMode)

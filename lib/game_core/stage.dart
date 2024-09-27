@@ -306,7 +306,7 @@ class Stage {
   void initialize(void Function() removeAll) {
     // TODO: 合ってる？
     player.moving = Move.none;
-    player.pushing = null;
+    player.pushings.clear();
     player.movingAmount = 0;
     score = 0;
     isGameover = false;
@@ -332,7 +332,7 @@ class Stage {
     objFactory.setPosition(player);
 
     // 各種変数初期化
-    player.pushing = null;
+    player.pushings.clear();
     player.moving = Move.none;
     player.movingAmount = 0;
     score = 0;
@@ -756,6 +756,14 @@ class Stage {
         isGameover = true;
       }
     }
+  }
+
+  void setHandAbility(bool isOn) {
+    (player as Player).pushableNum = -1;
+  }
+
+  void setLegAbility(bool isOn) {
+    (player as Player).isLegAbilityOn = isOn;
   }
 
   bool isClear() {

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
@@ -18,6 +20,12 @@ class Player extends StageObj {
   /// ex.) ドリルによるブロックの破壊
   bool executing = false;
 
+  /// 一度にいくつのオブジェクトを押せるか(-1なら制限なし)
+  int pushableNum = 1;
+
+  /// 足の能力が有効か
+  bool isLegAbilityOn = false;
+
   @override
   void update(
     double dt,
@@ -37,44 +45,96 @@ class Player extends StageObj {
       if (moveInput == Move.none) {
         return;
       }
-      final toObj = stage.get(to);
-      final toToObj = stage.get(toTo);
+      StageObjTypeLevel toObj = stage.get(to);
+      StageObjTypeLevel toToObj = stage.get(toTo);
 
-      // 壁にぶつかるか
+      // プレイヤーが壁にぶつかるか
       if (toObj.type == StageObjType.wall) {
         return;
       }
 
-      // 押すオブジェクトがあるか
-      if (toObj.type == StageObjType.box ||
-          toObj.type == StageObjType.trap ||
-          toObj.type == StageObjType.drill) {
-        if (toObj.type == StageObjType.drill) {
-          // ドリルの場合はまた別
-          if (toToObj.type != StageObjType.none &&
-              toToObj.type != StageObjType.wall &&
-              toToObj.type != toObj.type) {
+      pushings.clear();
+      int end = pushableNum;
+      if (end < 0) {
+        final range = stage.stageRB - stage.stageLT;
+        end = max(range.x, range.y);
+      }
+      for (int i = 0; i < end; i++) {
+        bool stopBecauseMergeOrDrill =
+            false; // マージが発生する/ドリルでブロックを壊すため、以降の判定をしなくて良いことを示すフラグ
+        // 押すオブジェクトがあるか
+        if (toObj.type == StageObjType.box || toObj.type == StageObjType.trap) {
+          // TODO:以下、各typeに属性として持たせるべき
+          const stopTypes = [
+            StageObjType.wall,
+            StageObjType.spike,
+          ];
+          const puttableTypes = [
+            StageObjType.none,
+          ];
+          // 押した先がブロック等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
+          // これまでにpushingsに追加したものも含めて一切押せない
+          if (stopTypes.contains(toToObj.type) ||
+              (i == end - 1 &&
+                  !puttableTypes.contains(toToObj.type) &&
+                  toObj != toToObj)) {
+            pushings.clear();
             return;
           }
-          if (toToObj.type == toObj.type && toToObj.level != toObj.level) {
-            return;
+          // マージできる場合は、一気に押せるオブジェクト（pushings）はここまで
+          if (toToObj == toObj) {
+            stopBecauseMergeOrDrill = true;
           }
-          // 押した先がブロックなら即座に破壊
+        } else if (toObj.type == StageObjType.drill) {
+          // 押した先が敵等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
+          // これまでにpushingsに追加したものも含めて一切押せない
+          // TODO:以下、各typeに属性として持たせるべき
+          const stopTypes = [
+            StageObjType.spike,
+          ];
+          const puttableTypes = [
+            StageObjType.none,
+          ];
+          // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
           if (toToObj.type == StageObjType.wall) {
             stage.setStaticType(toTo, StageObjType.none);
             executing = true;
+            stopBecauseMergeOrDrill = true;
+          } else if (stopTypes.contains(toToObj.type) ||
+              (i == end - 1 &&
+                  puttableTypes.contains(toToObj.type) &&
+                  toObj != toToObj)) {
+            pushings.clear();
+            return;
+          }
+          // マージできる場合は、一気に押せるオブジェクト（pushings）はここまで
+          if (toToObj == toObj) {
+            stopBecauseMergeOrDrill = true;
           }
         } else {
-          if (toToObj.type != StageObjType.none && toToObj.type != toObj.type) {
-            return;
-          }
-          if (toToObj.type == toObj.type && toToObj.level != toObj.level) {
-            return;
-          }
+          // 押すものがない場合
+          break;
         }
-        pushing = stage.boxes.firstWhere((element) => element.pos == to);
+        // 押すオブジェクトリストに追加
+        pushings.add(stage.boxes.firstWhere((element) => element.pos == to));
         // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
         prohibitedPoints.add(toTo);
+        if (stopBecauseMergeOrDrill) {
+          // マージする/ドリルでブロックを壊す場合
+          break;
+        }
+        // 1つ先へ
+        to = toTo.copy();
+        toTo = to + moveInput.point;
+        // 範囲外に出る場合は押せないとする
+        if (toTo.x < stage.stageLT.x ||
+            toTo.y < stage.stageLT.y ||
+            toTo.x > stage.stageRB.x ||
+            toTo.y > stage.stageRB.y) {
+          return;
+        }
+        toObj = stage.get(to);
+        toToObj = stage.get(toTo);
       }
       moving = moveInput;
       movingAmount = 0.0;
@@ -94,9 +154,9 @@ class Player extends StageObj {
       // プレイヤー位置変更
       stage.objFactory.setPosition(this, offset: offset);
       // TODO: 箱の方に実装？
-      if (pushing != null) {
+      for (final pushing in pushings) {
         // 押している箱の位置変更
-        stage.objFactory.setPosition(pushing!, offset: offset);
+        stage.objFactory.setPosition(pushing, offset: offset);
       }
       // ※※※画像の移動ここまで※※※
 
@@ -109,9 +169,10 @@ class Player extends StageObj {
         pos = to.copy();
         stage.objFactory.setPosition(this);
 
-        // 荷物位置更新
+        // 押したオブジェクト位置更新
         // TODO:箱の方に実装？
-        if (pushing != null) {
+        for (final pushing in pushings) {
+          // 押した先のオブジェクトを調べる
           switch (stage.get(toTo).type) {
             case StageObjType.none:
               break;
@@ -119,8 +180,8 @@ class Player extends StageObj {
             case StageObjType.trap:
             case StageObjType.drill:
               // マージ
-              if (pushing?.typeLevel.type == stage.get(toTo).type) {
-                stage.explode(toTo, pushing!, gameWorld);
+              if (pushing.typeLevel == stage.get(toTo)) {
+                stage.explode(toTo, pushing, gameWorld);
               }
               break;
             default:
@@ -129,25 +190,27 @@ class Player extends StageObj {
               break;
           }
           // 押したものの位置を設定
-          pushing!.pos = toTo;
-          stage.objFactory.setPosition(pushing!);
-          if (pushing!.typeLevel.type == StageObjType.drill && executing) {
+          pushing.pos = toTo;
+          stage.objFactory.setPosition(pushing);
+          if (pushing.typeLevel.type == StageObjType.drill &&
+              stage.get(toTo).type == StageObjType.none &&
+              executing) {
             // ドリル使用時
             // ドリルのオブジェクトレベルダウン、0になったら消す
-            pushing!.typeLevel.level--;
-            if (pushing!.typeLevel.level <= 0) {
-              gameWorld.remove(pushing!.sprite);
+            pushing.typeLevel.level--;
+            if (pushing.typeLevel.level <= 0) {
+              gameWorld.remove(pushing.sprite);
               stage.boxes.remove(pushing);
             }
           }
-          // 押しているものをnullにする
-          pushing = null;
+          toTo += moving.point;
         }
 
         // 各種移動中変数初期化
         moving = Move.none;
-        pushing = null;
+        pushings.clear();
         movingAmount = 0;
+        executing = false;
       }
     }
   }

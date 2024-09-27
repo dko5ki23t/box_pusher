@@ -48,7 +48,8 @@ class Spike extends StageObj {
           }
           final eToObj = stage.get(eTo);
           if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
-              stage.player.pushing?.pos == eTo) {
+              stage.player.pushings.isNotEmpty &&
+              stage.player.pushings.first.pos == eTo) {
             // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
           } else if (eToObj.type == StageObjType.wall ||
               eToObj.type == StageObjType.box ||
@@ -89,7 +90,7 @@ class Spike extends StageObj {
         pos += moving.point;
         moving = Move.none;
         movingAmount = 0;
-        pushing = null;
+        pushings.clear();
       }
     }
   }

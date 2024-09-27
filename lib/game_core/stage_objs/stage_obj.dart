@@ -52,6 +52,18 @@ class StageObjTypeLevel {
       level: src['level'],
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is StageObjTypeLevel &&
+            runtimeType == other.runtimeType &&
+            type == other.type &&
+            level == other.level);
+  }
+
+  @override
+  int get hashCode => type.hashCode ^ level.hashCode;
 }
 
 /// ステージ上オブジェクト
@@ -62,7 +74,7 @@ abstract class StageObj {
   SpriteComponent sprite;
   Move moving = Move.none; // 移動中の向き
   double movingAmount = 0;
-  StageObj? pushing; // 押しているオブジェクト
+  final List<StageObj> pushings = []; // 押しているオブジェクト
 
   StageObj({
     required this.typeLevel,

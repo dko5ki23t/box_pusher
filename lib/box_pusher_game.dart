@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
@@ -78,6 +79,13 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
           'debug_dialog': OverlayRoute(
             (context, game) {
               return DebugDialog(
+                game: this,
+              );
+            },
+          ),
+          'confirm_delete_stage_data_dialog': OverlayRoute(
+            (context, game) {
+              return ConfirmDeleteStageDataDialog(
                 game: this,
               );
             },

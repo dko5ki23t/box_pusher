@@ -35,11 +35,17 @@ class GameSeq extends Component
   /// 画面上下の操作ボタン領域(xPadding領域と重複。この領域下にはステージ描画もされる。y方向サイズはあとで計算する)
   static Vector2 get xButtonAreaSize => Vector2(50.0, 560.0);
 
-  /// メニューボタン領域(元に戻すボタン、ステージ名、メニューボタンの領域含む)
+  /// メニューボタン領域(各種能力ボタン、ステージ名、メニューボタンの領域含む)
   static Vector2 get menuButtonAreaSize => Vector2(360.0, 40.0);
 
-  /// 元に戻すボタン領域
-  static Vector2 get undoButtonAreaSize => Vector2(40.0, 40.0);
+  /// 手の能力ボタン領域
+  static Vector2 get handAbilityButtonAreaSize => Vector2(40.0, 40.0);
+
+  /// 足の能力ボタン領域
+  static Vector2 get legAbilityButtonAreaSize => Vector2(40.0, 40.0);
+
+  /// 能力ボタン間の余白
+  static double get paddingAbilityButtons => 10.0;
 
   /// メニューボタン領域
   static Vector2 get settingsButtonAreaSize => Vector2(40.0, 40.0);
@@ -59,22 +65,19 @@ class GameSeq extends Component
 
   late final Image stageImg;
   late final Image playerControllArrowImg;
-  late final Image undoImg;
+  late final Image handAbilityImg;
+  late final Image legAbilityImg;
   late final Image settingsImg;
   late TextComponent scoreText;
-  final List<String> stageStrs = [];
 
   @override
   Future<void> onLoad() async {
     stageImg = await Flame.images.load('stage_alpha.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
-    undoImg = await Flame.images.load('undo.png');
+    handAbilityImg = await Flame.images.load('hand_ability.png');
+    legAbilityImg = await Flame.images.load('leg_ability.png');
     settingsImg = await Flame.images.load('settings.png');
-    for (int i = 0; i < 30; i++) {
-      stageStrs
-          .add(await rootBundle.loadString('assets/texts/stage${i + 1}_1.txt'));
-    }
     initialize();
   }
 
@@ -193,6 +196,22 @@ class GameSeq extends Component
         ],
       ));
     }
+    // 手の能力ボタン領域
+    add(GameSpriteOnOffButton(
+      onChanged: (bool isOn) => stage.setHandAbility(isOn),
+      size: handAbilityButtonAreaSize,
+      position: Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y),
+      sprite: Sprite(handAbilityImg),
+    ));
+    // 足の能力ボタン領域
+    add(GameSpriteOnOffButton(
+      onChanged: (bool isOn) => stage.setLegAbility(isOn),
+      size: legAbilityButtonAreaSize,
+      position: Vector2(
+          xPaddingSize.x + handAbilityButtonAreaSize.x + paddingAbilityButtons,
+          640.0 - menuButtonAreaSize.y),
+      sprite: Sprite(legAbilityImg),
+    ));
     // メニューボタン領域
     add(GameSpriteButton(
       size: settingsButtonAreaSize,
