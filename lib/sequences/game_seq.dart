@@ -35,6 +35,9 @@ class GameSeq extends Component
   /// 画面上下の操作ボタン領域(xPadding領域と重複。この領域下にはステージ描画もされる。y方向サイズはあとで計算する)
   static Vector2 get xButtonAreaSize => Vector2(50.0, 560.0);
 
+  /// 画面斜めの操作ボタン領域(xPadding領域と重複。この領域下にはステージ描画もされる。)
+  static Vector2 get dButtonAreaSize => Vector2(300.0, 120.0);
+
   /// メニューボタン領域(各種能力ボタン、ステージ名、メニューボタンの領域含む)
   static Vector2 get menuButtonAreaSize => Vector2(360.0, 40.0);
 
@@ -69,6 +72,10 @@ class GameSeq extends Component
   late final Image legAbilityImg;
   late final Image settingsImg;
   late TextComponent scoreText;
+  late ButtonComponent playerControlLTButton;
+  late ButtonComponent playerControlRTButton;
+  late ButtonComponent playerControlLBButton;
+  late ButtonComponent playerControlRBButton;
 
   @override
   Future<void> onLoad() async {
@@ -102,59 +109,169 @@ class GameSeq extends Component
         break;
     }
 
-    // 画面上の操作ボタン
-    add(
-      playerControllButton(
-        onPressed: () => isPushingU = true,
-        onReleased: () => isPushingU = false,
-        onCanceled: () => isPushingU = false,
-        size: yButtonAreaSize,
-        position: Vector2(0, topPaddingSize.y),
-        arrowAngle: 0.0,
-      ),
+    // プレイヤーの操作ボタン群
+    final clipSize = Vector2(
+        yButtonAreaSize.x, 640.0 - topPaddingSize.y - menuButtonAreaSize.y);
+    //final tv = Vector2(t / clipSize.x, t / clipSize.y);
+    final tv = Vector2(0.3, 0.3 * 9 / 16);
+    final playerControllButtonsArea = ClipComponent.rectangle(
+      position: Vector2(0, topPaddingSize.y),
+      size: clipSize,
+      children: [
+        // 上下左右の操作ボタン(斜めボタンの領域は削る)
+        ClipComponent.polygon(
+            points: [
+              Vector2(tv.x, 0),
+              Vector2(1 - tv.x, 0),
+              Vector2(1, tv.y),
+              Vector2(1, 1 - tv.y),
+              Vector2(1 - tv.x, 1),
+              Vector2(tv.x, 1),
+              Vector2(0, 1 - tv.y),
+              Vector2(0, tv.y),
+              Vector2(tv.x, 0),
+            ],
+            size: clipSize,
+            children: [
+              // 画面上の操作ボタン
+              playerControllButton(
+                onPressed: () => isPushingU = true,
+                onReleased: () => isPushingU = false,
+                onCanceled: () => isPushingU = false,
+                size: yButtonAreaSize,
+                position: Vector2(0, 0),
+                arrowAngle: 0.0,
+              ),
+              // 画面下の操作ボタン
+              playerControllButton(
+                onPressed: () => isPushingD = true,
+                onReleased: () => isPushingD = false,
+                onCanceled: () => isPushingD = false,
+                size: yButtonAreaSize,
+                position: Vector2(
+                    0,
+                    640.0 -
+                        topPaddingSize.y -
+                        menuButtonAreaSize.y -
+                        yButtonAreaSize.y),
+                arrowAngle: pi,
+              ),
+              // 画面左の操作ボタン
+              playerControllButton(
+                onPressed: () => isPushingL = true,
+                onReleased: () => isPushingL = false,
+                onCanceled: () => isPushingL = false,
+                size: Vector2(
+                    xButtonAreaSize.x,
+                    640.0 -
+                        topPaddingSize.y -
+                        yButtonAreaSize.y * 2 -
+                        menuButtonAreaSize.y),
+                position: Vector2(0, yButtonAreaSize.y),
+                arrowAngle: -0.5 * pi,
+              ),
+              // 画面右の操作ボタン
+              playerControllButton(
+                onPressed: () => isPushingR = true,
+                onReleased: () => isPushingR = false,
+                onCanceled: () => isPushingR = false,
+                size: Vector2(
+                    xButtonAreaSize.x,
+                    640.0 -
+                        topPaddingSize.y -
+                        yButtonAreaSize.y * 2 -
+                        menuButtonAreaSize.y),
+                position: Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y),
+                arrowAngle: 0.5 * pi,
+              ),
+            ]),
+        // 画面左上の操作ボタン
+        ClipComponent.polygon(
+          points: [
+            Vector2(0, 0),
+            Vector2(tv.x, 0),
+            Vector2(0, tv.y),
+            Vector2(0, 0),
+          ],
+          size: clipSize,
+          children: [
+            playerControllButton(
+              size: dButtonAreaSize,
+              position:
+                  Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
+              anchor: Anchor.center,
+              angle: -0.25 * pi,
+            ),
+          ],
+        ),
+        // 画面右上の操作ボタン
+        ClipComponent.polygon(
+          points: [
+            Vector2(1, 0),
+            Vector2(1 - tv.x, 0),
+            Vector2(1, tv.y),
+            Vector2(1, 0),
+          ],
+          size: clipSize,
+          children: [
+            playerControllButton(
+              size: dButtonAreaSize,
+              position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                  yButtonAreaSize.y * 0.5),
+              anchor: Anchor.center,
+              angle: 0.25 * pi,
+            ),
+          ],
+        ),
+        // 画面左下の操作ボタン
+        ClipComponent.polygon(
+          points: [
+            Vector2(0, 1 - tv.y),
+            Vector2(tv.x, 1),
+            Vector2(0, 1),
+            Vector2(0, 1 - tv.y),
+          ],
+          size: clipSize,
+          children: [
+            playerControllButton(
+              size: dButtonAreaSize,
+              position: Vector2(xButtonAreaSize.x * 0.5,
+                  clipSize.y - yButtonAreaSize.y * 0.5),
+              anchor: Anchor.center,
+              angle: -0.75 * pi,
+            ),
+          ],
+        ),
+        // 画面右下の操作ボタン
+        ClipComponent.polygon(
+          points: [
+            Vector2(1, 1 - tv.y),
+            Vector2(1, 1),
+            Vector2(1 - tv.x, 1),
+            Vector2(1, 1 - tv.y),
+          ],
+          size: clipSize,
+          children: [
+            playerControllButton(
+              size: dButtonAreaSize,
+              position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                  clipSize.y - yButtonAreaSize.y * 0.5),
+              anchor: Anchor.center,
+              angle: 0.75 * pi,
+            ),
+          ],
+        ),
+      ],
     );
-    // 画面下の操作ボタン
+    add(playerControllButtonsArea);
+    // 画面上部、ボタンではない領域
     add(
-      playerControllButton(
-        onPressed: () => isPushingD = true,
-        onReleased: () => isPushingD = false,
-        onCanceled: () => isPushingD = false,
-        size: yButtonAreaSize,
-        position: Vector2(0, 640.0 - menuButtonAreaSize.y - yButtonAreaSize.y),
-        arrowAngle: pi,
-      ),
-    );
-    // 画面左の操作ボタン
-    add(
-      playerControllButton(
-        onPressed: () => isPushingL = true,
-        onReleased: () => isPushingL = false,
-        onCanceled: () => isPushingL = false,
-        size: Vector2(
-            xButtonAreaSize.x,
-            640.0 -
-                topPaddingSize.y -
-                yButtonAreaSize.y * 2 -
-                menuButtonAreaSize.y),
-        position: Vector2(0, topPaddingSize.y + yButtonAreaSize.y),
-        arrowAngle: -0.5 * pi,
-      ),
-    );
-    // 画面右の操作ボタン
-    add(
-      playerControllButton(
-        onPressed: () => isPushingR = true,
-        onReleased: () => isPushingR = false,
-        onCanceled: () => isPushingR = false,
-        size: Vector2(
-            xButtonAreaSize.x,
-            640.0 -
-                topPaddingSize.y -
-                yButtonAreaSize.y * 2 -
-                menuButtonAreaSize.y),
-        position: Vector2(
-            360.0 - xButtonAreaSize.x, topPaddingSize.y + yButtonAreaSize.y),
-        arrowAngle: 0.5 * pi,
+      ButtonComponent(
+        button: RectangleComponent(
+            size: topPaddingSize,
+            paint: Paint()
+              ..color = const Color(0x80000000)
+              ..style = PaintingStyle.fill),
       ),
     );
     // メニュー領域
@@ -265,6 +382,8 @@ class GameSeq extends Component
   ButtonComponent playerControllButton({
     required Vector2 size,
     Vector2? position,
+    Anchor? anchor,
+    double? angle,
     double? arrowAngle,
     void Function()? onPressed,
     void Function()? onReleased,
@@ -275,6 +394,8 @@ class GameSeq extends Component
       onReleased: onReleased,
       onCancelled: onCanceled,
       size: size,
+      anchor: anchor,
+      angle: angle,
       position: position,
       button: RectangleComponent(
         size: size,
