@@ -65,6 +65,11 @@ class GameSeq extends Component
   bool isPushingD = false;
   bool isPushingL = false;
   bool isPushingR = false;
+  // 各斜めのボタンが押されているかどうか
+  bool isPushingUL = false;
+  bool isPushingUR = false;
+  bool isPushingDL = false;
+  bool isPushingDR = false;
 
   late final Image stageImg;
   late final Image playerControllArrowImg;
@@ -72,10 +77,10 @@ class GameSeq extends Component
   late final Image legAbilityImg;
   late final Image settingsImg;
   late TextComponent scoreText;
-  late ButtonComponent playerControlLTButton;
-  late ButtonComponent playerControlRTButton;
-  late ButtonComponent playerControlLBButton;
-  late ButtonComponent playerControlRBButton;
+  ClipComponent? playerControllButtonsArea;
+  ClipComponent? clipByDiagonalMoveButton;
+  List<ButtonComponent>? playerStraightMoveButtons;
+  List<ClipComponent>? playerDiagonalMoveButtons;
 
   @override
   Future<void> onLoad() async {
@@ -112,158 +117,183 @@ class GameSeq extends Component
     // プレイヤーの操作ボタン群
     final clipSize = Vector2(
         yButtonAreaSize.x, 640.0 - topPaddingSize.y - menuButtonAreaSize.y);
-    //final tv = Vector2(t / clipSize.x, t / clipSize.y);
     final tv = Vector2(0.3, 0.3 * 9 / 16);
-    final playerControllButtonsArea = ClipComponent.rectangle(
+    playerControllButtonsArea ??=
+        playerControllButtonsArea = ClipComponent.rectangle(
       position: Vector2(0, topPaddingSize.y),
       size: clipSize,
-      children: [
-        // 上下左右の操作ボタン(斜めボタンの領域は削る)
-        ClipComponent.polygon(
-            points: [
-              Vector2(tv.x, 0),
-              Vector2(1 - tv.x, 0),
-              Vector2(1, tv.y),
-              Vector2(1, 1 - tv.y),
-              Vector2(1 - tv.x, 1),
-              Vector2(tv.x, 1),
-              Vector2(0, 1 - tv.y),
-              Vector2(0, tv.y),
-              Vector2(tv.x, 0),
-            ],
-            size: clipSize,
-            children: [
-              // 画面上の操作ボタン
-              playerControllButton(
-                onPressed: () => isPushingU = true,
-                onReleased: () => isPushingU = false,
-                onCanceled: () => isPushingU = false,
-                size: yButtonAreaSize,
-                position: Vector2(0, 0),
-                arrowAngle: 0.0,
-              ),
-              // 画面下の操作ボタン
-              playerControllButton(
-                onPressed: () => isPushingD = true,
-                onReleased: () => isPushingD = false,
-                onCanceled: () => isPushingD = false,
-                size: yButtonAreaSize,
-                position: Vector2(
-                    0,
-                    640.0 -
-                        topPaddingSize.y -
-                        menuButtonAreaSize.y -
-                        yButtonAreaSize.y),
-                arrowAngle: pi,
-              ),
-              // 画面左の操作ボタン
-              playerControllButton(
-                onPressed: () => isPushingL = true,
-                onReleased: () => isPushingL = false,
-                onCanceled: () => isPushingL = false,
-                size: Vector2(
-                    xButtonAreaSize.x,
-                    640.0 -
-                        topPaddingSize.y -
-                        yButtonAreaSize.y * 2 -
-                        menuButtonAreaSize.y),
-                position: Vector2(0, yButtonAreaSize.y),
-                arrowAngle: -0.5 * pi,
-              ),
-              // 画面右の操作ボタン
-              playerControllButton(
-                onPressed: () => isPushingR = true,
-                onReleased: () => isPushingR = false,
-                onCanceled: () => isPushingR = false,
-                size: Vector2(
-                    xButtonAreaSize.x,
-                    640.0 -
-                        topPaddingSize.y -
-                        yButtonAreaSize.y * 2 -
-                        menuButtonAreaSize.y),
-                position: Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y),
-                arrowAngle: 0.5 * pi,
-              ),
-            ]),
-        // 画面左上の操作ボタン
-        ClipComponent.polygon(
-          points: [
-            Vector2(0, 0),
-            Vector2(tv.x, 0),
-            Vector2(0, tv.y),
-            Vector2(0, 0),
-          ],
-          size: clipSize,
-          children: [
-            playerControllButton(
-              size: dButtonAreaSize,
-              position:
-                  Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
-              anchor: Anchor.center,
-              angle: -0.25 * pi,
-            ),
-          ],
-        ),
-        // 画面右上の操作ボタン
-        ClipComponent.polygon(
-          points: [
-            Vector2(1, 0),
-            Vector2(1 - tv.x, 0),
-            Vector2(1, tv.y),
-            Vector2(1, 0),
-          ],
-          size: clipSize,
-          children: [
-            playerControllButton(
-              size: dButtonAreaSize,
-              position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
-                  yButtonAreaSize.y * 0.5),
-              anchor: Anchor.center,
-              angle: 0.25 * pi,
-            ),
-          ],
-        ),
-        // 画面左下の操作ボタン
-        ClipComponent.polygon(
-          points: [
-            Vector2(0, 1 - tv.y),
-            Vector2(tv.x, 1),
-            Vector2(0, 1),
-            Vector2(0, 1 - tv.y),
-          ],
-          size: clipSize,
-          children: [
-            playerControllButton(
-              size: dButtonAreaSize,
-              position: Vector2(xButtonAreaSize.x * 0.5,
-                  clipSize.y - yButtonAreaSize.y * 0.5),
-              anchor: Anchor.center,
-              angle: -0.75 * pi,
-            ),
-          ],
-        ),
-        // 画面右下の操作ボタン
-        ClipComponent.polygon(
-          points: [
-            Vector2(1, 1 - tv.y),
-            Vector2(1, 1),
-            Vector2(1 - tv.x, 1),
-            Vector2(1, 1 - tv.y),
-          ],
-          size: clipSize,
-          children: [
-            playerControllButton(
-              size: dButtonAreaSize,
-              position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
-                  clipSize.y - yButtonAreaSize.y * 0.5),
-              anchor: Anchor.center,
-              angle: 0.75 * pi,
-            ),
-          ],
-        ),
-      ],
     );
-    add(playerControllButtonsArea);
+    // 上下左右の移動ボタン
+    playerStraightMoveButtons ??= [
+      // 画面上の操作ボタン
+      playerControllButton(
+        onPressed: () => isPushingU = true,
+        onReleased: () => isPushingU = false,
+        onCanceled: () => isPushingU = false,
+        size: yButtonAreaSize,
+        position: Vector2(0, 0),
+        arrowAngle: 0.0,
+      ),
+      // 画面下の操作ボタン
+      playerControllButton(
+        onPressed: () => isPushingD = true,
+        onReleased: () => isPushingD = false,
+        onCanceled: () => isPushingD = false,
+        size: yButtonAreaSize,
+        position: Vector2(
+            0,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                yButtonAreaSize.y),
+        arrowAngle: pi,
+      ),
+      // 画面左の操作ボタン
+      playerControllButton(
+        onPressed: () => isPushingL = true,
+        onReleased: () => isPushingL = false,
+        onCanceled: () => isPushingL = false,
+        size: Vector2(
+            xButtonAreaSize.x,
+            640.0 -
+                topPaddingSize.y -
+                yButtonAreaSize.y * 2 -
+                menuButtonAreaSize.y),
+        position: Vector2(0, yButtonAreaSize.y),
+        arrowAngle: -0.5 * pi,
+      ),
+      // 画面右の操作ボタン
+      playerControllButton(
+        onPressed: () => isPushingR = true,
+        onReleased: () => isPushingR = false,
+        onCanceled: () => isPushingR = false,
+        size: Vector2(
+            xButtonAreaSize.x,
+            640.0 -
+                topPaddingSize.y -
+                yButtonAreaSize.y * 2 -
+                menuButtonAreaSize.y),
+        position: Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y),
+        arrowAngle: 0.5 * pi,
+      ),
+    ];
+    // 斜めの移動ボタン
+    playerDiagonalMoveButtons ??= [
+      // 画面左上の操作ボタン
+      ClipComponent.polygon(
+        points: [
+          Vector2(0, 0),
+          Vector2(tv.x, 0),
+          Vector2(0, tv.y),
+          Vector2(0, 0),
+        ],
+        size: clipSize,
+        children: [
+          playerControllButton(
+            onPressed: () => isPushingUL = true,
+            onReleased: () => isPushingUL = false,
+            onCanceled: () => isPushingUL = false,
+            size: dButtonAreaSize,
+            position: Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
+            anchor: Anchor.center,
+            angle: -0.25 * pi,
+          ),
+        ],
+      ),
+      // 画面右上の操作ボタン
+      ClipComponent.polygon(
+        points: [
+          Vector2(1, 0),
+          Vector2(1 - tv.x, 0),
+          Vector2(1, tv.y),
+          Vector2(1, 0),
+        ],
+        size: clipSize,
+        children: [
+          playerControllButton(
+            onPressed: () => isPushingUR = true,
+            onReleased: () => isPushingUR = false,
+            onCanceled: () => isPushingUR = false,
+            size: dButtonAreaSize,
+            position: Vector2(
+                clipSize.x - xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
+            anchor: Anchor.center,
+            angle: 0.25 * pi,
+          ),
+        ],
+      ),
+      // 画面左下の操作ボタン
+      ClipComponent.polygon(
+        points: [
+          Vector2(0, 1 - tv.y),
+          Vector2(tv.x, 1),
+          Vector2(0, 1),
+          Vector2(0, 1 - tv.y),
+        ],
+        size: clipSize,
+        children: [
+          playerControllButton(
+            onPressed: () => isPushingDL = true,
+            onReleased: () => isPushingDL = false,
+            onCanceled: () => isPushingDL = false,
+            size: dButtonAreaSize,
+            position: Vector2(
+                xButtonAreaSize.x * 0.5, clipSize.y - yButtonAreaSize.y * 0.5),
+            anchor: Anchor.center,
+            angle: -0.75 * pi,
+          ),
+        ],
+      ),
+      // 画面右下の操作ボタン
+      ClipComponent.polygon(
+        points: [
+          Vector2(1, 1 - tv.y),
+          Vector2(1, 1),
+          Vector2(1 - tv.x, 1),
+          Vector2(1, 1 - tv.y),
+        ],
+        size: clipSize,
+        children: [
+          playerControllButton(
+            onPressed: () => isPushingDR = true,
+            onReleased: () => isPushingDR = false,
+            onCanceled: () => isPushingDR = false,
+            size: dButtonAreaSize,
+            position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                clipSize.y - yButtonAreaSize.y * 0.5),
+            anchor: Anchor.center,
+            angle: 0.75 * pi,
+          ),
+        ],
+      ),
+    ];
+    // 上下左右の操作ボタン領域(斜めボタンの領域は削る)
+    clipByDiagonalMoveButton ??= ClipComponent.polygon(
+      points: [
+        Vector2(tv.x, 0),
+        Vector2(1 - tv.x, 0),
+        Vector2(1, tv.y),
+        Vector2(1, 1 - tv.y),
+        Vector2(1 - tv.x, 1),
+        Vector2(tv.x, 1),
+        Vector2(0, 1 - tv.y),
+        Vector2(0, tv.y),
+        Vector2(tv.x, 0),
+      ],
+      size: clipSize,
+    );
+
+    // 斜め移動可能かどうかで操作ボタンの表示を変える
+    playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
+    if (stage.getLegAbility()) {
+      clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+      playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+      playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+    } else {
+      playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+    }
+
+    add(playerControllButtonsArea!);
     // 画面上部、ボタンではない領域
     add(
       ButtonComponent(
@@ -322,7 +352,18 @@ class GameSeq extends Component
     ));
     // 足の能力ボタン領域
     add(GameSpriteOnOffButton(
-      onChanged: (bool isOn) => stage.setLegAbility(isOn),
+      onChanged: (bool isOn) {
+        stage.setLegAbility(isOn);
+        playerControllButtonsArea!
+            .removeAll(playerControllButtonsArea!.children);
+        if (stage.getLegAbility()) {
+          clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+          playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+        } else {
+          playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+        }
+      },
       size: legAbilityButtonAreaSize,
       position: Vector2(
           xPaddingSize.x + handAbilityButtonAreaSize.x + paddingAbilityButtons,
@@ -361,6 +402,14 @@ class GameSeq extends Component
       moveInput = Move.up;
     } else if (game.isTriggeredD || isPushingD) {
       moveInput = Move.down;
+    } else if (isPushingUL) {
+      moveInput = Move.upLeft;
+    } else if (isPushingUR) {
+      moveInput = Move.upRight;
+    } else if (isPushingDL) {
+      moveInput = Move.downLeft;
+    } else if (isPushingDR) {
+      moveInput = Move.downRight;
     }
     stage.update(dt, moveInput, game.world, game.camera);
     // スコア表示更新

@@ -23,6 +23,10 @@ enum Move {
   right,
   up,
   down,
+  upLeft,
+  upRight,
+  downLeft,
+  downRight,
 }
 
 extension MoveExtent on Move {
@@ -39,6 +43,14 @@ extension MoveExtent on Move {
         return Point(0, -1);
       case Move.down:
         return Point(0, 1);
+      case Move.upLeft:
+        return Point(-1, -1);
+      case Move.upRight:
+        return Point(1, -1);
+      case Move.downLeft:
+        return Point(-1, 1);
+      case Move.downRight:
+        return Point(1, 1);
     }
   }
 
@@ -55,6 +67,14 @@ extension MoveExtent on Move {
         return Vector2(0, -1.0);
       case Move.down:
         return Vector2(0, 1.0);
+      case Move.upLeft:
+        return Vector2(-1.0, -1.0);
+      case Move.upRight:
+        return Vector2(1.0, -1.0);
+      case Move.downLeft:
+        return Vector2(-1.0, 1.0);
+      case Move.downRight:
+        return Vector2(1.0, 1.0);
     }
   }
 }
@@ -759,11 +779,23 @@ class Stage {
   }
 
   void setHandAbility(bool isOn) {
-    (player as Player).pushableNum = -1;
+    if (isOn) {
+      (player as Player).pushableNum = -1;
+    } else {
+      (player as Player).pushableNum = 1;
+    }
+  }
+
+  bool getHandAbility() {
+    return (player as Player).pushableNum == -1;
   }
 
   void setLegAbility(bool isOn) {
     (player as Player).isLegAbilityOn = isOn;
+  }
+
+  bool getLegAbility() {
+    return (player as Player).isLegAbilityOn;
   }
 
   bool isClear() {

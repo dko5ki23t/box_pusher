@@ -410,7 +410,7 @@ class GameSpriteOnOffButton extends ButtonComponent {
     super.onReleased = () {
       this.isOn = !this.isOn;
       if (onChanged != null) {
-        onChanged!(isOn);
+        onChanged!(this.isOn);
       }
     };
   }
