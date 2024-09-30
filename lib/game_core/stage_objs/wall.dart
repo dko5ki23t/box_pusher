@@ -4,7 +4,7 @@ import 'package:flame/components.dart';
 
 class Wall extends StageObj {
   Wall({
-    required super.sprite,
+    required super.animation,
     required super.pos,
     int level = 1,
   }) : super(

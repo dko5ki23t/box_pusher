@@ -10,7 +10,6 @@ import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
-import 'package:flutter/services.dart';
 
 enum GameMode {
   quest,
@@ -72,6 +71,9 @@ class GameSeq extends Component
   bool isPushingDR = false;
 
   late final Image stageImg;
+  late final Image playerImg;
+  late final Image spikeImg;
+  late final Image blockImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
   late final Image legAbilityImg;
@@ -85,6 +87,9 @@ class GameSeq extends Component
   @override
   Future<void> onLoad() async {
     stageImg = await Flame.images.load('stage_alpha.png');
+    playerImg = await Flame.images.load('player.png');
+    spikeImg = await Flame.images.load('spike.png');
+    blockImg = await Flame.images.load('block.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
     handAbilityImg = await Flame.images.load('hand_ability.png');
@@ -101,7 +106,7 @@ class GameSeq extends Component
     // フリック入力のトリガー状態をリセット
     game.resetTriggered();
 
-    stage = Stage(stageImg);
+    stage = Stage(stageImg, playerImg, spikeImg, blockImg);
     switch (game.gameMode) {
       case GameMode.quest:
         stage.setDefault(game.world, game.camera, game.stageData);

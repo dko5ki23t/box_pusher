@@ -35,7 +35,7 @@ class MyApp extends StatefulWidget {
 
 class MyAppStateForLocale extends State<MyApp> {
   Locale? _locale;
-  bool showAd = true;
+  bool showAd = false;
 
   @override
   void initState() {

@@ -71,14 +71,14 @@ abstract class StageObj {
   StageObjTypeLevel typeLevel;
   Point pos; // 現在位置
   bool valid;
-  SpriteComponent sprite;
+  SpriteAnimationComponent animation;
   Move moving = Move.none; // 移動中の向き
   double movingAmount = 0;
   final List<StageObj> pushings = []; // 押しているオブジェクト
 
   StageObj({
     required this.typeLevel,
-    required this.sprite,
+    required this.animation,
     this.valid = true,
     required this.pos,
   });

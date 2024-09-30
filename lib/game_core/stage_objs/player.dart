@@ -6,7 +6,7 @@ import 'package:flame/components.dart';
 
 class Player extends StageObj {
   Player({
-    required super.sprite,
+    required super.animation,
     required super.pos,
     int level = 1,
   }) : super(
@@ -199,7 +199,7 @@ class Player extends StageObj {
             // ドリルのオブジェクトレベルダウン、0になったら消す
             pushing.typeLevel.level--;
             if (pushing.typeLevel.level <= 0) {
-              gameWorld.remove(pushing.sprite);
+              gameWorld.remove(pushing.animation);
               stage.boxes.remove(pushing);
             }
           }

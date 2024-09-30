@@ -4,7 +4,7 @@ import 'package:flame/components.dart';
 
 class Box extends StageObj {
   Box({
-    required super.sprite,
+    required super.animation,
     required super.pos,
     int level = 1,
   }) : super(

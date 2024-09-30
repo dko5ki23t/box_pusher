@@ -4,7 +4,7 @@ import 'package:flame/components.dart';
 
 class Trap extends StageObj {
   Trap({
-    required super.sprite,
+    required super.animation,
     required super.pos,
     int level = 1,
   }) : super(
@@ -28,7 +28,7 @@ class Trap extends StageObj {
     final killings =
         stage.enemies.where((element) => element.pos == pos).toList();
     for (final killing in killings) {
-      gameWorld.remove(killing.sprite);
+      gameWorld.remove(killing.animation);
       stage.enemies.remove(killing);
     }
   }

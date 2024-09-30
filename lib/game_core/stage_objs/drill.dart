@@ -4,7 +4,7 @@ import 'package:flame/components.dart';
 
 class Drill extends StageObj {
   Drill({
-    required super.sprite,
+    required super.animation,
     required super.pos,
     int level = 1,
   }) : super(
