@@ -1,6 +1,5 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
-import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
 import 'package:flame/components.dart';
 import 'package:flame/layout.dart';
 //import 'package:flame/events.dart';

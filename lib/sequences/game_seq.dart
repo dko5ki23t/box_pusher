@@ -46,6 +46,12 @@ class GameSeq extends Component
   /// 足の能力ボタン領域
   static Vector2 get legAbilityButtonAreaSize => Vector2(40.0, 40.0);
 
+  /// コインのアイコン領域
+  static Vector2 get coinIconAreaSize => Vector2(40.0, 40.0);
+
+  /// コイン数領域
+  static Vector2 get coinNumAreaSize => Vector2(40.0, 40.0);
+
   /// 能力ボタン間の余白
   static double get paddingAbilityButtons => 10.0;
 
@@ -74,11 +80,13 @@ class GameSeq extends Component
   late final Image playerImg;
   late final Image spikeImg;
   late final Image blockImg;
+  late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
   late final Image legAbilityImg;
   late final Image settingsImg;
   late TextComponent scoreText;
+  late TextComponent coinNumText;
   ClipComponent? playerControllButtonsArea;
   ClipComponent? clipByDiagonalMoveButton;
   List<ButtonComponent>? playerStraightMoveButtons;
@@ -90,6 +98,7 @@ class GameSeq extends Component
     playerImg = await Flame.images.load('player.png');
     spikeImg = await Flame.images.load('spike.png');
     blockImg = await Flame.images.load('block.png');
+    coinImg = await Flame.images.load('coin.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
     handAbilityImg = await Flame.images.load('hand_ability.png');
@@ -375,6 +384,50 @@ class GameSeq extends Component
           640.0 - menuButtonAreaSize.y),
       sprite: Sprite(legAbilityImg),
     ));
+    // コインのアイコン領域
+    add(RectangleComponent(
+      size: coinIconAreaSize,
+      position: Vector2(
+          360.0 -
+              xPaddingSize.x -
+              settingsButtonAreaSize.x -
+              paddingAbilityButtons * 2 -
+              coinNumAreaSize.x -
+              coinIconAreaSize.x,
+          640.0 - menuButtonAreaSize.y),
+      children: [
+        AlignComponent(
+          alignment: Anchor.center,
+          child: SpriteComponent.fromImage(coinImg),
+        ),
+      ],
+    ));
+    // コイン数領域
+    coinNumText = TextComponent(
+      text: "${stage.coinNum}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          color: Color(0xff000000),
+        ),
+      ),
+    );
+    add(RectangleComponent(
+      size: coinNumAreaSize,
+      position: Vector2(
+          360.0 -
+              xPaddingSize.x -
+              settingsButtonAreaSize.x -
+              paddingAbilityButtons -
+              coinNumAreaSize.x,
+          640.0 - menuButtonAreaSize.y),
+      children: [
+        AlignComponent(
+          alignment: Anchor.center,
+          child: coinNumText,
+        ),
+      ],
+    ));
     // メニューボタン領域
     add(GameSpriteButton(
       size: settingsButtonAreaSize,
@@ -419,6 +472,8 @@ class GameSeq extends Component
     stage.update(dt, moveInput, game.world, game.camera);
     // スコア表示更新
     scoreText.text = "${stage.score}";
+    // コイン数表示更新
+    coinNumText.text = "${stage.coinNum}";
     // 今回のupdateでクリアしたらクリア画面に移行
     if (stage.isClear()) {
       game.router.pushNamed('clear');

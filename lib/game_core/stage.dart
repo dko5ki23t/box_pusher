@@ -8,7 +8,9 @@ import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
+import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
 import 'package:box_pusher/game_core/stage_objs/wall.dart';
+import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -122,6 +124,8 @@ class StageObjFactory {
         break;
       case StageObjType.none:
       case StageObjType.wall:
+      case StageObjType.treasureBox:
+      case StageObjType.warp:
         priority = Stage.staticPriority;
     }
 
@@ -194,6 +198,11 @@ class StageObjFactory {
         return Spike(animation: animation, pos: pos, level: typeLevel.level);
       case StageObjType.drill:
         return Drill(animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.treasureBox:
+        return TreasureBox(
+            animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.warp:
+        return Warp(animation: animation, pos: pos, level: typeLevel.level);
     }
   }
 
@@ -326,6 +335,9 @@ class Stage {
   /// 敵
   List<StageObj> enemies = [];
 
+  /// ワープの場所リスト
+  List<Point> warpPoints = [];
+
   /// プレイヤー
   late StageObj player;
 
@@ -340,6 +352,9 @@ class Stage {
 
   /// スコア
   int score = 0;
+
+  /// 所持しているコイン数
+  int coinNum = 0;
 
   Stage(
     this.stageImg,
@@ -372,6 +387,12 @@ class Stage {
     );
     stageSprites[StageObjType.drill] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(224, 0), srcSize: cellSize)],
+        stepTime: 1.0);
+    stageSprites[StageObjType.treasureBox] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(416, 0), srcSize: cellSize)],
+        stepTime: 1.0);
+    stageSprites[StageObjType.warp] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(480, 0), srcSize: cellSize)],
         stepTime: 1.0);
 
     objFactory = StageObjFactory(
@@ -410,6 +431,9 @@ class Stage {
       enemies = [
         for (final e in stageData['enemies'] as List<dynamic>)
           objFactory.createFromMap(e)
+      ];
+      warpPoints = [
+        for (final e in stageData['warpPoints'] as List<String>) Point.decode(e)
       ];
       gameWorld.addAll([for (final e in staticObjs.values) e.animation]);
       gameWorld.addAll([for (final e in boxes) e.animation]);
@@ -480,6 +504,10 @@ class Stage {
       for (final e in enemies) e.encode()
     ];
     ret['enemies'] = enemiesList;
+    final List<String> warpPointsList = [
+      for (final e in warpPoints) e.encode()
+    ];
+    ret['warpPoints'] = warpPointsList;
     ret['player'] = player.encode();
     return ret;
   }
@@ -640,6 +668,53 @@ class Stage {
           }
         }
         break;
+      case ObjInBlock.jewel1_2Treasure:
+        // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
+        final jewelAppears = breaked.sample((breaked.length / 2).ceil());
+        final breakedRemain = [...breaked];
+        breakedRemain.removeWhere((element) => jewelAppears.contains(element));
+        for (final jewelAppear in jewelAppears) {
+          adding.add(objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.box,
+                level: jewelLevel,
+              ),
+              pos: jewelAppear));
+          boxes.add(adding.last);
+        }
+        // 宝石出現以外の位置に最大1個の宝箱を出現させる
+        if (breakedRemain.isNotEmpty) {
+          bool treasure = Random().nextBool();
+          final appear = breakedRemain.sample(1).first;
+          if (treasure) {
+            setStaticType(appear, StageObjType.treasureBox);
+          }
+        }
+        break;
+      case ObjInBlock.jewel1_2Warp:
+        // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
+        final jewelAppears = breaked.sample((breaked.length / 2).ceil());
+        final breakedRemain = [...breaked];
+        breakedRemain.removeWhere((element) => jewelAppears.contains(element));
+        for (final jewelAppear in jewelAppears) {
+          adding.add(objFactory.create(
+              typeLevel: StageObjTypeLevel(
+                type: StageObjType.box,
+                level: jewelLevel,
+              ),
+              pos: jewelAppear));
+          boxes.add(adding.last);
+        }
+        // 宝石出現以外の位置に最大1個のワープを出現させる
+        if (breakedRemain.isNotEmpty) {
+          bool warp = Random().nextBool();
+          final appear = breakedRemain.sample(1).first;
+          if (warp) {
+            setStaticType(appear, StageObjType.warp);
+            warpPoints.add(appear);
+          }
+        }
+        break;
     }
     gameWorld.addAll([for (final e in adding) e.animation]);
 
@@ -706,6 +781,18 @@ class Stage {
             staticObjs[Point(x, y)] = objFactory.create(
                 typeLevel: StageObjTypeLevel(
                     type: StageObjType.wall, level: objType.level),
+                pos: Point(x, y));
+            break;
+          case StageObjType.treasureBox:
+            staticObjs[Point(x, y)] = objFactory.create(
+                typeLevel: StageObjTypeLevel(
+                    type: StageObjType.treasureBox, level: objType.level),
+                pos: Point(x, y));
+            break;
+          case StageObjType.warp:
+            staticObjs[Point(x, y)] = objFactory.create(
+                typeLevel: StageObjTypeLevel(
+                    type: StageObjType.warp, level: objType.level),
                 pos: Point(x, y));
             break;
         }

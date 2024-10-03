@@ -206,6 +206,26 @@ class Player extends StageObj {
           toTo += moving.point;
         }
 
+        if (stage.get(to).type == StageObjType.treasureBox) {
+          // 移動先が宝箱だった場合
+          // TODO:
+          // コイン増加
+          stage.coinNum++;
+          // 宝箱消滅
+          stage.setStaticType(to, StageObjType.none);
+        } else if (stage.get(to).type == StageObjType.warp) {
+          // 移動先がワープだった場合
+          if (stage.warpPoints.length > 1) {
+            // リスト内で次のワープ位置に移動
+            int index = stage.warpPoints.indexWhere((element) => element == to);
+            if (++index == stage.warpPoints.length) {
+              index = 0;
+            }
+            pos = stage.warpPoints[index];
+            stage.objFactory.setPosition(this);
+          }
+        }
+
         // 各種移動中変数初期化
         moving = Move.none;
         pushings.clear();

@@ -10,6 +10,8 @@ enum StageObjType {
   player,
   spike, // とげの敵
   drill,
+  treasureBox,
+  warp,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -21,6 +23,8 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.player: 'p',
     StageObjType.spike: 's',
     StageObjType.drill: 'd',
+    StageObjType.treasureBox: 'b',
+    StageObjType.warp: 'w',
   };
 
   String get str => strMap[this]!;
