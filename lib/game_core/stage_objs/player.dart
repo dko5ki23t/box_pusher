@@ -46,11 +46,11 @@ class Player extends StageObj {
       if (moveInput == Move.none) {
         return;
       }
-      StageObjTypeLevel toObj = stage.get(to);
-      StageObjTypeLevel toToObj = stage.get(toTo);
+      StageObj toObj = stage.getObject(to);
+      StageObj toToObj = stage.getObject(toTo);
 
       // プレイヤーが壁にぶつかるか
-      if (toObj.type == StageObjType.wall) {
+      if (toObj.typeLevel.type == StageObjType.wall) {
         return;
       }
 
@@ -63,57 +63,30 @@ class Player extends StageObj {
       for (int i = 0; i < end; i++) {
         bool stopBecauseMergeOrDrill =
             false; // マージが発生する/ドリルでブロックを壊すため、以降の判定をしなくて良いことを示すフラグ
-        // 押すオブジェクトがあるか
-        if (toObj.type == StageObjType.box || toObj.type == StageObjType.trap) {
-          // TODO:以下、各typeに属性として持たせるべき
-          const stopTypes = [
-            StageObjType.wall,
-            StageObjType.spike,
-          ];
-          const puttableTypes = [
-            StageObjType.none,
-          ];
-          // 押した先がブロック等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
-          // これまでにpushingsに追加したものも含めて一切押せない
-          if (stopTypes.contains(toToObj.type) ||
-              (i == end - 1 &&
-                  !puttableTypes.contains(toToObj.type) &&
-                  toObj != toToObj)) {
-            pushings.clear();
-            return;
-          }
-          // マージできる場合は、一気に押せるオブジェクト（pushings）はここまで
-          if (toToObj == toObj) {
-            stopBecauseMergeOrDrill = true;
-          }
-        } else if (toObj.type == StageObjType.drill) {
-          // 押した先が敵等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
-          // これまでにpushingsに追加したものも含めて一切押せない
-          // TODO:以下、各typeに属性として持たせるべき
-          const stopTypes = [
-            StageObjType.spike,
-          ];
-          const puttableTypes = [
-            StageObjType.none,
-          ];
-          // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
-          if (toToObj.type == StageObjType.wall) {
-            stage.setStaticType(toTo, StageObjType.none);
+        // オブジェクトが押せるか
+        if (toObj.pushable) {
+          // ドリルの場合は少し違う処理
+          if (toObj.typeLevel.type == StageObjType.drill &&
+              toToObj.typeLevel.type == StageObjType.wall) {
+            // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
+            stage.setStaticType(toTo, StageObjType.none, gameWorld);
             executing = true;
             stopBecauseMergeOrDrill = true;
-          } else if (stopTypes.contains(toToObj.type) ||
+          } else if (toToObj.stopping ||
               (i == end - 1 &&
-                  !puttableTypes.contains(toToObj.type) &&
-                  toObj != toToObj)) {
+                  !toToObj.puttable &&
+                  (toObj.typeLevel != toToObj.typeLevel || !toObj.mergable))) {
+            // 押した先が敵等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
+            // これまでにpushingsに追加したものも含めて一切押せない
             pushings.clear();
             return;
           }
           // マージできる場合は、一気に押せるオブジェクト（pushings）はここまで
-          if (toToObj == toObj) {
+          if (toToObj.typeLevel == toObj.typeLevel && toObj.mergable) {
             stopBecauseMergeOrDrill = true;
           }
         } else {
-          // 押すものがない場合
+          // 押せない場合
           break;
         }
         // 押すオブジェクトリストに追加
@@ -134,8 +107,8 @@ class Player extends StageObj {
             toTo.y > stage.stageRB.y) {
           return;
         }
-        toObj = stage.get(to);
-        toToObj = stage.get(toTo);
+        toObj = stage.getObject(to);
+        toToObj = stage.getObject(toTo);
       }
       moving = moveInput;
       movingAmount = 0.0;
@@ -211,7 +184,7 @@ class Player extends StageObj {
           // コイン増加
           stage.coinNum++;
           // 宝箱消滅
-          stage.setStaticType(to, StageObjType.none);
+          stage.setStaticType(to, StageObjType.none, gameWorld);
         } else if (stage.get(to).type == StageObjType.warp) {
           // 移動先がワープだった場合
           if (stage.warpPoints.length > 1) {
@@ -233,4 +206,19 @@ class Player extends StageObj {
       }
     }
   }
+
+  @override
+  bool get pushable => false;
+
+  @override
+  bool get stopping => false;
+
+  @override
+  bool get puttable => false;
+
+  @override
+  bool get mergable => false;
+
+  @override
+  int get maxLevel => 1;
 }

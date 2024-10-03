@@ -25,4 +25,19 @@ class Floor extends StageObj {
     bool playerStartMoving,
     List<Point> prohibitedPoints,
   ) {}
+
+  @override
+  bool get pushable => false;
+
+  @override
+  bool get stopping => false;
+
+  @override
+  bool get puttable => true;
+
+  @override
+  bool get mergable => false;
+
+  @override
+  int get maxLevel => 1;
 }

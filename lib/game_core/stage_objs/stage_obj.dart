@@ -98,6 +98,21 @@ abstract class StageObj {
     List<Point> prohibitedPoints, // 今は移動可能だが、他のオブジェクトが同時期に移動してくるため移動不可な座標のリスト
   );
 
+  /// このオブジェクトは押せるか
+  bool get pushable;
+
+  /// このオブジェクトは押す対象にならず、移動もできないか
+  bool get stopping;
+
+  /// このオブジェクトは押したオブジェクトの移動先になり得るか
+  bool get puttable;
+
+  /// このオブジェクトは同じレベルの同じオブジェクトとマージできるか
+  bool get mergable;
+
+  /// 最大レベル
+  int get maxLevel;
+
   Map<String, dynamic> encode() {
     return {'typeLevel': typeLevel.encode(), 'pos': pos.encode()};
   }

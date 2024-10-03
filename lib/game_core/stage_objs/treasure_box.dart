@@ -25,4 +25,19 @@ class TreasureBox extends StageObj {
     bool playerStartMoving,
     List<Point> prohibitedPoints,
   ) {}
+
+  @override
+  bool get pushable => false;
+
+  @override
+  bool get stopping => false;
+
+  @override
+  bool get puttable => false;
+
+  @override
+  bool get mergable => false;
+
+  @override
+  int get maxLevel => 1;
 }

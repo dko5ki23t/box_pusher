@@ -413,7 +413,7 @@ class Stage {
         if (p == pos) continue;
         if (get(p).type == StageObjType.wall &&
             get(p).level <= box.typeLevel.level) {
-          setStaticType(p, StageObjType.none);
+          setStaticType(p, StageObjType.none, gameWorld);
           breakingAnimations.add(objFactory.createBreakingBlock(p));
           breaked.add(p);
         }
@@ -526,7 +526,7 @@ class Stage {
           bool treasure = Random().nextBool();
           final appear = breakedRemain.sample(1).first;
           if (treasure) {
-            setStaticType(appear, StageObjType.treasureBox);
+            setStaticType(appear, StageObjType.treasureBox, gameWorld);
           }
         }
         break;
@@ -549,7 +549,7 @@ class Stage {
           bool warp = Random().nextBool();
           final appear = breakedRemain.sample(1).first;
           if (warp) {
-            setStaticType(appear, StageObjType.warp);
+            setStaticType(appear, StageObjType.warp, gameWorld);
             warpPoints.add(appear);
           }
         }
@@ -584,10 +584,24 @@ class Stage {
     }
   }
 
-  void setStaticType(Point p, StageObjType type, {int? level}) {
-    staticObjs[p]!.typeLevel.type = type;
-    if (level != null) staticObjs[p]!.typeLevel.level = level;
-    staticObjs[p]!.animation.animation = objFactory.getSpriteAnimation(type);
+  StageObj getObject(Point p) {
+    final box = boxes.firstWhereOrNull((element) => element.pos == p);
+    final enemy = enemies.firstWhereOrNull((element) => element.pos == p);
+    if (enemy != null) {
+      return enemy;
+    } else if (box != null) {
+      return box;
+    } else {
+      return staticObjs[p]!;
+    }
+  }
+
+  void setStaticType(Point p, StageObjType type, World gameWorld,
+      {int level = 1}) {
+    gameWorld.remove(staticObjs[p]!.animation);
+    staticObjs[p] = objFactory.create(
+        typeLevel: StageObjTypeLevel(type: type, level: level), pos: p);
+    gameWorld.add(staticObjs[p]!.animation);
   }
 
   void _drawWithObjsInfo(World gameWorld, CameraComponent camera) {

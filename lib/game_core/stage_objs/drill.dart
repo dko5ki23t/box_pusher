@@ -25,4 +25,19 @@ class Drill extends StageObj {
     bool playerStartMoving,
     List<Point> prohibitedPoints,
   ) {}
+
+  @override
+  bool get pushable => true;
+
+  @override
+  bool get stopping => false;
+
+  @override
+  bool get puttable => false;
+
+  @override
+  bool get mergable => typeLevel.level < maxLevel;
+
+  @override
+  int get maxLevel => 20;
 }

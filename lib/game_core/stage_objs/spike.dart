@@ -93,4 +93,19 @@ class Spike extends StageObj {
       }
     }
   }
+
+  @override
+  bool get pushable => false;
+
+  @override
+  bool get stopping => true;
+
+  @override
+  bool get puttable => false;
+
+  @override
+  bool get mergable => typeLevel.level < maxLevel;
+
+  @override
+  int get maxLevel => 20;
 }
