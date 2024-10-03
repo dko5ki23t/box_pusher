@@ -359,6 +359,7 @@ class GameSeq extends Component
     }
     // 手の能力ボタン領域
     add(GameSpriteOnOffButton(
+      isOn: stage.getHandAbility(),
       onChanged: (bool isOn) => stage.setHandAbility(isOn),
       size: handAbilityButtonAreaSize,
       position: Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y),
@@ -366,6 +367,7 @@ class GameSeq extends Component
     ));
     // 足の能力ボタン領域
     add(GameSpriteOnOffButton(
+      isOn: stage.getLegAbility(),
       onChanged: (bool isOn) {
         stage.setLegAbility(isOn);
         playerControllButtonsArea!

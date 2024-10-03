@@ -339,7 +339,7 @@ class Stage {
   List<Point> warpPoints = [];
 
   /// プレイヤー
-  late StageObj player;
+  late Player player;
 
   /// ゲームオーバーになったかどうか
   bool isGameover = false;
@@ -433,12 +433,15 @@ class Stage {
           objFactory.createFromMap(e)
       ];
       warpPoints = [
-        for (final e in stageData['warpPoints'] as List<String>) Point.decode(e)
+        for (final e in stageData['warpPoints'] as List<dynamic>)
+          Point.decode(e)
       ];
       gameWorld.addAll([for (final e in staticObjs.values) e.animation]);
       gameWorld.addAll([for (final e in boxes) e.animation]);
       gameWorld.addAll([for (final e in enemies) e.animation]);
-      player = objFactory.createFromMap(stageData['player']);
+      player = objFactory.createFromMap(stageData['player']) as Player;
+      player.pushableNum = stageData['handAbility'];
+      player.isLegAbilityOn = stageData['legAbility'];
       gameWorld.addAll([player.animation]);
       camera.follow(player.animation);
     } else {
@@ -509,6 +512,8 @@ class Stage {
     ];
     ret['warpPoints'] = warpPointsList;
     ret['player'] = player.encode();
+    ret['handAbility'] = player.pushableNum;
+    ret['legAbility'] = player.isLegAbilityOn;
     return ret;
   }
 
@@ -825,7 +830,7 @@ class Stage {
 
     player = objFactory.create(
         typeLevel: StageObjTypeLevel(type: StageObjType.player, level: 1),
-        pos: Point(0, 0));
+        pos: Point(0, 0)) as Player;
     gameWorld.addAll([player.animation]);
     camera.follow(player.animation);
   }
@@ -965,22 +970,22 @@ class Stage {
 
   void setHandAbility(bool isOn) {
     if (isOn) {
-      (player as Player).pushableNum = -1;
+      player.pushableNum = -1;
     } else {
-      (player as Player).pushableNum = 1;
+      player.pushableNum = 1;
     }
   }
 
   bool getHandAbility() {
-    return (player as Player).pushableNum == -1;
+    return player.pushableNum == -1;
   }
 
   void setLegAbility(bool isOn) {
-    (player as Player).isLegAbilityOn = isOn;
+    player.isLegAbilityOn = isOn;
   }
 
   bool getLegAbility() {
-    return (player as Player).isLegAbilityOn;
+    return player.isLegAbilityOn;
   }
 
   bool isClear() {
