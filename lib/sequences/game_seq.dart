@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/game_core/stage.dart';
@@ -65,16 +66,8 @@ class GameSeq extends Component
   /// ステージオブジェクト
   late Stage stage;
 
-  /// 上下左右のボタンが押されているかどうか
-  bool isPushingU = false;
-  bool isPushingD = false;
-  bool isPushingL = false;
-  bool isPushingR = false;
-  // 各斜めのボタンが押されているかどうか
-  bool isPushingUL = false;
-  bool isPushingUR = false;
-  bool isPushingDL = false;
-  bool isPushingDR = false;
+  /// 現在押されている移動ボタンの移動方向
+  Move pushingMoveButton = Move.none;
 
   late final Image stageImg;
   late final Image playerImg;
@@ -141,18 +134,13 @@ class GameSeq extends Component
     playerStraightMoveButtons ??= [
       // 画面上の操作ボタン
       playerControllButton(
-        onPressed: () => isPushingU = true,
-        onReleased: () => isPushingU = false,
-        onCanceled: () => isPushingU = false,
         size: yButtonAreaSize,
         position: Vector2(0, 0),
         arrowAngle: 0.0,
+        move: Move.up,
       ),
       // 画面下の操作ボタン
       playerControllButton(
-        onPressed: () => isPushingD = true,
-        onReleased: () => isPushingD = false,
-        onCanceled: () => isPushingD = false,
         size: yButtonAreaSize,
         position: Vector2(
             0,
@@ -161,12 +149,10 @@ class GameSeq extends Component
                 menuButtonAreaSize.y -
                 yButtonAreaSize.y),
         arrowAngle: pi,
+        move: Move.down,
       ),
       // 画面左の操作ボタン
       playerControllButton(
-        onPressed: () => isPushingL = true,
-        onReleased: () => isPushingL = false,
-        onCanceled: () => isPushingL = false,
         size: Vector2(
             xButtonAreaSize.x,
             640.0 -
@@ -175,12 +161,10 @@ class GameSeq extends Component
                 menuButtonAreaSize.y),
         position: Vector2(0, yButtonAreaSize.y),
         arrowAngle: -0.5 * pi,
+        move: Move.left,
       ),
       // 画面右の操作ボタン
       playerControllButton(
-        onPressed: () => isPushingR = true,
-        onReleased: () => isPushingR = false,
-        onCanceled: () => isPushingR = false,
         size: Vector2(
             xButtonAreaSize.x,
             640.0 -
@@ -189,6 +173,7 @@ class GameSeq extends Component
                 menuButtonAreaSize.y),
         position: Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y),
         arrowAngle: 0.5 * pi,
+        move: Move.right,
       ),
     ];
     // 斜めの移動ボタン
@@ -204,13 +189,11 @@ class GameSeq extends Component
         size: clipSize,
         children: [
           playerControllButton(
-            onPressed: () => isPushingUL = true,
-            onReleased: () => isPushingUL = false,
-            onCanceled: () => isPushingUL = false,
             size: dButtonAreaSize,
             position: Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
             anchor: Anchor.center,
             angle: -0.25 * pi,
+            move: Move.upLeft,
           ),
         ],
       ),
@@ -225,14 +208,12 @@ class GameSeq extends Component
         size: clipSize,
         children: [
           playerControllButton(
-            onPressed: () => isPushingUR = true,
-            onReleased: () => isPushingUR = false,
-            onCanceled: () => isPushingUR = false,
             size: dButtonAreaSize,
             position: Vector2(
                 clipSize.x - xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
             anchor: Anchor.center,
             angle: 0.25 * pi,
+            move: Move.upRight,
           ),
         ],
       ),
@@ -247,14 +228,12 @@ class GameSeq extends Component
         size: clipSize,
         children: [
           playerControllButton(
-            onPressed: () => isPushingDL = true,
-            onReleased: () => isPushingDL = false,
-            onCanceled: () => isPushingDL = false,
             size: dButtonAreaSize,
             position: Vector2(
                 xButtonAreaSize.x * 0.5, clipSize.y - yButtonAreaSize.y * 0.5),
             anchor: Anchor.center,
             angle: -0.75 * pi,
+            move: Move.downLeft,
           ),
         ],
       ),
@@ -269,14 +248,12 @@ class GameSeq extends Component
         size: clipSize,
         children: [
           playerControllButton(
-            onPressed: () => isPushingDR = true,
-            onReleased: () => isPushingDR = false,
-            onCanceled: () => isPushingDR = false,
             size: dButtonAreaSize,
             position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
                 clipSize.y - yButtonAreaSize.y * 0.5),
             anchor: Anchor.center,
             angle: 0.75 * pi,
+            move: Move.downRight,
           ),
         ],
       ),
@@ -319,44 +296,35 @@ class GameSeq extends Component
       ),
     );
     // メニュー領域
-    if (game.gameMode == GameMode.debug) {
-      add(GameTextButton(
-        size: menuButtonAreaSize,
-        position: Vector2(0, 640.0 - menuButtonAreaSize.y),
-        text: "現在の状態をログに出力",
-        onReleased: stage.logCurrentStage,
-      ));
-    } else {
-      scoreText = TextComponent(
-        text: "${stage.score}",
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            fontFamily: 'Aboreto',
-            color: Color(0xff000000),
-          ),
+    scoreText = TextComponent(
+      text: "${stage.score}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          color: Color(0xff000000),
         ),
-      );
-      add(RectangleComponent(
-        size: menuButtonAreaSize,
-        position: Vector2(0, 640.0 - menuButtonAreaSize.y),
-        paint: Paint()
-          ..color = Colors.green
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-        children: [
-          RectangleComponent(
-            size: menuButtonAreaSize,
-            paint: Paint()
-              ..color = Colors.white
-              ..style = PaintingStyle.fill,
-          ),
-          AlignComponent(
-            alignment: Anchor.center,
-            child: scoreText,
-          ),
-        ],
-      ));
-    }
+      ),
+    );
+    add(RectangleComponent(
+      size: menuButtonAreaSize,
+      position: Vector2(0, 640.0 - menuButtonAreaSize.y),
+      paint: Paint()
+        ..color = Colors.green
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+      children: [
+        RectangleComponent(
+          size: menuButtonAreaSize,
+          paint: Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.fill,
+        ),
+        AlignComponent(
+          alignment: Anchor.center,
+          child: scoreText,
+        ),
+      ],
+    ));
     // 手の能力ボタン領域
     add(GameSpriteOnOffButton(
       isOn: stage.getHandAbility(),
@@ -452,26 +420,7 @@ class GameSeq extends Component
     if (stage.isClear()) return;
     // ゲームオーバー済みなら何もしない
     if (stage.isGameover) return;
-    Move moveInput = Move.none;
-    //bool inputUndo = false;
-    if (game.isTriggeredL || isPushingL) {
-      moveInput = Move.left;
-    } else if (game.isTriggeredR || isPushingR) {
-      moveInput = Move.right;
-    } else if (game.isTriggeredU || isPushingU) {
-      moveInput = Move.up;
-    } else if (game.isTriggeredD || isPushingD) {
-      moveInput = Move.down;
-    } else if (isPushingUL) {
-      moveInput = Move.upLeft;
-    } else if (isPushingUR) {
-      moveInput = Move.upRight;
-    } else if (isPushingDL) {
-      moveInput = Move.downLeft;
-    } else if (isPushingDR) {
-      moveInput = Move.downRight;
-    }
-    stage.update(dt, moveInput, game.world, game.camera);
+    stage.update(dt, pushingMoveButton, game.world, game.camera);
     // スコア表示更新
     scoreText.text = "${stage.score}";
     // コイン数表示更新
@@ -496,14 +445,24 @@ class GameSeq extends Component
     Anchor? anchor,
     double? angle,
     double? arrowAngle,
-    void Function()? onPressed,
-    void Function()? onReleased,
-    void Function()? onCanceled,
+    required Move move,
   }) {
     return ButtonComponent(
-      onPressed: onPressed,
-      onReleased: onReleased,
-      onCancelled: onCanceled,
+      onPressed: () {
+        if (pushingMoveButton == Move.none) {
+          pushingMoveButton = move;
+        }
+      },
+      onReleased: () {
+        if (pushingMoveButton == move) {
+          pushingMoveButton = Move.none;
+        }
+      },
+      onCancelled: () {
+        if (pushingMoveButton == move) {
+          pushingMoveButton = Move.none;
+        }
+      },
       size: size,
       anchor: anchor,
       angle: angle,

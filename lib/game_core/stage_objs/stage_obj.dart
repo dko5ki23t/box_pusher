@@ -1,3 +1,4 @@
+import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:flame/components.dart';
 

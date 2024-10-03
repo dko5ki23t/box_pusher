@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:box_pusher/game_core/setting_variables.dart';
+import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/box.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
@@ -17,81 +18,6 @@ import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
-import 'package:logger/logger.dart';
-
-/// 移動
-enum Move {
-  none,
-  left,
-  right,
-  up,
-  down,
-  upLeft,
-  upRight,
-  downLeft,
-  downRight,
-}
-
-extension MoveExtent on Move {
-  /// 対応する座標
-  Point get point {
-    switch (this) {
-      case Move.none:
-        return Point(0, 0);
-      case Move.left:
-        return Point(-1, 0);
-      case Move.right:
-        return Point(1, 0);
-      case Move.up:
-        return Point(0, -1);
-      case Move.down:
-        return Point(0, 1);
-      case Move.upLeft:
-        return Point(-1, -1);
-      case Move.upRight:
-        return Point(1, -1);
-      case Move.downLeft:
-        return Point(-1, 1);
-      case Move.downRight:
-        return Point(1, 1);
-    }
-  }
-
-  /// 対応するベクトル
-  Vector2 get vector {
-    switch (this) {
-      case Move.none:
-        return Vector2(0, 0);
-      case Move.left:
-        return Vector2(-1.0, 0);
-      case Move.right:
-        return Vector2(1.0, 0);
-      case Move.up:
-        return Vector2(0, -1.0);
-      case Move.down:
-        return Vector2(0, 1.0);
-      case Move.upLeft:
-        return Vector2(-1.0, -1.0);
-      case Move.upRight:
-        return Vector2(1.0, -1.0);
-      case Move.downLeft:
-        return Vector2(-1.0, 1.0);
-      case Move.downRight:
-        return Vector2(1.0, 1.0);
-    }
-  }
-}
-
-/// 移動履歴
-class MoveHistory {
-  final bool boxMoved;
-  final Move move;
-
-  MoveHistory({
-    required this.boxMoved,
-    required this.move,
-  });
-}
 
 class StageObjFactory {
   final Map<StageObjType, SpriteAnimation> stageSpriteAnimatinos;
@@ -240,57 +166,6 @@ class StageObjFactory {
             Stage.cellSize / 2 +
             pixel;
   }
-}
-
-class Point {
-  int x = 0;
-  int y = 0;
-
-  Point(this.x, this.y);
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is Point &&
-            runtimeType == other.runtimeType &&
-            x == other.x &&
-            y == other.y);
-  }
-
-  @override
-  int get hashCode => x.hashCode ^ y.hashCode;
-
-  Point operator -() {
-    return Point(-x, -y);
-  }
-
-  Point operator +(Point a) {
-    return Point(x + a.x, y + a.y);
-  }
-
-  Point operator -(Point a) {
-    return Point(x - a.x, y - a.y);
-  }
-
-  Point copy() => Point(x, y);
-
-  int distance() {
-    return (x.abs() + y.abs());
-  }
-
-  String encode() {
-    return "$x,$y";
-  }
-
-  static Point decode(String str) {
-    final xy = str.split(',');
-    return Point(int.parse(xy[0]), int.parse(xy[1]));
-  }
-}
-
-class MovePath {
-  List<Point> path = [];
-  int fCount = 0;
 }
 
 class Stage {
@@ -447,7 +322,6 @@ class Stage {
     } else {
       stageLT = Point(-6, -20);
       stageRB = Point(6, 20);
-      //playerPos = Point(0, 0);
       _drawWithObjsInfo(gameWorld, camera);
     }
   }
@@ -515,46 +389,6 @@ class Stage {
     ret['handAbility'] = player.pushableNum;
     ret['legAbility'] = player.isLegAbilityOn;
     return ret;
-  }
-
-  void logInitialStage() {
-    String output = '';
-    /*for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        if (Point(x, y) == initialPlayerPos) {
-          if (initialObjsInfo[y][x].type == StageObjType.goal) {
-            output += symboleToStr(StageObjType.playerOnGoal);
-          } else {
-            output += symboleToStr(StageObjType.player);
-          }
-        } else {
-          output += symboleToStr(initialObjsInfo[y][x].type);
-        }
-      }
-      if (y < height - 1) output += '\n';
-    }
-    final logger = Logger();
-    logger.i(output);*/
-  }
-
-  void logCurrentStage() {
-    String output = '';
-    /*for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        if (Point(x, y) == playerPos) {
-          if (objsInfo[y][x].type == StageObjType.goal) {
-            output += symboleToStr(StageObjType.playerOnGoal);
-          } else {
-            output += symboleToStr(StageObjType.player);
-          }
-        } else {
-          output += symboleToStr(objsInfo[y][x].type);
-        }
-      }
-      if (y < height - 1) output += '\n';
-    }
-    final logger = Logger();
-    logger.i(output);*/
   }
 
   List<List<int>> combination(List<int> list, int n) {
