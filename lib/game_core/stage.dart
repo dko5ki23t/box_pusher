@@ -668,7 +668,7 @@ class Stage {
           }
         }
         break;
-      case ObjInBlock.jewel1_2Treasure:
+      case ObjInBlock.jewel1_2Treasure1:
         // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
         final jewelAppears = breaked.sample((breaked.length / 2).ceil());
         final breakedRemain = [...breaked];
@@ -691,7 +691,7 @@ class Stage {
           }
         }
         break;
-      case ObjInBlock.jewel1_2Warp:
+      case ObjInBlock.jewel1_2Warp1:
         // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
         final jewelAppears = breaked.sample((breaked.length / 2).ceil());
         final breakedRemain = [...breaked];

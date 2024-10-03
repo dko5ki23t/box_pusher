@@ -102,7 +102,7 @@ class Player extends StageObj {
             stopBecauseMergeOrDrill = true;
           } else if (stopTypes.contains(toToObj.type) ||
               (i == end - 1 &&
-                  puttableTypes.contains(toToObj.type) &&
+                  !puttableTypes.contains(toToObj.type) &&
                   toObj != toToObj)) {
             pushings.clear();
             return;
@@ -192,9 +192,7 @@ class Player extends StageObj {
           // 押したものの位置を設定
           pushing.pos = toTo;
           stage.objFactory.setPosition(pushing);
-          if (pushing.typeLevel.type == StageObjType.drill &&
-              stage.get(toTo).type == StageObjType.none &&
-              executing) {
+          if (pushing.typeLevel.type == StageObjType.drill && executing) {
             // ドリル使用時
             // ドリルのオブジェクトレベルダウン、0になったら消す
             pushing.typeLevel.level--;
