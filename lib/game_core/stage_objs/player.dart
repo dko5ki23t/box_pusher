@@ -70,6 +70,8 @@ class Player extends StageObj {
               toToObj.typeLevel.type == StageObjType.wall) {
             // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
             stage.setStaticType(toTo, StageObjType.none, gameWorld);
+            // 破壊したブロックのアニメーションを描画
+            gameWorld.add(stage.objFactory.createBreakingBlock(toTo));
             executing = true;
             stopBecauseMergeOrDrill = true;
           } else if (toToObj.stopping ||
