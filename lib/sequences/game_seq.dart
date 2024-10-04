@@ -5,11 +5,14 @@ import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
+import 'package:flame/palette.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart' hide Image;
 
 enum GameMode {
@@ -97,6 +100,9 @@ class GameSeq extends Component
     handAbilityImg = await Flame.images.load('hand_ability.png');
     legAbilityImg = await Flame.images.load('leg_ability.png');
     settingsImg = await Flame.images.load('settings.png');
+    // BGM再生
+    FlameAudio.bgm.stop();
+    FlameAudio.bgm.play('maou_bgm_8bit29.mp3');
     initialize();
   }
 
@@ -297,7 +303,7 @@ class GameSeq extends Component
     );
     // メニュー領域
     scoreText = TextComponent(
-      text: "${stage.score}",
+      text: "${stage.scoreVisual}",
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: 'Aboreto',
@@ -422,7 +428,49 @@ class GameSeq extends Component
     if (stage.isGameover) return;
     stage.update(dt, pushingMoveButton, game.world, game.camera);
     // スコア表示更新
-    scoreText.text = "${stage.score}";
+    scoreText.text = "${stage.scoreVisual}";
+    // スコア加算表示
+    int addedScore = stage.addedScore;
+    if (addedScore > 0) {
+      final addingScoreText = CaTextComponent(
+        text: "+$addedScore",
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            fontFamily: 'Aboreto',
+            color: Color(0xff000000),
+          ),
+        ),
+      );
+      add(RectangleComponent(
+        size: menuButtonAreaSize,
+        position: Vector2(0, 640.0 - menuButtonAreaSize.y),
+        paint: Paint()
+          ..color = Colors.transparent
+          ..style = PaintingStyle.fill,
+        children: [
+          RectangleComponent(
+            size: menuButtonAreaSize,
+            paint: Paint()
+              ..color = Colors.transparent
+              ..style = PaintingStyle.fill,
+          ),
+          AlignComponent(
+            alignment: Anchor.center,
+            child: addingScoreText,
+          ),
+          SequenceEffect([
+            MoveEffect.by(
+                Vector2(0, -10.0),
+                EffectController(
+                  duration: 0.3,
+                )),
+            OpacityEffect.fadeOut(EffectController(duration: 0.5),
+                target: addingScoreText),
+            RemoveEffect(),
+          ]),
+        ],
+      ));
+    }
     // コイン数表示更新
     coinNumText.text = "${stage.coinNum}";
     // 今回のupdateでクリアしたらクリア画面に移行
@@ -507,4 +555,42 @@ class GameSeq extends Component
   // TapCallbacks実装時には必要(PositionComponentでは不要)
   @override
   bool containsLocalPoint(Vector2 point) => true;
+}
+
+// TextComponentにOpacityEffectを適用させるためのワークアラウンド
+// https://github.com/flame-engine/flame/issues/1013
+mixin HasOpacityProvider on Component implements OpacityProvider {
+  double _opacity = 1;
+  Paint _paint = BasicPalette.white.paint();
+
+  @override
+  double get opacity => _opacity;
+
+  @override
+  set opacity(double value) {
+    if (value == _opacity) return;
+    _opacity = value;
+    _paint = Paint()..color = Colors.white.withOpacity(value);
+  }
+
+  @override
+  void renderTree(Canvas canvas) {
+    canvas.saveLayer(null, Paint()..blendMode = BlendMode.srcOver);
+    super.renderTree(canvas);
+    canvas.drawPaint(_paint..blendMode = BlendMode.modulate);
+    canvas.restore();
+  }
+}
+
+class CaTextComponent extends TextComponent with HasOpacityProvider {
+  CaTextComponent(
+      {super.anchor,
+      super.angle,
+      super.children,
+      super.position,
+      super.priority,
+      super.scale,
+      super.size,
+      super.text,
+      super.textRenderer});
 }

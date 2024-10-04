@@ -15,8 +15,10 @@ import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart' hide Route, OverlayRoute;
 import 'package:path_provider/path_provider.dart';
+import 'package:flame_audio/flame_audio.dart';
 
-class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
+class BoxPusherGame extends FlameGame
+    with SingleGameInstance, /*PanDetector,*/ ScaleDetector {
   late final RouterComponent router;
   static final Vector2 offset = Vector2(15, 50);
 
@@ -47,6 +49,9 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
   bool triggeredR = false;
   bool triggeredU = false;
   bool triggeredD = false;
+
+  /// ズーム操作し始めのズーム
+  late double startZoom;
 
   /// ゲーム開始時の情報（GameSeqのinitialize()で参照する）
   GameMode gameMode = GameMode.quest;
@@ -108,6 +113,10 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
       _stageData = {};
       setAndSaveHighScore(0);
     }
+
+    // BGMの準備
+    FlameAudio.bgm.initialize();
+    await FlameAudio.audioCache.load('maou_bgm_8bit29.mp3');
   }
 
   /// ハイスコアの更新・セーブデータに保存
@@ -157,7 +166,7 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
     Flame.assets.clearCache();
   }
 
-  @override
+  /*@override
   void onPanEnd(DragEndInfo info) {
     if (info.velocity.x.abs() > info.velocity.y.abs()) {
       // X Axis
@@ -174,6 +183,28 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, PanDetector {
         triggeredD = true;
       }
     }
+  }*/
+
+  @override
+  void onScaleStart(ScaleStartInfo info) {
+    startZoom = camera.viewfinder.zoom;
+  }
+
+  @override
+  void onScaleUpdate(ScaleUpdateInfo info) {
+    final currentScale = info.scale.global;
+    if (!currentScale.isIdentity()) {
+      camera.viewfinder.zoom = startZoom * currentScale.y;
+      clampZoom();
+    } else {
+      final delta = info.delta.global * -1.0;
+      camera.moveBy(delta);
+      //camera.viewfinder.position.translate(-delta.x, -delta.y);
+    }
+  }
+
+  void clampZoom() {
+    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.05, 3.0);
   }
 
   void pushAndInitGame(

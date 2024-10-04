@@ -15,6 +15,7 @@ import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
@@ -226,7 +227,37 @@ class Stage {
   Point stageRB = Point(0, 0);
 
   /// スコア
-  int score = 0;
+  int _score = 0;
+
+  /// スコア(加算途中の、表示上のスコア)
+  double _scoreVisual = 0;
+
+  /// スコア加算スピード(スコア/s)
+  double _scorePlusSpeed = 0;
+
+  /// スコア加算時間(s)
+  final double _scorePlusTime = 0.3;
+
+  set score(int s) {
+    _score = s;
+    _addedScore += (_score - _scoreVisual).round();
+    _scorePlusSpeed = (_score - _scoreVisual) / _scorePlusTime;
+  }
+
+  int get score => _score;
+
+  /// スコア(加算途中の、表示上のスコア)
+  int get scoreVisual => _scoreVisual.round();
+
+  /// 前回get呼び出し時から増えたスコア
+  int _addedScore = 0;
+
+  /// 前回get呼び出し時から増えたスコア
+  int get addedScore {
+    int ret = _addedScore;
+    _addedScore = 0;
+    return ret;
+  }
 
   /// 所持しているコイン数
   int coinNum = 0;
@@ -290,7 +321,8 @@ class Stage {
     gameWorld.add(effectBase.first.animation);
     // 前回のステージ情報が保存されているなら
     if (stageData.containsKey('score')) {
-      score = stageData['score'];
+      _score = stageData['score'];
+      _scoreVisual = _score.toDouble();
       stageLT = Point.decode(stageData['stageLT']);
       stageRB = Point.decode(stageData['stageRB']);
       staticObjs.clear();
@@ -319,9 +351,16 @@ class Stage {
       player.isLegAbilityOn = stageData['legAbility'];
       gameWorld.addAll([player.animation]);
       camera.follow(player.animation);
+      camera.setBounds(
+        Rectangle.fromPoints(
+            Vector2(stageLT.x * cellSize.x, stageLT.y * cellSize.y),
+            Vector2(stageRB.x * cellSize.x, stageRB.y * cellSize.y)),
+      );
     } else {
       stageLT = Point(-6, -20);
       stageRB = Point(6, 20);
+      _score = 0;
+      _scoreVisual = 0;
       _drawWithObjsInfo(gameWorld, camera);
     }
   }
@@ -681,10 +720,20 @@ class Stage {
         pos: Point(0, 0)) as Player;
     gameWorld.addAll([player.animation]);
     camera.follow(player.animation);
+    camera.setBounds(
+      Rectangle.fromPoints(
+          Vector2(stageLT.x * cellSize.x, stageLT.y * cellSize.y),
+          Vector2(stageRB.x * cellSize.x, stageRB.y * cellSize.y)),
+    );
   }
 
   void update(
       double dt, Move moveInput, World gameWorld, CameraComponent camera) {
+    // 見かけ上のスコア更新
+    _scoreVisual += _scorePlusSpeed * dt;
+    if (_scoreVisual > _score) {
+      _scoreVisual = _score.toDouble();
+    }
     // クリア済みなら何もしない
     if (isClear()) return;
     Move before = player.moving;
@@ -697,6 +746,10 @@ class Stage {
     for (final enemy in enemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, prohibitedPoints);
+    }
+    if (playerStartMoving) {
+      // 動き始めたらプレイヤーに再フォーカス
+      camera.follow(player.animation);
     }
     {
       // 同じレベルの敵同士が同じ位置になったらマージしてレベルアップ
@@ -806,6 +859,12 @@ class Stage {
           gameWorld.add(adding.animation);
         }
       }
+      // カメラの可動範囲更新
+      camera.setBounds(
+        Rectangle.fromPoints(
+            Vector2(stageLT.x * cellSize.x, stageLT.y * cellSize.y),
+            Vector2(stageRB.x * cellSize.x, stageRB.y * cellSize.y)),
+      );
     }
 
     // ゲームオーバー判定
