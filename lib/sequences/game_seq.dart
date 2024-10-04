@@ -4,6 +4,7 @@ import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
@@ -21,7 +22,7 @@ enum GameMode {
   debug,
 }
 
-class GameSeq extends Component
+class GameSeq extends Sequence
     with TapCallbacks, HasGameReference<BoxPusherGame> {
   /// 画面上部の余白
   static Vector2 get topPaddingSize => Vector2(360.0, 40.0);
@@ -101,9 +102,31 @@ class GameSeq extends Component
     legAbilityImg = await Flame.images.load('leg_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     // BGM再生
-    FlameAudio.bgm.stop();
     FlameAudio.bgm.play('maou_bgm_8bit29.mp3');
     initialize();
+  }
+
+  @override
+  void onFocus(String? before) {
+    if (before == 'menu') {
+      // BGM再開
+      FlameAudio.bgm.resume();
+    } else {
+      // BGM再生
+      FlameAudio.bgm.play('maou_bgm_8bit29.mp3');
+    }
+  }
+
+  @override
+  void onUnFocus() {
+    // BGM中断
+    FlameAudio.bgm.pause();
+  }
+
+  @override
+  void onRemove() {
+    // BGM停止
+    FlameAudio.bgm.stop();
   }
 
   // 初期化（というよりリセット）
@@ -410,7 +433,7 @@ class GameSeq extends Component
       position: Vector2(360.0 - xPaddingSize.x - settingsButtonAreaSize.x,
           640.0 - menuButtonAreaSize.y),
       sprite: Sprite(settingsImg),
-      onReleased: () => game.router.pushNamed("menu"),
+      onReleased: () => game.pushSeqNamed("menu"),
     ));
   }
 
@@ -475,7 +498,7 @@ class GameSeq extends Component
     coinNumText.text = "${stage.coinNum}";
     // 今回のupdateでクリアしたらクリア画面に移行
     if (stage.isClear()) {
-      game.router.pushNamed('clear');
+      game.pushSeqNamed('clear');
     }
     // 今回のupdateでゲームオーバーになったらゲームオーバー画面に移行
     if (stage.isGameover) {
@@ -483,7 +506,7 @@ class GameSeq extends Component
       if (stage.score > game.highScore) {
         game.setAndSaveHighScore(stage.score);
       }
-      game.router.pushNamed('gameover');
+      game.pushSeqNamed('gameover');
     }
   }
 

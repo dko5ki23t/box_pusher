@@ -8,6 +8,7 @@ import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
 import 'package:box_pusher/sequences/menu_seq.dart';
 import 'package:box_pusher/sequences/quest_seq.dart';
+import 'package:box_pusher/sequences/sequence.dart';
 import 'package:box_pusher/sequences/title_seq.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -19,8 +20,9 @@ import 'package:flame_audio/flame_audio.dart';
 
 class BoxPusherGame extends FlameGame
     with SingleGameInstance, /*PanDetector,*/ ScaleDetector {
-  late final RouterComponent router;
+  late final RouterComponent _router;
   static final Vector2 offset = Vector2(15, 50);
+  late final Map<String, OverlayRoute> _overlays;
 
   /// テストやデバッグ用のモード
   final bool testMode;
@@ -72,8 +74,24 @@ class BoxPusherGame extends FlameGame
     super.onLoad();
 
     // 各シーケンス（ルート）を追加
+    _overlays = {
+      'debug_dialog': OverlayRoute(
+        (context, game) {
+          return DebugDialog(
+            game: this,
+          );
+        },
+      ),
+      'confirm_delete_stage_data_dialog': OverlayRoute(
+        (context, game) {
+          return ConfirmDeleteStageDataDialog(
+            game: this,
+          );
+        },
+      ),
+    };
     camera.viewport.add(
-      router = RouterComponent(
+      _router = RouterComponent(
         routes: {
           'title': Route(TitleSeq.new),
           'quest': Route(QuestSeq.new),
@@ -81,21 +99,7 @@ class BoxPusherGame extends FlameGame
           'menu': Route(MenuSeq.new, transparent: true),
           'gameover': Route(GameoverSeq.new, transparent: true),
           'clear': Route(ClearSeq.new, transparent: true),
-          'debug_dialog': OverlayRoute(
-            (context, game) {
-              return DebugDialog(
-                game: this,
-              );
-            },
-          ),
-          'confirm_delete_stage_data_dialog': OverlayRoute(
-            (context, game) {
-              return ConfirmDeleteStageDataDialog(
-                game: this,
-              );
-            },
-          )
-        },
+        }..addAll(_overlays),
         initialRoute: 'title',
       ),
     );
@@ -131,7 +135,7 @@ class BoxPusherGame extends FlameGame
 
   /// プレイ中ステージの更新・セーブデータに保存
   Future<void> setAndSaveStageData() async {
-    final gameSeq = router.routes['game']!.firstChild() as GameSeq;
+    final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
     _stageData = gameSeq.stage.getStageData();
     String jsonText = jsonEncode({
       'highScore': _highScore,
@@ -150,8 +154,8 @@ class BoxPusherGame extends FlameGame
   }
 
   int getCurrentScore() {
-    if (router.routes['game']!.firstChild() != null) {
-      final gameSeq = router.routes['game']!.firstChild() as GameSeq;
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       return gameSeq.stage.score;
     } else {
       return 0;
@@ -212,21 +216,54 @@ class BoxPusherGame extends FlameGame
     if (mode != null) gameMode = mode;
     if (level != null) gameLevel = level;
     if (stage != null) gameStageNum = stage;
-    if (router.routes['game']!.firstChild() != null) {
-      final gameSeq = router.routes['game']!.firstChild() as GameSeq;
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       if (gameSeq.isLoaded && initialize) {
         gameSeq.initialize();
       }
     }
-    router.pushNamed('game');
+    pushSeqNamed('game');
   }
 
   void resetGame() {
-    if (router.routes['game']!.firstChild() != null) {
-      final gameSeq = router.routes['game']!.firstChild() as GameSeq;
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       if (gameSeq.isLoaded) {
         gameSeq.reset();
       }
+    }
+  }
+
+  void pushSeqNamed(String name, {bool replace = false}) {
+    final beforeName = _router.currentRoute.name;
+    if (!_overlays.keys.contains(beforeName)) {
+      (_router.currentRoute.firstChild()! as Sequence).onUnFocus();
+    }
+    _router.pushNamed(name, replace: replace);
+    final curName = _router.currentRoute.name;
+    if (_router.routes[name]!.firstChild() != null &&
+        !_overlays.keys.contains(curName)) {
+      (_router.routes[name]!.firstChild()! as Sequence).onFocus(beforeName);
+    }
+  }
+
+  void pushSeqOverlay(String name) {
+    final curName = _router.currentRoute.name;
+    if (!_overlays.keys.contains(curName)) {
+      (_router.currentRoute.firstChild()! as Sequence).onUnFocus();
+    }
+    _router.pushOverlay(name);
+  }
+
+  void popSeq() {
+    final beforeName = _router.currentRoute.name;
+    if (!_overlays.keys.contains(beforeName)) {
+      (_router.currentRoute.firstChild()! as Sequence).onUnFocus();
+    }
+    _router.pop();
+    final curName = _router.currentRoute.name;
+    if (!_overlays.keys.contains(curName)) {
+      (_router.currentRoute.firstChild()! as Sequence).onFocus(beforeName);
     }
   }
 

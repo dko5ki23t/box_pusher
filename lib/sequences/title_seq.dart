@@ -1,12 +1,13 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
+import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/layout.dart';
 //import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 //import 'package:share_plus/share_plus.dart';
 
-class TitleSeq extends Component
+class TitleSeq extends Sequence
     with /*TapCallbacks,*/ HasGameReference<BoxPusherGame> {
   late final TextComponent highScreText;
   late final GameTextButton continueButton;
@@ -59,7 +60,7 @@ class TitleSeq extends Component
         text: "はじめから",
         onReleased: () {
           if (game.stageData.isNotEmpty) {
-            game.router.pushOverlay('confirm_delete_stage_data_dialog');
+            game.pushSeqOverlay('confirm_delete_stage_data_dialog');
           } else {
             game.pushAndInitGame();
           }
@@ -73,7 +74,7 @@ class TitleSeq extends Component
           anchor: Anchor.center,
           text: "デバッグ",
           onReleased: () async {
-            game.router.pushOverlay('debug_dialog');
+            game.pushSeqOverlay('debug_dialog');
           },
         ),
       RectangleComponent(

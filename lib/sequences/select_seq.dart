@@ -28,6 +28,6 @@ class SelectSeq extends Component
   @override
   void onTapUp(TapUpEvent event) {
     // ローディング画面へ
-    game.router.pushNamed('loading');
+    game.pushSeqNamed('loading');
   }
 }

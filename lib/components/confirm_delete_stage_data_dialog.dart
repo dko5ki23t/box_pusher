@@ -26,14 +26,14 @@ class ConfirmDeleteStageDataDialogState
           child: const Text('OK'),
           onPressed: () {
             widget.game.clearAndSaveStageData();
-            widget.game.router.pop();
+            widget.game.popSeq();
             widget.game.pushAndInitGame();
           },
         ),
         TextButton(
           child: const Text('キャンセル'),
           onPressed: () {
-            widget.game.router.pop();
+            widget.game.popSeq();
           },
         ),
       ],
