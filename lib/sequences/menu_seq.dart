@@ -43,17 +43,6 @@ class MenuSeq extends Sequence with HasGameReference<BoxPusherGame> {
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 350.0),
         anchor: Anchor.center,
-        text: "最初から",
-        // TODO: ここだけonPressedなのは、onReleasedだとこの後ボタンが表示されなくなるから。原因究明求む
-        onPressed: () {
-          game.resetGame();
-          game.popSeq();
-        },
-      ),
-      GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 400.0),
-        anchor: Anchor.center,
         text: "一時中断する",
         onReleased: () async {
           await game.setAndSaveStageData();
@@ -62,7 +51,7 @@ class MenuSeq extends Sequence with HasGameReference<BoxPusherGame> {
       ),
       GameTextButton(
           size: Vector2(120.0, 30.0),
-          position: Vector2(180.0, 450.0),
+          position: Vector2(180.0, 400.0),
           anchor: Anchor.center,
           text: "あきらめる",
           onReleased: () async {

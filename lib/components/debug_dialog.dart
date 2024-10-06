@@ -79,7 +79,7 @@ class DebugDialogState extends State<DebugDialog> {
                 int.tryParse(boxNumTextController.text) ??
                     widget.game.debugStageBoxNum;
             widget.game.popSeq();
-            widget.game.pushAndInitGame(mode: GameMode.debug);
+            widget.game.pushAndInitGame();
           },
         ),
         TextButton(

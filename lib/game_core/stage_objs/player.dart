@@ -138,10 +138,10 @@ class Player extends StageObj {
 
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
-        Point to = pos + moving.point;
+        final Point to = pos + moving.point;
         Point toTo = to + moving.point;
         // プレーヤー位置更新
-        // ※explode()より前で更新することで、敵出現位置を、プレイヤーの目前にさせない
+        // ※merge()より前で更新することで、敵出現位置を、プレイヤーの目前にさせない
         pos = to.copy();
         stage.objFactory.setPosition(this);
 
@@ -149,21 +149,9 @@ class Player extends StageObj {
         // TODO:箱の方に実装？
         for (final pushing in pushings) {
           // 押した先のオブジェクトを調べる
-          switch (stage.get(toTo).type) {
-            case StageObjType.none:
-              break;
-            case StageObjType.box:
-            case StageObjType.trap:
-            case StageObjType.drill:
-              // マージ
-              if (pushing.typeLevel == stage.get(toTo)) {
-                stage.explode(toTo, pushing, gameWorld);
-              }
-              break;
-            default:
-              // ありえない
-              //HALT("fatal error");
-              break;
+          if (pushing.mergable && pushing.typeLevel == stage.get(toTo)) {
+            // マージ
+            stage.merge(toTo, pushing, gameWorld);
           }
           // 押したものの位置を設定
           pushing.pos = toTo;

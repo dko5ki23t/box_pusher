@@ -7,7 +7,6 @@ import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
 import 'package:box_pusher/sequences/menu_seq.dart';
-import 'package:box_pusher/sequences/quest_seq.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:box_pusher/sequences/title_seq.dart';
 import 'package:flame/components.dart';
@@ -47,18 +46,9 @@ class BoxPusherGame extends FlameGame
   static Vector2 get baseSize => Vector2(360.0, 640.0);
   Vector2 contentSize = Vector2(0.0, 0.0);
   double contentScale = 0.0;
-  bool triggeredL = false;
-  bool triggeredR = false;
-  bool triggeredU = false;
-  bool triggeredD = false;
 
   /// ズーム操作し始めのズーム
   late double startZoom;
-
-  /// ゲーム開始時の情報（GameSeqのinitialize()で参照する）
-  GameMode gameMode = GameMode.quest;
-  int gameLevel = 1;
-  int gameStageNum = 1;
 
   BoxPusherGame({this.testMode = false})
       : super(
@@ -94,7 +84,6 @@ class BoxPusherGame extends FlameGame
       _router = RouterComponent(
         routes: {
           'title': Route(TitleSeq.new),
-          'quest': Route(QuestSeq.new),
           'game': Route(GameSeq.new),
           'menu': Route(MenuSeq.new, transparent: true),
           'gameover': Route(GameoverSeq.new, transparent: true),
@@ -136,7 +125,7 @@ class BoxPusherGame extends FlameGame
   /// プレイ中ステージの更新・セーブデータに保存
   Future<void> setAndSaveStageData() async {
     final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-    _stageData = gameSeq.stage.getStageData();
+    _stageData = gameSeq.stage.encodeStageData();
     String jsonText = jsonEncode({
       'highScore': _highScore,
       'stageData': _stageData,
@@ -208,14 +197,10 @@ class BoxPusherGame extends FlameGame
   }
 
   void clampZoom() {
-    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.05, 3.0);
+    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.5, 3.0);
   }
 
-  void pushAndInitGame(
-      {GameMode? mode, int? level, int? stage, bool initialize = true}) {
-    if (mode != null) gameMode = mode;
-    if (level != null) gameLevel = level;
-    if (stage != null) gameStageNum = stage;
+  void pushAndInitGame({bool initialize = true}) {
     if (_router.routes['game']!.firstChild() != null) {
       final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       if (gameSeq.isLoaded && initialize) {
@@ -223,15 +208,6 @@ class BoxPusherGame extends FlameGame
       }
     }
     pushSeqNamed('game');
-  }
-
-  void resetGame() {
-    if (_router.routes['game']!.firstChild() != null) {
-      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-      if (gameSeq.isLoaded) {
-        gameSeq.reset();
-      }
-    }
   }
 
   void pushSeqNamed(String name, {bool replace = false}) {
@@ -265,36 +241,5 @@ class BoxPusherGame extends FlameGame
     if (!_overlays.keys.contains(curName)) {
       (_router.currentRoute.firstChild()! as Sequence).onFocus(beforeName);
     }
-  }
-
-  void resetTriggered() {
-    triggeredL = false;
-    triggeredR = false;
-    triggeredU = false;
-    triggeredD = false;
-  }
-
-  get isTriggeredL {
-    final ret = triggeredL;
-    triggeredL = false;
-    return ret;
-  }
-
-  get isTriggeredR {
-    final ret = triggeredR;
-    triggeredR = false;
-    return ret;
-  }
-
-  get isTriggeredU {
-    final ret = triggeredU;
-    triggeredU = false;
-    return ret;
-  }
-
-  get isTriggeredD {
-    final ret = triggeredD;
-    triggeredD = false;
-    return ret;
   }
 }

@@ -16,12 +16,6 @@ import 'package:flame/palette.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart' hide Image;
 
-enum GameMode {
-  quest,
-  endless,
-  debug,
-}
-
 class GameSeq extends Sequence
     with TapCallbacks, HasGameReference<BoxPusherGame> {
   /// 画面上部の余白
@@ -134,21 +128,8 @@ class GameSeq extends Sequence
     removeAll(children);
     game.world.removeAll(game.world.children);
 
-    // フリック入力のトリガー状態をリセット
-    game.resetTriggered();
-
     stage = Stage(stageImg, playerImg, spikeImg, blockImg);
-    switch (game.gameMode) {
-      case GameMode.quest:
-        stage.setDefault(game.world, game.camera, game.stageData);
-        break;
-      case GameMode.endless:
-        stage.setDefault(game.world, game.camera, game.stageData);
-        break;
-      case GameMode.debug:
-        stage.setDefault(game.world, game.camera, game.stageData);
-        break;
-    }
+    stage.initialize(game.world, game.camera, game.stageData);
 
     // プレイヤーの操作ボタン群
     final clipSize = Vector2(
@@ -435,11 +416,6 @@ class GameSeq extends Sequence
       sprite: Sprite(settingsImg),
       onReleased: () => game.pushSeqNamed("menu"),
     ));
-  }
-
-  void reset() {
-    // ステージ情報初期化
-    stage.reset();
   }
 
   @override
