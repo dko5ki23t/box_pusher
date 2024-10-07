@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/common.dart';
+import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/box.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
@@ -23,6 +24,7 @@ import 'package:flutter/material.dart' hide Image;
 class StageObjFactory {
   final Map<StageObjType, SpriteAnimation> stageSpriteAnimatinos;
   final SpriteAnimation breakingBlockAnimation;
+  final SpriteAnimation explodingBombAnimation;
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
   EffectController? baseMergable;
@@ -37,16 +39,19 @@ class StageObjFactory {
   StageObjFactory({
     required this.stageSpriteAnimatinos,
     required this.breakingBlockAnimation,
+    required this.explodingBombAnimation,
   });
 
   StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
     int priority = Stage.staticPriority;
+    // TODO: mergableとかで判定
     switch (typeLevel.type) {
       case StageObjType.box:
       case StageObjType.trap:
       case StageObjType.drill:
       case StageObjType.player:
       case StageObjType.spike:
+      case StageObjType.bomb:
         priority = Stage.dynamicPriority;
         break;
       case StageObjType.none:
@@ -59,9 +64,11 @@ class StageObjFactory {
     final animation = SpriteAnimationComponent(
       animation: stageSpriteAnimatinos[typeLevel.type],
       priority: priority,
+      // TODO: mergableとかで判定
       scale: (typeLevel.type == StageObjType.box ||
                   typeLevel.type == StageObjType.trap ||
-                  typeLevel.type == StageObjType.drill) &&
+                  typeLevel.type == StageObjType.drill ||
+                  typeLevel.type == StageObjType.bomb) &&
               isBaseMergableReverse
           ? Vector2.all(Stage.mergableZoomRate)
           : Vector2.all(1.0),
@@ -80,7 +87,8 @@ class StageObjFactory {
         ),
         if (typeLevel.type == StageObjType.box ||
             typeLevel.type == StageObjType.trap ||
-            typeLevel.type == StageObjType.drill)
+            typeLevel.type == StageObjType.drill ||
+            typeLevel.type == StageObjType.bomb)
           ScaleEffect.by(
             isBaseMergableReverse
                 ? Vector2.all(1.0 / Stage.mergableZoomRate)
@@ -101,7 +109,8 @@ class StageObjFactory {
     );
     if (typeLevel.type == StageObjType.box ||
         typeLevel.type == StageObjType.trap ||
-        typeLevel.type == StageObjType.drill) {
+        typeLevel.type == StageObjType.drill ||
+        typeLevel.type == StageObjType.bomb) {
       final controller = (animation.children.last as Effect).controller;
       baseMergable ??= controller;
       controller.advance((isBaseMergableReverse
@@ -130,6 +139,8 @@ class StageObjFactory {
             animation: animation, pos: pos, level: typeLevel.level);
       case StageObjType.warp:
         return Warp(animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.bomb:
+        return Bomb(animation: animation, pos: pos, level: typeLevel.level);
     }
   }
 
@@ -147,6 +158,32 @@ class StageObjFactory {
         OpacityEffect.by(
           -1.0,
           EffectController(duration: 0.5),
+        ),
+        RemoveEffect(delay: 1.0),
+      ],
+      size: Stage.cellSize,
+      anchor: Anchor.center,
+      position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+          Stage.cellSize / 2),
+    );
+  }
+
+  SpriteAnimationComponent createExplodingBomb(Point pos) {
+    return SpriteAnimationComponent(
+      animation: explodingBombAnimation,
+      priority: Stage.dynamicPriority,
+      children: [
+        OpacityEffect.by(
+          -1.0,
+          EffectController(duration: 0.8),
+        ),
+        ScaleEffect.by(
+          Vector2.all(Stage.bombZoomRate),
+          EffectController(
+            duration: Stage.bombZoomDuration,
+            reverseDuration: Stage.bombZoomDuration,
+            infinite: true,
+          ),
         ),
         RemoveEffect(delay: 1.0),
       ],
@@ -185,6 +222,12 @@ class Stage {
   /// マージ可能なオブジェクトの拡大/縮小率
   static const double mergableZoomRate = 0.9;
 
+  /// ボム爆発スプライトの拡大/縮小の時間(s)
+  static const double bombZoomDuration = 0.2;
+
+  /// ボム爆発スプライトの拡大/縮小率
+  static const double bombZoomRate = 0.6;
+
   /// 静止物のzインデックス
   static const staticPriority = 1;
 
@@ -195,6 +238,7 @@ class Stage {
   final Image playerImg;
   final Image spikeImg;
   final Image blockImg;
+  final Image bombImg;
 
   late StageObjFactory objFactory;
 
@@ -267,6 +311,7 @@ class Stage {
     this.playerImg,
     this.spikeImg,
     this.blockImg,
+    this.bombImg,
   ) {
     final Map<StageObjType, SpriteAnimation> stageSprites = {};
     stageSprites[StageObjType.none] = SpriteAnimation.spriteList(
@@ -300,11 +345,17 @@ class Stage {
     stageSprites[StageObjType.warp] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(480, 0), srcSize: cellSize)],
         stepTime: 1.0);
+    stageSprites[StageObjType.bomb] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(512, 0), srcSize: cellSize)],
+        stepTime: 1.0);
 
     objFactory = StageObjFactory(
       stageSpriteAnimatinos: stageSprites,
       breakingBlockAnimation: SpriteAnimation.spriteList(
           [Sprite(blockImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
+          stepTime: 1.0),
+      explodingBombAnimation: SpriteAnimation.spriteList(
+          [Sprite(bombImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
           stepTime: 1.0),
     );
   }
@@ -355,13 +406,25 @@ class Stage {
     return ret;
   }
 
-  void merge(Point pos, StageObj box, World gameWorld) {
+  void merge(
+    Point pos,
+    StageObj box,
+    World gameWorld, {
+    int breakLeftOffset = -1,
+    int breakTopOffset = -1,
+    int breakRightOffset = 1,
+    int breakBottomOffset = 1,
+    bool onlyDelete = false,
+  }) {
     // 引数位置を中心として周囲のブロックを爆破する
     /// 破壊されたブロックの位置のリスト
     final List<Point> breaked = [];
     final List<Component> breakingAnimations = [];
-    for (int y = pos.y - 1; y < pos.y + 2; y++) {
-      for (int x = pos.x - 1; x < pos.x + 2; x++) {
+
+    for (int y = pos.y + breakTopOffset; y <= pos.y + breakBottomOffset; y++) {
+      for (int x = pos.x + breakLeftOffset;
+          x <= pos.x + breakRightOffset;
+          x++) {
         if (x < stageLT.x || x > stageRB.x) continue;
         if (y < stageLT.y || y > stageRB.y) continue;
         final p = Point(x, y);
@@ -402,6 +465,7 @@ class Stage {
       case ObjInBlock.jewel1_2Drill1:
       case ObjInBlock.jewel1_2Treasure1:
       case ObjInBlock.jewel1_2Warp1:
+      case ObjInBlock.jewel1_2Bomb1:
         // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
         final jewelAppears = breaked.sample((breaked.length / 2).ceil());
         breakedRemain.removeWhere((element) => jewelAppears.contains(element));
@@ -475,22 +539,41 @@ class Stage {
           }
         }
         break;
+      case ObjInBlock.jewel1_2Bomb1:
+        // 宝石出現以外の位置に最大1個のボムを出現させる
+        if (breakedRemain.isNotEmpty) {
+          bool bomb = Random().nextBool();
+          final appear = breakedRemain.sample(1).first;
+          if (bomb) {
+            adding.add(objFactory.create(
+                typeLevel: StageObjTypeLevel(type: StageObjType.bomb, level: 1),
+                pos: appear));
+            boxes.add(adding.last);
+          }
+        }
+        break;
     }
     gameWorld.addAll([for (final e in adding) e.animation]);
 
-    // 当該位置のオブジェクトを消す
-    final merged = boxes.firstWhere((element) => element.pos == pos);
-    gameWorld.remove(merged.animation);
-    boxes.remove(merged);
-    // 移動したオブジェクトのレベルを上げる
-    (box.animation.children.first.children.first as TextComponent).text =
-        (++box.typeLevel.level).toString();
+    // スコア加算
+    score += box.typeLevel.level * 100;
+
+    if (onlyDelete) {
+      // 対象オブジェクトを消す
+      gameWorld.remove(box.animation);
+      boxes.remove(box);
+    } else {
+      // 当該位置のオブジェクトを消す
+      final merged = boxes.firstWhere((element) => element.pos == pos);
+      gameWorld.remove(merged.animation);
+      boxes.remove(merged);
+      // 移動したオブジェクトのレベルを上げる
+      (box.animation.children.first.children.first as TextComponent).text =
+          (++box.typeLevel.level).toString();
+    }
 
     // 破壊したブロックのアニメーションを描画
     gameWorld.addAll(breakingAnimations);
-
-    // スコア加算
-    score += box.typeLevel.level * 100;
   }
 
   StageObjTypeLevel get(Point p) {
@@ -708,7 +791,9 @@ class Stage {
     }
     // オブジェクト更新(罠：敵を倒す)
     // TODO: これらは他オブジェクトの移動完了時のみ動かせばよい
-    for (final box in boxes) {
+    // update()でboxesリストが変化する可能性がある(ボムの爆発等)ためコピーを使う
+    final boxesCopied = [for (final box in boxes) box];
+    for (final box in boxesCopied) {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           prohibitedPoints);
     }

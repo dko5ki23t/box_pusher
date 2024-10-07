@@ -13,6 +13,7 @@ enum StageObjType {
   drill,
   treasureBox,
   warp,
+  bomb,
 }
 
 extension StageObjTypeExtent on StageObjType {

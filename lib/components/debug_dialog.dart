@@ -1,5 +1,4 @@
 import 'package:box_pusher/box_pusher_game.dart';
-import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:flutter/material.dart';
 
 class DebugDialog extends StatefulWidget {
