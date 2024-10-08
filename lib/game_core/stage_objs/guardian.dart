@@ -3,14 +3,14 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 
-class Drill extends StageObj {
-  Drill({
+class Guardian extends StageObj {
+  Guardian({
     required super.animation,
     required super.pos,
     int level = 1,
   }) : super(
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.drill,
+            type: StageObjType.guardian,
             level: level,
           ),
         );

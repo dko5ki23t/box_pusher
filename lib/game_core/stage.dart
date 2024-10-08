@@ -2,17 +2,24 @@ import 'dart:math';
 
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/common.dart';
+import 'package:box_pusher/game_core/stage_objs/archer.dart';
+import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/box.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
+import 'package:box_pusher/game_core/stage_objs/guardian.dart';
+import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
 import 'package:box_pusher/game_core/stage_objs/wall.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
+import 'package:box_pusher/game_core/stage_objs/water.dart';
+import 'package:box_pusher/game_core/stage_objs/wizard.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -45,6 +52,8 @@ class StageObjFactory {
   StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
     int priority = Stage.staticPriority;
     // TODO: mergableとかで判定
+    double angle = 0;
+    Move beltV = Move.up;
     switch (typeLevel.type) {
       case StageObjType.box:
       case StageObjType.trap:
@@ -52,13 +61,36 @@ class StageObjFactory {
       case StageObjType.player:
       case StageObjType.spike:
       case StageObjType.bomb:
+      case StageObjType.guardian:
+      case StageObjType.swordsman:
+      case StageObjType.archer:
+      case StageObjType.wizard:
         priority = Stage.dynamicPriority;
         break;
       case StageObjType.none:
       case StageObjType.wall:
       case StageObjType.treasureBox:
       case StageObjType.warp:
+      case StageObjType.beltU:
+      case StageObjType.water:
+      case StageObjType.magma:
         priority = Stage.staticPriority;
+        break;
+      case StageObjType.beltL:
+        priority = Stage.staticPriority;
+        beltV = Move.left;
+        angle = -0.5 * pi;
+        break;
+      case StageObjType.beltR:
+        priority = Stage.staticPriority;
+        beltV = Move.right;
+        angle = 0.5 * pi;
+        break;
+      case StageObjType.beltD:
+        priority = Stage.staticPriority;
+        beltV = Move.down;
+        angle = pi;
+        break;
     }
 
     final animation = SpriteAnimationComponent(
@@ -68,7 +100,8 @@ class StageObjFactory {
       scale: (typeLevel.type == StageObjType.box ||
                   typeLevel.type == StageObjType.trap ||
                   typeLevel.type == StageObjType.drill ||
-                  typeLevel.type == StageObjType.bomb) &&
+                  typeLevel.type == StageObjType.bomb ||
+                  typeLevel.type == StageObjType.guardian) &&
               isBaseMergableReverse
           ? Vector2.all(Stage.mergableZoomRate)
           : Vector2.all(1.0),
@@ -88,7 +121,8 @@ class StageObjFactory {
         if (typeLevel.type == StageObjType.box ||
             typeLevel.type == StageObjType.trap ||
             typeLevel.type == StageObjType.drill ||
-            typeLevel.type == StageObjType.bomb)
+            typeLevel.type == StageObjType.bomb ||
+            typeLevel.type == StageObjType.guardian)
           ScaleEffect.by(
             isBaseMergableReverse
                 ? Vector2.all(1.0 / Stage.mergableZoomRate)
@@ -104,13 +138,15 @@ class StageObjFactory {
       ],
       size: Stage.cellSize,
       anchor: Anchor.center,
+      angle: angle,
       position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
           Stage.cellSize / 2),
     );
     if (typeLevel.type == StageObjType.box ||
         typeLevel.type == StageObjType.trap ||
         typeLevel.type == StageObjType.drill ||
-        typeLevel.type == StageObjType.bomb) {
+        typeLevel.type == StageObjType.bomb ||
+        typeLevel.type == StageObjType.guardian) {
       final controller = (animation.children.last as Effect).controller;
       baseMergable ??= controller;
       controller.advance((isBaseMergableReverse
@@ -141,6 +177,28 @@ class StageObjFactory {
         return Warp(animation: animation, pos: pos, level: typeLevel.level);
       case StageObjType.bomb:
         return Bomb(animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.beltL:
+      case StageObjType.beltR:
+      case StageObjType.beltU:
+      case StageObjType.beltD:
+        return Belt(
+            animation: animation,
+            pos: pos,
+            level: typeLevel.level,
+            vector: beltV);
+      case StageObjType.guardian:
+        return Guardian(animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.water:
+        return Water(animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.magma:
+        return Magma(animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.swordsman:
+        return Swordsman(
+            animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.archer:
+        return Archer(animation: animation, pos: pos, level: typeLevel.level);
+      case StageObjType.wizard:
+        return Wizard(animation: animation, pos: pos, level: typeLevel.level);
     }
   }
 
@@ -239,6 +297,7 @@ class Stage {
   final Image spikeImg;
   final Image blockImg;
   final Image bombImg;
+  final Image beltImg;
 
   late StageObjFactory objFactory;
 
@@ -257,6 +316,9 @@ class Stage {
 
   /// ワープの場所リスト
   List<Point> warpPoints = [];
+
+  /// コンベアの場所リスト
+  List<Point> beltPoints = [];
 
   /// プレイヤー
   late Player player;
@@ -312,6 +374,7 @@ class Stage {
     this.spikeImg,
     this.blockImg,
     this.bombImg,
+    this.beltImg,
   ) {
     final Map<StageObjType, SpriteAnimation> stageSprites = {};
     stageSprites[StageObjType.none] = SpriteAnimation.spriteList(
@@ -347,6 +410,31 @@ class Stage {
         stepTime: 1.0);
     stageSprites[StageObjType.bomb] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(512, 0), srcSize: cellSize)],
+        stepTime: 1.0);
+    stageSprites[StageObjType.beltL] = stageSprites[StageObjType.beltR] =
+        stageSprites[StageObjType.beltU] =
+            stageSprites[StageObjType.beltD] = SpriteAnimation.fromFrameData(
+      beltImg,
+      SpriteAnimationData.sequenced(
+          amount: 4, stepTime: objectStepTime, textureSize: cellSize),
+    );
+    stageSprites[StageObjType.guardian] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(576, 0), srcSize: cellSize)],
+        stepTime: 1.0);
+    stageSprites[StageObjType.water] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(608, 0), srcSize: cellSize)],
+        stepTime: 1.0);
+    stageSprites[StageObjType.magma] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(640, 0), srcSize: cellSize)],
+        stepTime: 1.0);
+    stageSprites[StageObjType.swordsman] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(672, 0), srcSize: cellSize)],
+        stepTime: 1.0);
+    stageSprites[StageObjType.archer] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(704, 0), srcSize: cellSize)],
+        stepTime: 1.0);
+    stageSprites[StageObjType.wizard] = SpriteAnimation.spriteList(
+        [Sprite(stageImg, srcPosition: Vector2(736, 0), srcSize: cellSize)],
         stepTime: 1.0);
 
     objFactory = StageObjFactory(
@@ -400,6 +488,10 @@ class Stage {
       for (final e in warpPoints) e.encode()
     ];
     ret['warpPoints'] = warpPointsList;
+    final List<String> beltPointsList = [
+      for (final e in beltPoints) e.encode()
+    ];
+    ret['beltPoints'] = beltPointsList;
     ret['player'] = player.encode();
     ret['handAbility'] = player.pushableNum;
     ret['legAbility'] = player.isLegAbilityOn;
@@ -466,6 +558,7 @@ class Stage {
       case ObjInBlock.jewel1_2Treasure1:
       case ObjInBlock.jewel1_2Warp1:
       case ObjInBlock.jewel1_2Bomb1:
+      case ObjInBlock.jewel1_2BeltGuardianSwordsman1:
         // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
         final jewelAppears = breaked.sample((breaked.length / 2).ceil());
         breakedRemain.removeWhere((element) => jewelAppears.contains(element));
@@ -552,8 +645,61 @@ class Stage {
           }
         }
         break;
+      case ObjInBlock.jewel1_2BeltGuardianSwordsman1:
+        // 宝石出現以外の位置にコンベア/ガーディアン/剣を持つ敵をそれぞれ最大1個出現させる
+        for (final StageObjType type in [
+          StageObjType.beltL,
+          StageObjType.guardian,
+          StageObjType.swordsman,
+        ]) {
+          if (breakedRemain.isNotEmpty) {
+            bool isAppear = Random().nextBool();
+            final appear = breakedRemain.sample(1).first;
+            if (isAppear) {
+              if (type == StageObjType.beltL) {
+                final trueType = [
+                  StageObjType.beltL,
+                  StageObjType.beltR,
+                  StageObjType.beltU,
+                  StageObjType.beltD,
+                ].sample(1).first;
+                setStaticType(appear, trueType, gameWorld);
+                beltPoints.add(appear);
+              } else {
+                adding.add(objFactory.create(
+                    typeLevel: StageObjTypeLevel(type: type, level: 1),
+                    pos: appear));
+                switch (type) {
+                  case StageObjType.guardian:
+                    boxes.add(adding.last);
+                    break;
+                  case StageObjType.swordsman:
+                    enemies.add(adding.last);
+                    break;
+                  default:
+                    break;
+                }
+              }
+            }
+            breakedRemain.remove(appear);
+          }
+        }
+        break;
     }
     gameWorld.addAll([for (final e in adding) e.animation]);
+
+    // TODO:削除というか別の方法で
+    // 床をランダムに水やマグマに変える
+    /*for (final pos in breaked) {
+      final StageObjType type = [
+        StageObjType.none,
+        StageObjType.none,
+        StageObjType.none,
+        StageObjType.water,
+        StageObjType.magma,
+      ].sample(1).first;
+      setStaticType(pos, type, gameWorld);
+    }*/
 
     // スコア加算
     score += box.typeLevel.level * 100;
@@ -634,6 +780,9 @@ class Stage {
     ];
     warpPoints = [
       for (final e in stageData['warpPoints'] as List<dynamic>) Point.decode(e)
+    ];
+    beltPoints = [
+      for (final e in stageData['beltPoints'] as List<dynamic>) Point.decode(e)
     ];
     gameWorld.addAll([for (final e in staticObjs.values) e.animation]);
     gameWorld.addAll([for (final e in boxes) e.animation]);
@@ -734,8 +883,14 @@ class Stage {
     // プレイヤー更新
     player.update(
         dt, moveInput, gameWorld, camera, this, false, prohibitedPoints);
+    bool playerStartMoving =
+        (before == Move.none && player.moving != Move.none);
+    // コンベア更新
+    for (final belt in beltPoints) {
+      staticObjs[belt]!.update(dt, moveInput, gameWorld, camera, this,
+          playerStartMoving, prohibitedPoints);
+    }
     // 敵更新
-    bool playerStartMoving = before == Move.none && player.moving != Move.none;
     for (final enemy in enemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, prohibitedPoints);

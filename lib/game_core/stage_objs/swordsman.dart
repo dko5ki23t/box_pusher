@@ -5,16 +5,16 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 
-class Spike extends StageObj {
+class Swordsman extends StageObj {
   final EnemyMovePattern movePattern = EnemyMovePattern.walkRandomOrStop;
 
-  Spike({
+  Swordsman({
     required super.animation,
     required super.pos,
     int level = 1,
   }) : super(
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.spike,
+            type: StageObjType.swordsman,
             level: level,
           ),
         );

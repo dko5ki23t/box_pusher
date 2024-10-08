@@ -40,4 +40,13 @@ class Warp extends StageObj {
 
   @override
   int get maxLevel => 1;
+
+  @override
+  bool get isEnemy => false;
+
+  @override
+  bool get killable => false;
+
+  @override
+  bool get beltMove => true;
 }

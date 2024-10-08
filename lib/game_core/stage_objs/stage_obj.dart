@@ -14,6 +14,16 @@ enum StageObjType {
   treasureBox,
   warp,
   bomb,
+  beltL,
+  beltR,
+  beltU,
+  beltD,
+  guardian,
+  water,
+  magma,
+  swordsman, // 剣を使う敵
+  archer, // 弓を使う敵
+  wizard, // 魔法を使う敵
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -27,6 +37,17 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.drill: 'd',
     StageObjType.treasureBox: 'b',
     StageObjType.warp: 'w',
+    StageObjType.bomb: 'B',
+    StageObjType.beltL: 'bL',
+    StageObjType.beltR: 'bR',
+    StageObjType.beltU: 'bU',
+    StageObjType.beltD: 'bD',
+    StageObjType.guardian: 'g',
+    StageObjType.water: 'W',
+    StageObjType.magma: 'm',
+    StageObjType.swordsman: 'S',
+    StageObjType.archer: 'a',
+    StageObjType.wizard: 'M',
   };
 
   String get str => strMap[this]!;
@@ -113,6 +134,15 @@ abstract class StageObj {
 
   /// 最大レベル
   int get maxLevel;
+
+  /// 敵かどうか
+  bool get isEnemy;
+
+  /// 倒せるかどうか
+  bool get killable;
+
+  /// コンベアで動くかどうか
+  bool get beltMove;
 
   Map<String, dynamic> encode() {
     return {'typeLevel': typeLevel.encode(), 'pos': pos.encode()};

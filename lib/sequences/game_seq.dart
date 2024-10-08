@@ -72,6 +72,7 @@ class GameSeq extends Sequence
   late final Image spikeImg;
   late final Image blockImg;
   late final Image bombImg;
+  late final Image beltImg;
   late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
@@ -91,6 +92,7 @@ class GameSeq extends Sequence
     spikeImg = await Flame.images.load('spike.png');
     blockImg = await Flame.images.load('block.png');
     bombImg = await Flame.images.load('bomb.png');
+    beltImg = await Flame.images.load('belt.png');
     coinImg = await Flame.images.load('coin.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
@@ -130,7 +132,7 @@ class GameSeq extends Sequence
     removeAll(children);
     game.world.removeAll(game.world.children);
 
-    stage = Stage(stageImg, playerImg, spikeImg, blockImg, bombImg);
+    stage = Stage(stageImg, playerImg, spikeImg, blockImg, bombImg, beltImg);
     stage.initialize(game.world, game.camera, game.stageData);
 
     // プレイヤーの操作ボタン群

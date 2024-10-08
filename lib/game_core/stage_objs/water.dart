@@ -3,14 +3,14 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 
-class Drill extends StageObj {
-  Drill({
+class Water extends StageObj {
+  Water({
     required super.animation,
     required super.pos,
     int level = 1,
   }) : super(
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.drill,
+            type: StageObjType.water,
             level: level,
           ),
         );
@@ -27,19 +27,19 @@ class Drill extends StageObj {
   ) {}
 
   @override
-  bool get pushable => true;
+  bool get pushable => false;
 
   @override
-  bool get stopping => false;
+  bool get stopping => true;
 
   @override
   bool get puttable => false;
 
   @override
-  bool get mergable => typeLevel.level < maxLevel;
+  bool get mergable => false;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 1;
 
   @override
   bool get isEnemy => false;
@@ -48,5 +48,5 @@ class Drill extends StageObj {
   bool get killable => false;
 
   @override
-  bool get beltMove => true;
+  bool get beltMove => false;
 }
