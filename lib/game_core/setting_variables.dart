@@ -4,6 +4,9 @@ enum EnemyMovePattern {
 
   /// ランダムに動くorその場にとどまる
   walkRandomOrStop,
+
+  /// プレイヤーの方へ動くor向く、こうげきする
+  followPlayerAttack,
 }
 
 enum ObjInBlock {

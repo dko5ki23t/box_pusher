@@ -32,6 +32,14 @@ class StageObjFactory {
   final Map<StageObjType, SpriteAnimation> stageSpriteAnimatinos;
   final SpriteAnimation breakingBlockAnimation;
   final SpriteAnimation explodingBombAnimation;
+  final SpriteAnimation swordsmanLeftAnimation;
+  final SpriteAnimation swordsmanRightAnimation;
+  final SpriteAnimation swordsmanUpAnimation;
+  final SpriteAnimation swordsmanDownAnimation;
+  final SpriteAnimation swordsmanLeftAttackAnimation;
+  final SpriteAnimation swordsmanRightAttackAnimation;
+  final SpriteAnimation swordsmanUpAttackAnimation;
+  final SpriteAnimation swordsmanDownAttackAnimation;
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
   EffectController? baseMergable;
@@ -47,6 +55,14 @@ class StageObjFactory {
     required this.stageSpriteAnimatinos,
     required this.breakingBlockAnimation,
     required this.explodingBombAnimation,
+    required this.swordsmanLeftAnimation,
+    required this.swordsmanRightAnimation,
+    required this.swordsmanUpAnimation,
+    required this.swordsmanDownAnimation,
+    required this.swordsmanLeftAttackAnimation,
+    required this.swordsmanRightAttackAnimation,
+    required this.swordsmanUpAttackAnimation,
+    required this.swordsmanDownAttackAnimation,
   });
 
   StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
@@ -194,7 +210,18 @@ class StageObjFactory {
         return Magma(animation: animation, pos: pos, level: typeLevel.level);
       case StageObjType.swordsman:
         return Swordsman(
-            animation: animation, pos: pos, level: typeLevel.level);
+          animation: animation,
+          leftAnimation: swordsmanLeftAnimation,
+          rightAnimation: swordsmanRightAnimation,
+          upAnimation: swordsmanUpAnimation,
+          downAnimation: swordsmanDownAnimation,
+          leftAttackAnimation: swordsmanLeftAttackAnimation,
+          rightAttackAnimation: swordsmanRightAttackAnimation,
+          upAttackAnimation: swordsmanUpAttackAnimation,
+          downAttackAnimation: swordsmanDownAttackAnimation,
+          pos: pos,
+          level: typeLevel.level,
+        );
       case StageObjType.archer:
         return Archer(animation: animation, pos: pos, level: typeLevel.level);
       case StageObjType.wizard:
@@ -274,6 +301,8 @@ class Stage {
   /// 常に動くオブジェクトのアニメーションステップ時間
   static const double objectStepTime = 0.4;
 
+  static const double swordsmanAttackStepTime = 32.0 / playerSpeed / 5;
+
   /// マージ可能なオブジェクトの拡大/縮小の時間(s)
   static const double mergableZoomDuration = 0.8;
 
@@ -298,6 +327,11 @@ class Stage {
   final Image blockImg;
   final Image bombImg;
   final Image beltImg;
+  final Image swordsmanImg;
+  final Image swordsmanAttackDImg;
+  final Image swordsmanAttackUImg;
+  final Image swordsmanAttackLImg;
+  final Image swordsmanAttackRImg;
 
   late StageObjFactory objFactory;
 
@@ -368,14 +402,19 @@ class Stage {
   /// 所持しているコイン数
   int coinNum = 0;
 
-  Stage(
-    this.stageImg,
-    this.playerImg,
-    this.spikeImg,
-    this.blockImg,
-    this.bombImg,
-    this.beltImg,
-  ) {
+  Stage({
+    required this.stageImg,
+    required this.playerImg,
+    required this.spikeImg,
+    required this.blockImg,
+    required this.bombImg,
+    required this.beltImg,
+    required this.swordsmanImg,
+    required this.swordsmanAttackDImg,
+    required this.swordsmanAttackUImg,
+    required this.swordsmanAttackLImg,
+    required this.swordsmanAttackRImg,
+  }) {
     final Map<StageObjType, SpriteAnimation> stageSprites = {};
     stageSprites[StageObjType.none] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(0, 0), srcSize: cellSize)],
@@ -427,9 +466,10 @@ class Stage {
     stageSprites[StageObjType.magma] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(640, 0), srcSize: cellSize)],
         stepTime: 1.0);
-    stageSprites[StageObjType.swordsman] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(672, 0), srcSize: cellSize)],
-        stepTime: 1.0);
+    stageSprites[StageObjType.swordsman] = SpriteAnimation.spriteList([
+      Sprite(swordsmanImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
+      Sprite(swordsmanImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
+    ], stepTime: objectStepTime);
     stageSprites[StageObjType.archer] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(704, 0), srcSize: cellSize)],
         stepTime: 1.0);
@@ -445,6 +485,50 @@ class Stage {
       explodingBombAnimation: SpriteAnimation.spriteList(
           [Sprite(bombImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
           stepTime: 1.0),
+      swordsmanLeftAnimation: SpriteAnimation.spriteList([
+        Sprite(swordsmanImg, srcPosition: Vector2(128, 0), srcSize: cellSize),
+        Sprite(swordsmanImg, srcPosition: Vector2(160, 0), srcSize: cellSize),
+      ], stepTime: objectStepTime),
+      swordsmanRightAnimation: SpriteAnimation.spriteList([
+        Sprite(swordsmanImg, srcPosition: Vector2(192, 0), srcSize: cellSize),
+        Sprite(swordsmanImg, srcPosition: Vector2(224, 0), srcSize: cellSize),
+      ], stepTime: objectStepTime),
+      swordsmanUpAnimation: SpriteAnimation.spriteList([
+        Sprite(swordsmanImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
+        Sprite(swordsmanImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
+      ], stepTime: objectStepTime),
+      swordsmanDownAnimation: SpriteAnimation.spriteList([
+        Sprite(swordsmanImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
+        Sprite(swordsmanImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
+      ], stepTime: objectStepTime),
+      swordsmanDownAttackAnimation: SpriteAnimation.fromFrameData(
+        swordsmanAttackDImg,
+        SpriteAnimationData.sequenced(
+            amount: 5,
+            stepTime: swordsmanAttackStepTime,
+            textureSize: Vector2(96.0, 64.0)),
+      ),
+      swordsmanUpAttackAnimation: SpriteAnimation.fromFrameData(
+        swordsmanAttackUImg,
+        SpriteAnimationData.sequenced(
+            amount: 5,
+            stepTime: swordsmanAttackStepTime,
+            textureSize: Vector2(96.0, 64.0)),
+      ),
+      swordsmanLeftAttackAnimation: SpriteAnimation.fromFrameData(
+        swordsmanAttackLImg,
+        SpriteAnimationData.sequenced(
+            amount: 5,
+            stepTime: swordsmanAttackStepTime,
+            textureSize: Vector2(64.0, 96.0)),
+      ),
+      swordsmanRightAttackAnimation: SpriteAnimation.fromFrameData(
+        swordsmanAttackRImg,
+        SpriteAnimationData.sequenced(
+            amount: 5,
+            stepTime: swordsmanAttackStepTime,
+            textureSize: Vector2(64.0, 96.0)),
+      ),
     );
   }
 
@@ -648,9 +732,9 @@ class Stage {
       case ObjInBlock.jewel1_2BeltGuardianSwordsman1:
         // 宝石出現以外の位置にコンベア/ガーディアン/剣を持つ敵をそれぞれ最大1個出現させる
         for (final StageObjType type in [
+          StageObjType.swordsman,
           StageObjType.beltL,
           StageObjType.guardian,
-          StageObjType.swordsman,
         ]) {
           if (breakedRemain.isNotEmpty) {
             bool isAppear = Random().nextBool();
@@ -944,7 +1028,7 @@ class Stage {
         enemies.remove(enemy);
       }
     }
-    // オブジェクト更新(罠：敵を倒す)
+    // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
     // TODO: これらは他オブジェクトの移動完了時のみ動かせばよい
     // update()でboxesリストが変化する可能性がある(ボムの爆発等)ためコピーを使う
     final boxesCopied = [for (final box in boxes) box];
@@ -1018,13 +1102,6 @@ class Stage {
             Vector2(stageLT.x * cellSize.x, stageLT.y * cellSize.y),
             Vector2(stageRB.x * cellSize.x, stageRB.y * cellSize.y)),
       );
-    }
-
-    // ゲームオーバー判定
-    for (final enemy in enemies) {
-      if (player.pos == enemy.pos) {
-        isGameover = true;
-      }
     }
   }
 

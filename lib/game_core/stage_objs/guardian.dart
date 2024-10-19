@@ -24,7 +24,26 @@ class Guardian extends StageObj {
     Stage stage,
     bool playerStartMoving,
     List<Point> prohibitedPoints,
-  ) {}
+  ) {
+    // 周囲8マスに敵がいる場合、ガーディアンのレベル分だけその敵のレベルを下げる(ただし1体だけ)
+    // レベルが0以下になった敵は消す
+    bool attacked = false;
+    for (int y = pos.y - 1; y <= pos.y + 1; y++) {
+      for (int x = pos.x - 1; x <= pos.x + 1; x++) {
+        final obj = stage.getObject(Point(x, y));
+        if (obj.isEnemy && obj.killable) {
+          obj.typeLevel.level -= typeLevel.level;
+          if (obj.typeLevel.level <= 0) {
+            gameWorld.remove(obj.animation);
+            stage.enemies.remove(obj);
+            attacked = true;
+            break;
+          }
+        }
+      }
+      if (attacked) break;
+    }
+  }
 
   @override
   bool get pushable => true;

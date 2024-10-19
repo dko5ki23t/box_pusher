@@ -86,6 +86,30 @@ extension MoveExtent on Move {
     }
   }
 
+  /// 逆の向き
+  Move get oppsite {
+    switch (this) {
+      case Move.none:
+        return Move.none;
+      case Move.left:
+        return Move.right;
+      case Move.right:
+        return Move.left;
+      case Move.up:
+        return Move.down;
+      case Move.down:
+        return Move.up;
+      case Move.upLeft:
+        return Move.downRight;
+      case Move.upRight:
+        return Move.downLeft;
+      case Move.downLeft:
+        return Move.upRight;
+      case Move.downRight:
+        return Move.upLeft;
+    }
+  }
+
   /// 対応するベクトル
   Vector2 get vector {
     switch (this) {
@@ -108,5 +132,15 @@ extension MoveExtent on Move {
       case Move.downRight:
         return Vector2(1.0, 1.0);
     }
+  }
+
+  /// 上下左右のみのリスト
+  static List<Move> get straights {
+    return [Move.up, Move.down, Move.left, Move.right];
+  }
+
+  /// 斜めのみのリスト
+  static List<Move> get diagonals {
+    return [Move.upLeft, Move.upRight, Move.downLeft, Move.downRight];
   }
 }

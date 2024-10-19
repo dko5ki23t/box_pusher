@@ -83,6 +83,11 @@ class Spike extends StageObj {
 
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
+        // ゲームオーバー判定
+        if (stage.player.pos == pos) {
+          stage.isGameover = true;
+        }
+
         pos += moving.point;
         moving = Move.none;
         movingAmount = 0;

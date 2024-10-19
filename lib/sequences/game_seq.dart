@@ -73,6 +73,11 @@ class GameSeq extends Sequence
   late final Image blockImg;
   late final Image bombImg;
   late final Image beltImg;
+  late final Image swordsmanImg;
+  late final Image swordsmanAttackDImg;
+  late final Image swordsmanAttackUImg;
+  late final Image swordsmanAttackLImg;
+  late final Image swordsmanAttackRImg;
   late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
@@ -93,6 +98,11 @@ class GameSeq extends Sequence
     blockImg = await Flame.images.load('block.png');
     bombImg = await Flame.images.load('bomb.png');
     beltImg = await Flame.images.load('belt.png');
+    swordsmanImg = await Flame.images.load('swordsman.png');
+    swordsmanAttackDImg = await Flame.images.load('swordsman_attackD.png');
+    swordsmanAttackUImg = await Flame.images.load('swordsman_attackU.png');
+    swordsmanAttackLImg = await Flame.images.load('swordsman_attackL.png');
+    swordsmanAttackRImg = await Flame.images.load('swordsman_attackR.png');
     coinImg = await Flame.images.load('coin.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
@@ -132,7 +142,19 @@ class GameSeq extends Sequence
     removeAll(children);
     game.world.removeAll(game.world.children);
 
-    stage = Stage(stageImg, playerImg, spikeImg, blockImg, bombImg, beltImg);
+    stage = Stage(
+      stageImg: stageImg,
+      playerImg: playerImg,
+      spikeImg: spikeImg,
+      blockImg: blockImg,
+      bombImg: bombImg,
+      beltImg: beltImg,
+      swordsmanImg: swordsmanImg,
+      swordsmanAttackDImg: swordsmanAttackDImg,
+      swordsmanAttackUImg: swordsmanAttackUImg,
+      swordsmanAttackLImg: swordsmanAttackLImg,
+      swordsmanAttackRImg: swordsmanAttackRImg,
+    );
     stage.initialize(game.world, game.camera, game.stageData);
 
     // プレイヤーの操作ボタン群
