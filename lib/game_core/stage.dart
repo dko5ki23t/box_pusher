@@ -32,14 +32,15 @@ class StageObjFactory {
   final Map<StageObjType, SpriteAnimation> stageSpriteAnimatinos;
   final SpriteAnimation breakingBlockAnimation;
   final SpriteAnimation explodingBombAnimation;
-  final SpriteAnimation swordsmanLeftAnimation;
-  final SpriteAnimation swordsmanRightAnimation;
-  final SpriteAnimation swordsmanUpAnimation;
-  final SpriteAnimation swordsmanDownAnimation;
-  final SpriteAnimation swordsmanLeftAttackAnimation;
-  final SpriteAnimation swordsmanRightAttackAnimation;
-  final SpriteAnimation swordsmanUpAttackAnimation;
-  final SpriteAnimation swordsmanDownAttackAnimation;
+
+  /// 【剣を持つ敵】向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> swordsmanAnimation;
+
+  /// 【剣を持つ敵】攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> swordsmanAttackAnimation;
+
+  /// 【剣を持つ敵】攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
+  final Map<Move, Vector2> swordsmanAttackAnimationOffset;
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
   EffectController? baseMergable;
@@ -55,14 +56,9 @@ class StageObjFactory {
     required this.stageSpriteAnimatinos,
     required this.breakingBlockAnimation,
     required this.explodingBombAnimation,
-    required this.swordsmanLeftAnimation,
-    required this.swordsmanRightAnimation,
-    required this.swordsmanUpAnimation,
-    required this.swordsmanDownAnimation,
-    required this.swordsmanLeftAttackAnimation,
-    required this.swordsmanRightAttackAnimation,
-    required this.swordsmanUpAttackAnimation,
-    required this.swordsmanDownAttackAnimation,
+    required this.swordsmanAnimation,
+    required this.swordsmanAttackAnimation,
+    required this.swordsmanAttackAnimationOffset,
   });
 
   StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
@@ -211,14 +207,9 @@ class StageObjFactory {
       case StageObjType.swordsman:
         return Swordsman(
           animation: animation,
-          leftAnimation: swordsmanLeftAnimation,
-          rightAnimation: swordsmanRightAnimation,
-          upAnimation: swordsmanUpAnimation,
-          downAnimation: swordsmanDownAnimation,
-          leftAttackAnimation: swordsmanLeftAttackAnimation,
-          rightAttackAnimation: swordsmanRightAttackAnimation,
-          upAttackAnimation: swordsmanUpAttackAnimation,
-          downAttackAnimation: swordsmanDownAttackAnimation,
+          vectorAnimation: swordsmanAnimation,
+          attackAnimation: swordsmanAttackAnimation,
+          attackAnimationOffset: swordsmanAttackAnimationOffset,
           pos: pos,
           level: typeLevel.level,
         );
@@ -485,50 +476,60 @@ class Stage {
       explodingBombAnimation: SpriteAnimation.spriteList(
           [Sprite(bombImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
           stepTime: 1.0),
-      swordsmanLeftAnimation: SpriteAnimation.spriteList([
-        Sprite(swordsmanImg, srcPosition: Vector2(128, 0), srcSize: cellSize),
-        Sprite(swordsmanImg, srcPosition: Vector2(160, 0), srcSize: cellSize),
-      ], stepTime: objectStepTime),
-      swordsmanRightAnimation: SpriteAnimation.spriteList([
-        Sprite(swordsmanImg, srcPosition: Vector2(192, 0), srcSize: cellSize),
-        Sprite(swordsmanImg, srcPosition: Vector2(224, 0), srcSize: cellSize),
-      ], stepTime: objectStepTime),
-      swordsmanUpAnimation: SpriteAnimation.spriteList([
-        Sprite(swordsmanImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
-        Sprite(swordsmanImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
-      ], stepTime: objectStepTime),
-      swordsmanDownAnimation: SpriteAnimation.spriteList([
-        Sprite(swordsmanImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
-        Sprite(swordsmanImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
-      ], stepTime: objectStepTime),
-      swordsmanDownAttackAnimation: SpriteAnimation.fromFrameData(
-        swordsmanAttackDImg,
-        SpriteAnimationData.sequenced(
-            amount: 5,
-            stepTime: swordsmanAttackStepTime,
-            textureSize: Vector2(96.0, 64.0)),
-      ),
-      swordsmanUpAttackAnimation: SpriteAnimation.fromFrameData(
-        swordsmanAttackUImg,
-        SpriteAnimationData.sequenced(
-            amount: 5,
-            stepTime: swordsmanAttackStepTime,
-            textureSize: Vector2(96.0, 64.0)),
-      ),
-      swordsmanLeftAttackAnimation: SpriteAnimation.fromFrameData(
-        swordsmanAttackLImg,
-        SpriteAnimationData.sequenced(
-            amount: 5,
-            stepTime: swordsmanAttackStepTime,
-            textureSize: Vector2(64.0, 96.0)),
-      ),
-      swordsmanRightAttackAnimation: SpriteAnimation.fromFrameData(
-        swordsmanAttackRImg,
-        SpriteAnimationData.sequenced(
-            amount: 5,
-            stepTime: swordsmanAttackStepTime,
-            textureSize: Vector2(64.0, 96.0)),
-      ),
+      swordsmanAnimation: {
+        Move.left: SpriteAnimation.spriteList([
+          Sprite(swordsmanImg, srcPosition: Vector2(128, 0), srcSize: cellSize),
+          Sprite(swordsmanImg, srcPosition: Vector2(160, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.right: SpriteAnimation.spriteList([
+          Sprite(swordsmanImg, srcPosition: Vector2(192, 0), srcSize: cellSize),
+          Sprite(swordsmanImg, srcPosition: Vector2(224, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.up: SpriteAnimation.spriteList([
+          Sprite(swordsmanImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
+          Sprite(swordsmanImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.down: SpriteAnimation.spriteList([
+          Sprite(swordsmanImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
+          Sprite(swordsmanImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+      },
+      swordsmanAttackAnimation: {
+        Move.down: SpriteAnimation.fromFrameData(
+          swordsmanAttackDImg,
+          SpriteAnimationData.sequenced(
+              amount: 5,
+              stepTime: swordsmanAttackStepTime,
+              textureSize: Vector2(96.0, 64.0)),
+        ),
+        Move.up: SpriteAnimation.fromFrameData(
+          swordsmanAttackUImg,
+          SpriteAnimationData.sequenced(
+              amount: 5,
+              stepTime: swordsmanAttackStepTime,
+              textureSize: Vector2(96.0, 64.0)),
+        ),
+        Move.left: SpriteAnimation.fromFrameData(
+          swordsmanAttackLImg,
+          SpriteAnimationData.sequenced(
+              amount: 5,
+              stepTime: swordsmanAttackStepTime,
+              textureSize: Vector2(64.0, 96.0)),
+        ),
+        Move.right: SpriteAnimation.fromFrameData(
+          swordsmanAttackRImg,
+          SpriteAnimationData.sequenced(
+              amount: 5,
+              stepTime: swordsmanAttackStepTime,
+              textureSize: Vector2(64.0, 96.0)),
+        ),
+      },
+      swordsmanAttackAnimationOffset: {
+        Move.up: Vector2(0, -16.0),
+        Move.down: Vector2(0, 16.0),
+        Move.left: Vector2(-16.0, 0),
+        Move.right: Vector2(16.0, 0)
+      },
     );
   }
 

@@ -1,5 +1,8 @@
 import 'package:box_pusher/game_core/common.dart';
+import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/game_core/stage_objs/player.dart';
+import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 
 /// ステージ上オブジェクトの種類
@@ -143,6 +146,115 @@ abstract class StageObj {
 
   /// コンベアで動くかどうか
   bool get beltMove;
+
+  /// 敵の動きを決定する
+  Map<String, dynamic> enemyMove(
+    EnemyMovePattern pattern,
+    Move vector,
+    Player player,
+    Stage stage,
+    List<Point> prohibitedPoints,
+  ) {
+    Map<String, dynamic> ret = {};
+
+    switch (pattern) {
+      case EnemyMovePattern.walkRandom:
+      case EnemyMovePattern.walkRandomOrStop:
+        final List<Move> cand = [];
+        // 今プレイヤーの移動先にいるなら移動しない
+        if (pos == player.pos + player.moving.point) {
+          cand.add(Move.none);
+        } else {
+          if (pattern == EnemyMovePattern.walkRandomOrStop) {
+            cand.add(Move.none);
+          }
+          for (final move in MoveExtent.straights) {
+            Point eTo = pos + move.point;
+            final eToObj = stage.getObject(eTo);
+            if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
+                player.pushings.isNotEmpty &&
+                player.pushings.first.pos == eTo) {
+              // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+            } else if (!eToObj.puttable && eToObj.typeLevel != typeLevel) {
+              continue;
+            }
+            if (prohibitedPoints.contains(eTo)) {
+              continue;
+            }
+            cand.add(move);
+          }
+        }
+        if (cand.isNotEmpty) {
+          final move = cand.sample(1).first;
+          ret['move'] = move;
+          // 自身の移動先は、他のオブジェクトの移動先にならないようにする
+          prohibitedPoints.add(pos + move.point);
+        }
+        break;
+      case EnemyMovePattern.followPlayerAttack:
+        // 向いている方向の3マスにプレイヤーがいるなら攻撃
+        final tmp = MoveExtent.straights;
+        tmp.remove(vector);
+        tmp.remove(vector.oppsite);
+        final attackable = pos + vector.point;
+        final attackables = [attackable];
+        for (final v in tmp) {
+          attackables.add(attackable + v.point);
+        }
+        if (attackables.contains(player.pos)) {
+          ret['attack'] = true;
+        } else {
+          // 今プレイヤーの移動先にいるなら移動しない
+          if (pos == player.pos + player.moving.point) {
+            ret['move'] = Move.none;
+          } else {
+            // プレイヤーの方へ移動する/向きを変える
+            final delta = player.pos - pos;
+            final List<Move> tmpCand = [];
+            if (delta.x > 0) {
+              tmpCand.add(Move.right);
+            } else if (delta.x < 0) {
+              tmpCand.add(Move.left);
+            }
+            if (delta.y > 0) {
+              tmpCand.add(Move.down);
+            } else if (delta.y < 0) {
+              tmpCand.add(Move.up);
+            }
+            final List<Move> cand = [];
+            for (final move in tmpCand) {
+              Point eTo = pos + move.point;
+              final eToObj = stage.getObject(eTo);
+              if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
+                  player.pushings.isNotEmpty &&
+                  player.pushings.first.pos == eTo) {
+                // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+              } else if (!eToObj.puttable && eToObj.typeLevel != typeLevel) {
+                continue;
+              }
+              if (prohibitedPoints.contains(eTo)) {
+                continue;
+              }
+              cand.add(move);
+            }
+            if (cand.isNotEmpty) {
+              final move = cand.sample(1).first;
+              ret['move'] = move;
+              // 向きも変更
+              ret['vector'] = move;
+              // 自身の移動先は、他のオブジェクトの移動先にならないようにする
+              prohibitedPoints.add(pos + move.point);
+            } else if (tmpCand.isNotEmpty) {
+              // 向きだけ変更
+              ret['vector'] = tmpCand.sample(1).first;
+            }
+          }
+        }
+        break;
+    }
+
+    return ret;
+  }
 
   Map<String, dynamic> encode() {
     return {'typeLevel': typeLevel.encode(), 'pos': pos.encode()};

@@ -2,7 +2,6 @@ import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
-import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 
 class Spike extends StageObj {
@@ -29,40 +28,13 @@ class Spike extends StageObj {
     bool playerStartMoving,
     List<Point> prohibitedPoints,
   ) {
+    // 移動し始めのフレームの場合
     if (playerStartMoving) {
-      // 移動し始めのフレームの場合
       // 移動を決定する
-      final List<Move> cand = [];
-      // 今プレイヤーの移動先にいるなら移動しない
-      if (pos == stage.player.pos + stage.player.moving.point) {
-        cand.add(Move.none);
-      } else {
-        for (final move in Move.values) {
-          Point eTo = pos + move.point;
-          if (move == Move.none) {
-            if (movePattern == EnemyMovePattern.walkRandomOrStop) {
-              cand.add(move);
-            }
-            continue;
-          }
-          final eToObj = stage.getObject(eTo);
-          if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
-              stage.player.pushings.isNotEmpty &&
-              stage.player.pushings.first.pos == eTo) {
-            // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-          } else if (!eToObj.puttable && eToObj.typeLevel != typeLevel) {
-            continue;
-          }
-          if (prohibitedPoints.contains(eTo)) {
-            continue;
-          }
-          cand.add(move);
-        }
-      }
-      if (cand.isNotEmpty) {
-        moving = cand.sample(1).first;
-        // 自身の移動先は、他のオブジェクトの移動先にならないようにする
-        prohibitedPoints.add(pos + moving.point);
+      final ret = super.enemyMove(
+          movePattern, Move.none, stage.player, stage, prohibitedPoints);
+      if (ret.containsKey('move')) {
+        moving = ret['move'] as Move;
       }
       movingAmount = 0;
     }

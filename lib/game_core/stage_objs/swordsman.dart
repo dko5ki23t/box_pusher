@@ -7,14 +7,15 @@ import 'package:flame/components.dart';
 
 class Swordsman extends StageObj {
   final EnemyMovePattern movePattern = EnemyMovePattern.followPlayerAttack;
-  final SpriteAnimation leftAnimation;
-  final SpriteAnimation rightAnimation;
-  final SpriteAnimation upAnimation;
-  final SpriteAnimation downAnimation;
-  final SpriteAnimation leftAttackAnimation;
-  final SpriteAnimation rightAttackAnimation;
-  final SpriteAnimation upAttackAnimation;
-  final SpriteAnimation downAttackAnimation;
+
+  /// 向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> vectorAnimation;
+
+  /// 攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> attackAnimation;
+
+  /// 攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
+  final Map<Move, Vector2> attackAnimationOffset;
 
   /// 向き
   Move _vector = Move.down;
@@ -23,33 +24,14 @@ class Swordsman extends StageObj {
   Move get vector => _vector;
   set vector(Move v) {
     _vector = v;
-    switch (_vector) {
-      case Move.left:
-        animation.animation = leftAnimation;
-        break;
-      case Move.right:
-        animation.animation = rightAnimation;
-        break;
-      case Move.up:
-        animation.animation = upAnimation;
-        break;
-      case Move.down:
-      default:
-        animation.animation = downAnimation;
-        break;
-    }
+    animation.animation = vectorAnimation[_vector];
   }
 
   Swordsman({
     required super.animation,
-    required this.leftAnimation,
-    required this.rightAnimation,
-    required this.upAnimation,
-    required this.downAnimation,
-    required this.leftAttackAnimation,
-    required this.rightAttackAnimation,
-    required this.upAttackAnimation,
-    required this.downAttackAnimation,
+    required this.vectorAnimation,
+    required this.attackAnimation,
+    required this.attackAnimationOffset,
     required super.pos,
     int level = 1,
   }) : super(
@@ -74,6 +56,28 @@ class Swordsman extends StageObj {
     bool playerStartMoving,
     List<Point> prohibitedPoints,
   ) {
+    // 移動し始めのフレームの場合
+    if (playerStartMoving) {
+      playerStartMovingFlag = true;
+      // 移動/攻撃を決定
+      final ret = super.enemyMove(
+          movePattern, vector, stage.player, stage, prohibitedPoints);
+      if (ret.containsKey('attack') && ret['attack']!) {
+        // 攻撃中のアニメーションに変更
+        animation.animation = attackAnimation[vector]!;
+        animation.size = animation.animation!.frames.first.sprite.srcSize;
+        stage.objFactory
+            .setPosition(this, offset: attackAnimationOffset[vector]!);
+      }
+      if (ret.containsKey('move')) {
+        moving = ret['move'] as Move;
+      }
+      if (ret.containsKey('vector')) {
+        vector = ret['vector'] as Move;
+      }
+      movingAmount = 0;
+    }
+
     if (playerStartMoving) {
       // 移動し始めのフレームの場合
       playerStartMovingFlag = true;
@@ -89,29 +93,10 @@ class Swordsman extends StageObj {
       if (attackables.contains(stage.player.pos)) {
         attacking = true;
         // 攻撃中のアニメーションに変更
-        switch (vector) {
-          case Move.left:
-            animation.animation = leftAttackAnimation;
-            animation.size = Vector2(64.0, 96.0);
-            stage.objFactory.setPosition(this, offset: Vector2(-16.0, 0));
-            break;
-          case Move.right:
-            animation.animation = rightAttackAnimation;
-            animation.size = Vector2(64.0, 96.0);
-            stage.objFactory.setPosition(this, offset: Vector2(16.0, 0));
-            break;
-          case Move.up:
-            animation.animation = upAttackAnimation;
-            animation.size = Vector2(96.0, 64.0);
-            stage.objFactory.setPosition(this, offset: Vector2(0, -16.0));
-            break;
-          case Move.down:
-          default:
-            animation.animation = downAttackAnimation;
-            animation.size = Vector2(96.0, 64.0);
-            stage.objFactory.setPosition(this, offset: Vector2(0, 16.0));
-            break;
-        }
+        animation.animation = attackAnimation[vector]!;
+        animation.size = animation.animation!.frames.first.sprite.srcSize;
+        stage.objFactory
+            .setPosition(this, offset: attackAnimationOffset[vector]!);
       } else {
         // 今プレイヤーの移動先にいるなら移動しない
         if (pos == stage.player.pos + stage.player.moving.point) {
