@@ -78,6 +78,10 @@ class GameSeq extends Sequence
   late final Image swordsmanAttackUImg;
   late final Image swordsmanAttackLImg;
   late final Image swordsmanAttackRImg;
+  late final Image swordsmanRoundAttackDImg;
+  late final Image swordsmanRoundAttackUImg;
+  late final Image swordsmanRoundAttackLImg;
+  late final Image swordsmanRoundAttackRImg;
   late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
@@ -103,6 +107,14 @@ class GameSeq extends Sequence
     swordsmanAttackUImg = await Flame.images.load('swordsman_attackU.png');
     swordsmanAttackLImg = await Flame.images.load('swordsman_attackL.png');
     swordsmanAttackRImg = await Flame.images.load('swordsman_attackR.png');
+    swordsmanRoundAttackDImg =
+        await Flame.images.load('swordsman_attack_roundD.png');
+    swordsmanRoundAttackUImg =
+        await Flame.images.load('swordsman_attack_roundU.png');
+    swordsmanRoundAttackLImg =
+        await Flame.images.load('swordsman_attack_roundL.png');
+    swordsmanRoundAttackRImg =
+        await Flame.images.load('swordsman_attack_roundR.png');
     coinImg = await Flame.images.load('coin.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
@@ -154,6 +166,10 @@ class GameSeq extends Sequence
       swordsmanAttackUImg: swordsmanAttackUImg,
       swordsmanAttackLImg: swordsmanAttackLImg,
       swordsmanAttackRImg: swordsmanAttackRImg,
+      swordsmanRoundAttackDImg: swordsmanRoundAttackDImg,
+      swordsmanRoundAttackUImg: swordsmanRoundAttackUImg,
+      swordsmanRoundAttackLImg: swordsmanRoundAttackLImg,
+      swordsmanRoundAttackRImg: swordsmanRoundAttackRImg,
     );
     stage.initialize(game.world, game.camera, game.stageData);
 

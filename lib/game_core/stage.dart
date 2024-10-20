@@ -39,8 +39,14 @@ class StageObjFactory {
   /// 【剣を持つ敵】攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
   final Map<Move, SpriteAnimation> swordsmanAttackAnimation;
 
+  /// 【剣を持つ敵】回転斬り攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> swordsmanRoundAttackAnimation;
+
   /// 【剣を持つ敵】攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
   final Map<Move, Vector2> swordsmanAttackAnimationOffset;
+
+  /// 【剣を持つ敵】回転斬り攻撃時アニメーションのオフセット
+  final Vector2 swordsmanRoundAttackAnimationOffset;
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
   EffectController? baseMergable;
@@ -59,6 +65,8 @@ class StageObjFactory {
     required this.swordsmanAnimation,
     required this.swordsmanAttackAnimation,
     required this.swordsmanAttackAnimationOffset,
+    required this.swordsmanRoundAttackAnimation,
+    required this.swordsmanRoundAttackAnimationOffset,
   });
 
   StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
@@ -210,6 +218,8 @@ class StageObjFactory {
           vectorAnimation: swordsmanAnimation,
           attackAnimation: swordsmanAttackAnimation,
           attackAnimationOffset: swordsmanAttackAnimationOffset,
+          roundAttackAnimation: swordsmanRoundAttackAnimation,
+          roundAttackAnimationOffset: swordsmanRoundAttackAnimationOffset,
           pos: pos,
           level: typeLevel.level,
         );
@@ -294,6 +304,8 @@ class Stage {
 
   static const double swordsmanAttackStepTime = 32.0 / playerSpeed / 5;
 
+  static const double swordsmanRoundAttackStepTime = 32.0 / playerSpeed / 20;
+
   /// マージ可能なオブジェクトの拡大/縮小の時間(s)
   static const double mergableZoomDuration = 0.8;
 
@@ -323,6 +335,10 @@ class Stage {
   final Image swordsmanAttackUImg;
   final Image swordsmanAttackLImg;
   final Image swordsmanAttackRImg;
+  final Image swordsmanRoundAttackDImg;
+  final Image swordsmanRoundAttackUImg;
+  final Image swordsmanRoundAttackLImg;
+  final Image swordsmanRoundAttackRImg;
 
   late StageObjFactory objFactory;
 
@@ -405,6 +421,10 @@ class Stage {
     required this.swordsmanAttackUImg,
     required this.swordsmanAttackLImg,
     required this.swordsmanAttackRImg,
+    required this.swordsmanRoundAttackDImg,
+    required this.swordsmanRoundAttackUImg,
+    required this.swordsmanRoundAttackLImg,
+    required this.swordsmanRoundAttackRImg,
   }) {
     final Map<StageObjType, SpriteAnimation> stageSprites = {};
     stageSprites[StageObjType.none] = SpriteAnimation.spriteList(
@@ -530,6 +550,37 @@ class Stage {
         Move.left: Vector2(-16.0, 0),
         Move.right: Vector2(16.0, 0)
       },
+      swordsmanRoundAttackAnimation: {
+        Move.down: SpriteAnimation.fromFrameData(
+          swordsmanRoundAttackDImg,
+          SpriteAnimationData.sequenced(
+              amount: 20,
+              stepTime: swordsmanRoundAttackStepTime,
+              textureSize: Vector2.all(96.0)),
+        ),
+        Move.up: SpriteAnimation.fromFrameData(
+          swordsmanRoundAttackUImg,
+          SpriteAnimationData.sequenced(
+              amount: 20,
+              stepTime: swordsmanRoundAttackStepTime,
+              textureSize: Vector2.all(96.0)),
+        ),
+        Move.left: SpriteAnimation.fromFrameData(
+          swordsmanRoundAttackLImg,
+          SpriteAnimationData.sequenced(
+              amount: 20,
+              stepTime: swordsmanRoundAttackStepTime,
+              textureSize: Vector2.all(96.0)),
+        ),
+        Move.right: SpriteAnimation.fromFrameData(
+          swordsmanRoundAttackRImg,
+          SpriteAnimationData.sequenced(
+              amount: 20,
+              stepTime: swordsmanRoundAttackStepTime,
+              textureSize: Vector2.all(96.0)),
+        ),
+      },
+      swordsmanRoundAttackAnimationOffset: Vector2.zero(),
     );
   }
 
@@ -990,6 +1041,7 @@ class Stage {
     {
       // 同じレベルの敵同士が同じ位置になったらマージしてレベルアップ
       // TODO: 敵がお互いにすれ違ってマージしない場合あり
+      // TODO: レベルがMAXでマージできない場合はそもそも同じマスに移動できないようにするべき
       final List<Point> mergingPosList = [];
       final List<StageObj> mergedEnemies = [];
       for (final enemy in enemies) {
@@ -999,7 +1051,7 @@ class Stage {
         final t = enemies.where((element) =>
             element != enemy &&
             element.pos == enemy.pos &&
-            element.typeLevel.type == StageObjType.spike &&
+            element.typeLevel.type == enemy.typeLevel.type &&
             element.typeLevel.level == enemy.typeLevel.level);
         if (t.isNotEmpty) {
           mergingPosList.add(enemy.pos);

@@ -5,8 +5,11 @@ enum EnemyMovePattern {
   /// ランダムに動くorその場にとどまる
   walkRandomOrStop,
 
-  /// プレイヤーの方へ動くor向く、こうげきする
-  followPlayerAttack,
+  /// プレイヤーの方へ動くor向く、前方3マスを攻撃する
+  followPlayerAttackForward3,
+
+  /// プレイヤーの方へ動くor向く、周囲8マスを攻撃する
+  followPlayerAttackRound8,
 }
 
 enum ObjInBlock {
