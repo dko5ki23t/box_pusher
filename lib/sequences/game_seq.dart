@@ -57,6 +57,9 @@ class GameSeq extends Sequence
   /// メニューボタン領域
   static Vector2 get settingsButtonAreaSize => Vector2(40.0, 40.0);
 
+  /// 【テストモード】現在位置表示領域
+  static Vector2 get currentPosAreaSize => Vector2(40.0, 40.0);
+
   /// ステージ領域
   static Vector2 get stageViewSize => Vector2(360.0 - xPaddingSize.x * 2,
       640.0 - menuButtonAreaSize.y - topPaddingSize.y - yPaddingSize.y * 2);
@@ -73,6 +76,11 @@ class GameSeq extends Sequence
   late final Image blockImg;
   late final Image bombImg;
   late final Image beltImg;
+  late final Image guardianImg;
+  late final Image guardianAttackDImg;
+  late final Image guardianAttackUImg;
+  late final Image guardianAttackLImg;
+  late final Image guardianAttackRImg;
   late final Image swordsmanImg;
   late final Image swordsmanAttackDImg;
   late final Image swordsmanAttackUImg;
@@ -87,6 +95,7 @@ class GameSeq extends Sequence
   late final Image handAbilityImg;
   late final Image legAbilityImg;
   late final Image settingsImg;
+  late TextComponent currentPosText;
   late TextComponent scoreText;
   late TextComponent coinNumText;
   ClipComponent? playerControllButtonsArea;
@@ -102,6 +111,11 @@ class GameSeq extends Sequence
     blockImg = await Flame.images.load('block.png');
     bombImg = await Flame.images.load('bomb.png');
     beltImg = await Flame.images.load('belt.png');
+    guardianImg = await Flame.images.load('guardian.png');
+    guardianAttackDImg = await Flame.images.load('guardian_attackD.png');
+    guardianAttackUImg = await Flame.images.load('guardian_attackU.png');
+    guardianAttackLImg = await Flame.images.load('guardian_attackL.png');
+    guardianAttackRImg = await Flame.images.load('guardian_attackR.png');
     swordsmanImg = await Flame.images.load('swordsman.png');
     swordsmanAttackDImg = await Flame.images.load('swordsman_attackD.png');
     swordsmanAttackUImg = await Flame.images.load('swordsman_attackU.png');
@@ -161,6 +175,11 @@ class GameSeq extends Sequence
       blockImg: blockImg,
       bombImg: bombImg,
       beltImg: beltImg,
+      guardianImg: guardianImg,
+      guardianAttackDImg: guardianAttackDImg,
+      guardianAttackUImg: guardianAttackUImg,
+      guardianAttackLImg: guardianAttackLImg,
+      guardianAttackRImg: guardianAttackRImg,
       swordsmanImg: swordsmanImg,
       swordsmanAttackDImg: swordsmanAttackDImg,
       swordsmanAttackUImg: swordsmanAttackUImg,
@@ -458,6 +477,22 @@ class GameSeq extends Sequence
       sprite: Sprite(settingsImg),
       onReleased: () => game.pushSeqNamed("menu"),
     ));
+
+    // 【テストモード時】現在座標表示領域
+    currentPosText = TextComponent(
+      size: currentPosAreaSize,
+      position: Vector2(0, yPaddingSize.y),
+      text: "pos:(${stage.player.pos.x},${stage.player.pos.y})",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          color: Color(0xffffffff),
+        ),
+      ),
+    );
+    if (game.testMode) {
+      add(currentPosText);
+    }
   }
 
   @override
@@ -514,6 +549,10 @@ class GameSeq extends Sequence
     }
     // コイン数表示更新
     coinNumText.text = "${stage.coinNum}";
+    // 【テストモード】
+    if (game.testMode) {
+      currentPosText.text = "pos:(${stage.player.pos.x},${stage.player.pos.y})";
+    }
     // 今回のupdateでクリアしたらクリア画面に移行
     if (stage.isClear()) {
       game.pushSeqNamed('clear');

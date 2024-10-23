@@ -33,6 +33,15 @@ class StageObjFactory {
   final SpriteAnimation breakingBlockAnimation;
   final SpriteAnimation explodingBombAnimation;
 
+  /// 【ガーディアン】向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> guardianAnimation;
+
+  /// 【ガーディアン】攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> guardianAttackAnimation;
+
+  /// 【ガーディアン】攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
+  final Map<Move, Vector2> guardianAttackAnimationOffset;
+
   /// 【剣を持つ敵】向きに対応するアニメーション。上下左右のkeyが必須
   final Map<Move, SpriteAnimation> swordsmanAnimation;
 
@@ -62,6 +71,9 @@ class StageObjFactory {
     required this.stageSpriteAnimatinos,
     required this.breakingBlockAnimation,
     required this.explodingBombAnimation,
+    required this.guardianAnimation,
+    required this.guardianAttackAnimation,
+    required this.guardianAttackAnimationOffset,
     required this.swordsmanAnimation,
     required this.swordsmanAttackAnimation,
     required this.swordsmanAttackAnimationOffset,
@@ -207,7 +219,13 @@ class StageObjFactory {
             level: typeLevel.level,
             vector: beltV);
       case StageObjType.guardian:
-        return Guardian(animation: animation, pos: pos, level: typeLevel.level);
+        return Guardian(
+            animation: animation,
+            vectorAnimation: guardianAnimation,
+            attackAnimation: guardianAttackAnimation,
+            attackAnimationOffset: guardianAttackAnimationOffset,
+            pos: pos,
+            level: typeLevel.level);
       case StageObjType.water:
         return Water(animation: animation, pos: pos, level: typeLevel.level);
       case StageObjType.magma:
@@ -302,6 +320,8 @@ class Stage {
   /// 常に動くオブジェクトのアニメーションステップ時間
   static const double objectStepTime = 0.4;
 
+  static const double guardianAttackStepTime = 32.0 / playerSpeed / 5;
+
   static const double swordsmanAttackStepTime = 32.0 / playerSpeed / 5;
 
   static const double swordsmanRoundAttackStepTime = 32.0 / playerSpeed / 20;
@@ -330,6 +350,11 @@ class Stage {
   final Image blockImg;
   final Image bombImg;
   final Image beltImg;
+  final Image guardianImg;
+  final Image guardianAttackDImg;
+  final Image guardianAttackUImg;
+  final Image guardianAttackLImg;
+  final Image guardianAttackRImg;
   final Image swordsmanImg;
   final Image swordsmanAttackDImg;
   final Image swordsmanAttackUImg;
@@ -416,6 +441,11 @@ class Stage {
     required this.blockImg,
     required this.bombImg,
     required this.beltImg,
+    required this.guardianImg,
+    required this.guardianAttackDImg,
+    required this.guardianAttackUImg,
+    required this.guardianAttackLImg,
+    required this.guardianAttackRImg,
     required this.swordsmanImg,
     required this.swordsmanAttackDImg,
     required this.swordsmanAttackUImg,
@@ -496,6 +526,56 @@ class Stage {
       explodingBombAnimation: SpriteAnimation.spriteList(
           [Sprite(bombImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
           stepTime: 1.0),
+      guardianAnimation: {
+        Move.left: SpriteAnimation.spriteList([
+          Sprite(guardianImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.right: SpriteAnimation.spriteList([
+          Sprite(guardianImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.up: SpriteAnimation.spriteList([
+          Sprite(guardianImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.down: SpriteAnimation.spriteList([
+          Sprite(guardianImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+      },
+      guardianAttackAnimation: {
+        Move.down: SpriteAnimation.fromFrameData(
+          guardianAttackDImg,
+          SpriteAnimationData.sequenced(
+              amount: 5,
+              stepTime: guardianAttackStepTime,
+              textureSize: Vector2(96.0, 64.0)),
+        ),
+        Move.up: SpriteAnimation.fromFrameData(
+          guardianAttackUImg,
+          SpriteAnimationData.sequenced(
+              amount: 5,
+              stepTime: guardianAttackStepTime,
+              textureSize: Vector2(96.0, 64.0)),
+        ),
+        Move.left: SpriteAnimation.fromFrameData(
+          guardianAttackLImg,
+          SpriteAnimationData.sequenced(
+              amount: 5,
+              stepTime: guardianAttackStepTime,
+              textureSize: Vector2(64.0, 96.0)),
+        ),
+        Move.right: SpriteAnimation.fromFrameData(
+          guardianAttackRImg,
+          SpriteAnimationData.sequenced(
+              amount: 5,
+              stepTime: guardianAttackStepTime,
+              textureSize: Vector2(64.0, 96.0)),
+        ),
+      },
+      guardianAttackAnimationOffset: {
+        Move.up: Vector2(0, -16.0),
+        Move.down: Vector2(0, 16.0),
+        Move.left: Vector2(-16.0, 0),
+        Move.right: Vector2(16.0, 0)
+      },
       swordsmanAnimation: {
         Move.left: SpriteAnimation.spriteList([
           Sprite(swordsmanImg, srcPosition: Vector2(128, 0), srcSize: cellSize),
@@ -666,17 +746,18 @@ class Stage {
       }
     }
     // 引数位置を元に、どういうオブジェクトが出現するか決定
-    final distance = pos.distance();
     ObjInBlock pattern = ObjInBlock.jewel1_2;
     int jewelLevel = 1;
     for (final objInBlock in SettingVariables.objInBlockMap.entries) {
-      if (objInBlock.key <= distance) {
+      if (objInBlock.key.contains(pos)) {
         pattern = objInBlock.value;
+        break;
       }
     }
     for (final level in SettingVariables.jewelLevelInBlockMap.entries) {
-      if (level.key <= distance) {
+      if (level.key.contains(pos)) {
         jewelLevel = level.value;
+        break;
       }
     }
 
@@ -694,6 +775,7 @@ class Stage {
       case ObjInBlock.jewel1_2Treasure1:
       case ObjInBlock.jewel1_2Warp1:
       case ObjInBlock.jewel1_2Bomb1:
+      case ObjInBlock.jewel1_2Guardian1:
       case ObjInBlock.jewel1_2BeltGuardianSwordsman1:
         // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
         final jewelAppears = breaked.sample((breaked.length / 2).ceil());
@@ -776,6 +858,20 @@ class Stage {
           if (bomb) {
             adding.add(objFactory.create(
                 typeLevel: StageObjTypeLevel(type: StageObjType.bomb, level: 1),
+                pos: appear));
+            boxes.add(adding.last);
+          }
+        }
+        break;
+      case ObjInBlock.jewel1_2Guardian1:
+        // 宝石出現以外の位置に最大1個のガーディアンを出現させる
+        if (breakedRemain.isNotEmpty) {
+          bool guardian = Random().nextBool();
+          final appear = breakedRemain.sample(1).first;
+          if (guardian) {
+            adding.add(objFactory.create(
+                typeLevel:
+                    StageObjTypeLevel(type: StageObjType.guardian, level: 1),
                 pos: appear));
             boxes.add(adding.last);
           }

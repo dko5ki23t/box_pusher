@@ -253,10 +253,9 @@ abstract class StageObj {
         break;
       case EnemyMovePattern.followPlayerAttackRound8:
         // 周囲8マスにプレイヤーがいるなら攻撃
-        if (player.pos.x >= pos.x - 1 &&
-            player.pos.x <= pos.x + 1 &&
-            player.pos.y >= pos.y - 1 &&
-            player.pos.y <= pos.y + 1) {
+        if (PointRectRange(
+                Point(pos.x - 1, pos.y - 1), Point(pos.x + 1, pos.y + 1))
+            .contains(player.pos)) {
           ret['attack'] = true;
         } else {
           // 今プレイヤーの移動先にいるなら移動しない

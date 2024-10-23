@@ -132,10 +132,8 @@ class Swordsman extends StageObj {
             if (attackables.contains(stage.player.pos)) {
               stage.isGameover = true;
             }
-          } else if (stage.player.pos.x >= pos.x - 1 &&
-              stage.player.pos.x <= pos.x + 1 &&
-              stage.player.pos.y >= pos.y - 1 &&
-              stage.player.pos.y <= pos.y + 1) {
+          } else if (PointRectRange((pos - Point(1, 1)), pos + Point(1, 1))
+              .contains(stage.player.pos)) {
             // 回転斬りの場合は周囲8マス
             stage.isGameover = true;
           }

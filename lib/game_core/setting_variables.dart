@@ -1,3 +1,5 @@
+import 'package:box_pusher/game_core/common.dart';
+
 enum EnemyMovePattern {
   /// 完全にランダムに動く
   walkRandom,
@@ -31,6 +33,9 @@ enum ObjInBlock {
   /// 破壊した数/2(切り上げ)個の宝石、ボムが1個以下出現
   jewel1_2Bomb1,
 
+  /// 破壊した数/2(切り上げ)個の宝石、ガーディアンが1個以下出現
+  jewel1_2Guardian1,
+
   /// 破壊した数/2(切り上げ)個の宝石、コンベア/ガーディアン/剣を持つ敵がそれぞれ1個以下出現
   jewel1_2BeltGuardianSwordsman1,
 }
@@ -44,16 +49,21 @@ class SettingVariables {
   /// に敵が移動することを許すかどうか
   static bool allowEnemyMoveToMovingEnemyPoint = true;
 
-  /// 中心(ゲーム開始地点)からの距離->ブロック破壊時の出現オブジェクトのマップ
-  static Map<int, ObjInBlock> objInBlockMap = {
-    0: ObjInBlock.jewel1_2,
-    6: ObjInBlock.jewel1_2BeltGuardianSwordsman1,
+  /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
+  static Map<PointRange, ObjInBlock> objInBlockMap = {
+    PointDistanceRange(Point(0, 0), 5): ObjInBlock.jewel1_2,
+    PointRectRange(Point(-10, -10), Point(-5, -5)):
+        ObjInBlock.jewel1_2SpikeOrTrap1,
+    PointRectRange(Point(5, 5), Point(10, 10)):
+        ObjInBlock.jewel1_2BeltGuardianSwordsman1,
+    PointDistanceRange(Point(0, 0), 10): ObjInBlock.jewel1_2,
+    PointDistanceRange(Point(0, 0), 100): ObjInBlock.jewel1_2Guardian1,
   };
 
-  /// 中心(ゲーム開始地点)からの距離->ブロック破壊時の出現宝石のレベル
-  static Map<int, int> jewelLevelInBlockMap = {
-    0: 1,
-    5: 2,
-    10: 3,
+  /// ステージ上範囲->ブロック破壊時の出現宝石のレベル（範囲が重複する場合は先に存在するキーを優先）
+  static Map<PointRange, int> jewelLevelInBlockMap = {
+    PointDistanceRange(Point(0, 0), 4): 1,
+    PointDistanceRange(Point(0, 0), 9): 2,
+    PointDistanceRange(Point(0, 0), 100): 3,
   };
 }

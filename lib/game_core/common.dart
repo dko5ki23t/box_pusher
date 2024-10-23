@@ -48,6 +48,64 @@ class Point {
   }
 }
 
+/// 整数座標による範囲表現
+abstract class PointRange {
+  /// 引数の座標が範囲内にあるか
+  bool contains(Point p);
+}
+
+/// 整数座標による四角形表現
+class PointRectRange extends PointRange {
+  Point lt = Point(0, 0);
+  Point rb = Point(0, 0);
+
+  PointRectRange(this.lt, this.rb);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PointRectRange &&
+            runtimeType == other.runtimeType &&
+            lt == other.lt &&
+            rb == other.rb);
+  }
+
+  @override
+  int get hashCode => lt.hashCode ^ rb.hashCode;
+
+  /// 引数の座標が四角形内にあるか
+  @override
+  bool contains(Point p) {
+    return (p.x >= lt.x && p.x <= rb.x && p.y >= lt.y && p.y <= rb.y);
+  }
+}
+
+/// 整数座標による等距離範囲（≒円）表現
+class PointDistanceRange extends PointRange {
+  Point center = Point(0, 0);
+  int distance = 0;
+
+  PointDistanceRange(this.center, this.distance);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PointDistanceRange &&
+            runtimeType == other.runtimeType &&
+            center == other.center &&
+            distance == other.distance);
+  }
+
+  @override
+  int get hashCode => center.hashCode ^ distance.hashCode;
+
+  /// 引数の座標が範囲内にあるか
+  @override
+  bool contains(Point p) {
+    return (p - center).distance() <= distance;
+  }
+}
+
 /// 移動
 enum Move {
   none,
