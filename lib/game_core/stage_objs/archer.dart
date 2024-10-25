@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
@@ -24,6 +26,9 @@ class Archer extends StageObj {
 
   /// 矢のアニメーション
   final SpriteAnimation arrowAnimation;
+
+  /// 矢が飛ぶ時間
+  static final arrowMoveTime = Stage.cellSize.x / 2 / Stage.playerSpeed;
 
   /// 向き
   Move _vector = Move.down;
@@ -109,6 +114,20 @@ class Archer extends StageObj {
       if (attacking &&
           prevMovingAmount < Stage.cellSize.x / 2 &&
           movingAmount >= Stage.cellSize.x / 2) {
+        double angle = 0;
+        switch (vector) {
+          case Move.left:
+            angle = 0.5 * pi;
+            break;
+          case Move.right:
+            angle = -0.5 * pi;
+            break;
+          case Move.up:
+            angle = pi;
+            break;
+          default:
+            break;
+        }
         gameWorld.add(SpriteAnimationComponent(
           animation: arrowAnimation,
           priority: Stage.dynamicPriority,
@@ -116,12 +135,13 @@ class Archer extends StageObj {
             MoveEffect.by(
               Vector2(Stage.cellSize.x * vector.vector.x * 5,
                   Stage.cellSize.y * vector.vector.y * 5),
-              EffectController(duration: 0.5),
+              EffectController(duration: arrowMoveTime),
             ),
-            RemoveEffect(delay: 0.5),
+            RemoveEffect(delay: arrowMoveTime),
           ],
           size: Stage.cellSize,
           anchor: Anchor.center,
+          angle: angle,
           position:
               Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                   Stage.cellSize / 2,
