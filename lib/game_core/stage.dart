@@ -57,6 +57,18 @@ class StageObjFactory {
   /// 【剣を持つ敵】回転斬り攻撃時アニメーションのオフセット
   final Vector2 swordsmanRoundAttackAnimationOffset;
 
+  /// 【弓を持つ敵】向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> archerAnimation;
+
+  /// 【弓を持つ敵】攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
+  final Map<Move, SpriteAnimation> archerAttackAnimation;
+
+  /// 【弓を持つ敵】攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
+  final Map<Move, Vector2> archerAttackAnimationOffset;
+
+  /// 【弓を持つ敵】矢のアニメーション
+  final SpriteAnimation archerArrowAnimation;
+
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
   EffectController? baseMergable;
 
@@ -79,6 +91,10 @@ class StageObjFactory {
     required this.swordsmanAttackAnimationOffset,
     required this.swordsmanRoundAttackAnimation,
     required this.swordsmanRoundAttackAnimationOffset,
+    required this.archerAnimation,
+    required this.archerAttackAnimation,
+    required this.archerAttackAnimationOffset,
+    required this.archerArrowAnimation,
   });
 
   StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
@@ -242,7 +258,15 @@ class StageObjFactory {
           level: typeLevel.level,
         );
       case StageObjType.archer:
-        return Archer(animation: animation, pos: pos, level: typeLevel.level);
+        return Archer(
+          animation: animation,
+          vectorAnimation: archerAnimation,
+          attackAnimation: archerAttackAnimation,
+          attackAnimationOffset: archerAttackAnimationOffset,
+          arrowAnimation: archerArrowAnimation,
+          pos: pos,
+          level: typeLevel.level,
+        );
       case StageObjType.wizard:
         return Wizard(animation: animation, pos: pos, level: typeLevel.level);
     }
@@ -326,6 +350,8 @@ class Stage {
 
   static const double swordsmanRoundAttackStepTime = 32.0 / playerSpeed / 20;
 
+  static const double archerAttackStepTime = 32.0 / playerSpeed / 4;
+
   /// マージ可能なオブジェクトの拡大/縮小の時間(s)
   static const double mergableZoomDuration = 0.8;
 
@@ -364,6 +390,9 @@ class Stage {
   final Image swordsmanRoundAttackUImg;
   final Image swordsmanRoundAttackLImg;
   final Image swordsmanRoundAttackRImg;
+  final Image archerImg;
+  final Image archerAttackImg;
+  final Image arrowImg;
 
   late StageObjFactory objFactory;
 
@@ -455,6 +484,9 @@ class Stage {
     required this.swordsmanRoundAttackUImg,
     required this.swordsmanRoundAttackLImg,
     required this.swordsmanRoundAttackRImg,
+    required this.archerImg,
+    required this.archerAttackImg,
+    required this.arrowImg,
   }) {
     final Map<StageObjType, SpriteAnimation> stageSprites = {};
     stageSprites[StageObjType.none] = SpriteAnimation.spriteList(
@@ -661,6 +693,75 @@ class Stage {
         ),
       },
       swordsmanRoundAttackAnimationOffset: Vector2.zero(),
+      archerAnimation: {
+        Move.left: SpriteAnimation.spriteList([
+          Sprite(archerImg, srcPosition: Vector2(128, 0), srcSize: cellSize),
+          Sprite(archerImg, srcPosition: Vector2(160, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.right: SpriteAnimation.spriteList([
+          Sprite(archerImg, srcPosition: Vector2(192, 0), srcSize: cellSize),
+          Sprite(archerImg, srcPosition: Vector2(224, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.up: SpriteAnimation.spriteList([
+          Sprite(archerImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
+          Sprite(archerImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+        Move.down: SpriteAnimation.spriteList([
+          Sprite(archerImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
+          Sprite(archerImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
+        ], stepTime: objectStepTime),
+      },
+      archerAttackAnimation: {
+        Move.down: SpriteAnimation.spriteList([
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(0, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(32, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(64, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(96, 0), srcSize: cellSize),
+        ], stepTime: archerAttackStepTime),
+        Move.up: SpriteAnimation.spriteList([
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(128, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(160, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(192, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(224, 0), srcSize: cellSize),
+        ], stepTime: archerAttackStepTime),
+        Move.left: SpriteAnimation.spriteList([
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(256, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(288, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(320, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(352, 0), srcSize: cellSize),
+        ], stepTime: archerAttackStepTime),
+        Move.right: SpriteAnimation.spriteList([
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(384, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(416, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(448, 0), srcSize: cellSize),
+          Sprite(archerAttackImg,
+              srcPosition: Vector2(480, 0), srcSize: cellSize),
+        ], stepTime: archerAttackStepTime),
+      },
+      archerAttackAnimationOffset: {
+        Move.up: Vector2.zero(),
+        Move.down: Vector2.zero(),
+        Move.left: Vector2.zero(),
+        Move.right: Vector2.zero(),
+      },
+      archerArrowAnimation: SpriteAnimation.spriteList([
+        Sprite(arrowImg),
+      ], stepTime: 1.0),
     );
   }
 
@@ -777,6 +878,7 @@ class Stage {
       case ObjInBlock.jewel1_2Bomb1:
       case ObjInBlock.jewel1_2Guardian1:
       case ObjInBlock.jewel1_2BeltGuardianSwordsman1:
+      case ObjInBlock.jewel1_2Archer1:
         // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
         final jewelAppears = breaked.sample((breaked.length / 2).ceil());
         breakedRemain.removeWhere((element) => jewelAppears.contains(element));
@@ -914,6 +1016,20 @@ class Stage {
               }
             }
             breakedRemain.remove(appear);
+          }
+        }
+        break;
+      case ObjInBlock.jewel1_2Archer1:
+        // 宝石出現以外の位置に最大1個のガーディアンを出現させる
+        if (breakedRemain.isNotEmpty) {
+          bool archer = Random().nextBool();
+          final appear = breakedRemain.sample(1).first;
+          if (archer) {
+            adding.add(objFactory.create(
+                typeLevel:
+                    StageObjTypeLevel(type: StageObjType.archer, level: 1),
+                pos: appear));
+            enemies.add(adding.last);
           }
         }
         break;

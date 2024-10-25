@@ -31,6 +31,10 @@ class Point {
     return Point(x - a.x, y - a.y);
   }
 
+  Point operator *(int a) {
+    return Point(x * a, y * a);
+  }
+
   Point copy() => Point(x, y);
 
   /// 原点(0,0)からの距離
@@ -59,7 +63,14 @@ class PointRectRange extends PointRange {
   Point lt = Point(0, 0);
   Point rb = Point(0, 0);
 
-  PointRectRange(this.lt, this.rb);
+  /// 左上と右下は逆で指定しても良い
+  PointRectRange(this.lt, this.rb) {
+    if (lt.x > rb.x || lt.y > rb.y) {
+      Point tmp = lt.copy();
+      lt = rb.copy();
+      rb = tmp;
+    }
+  }
 
   @override
   bool operator ==(Object other) {

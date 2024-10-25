@@ -147,6 +147,61 @@ abstract class StageObj {
   /// コンベアで動くかどうか
   bool get beltMove;
 
+  void _enemyMoveFollow(
+    Map<String, dynamic> ret,
+    EnemyMovePattern pattern,
+    Move vector,
+    Player player,
+    Stage stage,
+    List<Point> prohibitedPoints,
+  ) {
+    // 今プレイヤーの移動先にいるなら移動しない
+    if (pos == player.pos + player.moving.point) {
+      ret['move'] = Move.none;
+    } else {
+      // プレイヤーの方へ移動する/向きを変える
+      final delta = player.pos - pos;
+      final List<Move> tmpCand = [];
+      if (delta.x > 0) {
+        tmpCand.add(Move.right);
+      } else if (delta.x < 0) {
+        tmpCand.add(Move.left);
+      }
+      if (delta.y > 0) {
+        tmpCand.add(Move.down);
+      } else if (delta.y < 0) {
+        tmpCand.add(Move.up);
+      }
+      final List<Move> cand = [];
+      for (final move in tmpCand) {
+        Point eTo = pos + move.point;
+        final eToObj = stage.getObject(eTo);
+        if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
+            player.pushings.isNotEmpty &&
+            player.pushings.first.pos == eTo) {
+          // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+        } else if (!eToObj.puttable && eToObj.typeLevel != typeLevel) {
+          continue;
+        }
+        if (prohibitedPoints.contains(eTo)) {
+          continue;
+        }
+        cand.add(move);
+      }
+      if (cand.isNotEmpty) {
+        final move = cand.sample(1).first;
+        ret['move'] = move;
+        // 向きも変更
+        ret['vector'] = move;
+        // 自身の移動先は、他のオブジェクトの移動先にならないようにする
+        prohibitedPoints.add(pos + move.point);
+      } else if (tmpCand.isNotEmpty) {
+        // 向きだけ変更
+        ret['vector'] = tmpCand.sample(1).first;
+      }
+    }
+  }
+
   /// 敵の動きを決定する
   Map<String, dynamic> enemyMove(
     EnemyMovePattern pattern,
@@ -191,6 +246,9 @@ abstract class StageObj {
           prohibitedPoints.add(pos + move.point);
         }
         break;
+      case EnemyMovePattern.followPlayer:
+        _enemyMoveFollow(ret, pattern, vector, player, stage, prohibitedPoints);
+        break;
       case EnemyMovePattern.followPlayerAttackForward3:
         // 向いている方向の3マスにプレイヤーがいるなら攻撃
         final tmp = MoveExtent.straights;
@@ -204,51 +262,8 @@ abstract class StageObj {
         if (attackables.contains(player.pos)) {
           ret['attack'] = true;
         } else {
-          // 今プレイヤーの移動先にいるなら移動しない
-          if (pos == player.pos + player.moving.point) {
-            ret['move'] = Move.none;
-          } else {
-            // プレイヤーの方へ移動する/向きを変える
-            final delta = player.pos - pos;
-            final List<Move> tmpCand = [];
-            if (delta.x > 0) {
-              tmpCand.add(Move.right);
-            } else if (delta.x < 0) {
-              tmpCand.add(Move.left);
-            }
-            if (delta.y > 0) {
-              tmpCand.add(Move.down);
-            } else if (delta.y < 0) {
-              tmpCand.add(Move.up);
-            }
-            final List<Move> cand = [];
-            for (final move in tmpCand) {
-              Point eTo = pos + move.point;
-              final eToObj = stage.getObject(eTo);
-              if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
-                  player.pushings.isNotEmpty &&
-                  player.pushings.first.pos == eTo) {
-                // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-              } else if (!eToObj.puttable && eToObj.typeLevel != typeLevel) {
-                continue;
-              }
-              if (prohibitedPoints.contains(eTo)) {
-                continue;
-              }
-              cand.add(move);
-            }
-            if (cand.isNotEmpty) {
-              final move = cand.sample(1).first;
-              ret['move'] = move;
-              // 向きも変更
-              ret['vector'] = move;
-              // 自身の移動先は、他のオブジェクトの移動先にならないようにする
-              prohibitedPoints.add(pos + move.point);
-            } else if (tmpCand.isNotEmpty) {
-              // 向きだけ変更
-              ret['vector'] = tmpCand.sample(1).first;
-            }
-          }
+          _enemyMoveFollow(
+              ret, pattern, vector, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackRound8:
@@ -258,51 +273,17 @@ abstract class StageObj {
             .contains(player.pos)) {
           ret['attack'] = true;
         } else {
-          // 今プレイヤーの移動先にいるなら移動しない
-          if (pos == player.pos + player.moving.point) {
-            ret['move'] = Move.none;
-          } else {
-            // プレイヤーの方へ移動する/向きを変える
-            final delta = player.pos - pos;
-            final List<Move> tmpCand = [];
-            if (delta.x > 0) {
-              tmpCand.add(Move.right);
-            } else if (delta.x < 0) {
-              tmpCand.add(Move.left);
-            }
-            if (delta.y > 0) {
-              tmpCand.add(Move.down);
-            } else if (delta.y < 0) {
-              tmpCand.add(Move.up);
-            }
-            final List<Move> cand = [];
-            for (final move in tmpCand) {
-              Point eTo = pos + move.point;
-              final eToObj = stage.getObject(eTo);
-              if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
-                  player.pushings.isNotEmpty &&
-                  player.pushings.first.pos == eTo) {
-                // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-              } else if (!eToObj.puttable && eToObj.typeLevel != typeLevel) {
-                continue;
-              }
-              if (prohibitedPoints.contains(eTo)) {
-                continue;
-              }
-              cand.add(move);
-            }
-            if (cand.isNotEmpty) {
-              final move = cand.sample(1).first;
-              ret['move'] = move;
-              // 向きも変更
-              ret['vector'] = move;
-              // 自身の移動先は、他のオブジェクトの移動先にならないようにする
-              prohibitedPoints.add(pos + move.point);
-            } else if (tmpCand.isNotEmpty) {
-              // 向きだけ変更
-              ret['vector'] = tmpCand.sample(1).first;
-            }
-          }
+          _enemyMoveFollow(
+              ret, pattern, vector, player, stage, prohibitedPoints);
+        }
+        break;
+      case EnemyMovePattern.followPlayerAttackStraight5:
+        // 前方直線状5マスにプレイヤーがいるなら攻撃
+        if (PointRectRange(pos, pos + vector.point * 5).contains(player.pos)) {
+          ret['attack'] = true;
+        } else {
+          _enemyMoveFollow(
+              ret, pattern, vector, player, stage, prohibitedPoints);
         }
         break;
     }

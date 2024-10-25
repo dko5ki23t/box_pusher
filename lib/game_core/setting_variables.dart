@@ -7,11 +7,17 @@ enum EnemyMovePattern {
   /// ランダムに動くorその場にとどまる
   walkRandomOrStop,
 
+  /// プレイヤーの方へ動くor向く
+  followPlayer,
+
   /// プレイヤーの方へ動くor向く、前方3マスを攻撃する
   followPlayerAttackForward3,
 
   /// プレイヤーの方へ動くor向く、周囲8マスを攻撃する
   followPlayerAttackRound8,
+
+  /// プレイヤーの方へ動くor向く、直線5マスを攻撃する
+  followPlayerAttackStraight5,
 }
 
 enum ObjInBlock {
@@ -38,6 +44,9 @@ enum ObjInBlock {
 
   /// 破壊した数/2(切り上げ)個の宝石、コンベア/ガーディアン/剣を持つ敵がそれぞれ1個以下出現
   jewel1_2BeltGuardianSwordsman1,
+
+  /// 破壊した数/2(切り上げ)個の宝石、弓を持つ敵が1個以下出現
+  jewel1_2Archer1,
 }
 
 class SettingVariables {
@@ -57,6 +66,7 @@ class SettingVariables {
     PointRectRange(Point(5, 5), Point(10, 10)):
         ObjInBlock.jewel1_2BeltGuardianSwordsman1,
     PointDistanceRange(Point(0, 0), 10): ObjInBlock.jewel1_2,
+    PointDistanceRange(Point(0, 0), 15): ObjInBlock.jewel1_2Archer1,
     PointDistanceRange(Point(0, 0), 100): ObjInBlock.jewel1_2Guardian1,
   };
 
@@ -64,6 +74,14 @@ class SettingVariables {
   static Map<PointRange, int> jewelLevelInBlockMap = {
     PointDistanceRange(Point(0, 0), 4): 1,
     PointDistanceRange(Point(0, 0), 9): 2,
-    PointDistanceRange(Point(0, 0), 100): 3,
+    PointDistanceRange(Point(0, 0), 16): 3,
+    PointDistanceRange(Point(0, 0), 25): 4,
+    PointDistanceRange(Point(0, 0), 36): 5,
+    PointDistanceRange(Point(0, 0), 49): 6,
+    PointDistanceRange(Point(0, 0), 64): 7,
+    PointDistanceRange(Point(0, 0), 81): 8,
+    PointDistanceRange(Point(0, 0), 100): 9,
+    PointDistanceRange(Point(0, 0), 121): 10,
+    PointDistanceRange(Point(0, 0), 1000): 11,
   };
 }

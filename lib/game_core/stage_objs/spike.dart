@@ -5,7 +5,9 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 
 class Spike extends StageObj {
-  final EnemyMovePattern movePattern = EnemyMovePattern.walkRandomOrStop;
+  final EnemyMovePattern movePattern = EnemyMovePattern.followPlayer;
+
+  bool _playerStartMovingFlag = false;
 
   Spike({
     required super.animation,
@@ -37,9 +39,10 @@ class Spike extends StageObj {
         moving = ret['move'] as Move;
       }
       movingAmount = 0;
+      _playerStartMovingFlag = true;
     }
 
-    if (moving != Move.none) {
+    if (_playerStartMovingFlag) {
       // 移動中の場合(このフレームで移動開始した場合を含む)
       // 移動量加算
       movingAmount += dt * Stage.playerSpeed;
@@ -49,8 +52,10 @@ class Spike extends StageObj {
 
       // ※※※画像の移動ここから※※※
       // 移動中の場合は画素も考慮
-      Vector2 offset = moving.vector * movingAmount;
-      stage.objFactory.setPosition(this, offset: offset);
+      if (moving != Move.none) {
+        Vector2 offset = moving.vector * movingAmount;
+        stage.objFactory.setPosition(this, offset: offset);
+      }
       // ※※※画像の移動ここまで※※※
 
       // 次のマスに移っていたら移動終了
