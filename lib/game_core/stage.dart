@@ -1305,12 +1305,8 @@ class Stage {
               ),
               pos: Point(x, y)));
         } else {
-          // その他、ブロック
-          staticObjs[Point(x, y)] = objFactory.create(
-              typeLevel: StageObjTypeLevel(
-                type: StageObjType.wall,
-              ),
-              pos: Point(x, y));
+          // その他は定めたパターンに従う
+          staticObjs[Point(x, y)] = createStaticObjWithPattern(Point(x, y));
         }
       }
     }
@@ -1487,6 +1483,43 @@ class Stage {
             Vector2(stageRB.x * cellSize.x, stageRB.y * cellSize.y)),
       );
     }
+  }
+
+  /// 引数で指定した位置に、パターンに従った静止物を生成する
+  StageObj createStaticObjWithPattern(Point point) {
+    // その他は定めたパターンに従う
+    for (final pattern in SettingVariables.blockFloorMap.entries) {
+      if (pattern.key.contains(point)) {
+        switch (pattern.value) {
+          case BlockFloorPattern.allBlockLevel1:
+            return objFactory.create(
+                typeLevel: StageObjTypeLevel(
+                  type: StageObjType.wall,
+                ),
+                pos: point);
+          case BlockFloorPattern.floor2BlockLevel1:
+            if (Random().nextInt(50) == 0) {
+              return objFactory.create(
+                  typeLevel: StageObjTypeLevel(
+                    type: StageObjType.none,
+                  ),
+                  pos: point);
+            } else {
+              return objFactory.create(
+                  typeLevel: StageObjTypeLevel(
+                    type: StageObjType.wall,
+                  ),
+                  pos: point);
+            }
+        }
+      }
+    }
+    assert(false, 'arienai!');
+    return objFactory.create(
+        typeLevel: StageObjTypeLevel(
+          type: StageObjType.wall,
+        ),
+        pos: point);
   }
 
   void setHandAbility(bool isOn) {

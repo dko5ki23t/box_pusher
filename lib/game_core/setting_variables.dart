@@ -20,6 +20,14 @@ enum EnemyMovePattern {
   followPlayerAttackStraight5,
 }
 
+enum BlockFloorPattern {
+  /// 全てレベル1のブロック
+  allBlockLevel1,
+
+  /// 2%が床、それ以外はレベル1のブロック
+  floor2BlockLevel1,
+}
+
 enum ObjInBlock {
   /// 破壊した数/2(切り上げ)個の宝石が出現
   jewel1_2,
@@ -60,6 +68,12 @@ class SettingVariables {
   /// 「今は敵または移動するオブジェクトがある位置だが、その敵やオブジェクトが移動することが確定しているため、実際には移動可能な座標」
   /// に敵が移動することを許すかどうか
   static bool allowEnemyMoveToMovingEnemyPoint = true;
+
+  /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
+  static Map<PointRange, BlockFloorPattern> blockFloorMap = {
+    PointDistanceRange(Point(0, 0), 8): BlockFloorPattern.allBlockLevel1,
+    PointDistanceRange(Point(0, 0), 100): BlockFloorPattern.floor2BlockLevel1,
+  };
 
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, ObjInBlock> objInBlockMap = {
