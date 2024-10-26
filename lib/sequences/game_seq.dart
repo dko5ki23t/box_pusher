@@ -93,6 +93,9 @@ class GameSeq extends Sequence
   late final Image archerImg;
   late final Image archerAttackImg;
   late final Image arrowImg;
+  late final Image wizardImg;
+  late final Image wizardAttackImg;
+  late final Image magicImg;
   late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
@@ -135,6 +138,9 @@ class GameSeq extends Sequence
     archerImg = await Flame.images.load('archer.png');
     archerAttackImg = await Flame.images.load('archer_attack.png');
     arrowImg = await Flame.images.load('arrow.png');
+    wizardImg = await Flame.images.load('wizard.png');
+    wizardAttackImg = await Flame.images.load('wizard_attack.png');
+    magicImg = await Flame.images.load('magic.png');
     coinImg = await Flame.images.load('coin.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
@@ -198,6 +204,9 @@ class GameSeq extends Sequence
       archerImg: archerImg,
       archerAttackImg: archerAttackImg,
       arrowImg: arrowImg,
+      wizardImg: wizardImg,
+      wizardAttackImg: wizardAttackImg,
+      magicImg: magicImg,
     );
     stage.initialize(game.world, game.camera, game.stageData);
 

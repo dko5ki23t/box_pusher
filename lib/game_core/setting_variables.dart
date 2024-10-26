@@ -47,6 +47,9 @@ enum ObjInBlock {
 
   /// 破壊した数/2(切り上げ)個の宝石、弓を持つ敵が1個以下出現
   jewel1_2Archer1,
+
+  /// 破壊した数/2(切り上げ)個の宝石、魔法使いが1個以下出現
+  jewel1_2Wizard1,
 }
 
 class SettingVariables {
@@ -66,7 +69,7 @@ class SettingVariables {
     PointRectRange(Point(5, 5), Point(10, 10)):
         ObjInBlock.jewel1_2BeltGuardianSwordsman1,
     PointDistanceRange(Point(0, 0), 10): ObjInBlock.jewel1_2,
-    PointDistanceRange(Point(0, 0), 15): ObjInBlock.jewel1_2Archer1,
+    PointDistanceRange(Point(0, 0), 15): ObjInBlock.jewel1_2Wizard1,
     PointDistanceRange(Point(0, 0), 100): ObjInBlock.jewel1_2Guardian1,
   };
 
