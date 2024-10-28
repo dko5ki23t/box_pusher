@@ -37,11 +37,12 @@ class Archer extends StageObj {
   Move get vector => _vector;
   set vector(Move v) {
     _vector = v;
-    animation.animation = vectorAnimation[_vector];
+    animationComponent.animation = vectorAnimation[_vector];
   }
 
   Archer({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required this.vectorAnimation,
     required this.attackAnimation,
     required this.attackAnimationOffset,
@@ -74,13 +75,14 @@ class Archer extends StageObj {
     if (playerStartMoving) {
       playerStartMovingFlag = true;
       // 移動/攻撃を決定
-      final ret = super.enemyMove(movePatterns[typeLevel.level]!, vector,
-          stage.player, stage, prohibitedPoints);
+      final ret = super.enemyMove(
+          movePatterns[level]!, vector, stage.player, stage, prohibitedPoints);
       if (ret.containsKey('attack') && ret['attack']!) {
         attacking = true;
         // 攻撃中のアニメーションに変更
-        animation.animation = attackAnimation[vector]!;
-        animation.size = animation.animation!.frames.first.sprite.srcSize;
+        animationComponent.animation = attackAnimation[vector]!;
+        animationComponent.size =
+            animationComponent.animation!.frames.first.sprite.srcSize;
         stage.objFactory
             .setPosition(this, offset: attackAnimationOffset[vector]!);
       }
@@ -166,7 +168,7 @@ class Archer extends StageObj {
         if (attacking) {
           // アニメーションを元に戻す
           vector = vector;
-          animation.size = Stage.cellSize;
+          animationComponent.size = Stage.cellSize;
           stage.objFactory.setPosition(this);
           attacking = false;
         }
@@ -184,7 +186,7 @@ class Archer extends StageObj {
   bool get puttable => false;
 
   @override
-  bool get mergable => typeLevel.level < maxLevel;
+  bool get mergable => level < maxLevel;
 
   @override
   int get maxLevel => 20;

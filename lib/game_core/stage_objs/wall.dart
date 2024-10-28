@@ -5,7 +5,8 @@ import 'package:flame/components.dart';
 
 class Wall extends StageObj {
   Wall({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required super.pos,
     int level = 1,
   }) : super(
@@ -39,7 +40,7 @@ class Wall extends StageObj {
   bool get mergable => false;
 
   @override
-  int get maxLevel => 1;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => false;

@@ -71,6 +71,7 @@ class GameSeq extends Sequence
   Move pushingMoveButton = Move.none;
 
   late final Image stageImg;
+  late final Image jewelImg;
   late final Image playerImg;
   late final Image spikeImg;
   late final Image blockImg;
@@ -112,6 +113,7 @@ class GameSeq extends Sequence
   @override
   Future<void> onLoad() async {
     stageImg = await Flame.images.load('stage_alpha.png');
+    jewelImg = await Flame.images.load('jewels.png');
     playerImg = await Flame.images.load('player.png');
     spikeImg = await Flame.images.load('spike.png');
     blockImg = await Flame.images.load('block.png');
@@ -182,6 +184,7 @@ class GameSeq extends Sequence
 
     stage = Stage(
       stageImg: stageImg,
+      jewelImg: jewelImg,
       playerImg: playerImg,
       spikeImg: spikeImg,
       blockImg: blockImg,

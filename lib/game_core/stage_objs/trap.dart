@@ -5,7 +5,8 @@ import 'package:flame/components.dart';
 
 class Trap extends StageObj {
   Trap({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required super.pos,
     int level = 1,
   }) : super(
@@ -29,7 +30,7 @@ class Trap extends StageObj {
     final killings =
         stage.enemies.where((element) => element.pos == pos).toList();
     for (final killing in killings) {
-      gameWorld.remove(killing.animation);
+      gameWorld.remove(killing.animationComponent);
       stage.enemies.remove(killing);
     }
   }
@@ -44,7 +45,7 @@ class Trap extends StageObj {
   bool get puttable => false;
 
   @override
-  bool get mergable => typeLevel.level < maxLevel;
+  bool get mergable => level < maxLevel;
 
   @override
   int get maxLevel => 20;

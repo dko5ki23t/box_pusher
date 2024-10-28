@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
@@ -98,20 +100,44 @@ class StageObjTypeLevel {
 
 /// ステージ上オブジェクト
 abstract class StageObj {
-  StageObjTypeLevel typeLevel;
+  final StageObjTypeLevel _typeLevel;
   Point pos; // 現在位置
   bool valid;
-  SpriteAnimationComponent animation;
+  SpriteAnimationComponent animationComponent;
+  Map<int, SpriteAnimation> levelToAnimations; // オブジェクトのレベル->アニメーションのマップ
   Move moving = Move.none; // 移動中の向き
   double movingAmount = 0;
   final List<StageObj> pushings = []; // 押しているオブジェクト
 
   StageObj({
-    required this.typeLevel,
-    required this.animation,
+    required typeLevel,
+    required this.animationComponent,
+    required this.levelToAnimations,
     this.valid = true,
     required this.pos,
-  });
+  }) : _typeLevel = typeLevel {
+    level = typeLevel.level;
+  }
+
+  /// タイプ
+  StageObjType get type => _typeLevel.type;
+  set type(StageObjType t) => _typeLevel.type = type;
+
+  /// レベル
+  int get level => _typeLevel.level;
+  set level(int l) {
+    if (!levelToAnimations.containsKey(l)) {
+      log('no animation for level $l in ${_typeLevel.type}');
+      animationComponent.animation = levelToAnimations[1]!;
+    } else {
+      animationComponent.animation = levelToAnimations[l]!;
+    }
+    _typeLevel.level = l;
+  }
+
+  bool isSameTypeLevel(StageObj o) {
+    return o._typeLevel == _typeLevel;
+  }
 
   void update(
     double dt,
@@ -175,12 +201,13 @@ abstract class StageObj {
       final List<Move> cand = [];
       for (final move in tmpCand) {
         Point eTo = pos + move.point;
-        final eToObj = stage.getObject(eTo);
+        final eToObj = stage.get(eTo);
         if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
             player.pushings.isNotEmpty &&
             player.pushings.first.pos == eTo) {
           // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-        } else if (!eToObj.puttable && eToObj.typeLevel != typeLevel) {
+        } else if (!eToObj.puttable &&
+            !(eToObj.type == type && eToObj.level == level)) {
           continue;
         }
         if (prohibitedPoints.contains(eTo)) {
@@ -225,12 +252,13 @@ abstract class StageObj {
           }
           for (final move in MoveExtent.straights) {
             Point eTo = pos + move.point;
-            final eToObj = stage.getObject(eTo);
+            final eToObj = stage.get(eTo);
             if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
                 player.pushings.isNotEmpty &&
                 player.pushings.first.pos == eTo) {
               // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-            } else if (!eToObj.puttable && eToObj.typeLevel != typeLevel) {
+            } else if (!eToObj.puttable &&
+                (eToObj.type != type || eToObj.level != level)) {
               continue;
             }
             if (prohibitedPoints.contains(eTo)) {
@@ -292,6 +320,6 @@ abstract class StageObj {
   }
 
   Map<String, dynamic> encode() {
-    return {'typeLevel': typeLevel.encode(), 'pos': pos.encode()};
+    return {'typeLevel': _typeLevel.encode(), 'pos': pos.encode()};
   }
 }

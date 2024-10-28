@@ -7,7 +7,8 @@ import 'package:flame/components.dart';
 
 class Player extends StageObj {
   Player({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required super.pos,
     int level = 1,
   }) : super(
@@ -46,11 +47,11 @@ class Player extends StageObj {
       if (moveInput == Move.none) {
         return;
       }
-      StageObj toObj = stage.getObject(to);
-      StageObj toToObj = stage.getObject(toTo);
+      StageObj toObj = stage.get(to);
+      StageObj toToObj = stage.get(toTo);
 
       // プレイヤーが壁にぶつかるか
-      if (toObj.typeLevel.type == StageObjType.wall) {
+      if (toObj.type == StageObjType.wall) {
         return;
       }
 
@@ -66,8 +67,8 @@ class Player extends StageObj {
         // オブジェクトが押せるか
         if (toObj.pushable) {
           // ドリルの場合は少し違う処理
-          if (toObj.typeLevel.type == StageObjType.drill &&
-              toToObj.typeLevel.type == StageObjType.wall) {
+          if (toObj.type == StageObjType.drill &&
+              toToObj.type == StageObjType.wall) {
             // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
             stage.setStaticType(toTo, StageObjType.none, gameWorld);
             // 破壊したブロックのアニメーションを描画
@@ -77,14 +78,14 @@ class Player extends StageObj {
           } else if (toToObj.stopping ||
               (i == end - 1 &&
                   !toToObj.puttable &&
-                  (toObj.typeLevel != toToObj.typeLevel || !toObj.mergable))) {
+                  (!toObj.isSameTypeLevel(toToObj) || !toObj.mergable))) {
             // 押した先が敵等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
             // これまでにpushingsに追加したものも含めて一切押せない
             pushings.clear();
             return;
           }
           // マージできる場合は、一気に押せるオブジェクト（pushings）はここまで
-          if (toToObj.typeLevel == toObj.typeLevel && toObj.mergable) {
+          if (toToObj.isSameTypeLevel(toObj) && toObj.mergable) {
             stopBecauseMergeOrDrill = true;
           }
         } else {
@@ -109,8 +110,8 @@ class Player extends StageObj {
             toTo.y > stage.stageRB.y) {
           return;
         }
-        toObj = stage.getObject(to);
-        toToObj = stage.getObject(toTo);
+        toObj = stage.get(to);
+        toToObj = stage.get(toTo);
       }
       moving = moveInput;
       movingAmount = 0.0;
@@ -149,19 +150,19 @@ class Player extends StageObj {
         // TODO:箱の方に実装？
         for (final pushing in pushings) {
           // 押した先のオブジェクトを調べる
-          if (pushing.mergable && pushing.typeLevel == stage.get(toTo)) {
+          if (pushing.mergable && pushing.isSameTypeLevel(stage.get(toTo))) {
             // マージ
             stage.merge(toTo, pushing, gameWorld);
           }
           // 押したものの位置を設定
           pushing.pos = toTo;
           stage.objFactory.setPosition(pushing);
-          if (pushing.typeLevel.type == StageObjType.drill && executing) {
+          if (pushing.type == StageObjType.drill && executing) {
             // ドリル使用時
             // ドリルのオブジェクトレベルダウン、0になったら消す
-            pushing.typeLevel.level--;
-            if (pushing.typeLevel.level <= 0) {
-              gameWorld.remove(pushing.animation);
+            pushing.level--;
+            if (pushing.level <= 0) {
+              gameWorld.remove(pushing.animationComponent);
               stage.boxes.remove(pushing);
             }
           }

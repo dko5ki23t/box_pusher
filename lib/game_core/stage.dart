@@ -32,6 +32,7 @@ class StageObjFactory {
   final Map<StageObjType, SpriteAnimation> stageSpriteAnimatinos;
   final SpriteAnimation breakingBlockAnimation;
   final SpriteAnimation explodingBombAnimation;
+  final Map<int, SpriteAnimation> jewelLevelToAnimation;
 
   /// 【ガーディアン】向きに対応するアニメーション。上下左右のkeyが必須
   final Map<Move, SpriteAnimation> guardianAnimation;
@@ -95,6 +96,7 @@ class StageObjFactory {
     required this.stageSpriteAnimatinos,
     required this.breakingBlockAnimation,
     required this.explodingBombAnimation,
+    required this.jewelLevelToAnimation,
     required this.guardianAnimation,
     required this.guardianAttackAnimation,
     required this.guardianAttackAnimationOffset,
@@ -221,76 +223,128 @@ class StageObjFactory {
 
     switch (typeLevel.type) {
       case StageObjType.none:
-        return Floor(animation: animation, pos: pos, level: typeLevel.level);
+        return Floor(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.box:
-        return Box(animation: animation, pos: pos, level: typeLevel.level);
+        return Box(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: jewelLevelToAnimation);
       case StageObjType.trap:
-        return Trap(animation: animation, pos: pos, level: typeLevel.level);
+        return Trap(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.player:
-        return Player(animation: animation, pos: pos, level: typeLevel.level);
+        return Player(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.wall:
-        return Wall(animation: animation, pos: pos, level: typeLevel.level);
+        return Wall(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.spike:
-        return Spike(animation: animation, pos: pos, level: typeLevel.level);
+        return Spike(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.drill:
-        return Drill(animation: animation, pos: pos, level: typeLevel.level);
+        return Drill(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.treasureBox:
         return TreasureBox(
-            animation: animation, pos: pos, level: typeLevel.level);
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.warp:
-        return Warp(animation: animation, pos: pos, level: typeLevel.level);
+        return Warp(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.bomb:
-        return Bomb(animation: animation, pos: pos, level: typeLevel.level);
+        return Bomb(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.beltL:
       case StageObjType.beltR:
       case StageObjType.beltU:
       case StageObjType.beltD:
         return Belt(
-            animation: animation,
+            animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!},
             vector: beltV);
       case StageObjType.guardian:
         return Guardian(
-            animation: animation,
+            animationComponent: animation,
             vectorAnimation: guardianAnimation,
             attackAnimation: guardianAttackAnimation,
+            levelToAnimations: {1: animation.animation!},
             attackAnimationOffset: guardianAttackAnimationOffset,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.water:
-        return Water(animation: animation, pos: pos, level: typeLevel.level);
+        return Water(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.magma:
-        return Magma(animation: animation, pos: pos, level: typeLevel.level);
+        return Magma(
+            animationComponent: animation,
+            pos: pos,
+            level: typeLevel.level,
+            levelToAnimations: {1: animation.animation!});
       case StageObjType.swordsman:
         return Swordsman(
-          animation: animation,
+          animationComponent: animation,
           vectorAnimation: swordsmanAnimation,
           attackAnimation: swordsmanAttackAnimation,
           attackAnimationOffset: swordsmanAttackAnimationOffset,
           roundAttackAnimation: swordsmanRoundAttackAnimation,
           roundAttackAnimationOffset: swordsmanRoundAttackAnimationOffset,
+          levelToAnimations: {1: animation.animation!},
           pos: pos,
           level: typeLevel.level,
         );
       case StageObjType.archer:
         return Archer(
-          animation: animation,
+          animationComponent: animation,
           vectorAnimation: archerAnimation,
           attackAnimation: archerAttackAnimation,
           attackAnimationOffset: archerAttackAnimationOffset,
           arrowAnimation: archerArrowAnimation,
+          levelToAnimations: {1: animation.animation!},
           pos: pos,
           level: typeLevel.level,
         );
       case StageObjType.wizard:
         return Wizard(
-          animation: animation,
+          animationComponent: animation,
           vectorAnimation: wizardAnimation,
           attackAnimation: wizardAttackAnimation,
           attackAnimationOffset: wizardAttackAnimationOffset,
           magicAnimation: wizardMagicAnimation,
           pos: pos,
+          levelToAnimations: {1: animation.animation!},
           level: typeLevel.level,
         );
     }
@@ -351,7 +405,7 @@ class StageObjFactory {
 
   void setPosition(StageObj obj, {Vector2? offset}) {
     final pixel = offset ?? Vector2.zero();
-    obj.animation.position =
+    obj.animationComponent.position =
         Vector2(obj.pos.x * Stage.cellSize.x, obj.pos.y * Stage.cellSize.y) +
             Stage.cellSize / 2 +
             pixel;
@@ -399,6 +453,7 @@ class Stage {
   static const dynamicPriority = 2;
 
   final Image stageImg;
+  final Image jewelImg;
   final Image playerImg;
   final Image spikeImg;
   final Image blockImg;
@@ -496,6 +551,7 @@ class Stage {
 
   Stage({
     required this.stageImg,
+    required this.jewelImg,
     required this.playerImg,
     required this.spikeImg,
     required this.blockImg,
@@ -533,7 +589,7 @@ class Stage {
         [Sprite(stageImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
         stepTime: 1.0);
     stageSprites[StageObjType.box] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(96, 0), srcSize: cellSize)],
+        [Sprite(jewelImg, srcSize: Vector2(1024, 1024))],
         stepTime: 1.0);
     stageSprites[StageObjType.player] = SpriteAnimation.fromFrameData(
       playerImg,
@@ -586,6 +642,16 @@ class Stage {
 
     objFactory = StageObjFactory(
       stageSpriteAnimatinos: stageSprites,
+      jewelLevelToAnimation: {
+        1: SpriteAnimation.spriteList([
+          Sprite(jewelImg,
+              srcPosition: Vector2(0, 0), srcSize: Vector2(1024, 1024))
+        ], stepTime: 1.0),
+        2: SpriteAnimation.spriteList([
+          Sprite(jewelImg,
+              srcPosition: Vector2(1024, 0), srcSize: Vector2(1024, 1024))
+        ], stepTime: 1.0),
+      },
       breakingBlockAnimation: SpriteAnimation.spriteList(
           [Sprite(blockImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
           stepTime: 1.0),
@@ -877,8 +943,8 @@ class Stage {
           typeLevel: StageObjTypeLevel(type: StageObjType.box, level: 1),
           pos: Point(0, 0))
     ];
-    effectBase.first.animation.opacity = 0.0;
-    gameWorld.add(effectBase.first.animation);
+    effectBase.first.animationComponent.opacity = 0.0;
+    gameWorld.add(effectBase.first.animationComponent);
     // 前回のステージ情報が保存されているなら
     if (stageData.containsKey('score')) {
       _setStageDataFromSaveData(gameWorld, camera, stageData);
@@ -942,8 +1008,7 @@ class Stage {
         if (y < stageLT.y || y > stageRB.y) continue;
         final p = Point(x, y);
         if (p == pos) continue;
-        if (get(p).type == StageObjType.wall &&
-            get(p).level <= box.typeLevel.level) {
+        if (get(p).type == StageObjType.wall && get(p).level <= box.level) {
           setStaticType(p, StageObjType.none, gameWorld);
           breakingAnimations.add(objFactory.createBreakingBlock(p));
           breaked.add(p);
@@ -1153,7 +1218,7 @@ class Stage {
         }
         break;
     }
-    gameWorld.addAll([for (final e in adding) e.animation]);
+    gameWorld.addAll([for (final e in adding) e.animationComponent]);
 
     // TODO:削除というか別の方法で
     // 床をランダムに水やマグマに変える
@@ -1169,26 +1234,26 @@ class Stage {
     }*/
 
     // スコア加算
-    score += box.typeLevel.level * 100;
+    score += box.level * 100;
 
     if (onlyDelete) {
       // 対象オブジェクトを消す
-      gameWorld.remove(box.animation);
+      gameWorld.remove(box.animationComponent);
       boxes.remove(box);
     } else {
       // 当該位置のオブジェクトを消す
       final merged = boxes.firstWhere((element) => element.pos == pos);
-      gameWorld.remove(merged.animation);
+      gameWorld.remove(merged.animationComponent);
       boxes.remove(merged);
       // 移動したオブジェクトのレベルを上げる
-      (box.animation.children.first.children.first as TextComponent).text =
-          (++box.typeLevel.level).toString();
+      (box.animationComponent.children.first.children.first as TextComponent)
+          .text = (++box.level).toString();
     }
 
     // 破壊したブロックのアニメーションを描画
     gameWorld.addAll(breakingAnimations);
   }
-
+/*
   StageObjTypeLevel get(Point p) {
     final box = boxes.firstWhereOrNull((element) => element.pos == p);
     final enemy = enemies.firstWhereOrNull((element) => element.pos == p);
@@ -1199,9 +1264,9 @@ class Stage {
     } else {
       return staticObjs[p]!.typeLevel;
     }
-  }
+  }*/
 
-  StageObj getObject(Point p) {
+  StageObj get(Point p) {
     final box = boxes.firstWhereOrNull((element) => element.pos == p);
     final enemy = enemies.firstWhereOrNull((element) => element.pos == p);
     if (enemy != null) {
@@ -1215,10 +1280,10 @@ class Stage {
 
   void setStaticType(Point p, StageObjType type, World gameWorld,
       {int level = 1}) {
-    gameWorld.remove(staticObjs[p]!.animation);
+    gameWorld.remove(staticObjs[p]!.animationComponent);
     staticObjs[p] = objFactory.create(
         typeLevel: StageObjTypeLevel(type: type, level: level), pos: p);
-    gameWorld.add(staticObjs[p]!.animation);
+    gameWorld.add(staticObjs[p]!.animationComponent);
   }
 
   void _setStageDataFromSaveData(
@@ -1251,17 +1316,17 @@ class Stage {
     beltPoints = [
       for (final e in stageData['beltPoints'] as List<dynamic>) Point.decode(e)
     ];
-    gameWorld.addAll([for (final e in staticObjs.values) e.animation]);
-    gameWorld.addAll([for (final e in boxes) e.animation]);
-    gameWorld.addAll([for (final e in enemies) e.animation]);
+    gameWorld.addAll([for (final e in staticObjs.values) e.animationComponent]);
+    gameWorld.addAll([for (final e in boxes) e.animationComponent]);
+    gameWorld.addAll([for (final e in enemies) e.animationComponent]);
     // プレイヤー作成
     player = objFactory.createFromMap(stageData['player']) as Player;
     player.pushableNum = stageData['handAbility'];
     player.isLegAbilityOn = stageData['legAbility'];
-    gameWorld.addAll([player.animation]);
+    gameWorld.addAll([player.animationComponent]);
     // カメラはプレイヤーに追従
     camera.follow(
-      player.animation,
+      player.animationComponent,
       maxSpeed: cameraMaxSpeed,
     );
     // カメラの可動域設定
@@ -1310,18 +1375,18 @@ class Stage {
         }
       }
     }
-    gameWorld.addAll([for (final e in staticObjs.values) e.animation]);
-    gameWorld.addAll([for (final e in boxes) e.animation]);
-    //gameWorld.addAll([for (final e in enemies) e.animation]);
+    gameWorld.addAll([for (final e in staticObjs.values) e.animationComponent]);
+    gameWorld.addAll([for (final e in boxes) e.animationComponent]);
+    //gameWorld.addAll([for (final e in enemies) e.animationComponent]);
 
     // プレイヤー作成
     player = objFactory.create(
         typeLevel: StageObjTypeLevel(type: StageObjType.player, level: 1),
         pos: Point(0, 0)) as Player;
-    gameWorld.addAll([player.animation]);
+    gameWorld.addAll([player.animationComponent]);
     // カメラはプレイヤーに追従
     camera.follow(
-      player.animation,
+      player.animationComponent,
       maxSpeed: cameraMaxSpeed,
     );
     // カメラの可動域設定
@@ -1361,7 +1426,7 @@ class Stage {
     if (playerStartMoving) {
       // 動き始めたらプレイヤーに再フォーカス
       camera.follow(
-        player.animation,
+        player.animationComponent,
         maxSpeed: cameraMaxSpeed,
       );
     }
@@ -1378,20 +1443,20 @@ class Stage {
         final t = enemies.where((element) =>
             element != enemy &&
             element.pos == enemy.pos &&
-            element.typeLevel.type == enemy.typeLevel.type &&
-            element.typeLevel.level == enemy.typeLevel.level);
+            element.isSameTypeLevel(enemy));
         if (t.isNotEmpty) {
           mergingPosList.add(enemy.pos);
           mergedEnemies.add(enemy);
           // マージされた敵を削除
-          gameWorld.remove(enemy.animation);
+          gameWorld.remove(enemy.animationComponent);
           // レベルを上げる
-          t.first.animation.removeAll(t.first.animation.children);
-          t.first.animation.add(
+          t.first.animationComponent
+              .removeAll(t.first.animationComponent.children);
+          t.first.animationComponent.add(
             AlignComponent(
               alignment: Anchor.center,
               child: TextComponent(
-                text: (++t.first.typeLevel.level).toString(),
+                text: (++t.first.level).toString(),
                 textRenderer: TextPaint(
                   style: const TextStyle(
                     fontFamily: 'Aboreto',
@@ -1421,8 +1486,8 @@ class Stage {
     if (before != Move.none && player.moving == Move.none) {
       // 移動によって新たな座標が見えそうなら追加する
       // 左端
-      if (camera
-          .canSee(staticObjs[Point(stageLT.x, player.pos.y)]!.animation)) {
+      if (camera.canSee(
+          staticObjs[Point(stageLT.x, player.pos.y)]!.animationComponent)) {
         stageLT.x--;
         for (int y = stageLT.y; y <= stageRB.y; y++) {
           final adding = objFactory.create(
@@ -1431,12 +1496,12 @@ class Stage {
               ),
               pos: Point(stageLT.x, y));
           staticObjs[Point(stageLT.x, y)] = adding;
-          gameWorld.add(adding.animation);
+          gameWorld.add(adding.animationComponent);
         }
       }
       // 右端
-      if (camera
-          .canSee(staticObjs[Point(stageRB.x, player.pos.y)]!.animation)) {
+      if (camera.canSee(
+          staticObjs[Point(stageRB.x, player.pos.y)]!.animationComponent)) {
         stageRB.x++;
         for (int y = stageLT.y; y <= stageRB.y; y++) {
           final adding = objFactory.create(
@@ -1445,12 +1510,12 @@ class Stage {
               ),
               pos: Point(stageRB.x, y));
           staticObjs[Point(stageRB.x, y)] = adding;
-          gameWorld.add(adding.animation);
+          gameWorld.add(adding.animationComponent);
         }
       }
       // 上端
-      if (camera
-          .canSee(staticObjs[Point(player.pos.x, stageLT.y)]!.animation)) {
+      if (camera.canSee(
+          staticObjs[Point(player.pos.x, stageLT.y)]!.animationComponent)) {
         stageLT.y--;
         for (int x = stageLT.x; x <= stageRB.x; x++) {
           final adding = objFactory.create(
@@ -1459,12 +1524,12 @@ class Stage {
               ),
               pos: Point(x, stageLT.y));
           staticObjs[Point(x, stageLT.y)] = adding;
-          gameWorld.add(adding.animation);
+          gameWorld.add(adding.animationComponent);
         }
       }
       // 下端
-      if (camera
-          .canSee(staticObjs[Point(player.pos.x, stageRB.y)]!.animation)) {
+      if (camera.canSee(
+          staticObjs[Point(player.pos.x, stageRB.y)]!.animationComponent)) {
         stageRB.y++;
         for (int x = stageLT.x; x <= stageRB.x; x++) {
           final adding = objFactory.create(
@@ -1473,7 +1538,7 @@ class Stage {
               ),
               pos: Point(x, stageRB.y));
           staticObjs[Point(x, stageRB.y)] = adding;
-          gameWorld.add(adding.animation);
+          gameWorld.add(adding.animationComponent);
         }
       }
       // カメラの可動範囲更新

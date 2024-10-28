@@ -34,16 +34,17 @@ class Swordsman extends StageObj {
   Move get vector => _vector;
   set vector(Move v) {
     _vector = v;
-    animation.animation = vectorAnimation[_vector];
+    animationComponent.animation = vectorAnimation[_vector];
   }
 
   Swordsman({
-    required super.animation,
+    required super.animationComponent,
     required this.vectorAnimation,
     required this.attackAnimation,
     required this.roundAttackAnimation,
     required this.attackAnimationOffset,
     required this.roundAttackAnimationOffset,
+    required super.levelToAnimations,
     required super.pos,
     int level = 1,
   }) : super(
@@ -72,19 +73,21 @@ class Swordsman extends StageObj {
     if (playerStartMoving) {
       playerStartMovingFlag = true;
       // 移動/攻撃を決定
-      final ret = super.enemyMove(movePatterns[typeLevel.level]!, vector,
-          stage.player, stage, prohibitedPoints);
+      final ret = super.enemyMove(
+          movePatterns[level]!, vector, stage.player, stage, prohibitedPoints);
       if (ret.containsKey('attack') && ret['attack']!) {
         attacking = true;
         // 攻撃中のアニメーションに変更
-        if (typeLevel.level <= 1) {
-          animation.animation = attackAnimation[vector]!;
-          animation.size = animation.animation!.frames.first.sprite.srcSize;
+        if (level <= 1) {
+          animationComponent.animation = attackAnimation[vector]!;
+          animationComponent.size =
+              animationComponent.animation!.frames.first.sprite.srcSize;
           stage.objFactory
               .setPosition(this, offset: attackAnimationOffset[vector]!);
         } else {
-          animation.animation = roundAttackAnimation[vector]!;
-          animation.size = animation.animation!.frames.first.sprite.srcSize;
+          animationComponent.animation = roundAttackAnimation[vector]!;
+          animationComponent.size =
+              animationComponent.animation!.frames.first.sprite.srcSize;
           stage.objFactory
               .setPosition(this, offset: roundAttackAnimationOffset);
         }
@@ -119,7 +122,7 @@ class Swordsman extends StageObj {
         pos += moving.point;
         // 攻撃中ならゲームオーバー判定
         if (attacking) {
-          if (typeLevel.level <= 1) {
+          if (level <= 1) {
             // 前方3マス
             final tmp = MoveExtent.straights;
             tmp.remove(vector);
@@ -145,7 +148,7 @@ class Swordsman extends StageObj {
         if (attacking) {
           // アニメーションを元に戻す
           vector = vector;
-          animation.size = Stage.cellSize;
+          animationComponent.size = Stage.cellSize;
           stage.objFactory.setPosition(this);
           attacking = false;
         }
@@ -163,7 +166,7 @@ class Swordsman extends StageObj {
   bool get puttable => false;
 
   @override
-  bool get mergable => typeLevel.level < maxLevel;
+  bool get mergable => level < maxLevel;
 
   @override
   int get maxLevel => 3;

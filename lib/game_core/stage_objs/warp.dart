@@ -5,7 +5,8 @@ import 'package:flame/components.dart';
 
 class Warp extends StageObj {
   Warp({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required super.pos,
     int level = 1,
   }) : super(

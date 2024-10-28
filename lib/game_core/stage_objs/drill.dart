@@ -5,7 +5,8 @@ import 'package:flame/components.dart';
 
 class Drill extends StageObj {
   Drill({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required super.pos,
     int level = 1,
   }) : super(
@@ -36,7 +37,7 @@ class Drill extends StageObj {
   bool get puttable => false;
 
   @override
-  bool get mergable => typeLevel.level < maxLevel;
+  bool get mergable => level < maxLevel;
 
   @override
   int get maxLevel => 20;

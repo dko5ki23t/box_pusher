@@ -15,7 +15,8 @@ class Guardian extends StageObj {
   final Map<Move, Vector2> attackAnimationOffset;
 
   Guardian({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required super.pos,
     required this.vectorAnimation,
     required this.attackAnimation,
@@ -35,7 +36,7 @@ class Guardian extends StageObj {
   Move get vector => _vector;
   set vector(Move v) {
     _vector = v;
-    animation.animation = vectorAnimation[_vector];
+    animationComponent.animation = vectorAnimation[_vector];
   }
 
   bool playerStartMovingFlag = false;
@@ -75,7 +76,7 @@ class Guardian extends StageObj {
           attackPoints.add(t + tmp.point);
         }
         for (final attackPoint in attackPoints) {
-          final obj = stage.getObject(attackPoint);
+          final obj = stage.get(attackPoint);
           if (obj.isEnemy && obj.killable) {
             enemyCounts[move] = enemyCounts[move]! + 1;
           }
@@ -97,8 +98,9 @@ class Guardian extends StageObj {
         attacking = true;
         // 攻撃中のアニメーションに変更
         //if (typeLevel.level <= 1) {
-        animation.animation = attackAnimation[vector]!;
-        animation.size = animation.animation!.frames.first.sprite.srcSize;
+        animationComponent.animation = attackAnimation[vector]!;
+        animationComponent.size =
+            animationComponent.animation!.frames.first.sprite.srcSize;
         stage.objFactory
             .setPosition(this, offset: attackAnimationOffset[vector]!);
         //} else {
@@ -142,11 +144,11 @@ class Guardian extends StageObj {
             attackables.add(attackable + v.point);
           }
           for (final p in attackables) {
-            final obj = stage.getObject(p);
+            final obj = stage.get(p);
             if (obj.isEnemy && obj.killable) {
-              obj.typeLevel.level -= typeLevel.level;
-              if (obj.typeLevel.level <= 0) {
-                gameWorld.remove(obj.animation);
+              obj.level -= level;
+              if (obj.level <= 0) {
+                gameWorld.remove(obj.animationComponent);
                 stage.enemies.remove(obj);
               }
             }
@@ -164,7 +166,7 @@ class Guardian extends StageObj {
         if (attacking) {
           // アニメーションを元に戻す
           vector = vector;
-          animation.size = Stage.cellSize;
+          animationComponent.size = Stage.cellSize;
           stage.objFactory.setPosition(this);
           attacking = false;
         }
@@ -182,7 +184,7 @@ class Guardian extends StageObj {
   bool get puttable => false;
 
   @override
-  bool get mergable => typeLevel.level < maxLevel;
+  bool get mergable => level < maxLevel;
 
   @override
   int get maxLevel => 20;

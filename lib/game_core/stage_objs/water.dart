@@ -5,8 +5,9 @@ import 'package:flame/components.dart';
 
 class Water extends StageObj {
   Water({
-    required super.animation,
+    required super.animationComponent,
     required super.pos,
+    required super.levelToAnimations,
     int level = 1,
   }) : super(
           typeLevel: StageObjTypeLevel(

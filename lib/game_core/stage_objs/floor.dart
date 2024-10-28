@@ -5,7 +5,8 @@ import 'package:flame/components.dart';
 
 class Floor extends StageObj {
   Floor({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required super.pos,
     int level = 1,
   }) : super(

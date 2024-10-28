@@ -12,31 +12,33 @@ class Belt extends StageObj {
     _vector = v;
     switch (_vector) {
       case Move.right:
-        typeLevel.type = StageObjType.beltR;
+        type = StageObjType.beltR;
         break;
       case Move.up:
-        typeLevel.type = StageObjType.beltU;
+        type = StageObjType.beltU;
         break;
       case Move.down:
-        typeLevel.type = StageObjType.beltD;
+        type = StageObjType.beltD;
         break;
       case Move.left:
       default:
-        typeLevel.type = StageObjType.beltL;
+        type = StageObjType.beltL;
         break;
     }
   }
 
   Belt({
-    required super.animation,
+    required super.animationComponent,
+    required super.levelToAnimations,
     required super.pos,
     required Move vector,
     int level = 1,
   }) : super(
-            typeLevel: StageObjTypeLevel(
-          type: StageObjType.beltL,
-          level: level,
-        )) {
+          typeLevel: StageObjTypeLevel(
+            type: StageObjType.beltL,
+            level: level,
+          ),
+        ) {
     this.vector = vector;
   }
 
@@ -56,14 +58,13 @@ class Belt extends StageObj {
   ) {
     // プレイヤー移動開始時
     if (playerStartMoving) {
-      final obj = stage.getObject(pos);
+      final obj = stage.get(pos);
       final to = pos + vector.point;
-      final toObj = stage.getObject(to);
+      final toObj = stage.get(to);
       if (obj.beltMove) {
         // コンベア上のオブジェクトが動かせる場合
         // ドリルの場合は少し違う処理
-        if (obj.typeLevel.type == StageObjType.drill &&
-            toObj.typeLevel.type == StageObjType.wall) {
+        if (obj.type == StageObjType.drill && toObj.type == StageObjType.wall) {
           // 押した先がブロックなら即座に破壊
           stage.setStaticType(to, StageObjType.none, gameWorld);
           // 破壊したブロックのアニメーションを描画
@@ -71,7 +72,7 @@ class Belt extends StageObj {
           executing = true;
         } else if (toObj.stopping ||
             (!toObj.puttable &&
-                (obj.typeLevel != toObj.typeLevel || !obj.mergable))) {
+                (!obj.isSameTypeLevel(toObj) || !obj.mergable))) {
           // 押した先が敵等 or マージできないオブジェクトの場合は押せない
           pushings.clear();
           return;
@@ -106,19 +107,19 @@ class Belt extends StageObj {
         // TODO:箱の方に実装？
         for (final pushing in pushings) {
           // 押した先のオブジェクトを調べる
-          if (pushing.mergable && pushing.typeLevel == stage.get(to)) {
+          if (pushing.mergable && pushing.isSameTypeLevel(stage.get(to))) {
             // マージ
             stage.merge(to, pushing, gameWorld);
           }
           // 押したものの位置を設定
           pushing.pos = to;
           stage.objFactory.setPosition(pushing);
-          if (pushing.typeLevel.type == StageObjType.drill && executing) {
+          if (pushing.type == StageObjType.drill && executing) {
             // ドリル使用時
             // ドリルのオブジェクトレベルダウン、0になったら消す
-            pushing.typeLevel.level--;
-            if (pushing.typeLevel.level <= 0) {
-              gameWorld.remove(pushing.animation);
+            pushing.level--;
+            if (pushing.level <= 0) {
+              gameWorld.remove(pushing.animationComponent);
               stage.boxes.remove(pushing);
             }
           }
