@@ -41,7 +41,7 @@ class TitleSeq extends Sequence
           ..style = PaintingStyle.fill,
       ),
       TextComponent(
-        text: "箱推し",
+        text: "押しごと",
         size: Vector2(150.0, 45.0),
         position: Vector2(180.0, 280.0),
         anchor: Anchor.center,

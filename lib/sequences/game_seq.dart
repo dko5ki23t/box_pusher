@@ -71,7 +71,6 @@ class GameSeq extends Sequence
   Move pushingMoveButton = Move.none;
 
   late final Image stageImg;
-  late final Image jewelImg;
   late final Image playerImg;
   late final Image spikeImg;
   late final Image blockImg;
@@ -114,7 +113,6 @@ class GameSeq extends Sequence
   @override
   Future<void> onLoad() async {
     stageImg = await Flame.images.load('stage_alpha.png');
-    jewelImg = await Flame.images.load('jewels.png');
     playerImg = await Flame.images.load('player.png');
     spikeImg = await Flame.images.load('spike.png');
     blockImg = await Flame.images.load('block.png');
@@ -153,7 +151,7 @@ class GameSeq extends Sequence
     settingsImg = await Flame.images.load('settings.png');
     // BGM再生
     FlameAudio.bgm.play('maou_bgm_8bit29.mp3');
-    initialize();
+    await initialize();
   }
 
   @override
@@ -180,13 +178,12 @@ class GameSeq extends Sequence
   }
 
   // 初期化（というよりリセット）
-  void initialize() {
+  Future<void> initialize() async {
     removeAll(children);
     game.world.removeAll(game.world.children);
 
     stage = Stage(
       stageImg: stageImg,
-      jewelImg: jewelImg,
       playerImg: playerImg,
       spikeImg: spikeImg,
       blockImg: blockImg,
@@ -214,6 +211,7 @@ class GameSeq extends Sequence
       magicImg: magicImg,
       errorImg: errorImg,
     );
+    await stage.onLoad();
     stage.initialize(game.world, game.camera, game.stageData);
 
     // プレイヤーの操作ボタン群
