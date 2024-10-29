@@ -3,7 +3,8 @@ import 'dart:math';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
-import 'package:flame/components.dart';
+import 'package:box_pusher/game_core/stage_objs/block.dart';
+import 'package:flame/components.dart' hide Block;
 
 class Player extends StageObj {
   Player({
@@ -51,7 +52,7 @@ class Player extends StageObj {
       StageObj toToObj = stage.get(toTo);
 
       // プレイヤーが壁にぶつかるか
-      if (toObj.type == StageObjType.wall) {
+      if (toObj.type == StageObjType.block) {
         return;
       }
 
@@ -68,11 +69,11 @@ class Player extends StageObj {
         if (toObj.pushable) {
           // ドリルの場合は少し違う処理
           if (toObj.type == StageObjType.drill &&
-              toToObj.type == StageObjType.wall) {
+              toToObj.type == StageObjType.block) {
             // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
+            // 破壊するブロックのアニメーションを描画
+            gameWorld.add((toToObj as Block).createBreakingBlock());
             stage.setStaticType(toTo, StageObjType.none, gameWorld);
-            // 破壊したブロックのアニメーションを描画
-            gameWorld.add(stage.objFactory.createBreakingBlock(toTo));
             executing = true;
             stopBecauseMergeOrDrill = true;
           } else if (toToObj.stopping ||

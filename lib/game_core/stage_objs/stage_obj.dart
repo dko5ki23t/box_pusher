@@ -10,9 +10,9 @@ import 'package:flame/components.dart';
 /// ステージ上オブジェクトの種類
 enum StageObjType {
   none,
-  wall,
+  block,
   trap,
-  box,
+  jewel,
   player,
   spike, // とげの敵
   drill,
@@ -34,9 +34,9 @@ enum StageObjType {
 extension StageObjTypeExtent on StageObjType {
   static Map<StageObjType, String> strMap = {
     StageObjType.none: ' ',
-    StageObjType.wall: '#',
+    StageObjType.block: '#',
     StageObjType.trap: '.',
-    StageObjType.box: 'o',
+    StageObjType.jewel: 'o',
     StageObjType.player: 'p',
     StageObjType.spike: 's',
     StageObjType.drill: 'd',
@@ -128,7 +128,7 @@ abstract class StageObj {
   set level(int l) {
     if (!levelToAnimations.containsKey(l)) {
       log('no animation for level $l in ${_typeLevel.type}');
-      animationComponent.animation = levelToAnimations[1]!;
+      animationComponent.animation = levelToAnimations[0]!;
     } else {
       animationComponent.animation = levelToAnimations[l]!;
     }

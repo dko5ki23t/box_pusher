@@ -3,15 +3,15 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 
-class Wall extends StageObj {
-  Wall({
+class Jewel extends StageObj {
+  Jewel({
     required super.animationComponent,
     required super.levelToAnimations,
     required super.pos,
     int level = 1,
   }) : super(
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.wall,
+            type: StageObjType.jewel,
             level: level,
           ),
         );
@@ -28,19 +28,19 @@ class Wall extends StageObj {
   ) {}
 
   @override
-  bool get pushable => false;
+  bool get pushable => true;
 
   @override
-  bool get stopping => true;
+  bool get stopping => false;
 
   @override
   bool get puttable => false;
 
   @override
-  bool get mergable => false;
+  bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 3;
+  int get maxLevel => 20;
 
   @override
   bool get isEnemy => false;
@@ -49,5 +49,5 @@ class Wall extends StageObj {
   bool get killable => false;
 
   @override
-  bool get beltMove => false;
+  bool get beltMove => true;
 }

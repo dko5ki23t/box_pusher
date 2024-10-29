@@ -1,4 +1,6 @@
 import 'package:box_pusher/game_core/common.dart';
+import 'package:box_pusher/game_core/stage_objs/block.dart';
+import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 
 enum EnemyMovePattern {
   /// 完全にランダムに動く
@@ -26,6 +28,9 @@ enum BlockFloorPattern {
 
   /// 2%が床、それ以外はレベル1のブロック
   floor2BlockLevel1,
+
+  /// 2%が床、10%がレベル2のブロック、それ以外はレベル1のブロック
+  floor2Block10Level2BlockLevel1,
 }
 
 enum ObjInBlock {
@@ -72,7 +77,9 @@ class SettingVariables {
   /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, BlockFloorPattern> blockFloorMap = {
     PointDistanceRange(Point(0, 0), 8): BlockFloorPattern.allBlockLevel1,
-    PointDistanceRange(Point(0, 0), 100): BlockFloorPattern.floor2BlockLevel1,
+    PointDistanceRange(Point(0, 0), 10): BlockFloorPattern.floor2BlockLevel1,
+    PointDistanceRange(Point(0, 0), 100):
+        BlockFloorPattern.floor2Block10Level2BlockLevel1,
   };
 
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
@@ -101,4 +108,9 @@ class SettingVariables {
     PointDistanceRange(Point(0, 0), 121): 10,
     PointDistanceRange(Point(0, 0), 1000): 11,
   };
+
+  /// マージしたオブジェクトが、対象のブロックを破壊できるかどうか
+  static bool canBreakBlock(Block block, StageObj mergeObj) {
+    return block.level == 1 || mergeObj.level >= block.level * 2;
+  }
 }

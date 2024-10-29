@@ -5,7 +5,7 @@ import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
-import 'package:box_pusher/game_core/stage_objs/box.dart';
+import 'package:box_pusher/game_core/stage_objs/jewel.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/guardian.dart';
@@ -16,12 +16,12 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
-import 'package:box_pusher/game_core/stage_objs/wall.dart';
+import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:box_pusher/game_core/stage_objs/water.dart';
 import 'package:box_pusher/game_core/stage_objs/wizard.dart';
 import 'package:collection/collection.dart';
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide Block;
 import 'package:flame/effects.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
@@ -30,9 +30,13 @@ import 'package:flutter/material.dart' hide Image;
 
 class StageObjFactory {
   final Map<StageObjType, SpriteAnimation> stageSpriteAnimatinos;
-  final SpriteAnimation breakingBlockAnimation;
+  final Map<int, SpriteAnimation> breakingBlockAnimations;
   final SpriteAnimation explodingBombAnimation;
   final Map<int, SpriteAnimation> jewelLevelToAnimation;
+  final Map<int, SpriteAnimation> blockLevelToAnimation;
+
+  /// エラー画像アニメーション（該当アニメーションが無いとき等で使う）
+  SpriteAnimation errorAnimation;
 
   /// 【ガーディアン】向きに対応するアニメーション。上下左右のkeyが必須
   final Map<Move, SpriteAnimation> guardianAnimation;
@@ -93,8 +97,10 @@ class StageObjFactory {
   }
 
   StageObjFactory({
+    required this.errorAnimation,
     required this.stageSpriteAnimatinos,
-    required this.breakingBlockAnimation,
+    required this.blockLevelToAnimation,
+    required this.breakingBlockAnimations,
     required this.explodingBombAnimation,
     required this.jewelLevelToAnimation,
     required this.guardianAnimation,
@@ -121,7 +127,7 @@ class StageObjFactory {
     double angle = 0;
     Move beltV = Move.up;
     switch (typeLevel.type) {
-      case StageObjType.box:
+      case StageObjType.jewel:
       case StageObjType.trap:
       case StageObjType.drill:
       case StageObjType.player:
@@ -134,7 +140,7 @@ class StageObjFactory {
         priority = Stage.dynamicPriority;
         break;
       case StageObjType.none:
-      case StageObjType.wall:
+      case StageObjType.block:
       case StageObjType.treasureBox:
       case StageObjType.warp:
       case StageObjType.beltU:
@@ -163,7 +169,7 @@ class StageObjFactory {
       animation: stageSpriteAnimatinos[typeLevel.type],
       priority: priority,
       // TODO: mergableとかで判定
-      scale: (typeLevel.type == StageObjType.box ||
+      scale: (typeLevel.type == StageObjType.jewel ||
                   typeLevel.type == StageObjType.trap ||
                   typeLevel.type == StageObjType.drill ||
                   typeLevel.type == StageObjType.bomb ||
@@ -184,7 +190,7 @@ class StageObjFactory {
             ),
           ),
         ),
-        if (typeLevel.type == StageObjType.box ||
+        if (typeLevel.type == StageObjType.jewel ||
             typeLevel.type == StageObjType.trap ||
             typeLevel.type == StageObjType.drill ||
             typeLevel.type == StageObjType.bomb ||
@@ -208,7 +214,7 @@ class StageObjFactory {
       position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
           Stage.cellSize / 2),
     );
-    if (typeLevel.type == StageObjType.box ||
+    if (typeLevel.type == StageObjType.jewel ||
         typeLevel.type == StageObjType.trap ||
         typeLevel.type == StageObjType.drill ||
         typeLevel.type == StageObjType.bomb ||
@@ -221,67 +227,76 @@ class StageObjFactory {
           Stage.mergableZoomDuration);
     }
 
+    // TODO
+    final levelToAnimation = typeLevel.type == StageObjType.jewel
+        ? jewelLevelToAnimation
+        : typeLevel.type == StageObjType.block
+            ? blockLevelToAnimation
+            : {0: errorAnimation, 1: animation.animation!};
+    levelToAnimation[0] = errorAnimation;
+
     switch (typeLevel.type) {
       case StageObjType.none:
         return Floor(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
-      case StageObjType.box:
-        return Box(
+            levelToAnimations: levelToAnimation);
+      case StageObjType.jewel:
+        return Jewel(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: jewelLevelToAnimation);
+            levelToAnimations: levelToAnimation);
       case StageObjType.trap:
         return Trap(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation);
       case StageObjType.player:
         return Player(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
-      case StageObjType.wall:
-        return Wall(
+            levelToAnimations: levelToAnimation);
+      case StageObjType.block:
+        return Block(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation,
+            breakingAnimations: breakingBlockAnimations);
       case StageObjType.spike:
         return Spike(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation);
       case StageObjType.drill:
         return Drill(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation);
       case StageObjType.treasureBox:
         return TreasureBox(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation);
       case StageObjType.warp:
         return Warp(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation);
       case StageObjType.bomb:
         return Bomb(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation);
       case StageObjType.beltL:
       case StageObjType.beltR:
       case StageObjType.beltU:
@@ -290,14 +305,14 @@ class StageObjFactory {
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!},
+            levelToAnimations: levelToAnimation,
             vector: beltV);
       case StageObjType.guardian:
         return Guardian(
             animationComponent: animation,
             vectorAnimation: guardianAnimation,
             attackAnimation: guardianAttackAnimation,
-            levelToAnimations: {1: animation.animation!},
+            levelToAnimations: levelToAnimation,
             attackAnimationOffset: guardianAttackAnimationOffset,
             pos: pos,
             level: typeLevel.level);
@@ -306,13 +321,13 @@ class StageObjFactory {
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation);
       case StageObjType.magma:
         return Magma(
             animationComponent: animation,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: {1: animation.animation!});
+            levelToAnimations: levelToAnimation);
       case StageObjType.swordsman:
         return Swordsman(
           animationComponent: animation,
@@ -321,7 +336,7 @@ class StageObjFactory {
           attackAnimationOffset: swordsmanAttackAnimationOffset,
           roundAttackAnimation: swordsmanRoundAttackAnimation,
           roundAttackAnimationOffset: swordsmanRoundAttackAnimationOffset,
-          levelToAnimations: {1: animation.animation!},
+          levelToAnimations: levelToAnimation,
           pos: pos,
           level: typeLevel.level,
         );
@@ -332,7 +347,7 @@ class StageObjFactory {
           attackAnimation: archerAttackAnimation,
           attackAnimationOffset: archerAttackAnimationOffset,
           arrowAnimation: archerArrowAnimation,
-          levelToAnimations: {1: animation.animation!},
+          levelToAnimations: levelToAnimation,
           pos: pos,
           level: typeLevel.level,
         );
@@ -344,7 +359,7 @@ class StageObjFactory {
           attackAnimationOffset: wizardAttackAnimationOffset,
           magicAnimation: wizardMagicAnimation,
           pos: pos,
-          levelToAnimations: {1: animation.animation!},
+          levelToAnimations: levelToAnimation,
           level: typeLevel.level,
         );
     }
@@ -354,24 +369,6 @@ class StageObjFactory {
     return create(
         typeLevel: StageObjTypeLevel.decode(src['typeLevel']),
         pos: Point.decode(src['pos']));
-  }
-
-  SpriteAnimationComponent createBreakingBlock(Point pos) {
-    return SpriteAnimationComponent(
-      animation: breakingBlockAnimation,
-      priority: Stage.dynamicPriority,
-      children: [
-        OpacityEffect.by(
-          -1.0,
-          EffectController(duration: 0.5),
-        ),
-        RemoveEffect(delay: 1.0),
-      ],
-      size: Stage.cellSize,
-      anchor: Anchor.center,
-      position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-          Stage.cellSize / 2),
-    );
   }
 
   SpriteAnimationComponent createExplodingBomb(Point pos) {
@@ -479,6 +476,7 @@ class Stage {
   final Image wizardImg;
   final Image wizardAttackImg;
   final Image magicImg;
+  final Image errorImg;
 
   late StageObjFactory objFactory;
 
@@ -577,18 +575,19 @@ class Stage {
     required this.wizardImg,
     required this.wizardAttackImg,
     required this.magicImg,
+    required this.errorImg,
   }) {
     final Map<StageObjType, SpriteAnimation> stageSprites = {};
     stageSprites[StageObjType.none] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(0, 0), srcSize: cellSize)],
         stepTime: 1.0);
-    stageSprites[StageObjType.wall] = SpriteAnimation.spriteList(
+    stageSprites[StageObjType.block] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(160, 0), srcSize: cellSize)],
         stepTime: 1.0);
     stageSprites[StageObjType.trap] = SpriteAnimation.spriteList(
         [Sprite(stageImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
         stepTime: 1.0);
-    stageSprites[StageObjType.box] = SpriteAnimation.spriteList(
+    stageSprites[StageObjType.jewel] = SpriteAnimation.spriteList(
         [Sprite(jewelImg, srcSize: Vector2(1024, 1024))],
         stepTime: 1.0);
     stageSprites[StageObjType.player] = SpriteAnimation.fromFrameData(
@@ -641,6 +640,8 @@ class Stage {
         stepTime: 1.0);
 
     objFactory = StageObjFactory(
+      errorAnimation:
+          SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
       stageSpriteAnimatinos: stageSprites,
       jewelLevelToAnimation: {
         1: SpriteAnimation.spriteList([
@@ -652,9 +653,20 @@ class Stage {
               srcPosition: Vector2(1024, 0), srcSize: Vector2(1024, 1024))
         ], stepTime: 1.0),
       },
-      breakingBlockAnimation: SpriteAnimation.spriteList(
-          [Sprite(blockImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
-          stepTime: 1.0),
+      blockLevelToAnimation: {
+        1: SpriteAnimation.spriteList([
+          Sprite(blockImg, srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
+        ], stepTime: 1.0),
+        2: SpriteAnimation.spriteList([
+          Sprite(blockImg, srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
+        ], stepTime: 1.0),
+      },
+      breakingBlockAnimations: {
+        1: SpriteAnimation.spriteList([
+          Sprite(blockImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
+          Sprite(blockImg, srcPosition: Vector2(96, 0), srcSize: cellSize)
+        ], stepTime: 1.0),
+      },
       explodingBombAnimation: SpriteAnimation.spriteList(
           [Sprite(bombImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
           stepTime: 1.0),
@@ -940,7 +952,7 @@ class Stage {
       World gameWorld, CameraComponent camera, Map<String, dynamic> stageData) {
     effectBase = [
       objFactory.create(
-          typeLevel: StageObjTypeLevel(type: StageObjType.box, level: 1),
+          typeLevel: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
           pos: Point(0, 0))
     ];
     effectBase.first.animationComponent.opacity = 0.0;
@@ -1008,9 +1020,11 @@ class Stage {
         if (y < stageLT.y || y > stageRB.y) continue;
         final p = Point(x, y);
         if (p == pos) continue;
-        if (get(p).type == StageObjType.wall && get(p).level <= box.level) {
+        //
+        if (get(p).type == StageObjType.block &&
+            SettingVariables.canBreakBlock(get(p) as Block, box)) {
+          breakingAnimations.add((get(p) as Block).createBreakingBlock());
           setStaticType(p, StageObjType.none, gameWorld);
-          breakingAnimations.add(objFactory.createBreakingBlock(p));
           breaked.add(p);
         }
       }
@@ -1055,7 +1069,7 @@ class Stage {
         for (final jewelAppear in jewelAppears) {
           adding.add(objFactory.create(
               typeLevel: StageObjTypeLevel(
-                type: StageObjType.box,
+                type: StageObjType.jewel,
                 level: jewelLevel,
               ),
               pos: jewelAppear));
@@ -1366,7 +1380,7 @@ class Stage {
               pos: Point(x, y));
           boxes.add(objFactory.create(
               typeLevel: StageObjTypeLevel(
-                type: StageObjType.box,
+                type: StageObjType.jewel,
               ),
               pos: Point(x, y)));
         } else {
@@ -1492,7 +1506,7 @@ class Stage {
         for (int y = stageLT.y; y <= stageRB.y; y++) {
           final adding = objFactory.create(
               typeLevel: StageObjTypeLevel(
-                type: StageObjType.wall,
+                type: StageObjType.block,
               ),
               pos: Point(stageLT.x, y));
           staticObjs[Point(stageLT.x, y)] = adding;
@@ -1506,7 +1520,7 @@ class Stage {
         for (int y = stageLT.y; y <= stageRB.y; y++) {
           final adding = objFactory.create(
               typeLevel: StageObjTypeLevel(
-                type: StageObjType.wall,
+                type: StageObjType.block,
               ),
               pos: Point(stageRB.x, y));
           staticObjs[Point(stageRB.x, y)] = adding;
@@ -1520,7 +1534,7 @@ class Stage {
         for (int x = stageLT.x; x <= stageRB.x; x++) {
           final adding = objFactory.create(
               typeLevel: StageObjTypeLevel(
-                type: StageObjType.wall,
+                type: StageObjType.block,
               ),
               pos: Point(x, stageLT.y));
           staticObjs[Point(x, stageLT.y)] = adding;
@@ -1534,7 +1548,7 @@ class Stage {
         for (int x = stageLT.x; x <= stageRB.x; x++) {
           final adding = objFactory.create(
               typeLevel: StageObjTypeLevel(
-                type: StageObjType.wall,
+                type: StageObjType.block,
               ),
               pos: Point(x, stageRB.y));
           staticObjs[Point(x, stageRB.y)] = adding;
@@ -1559,7 +1573,7 @@ class Stage {
           case BlockFloorPattern.allBlockLevel1:
             return objFactory.create(
                 typeLevel: StageObjTypeLevel(
-                  type: StageObjType.wall,
+                  type: StageObjType.block,
                 ),
                 pos: point);
           case BlockFloorPattern.floor2BlockLevel1:
@@ -1572,7 +1586,29 @@ class Stage {
             } else {
               return objFactory.create(
                   typeLevel: StageObjTypeLevel(
-                    type: StageObjType.wall,
+                    type: StageObjType.block,
+                  ),
+                  pos: point);
+            }
+          case BlockFloorPattern.floor2Block10Level2BlockLevel1:
+            int r = Random().nextInt(50);
+            if (r == 0) {
+              return objFactory.create(
+                  typeLevel: StageObjTypeLevel(
+                    type: StageObjType.none,
+                  ),
+                  pos: point);
+            } else if (r <= 5) {
+              return objFactory.create(
+                  typeLevel: StageObjTypeLevel(
+                    type: StageObjType.block,
+                    level: 2,
+                  ),
+                  pos: point);
+            } else {
+              return objFactory.create(
+                  typeLevel: StageObjTypeLevel(
+                    type: StageObjType.block,
                   ),
                   pos: point);
             }
@@ -1582,7 +1618,7 @@ class Stage {
     assert(false, 'arienai!');
     return objFactory.create(
         typeLevel: StageObjTypeLevel(
-          type: StageObjType.wall,
+          type: StageObjType.block,
         ),
         pos: point);
   }

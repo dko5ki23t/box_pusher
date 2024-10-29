@@ -1,7 +1,8 @@
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
-import 'package:flame/components.dart';
+import 'package:box_pusher/game_core/stage_objs/block.dart';
+import 'package:flame/components.dart' hide Block;
 
 class Belt extends StageObj {
   Move _vector = Move.left;
@@ -64,11 +65,12 @@ class Belt extends StageObj {
       if (obj.beltMove) {
         // コンベア上のオブジェクトが動かせる場合
         // ドリルの場合は少し違う処理
-        if (obj.type == StageObjType.drill && toObj.type == StageObjType.wall) {
+        if (obj.type == StageObjType.drill &&
+            toObj.type == StageObjType.block) {
           // 押した先がブロックなら即座に破壊
+          // 破壊するブロックのアニメーションを描画
+          gameWorld.add((toObj as Block).createBreakingBlock());
           stage.setStaticType(to, StageObjType.none, gameWorld);
-          // 破壊したブロックのアニメーションを描画
-          gameWorld.add(stage.objFactory.createBreakingBlock(to));
           executing = true;
         } else if (toObj.stopping ||
             (!toObj.puttable &&
