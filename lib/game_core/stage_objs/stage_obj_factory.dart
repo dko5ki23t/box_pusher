@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
@@ -20,72 +18,46 @@ import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:box_pusher/game_core/stage_objs/water.dart';
 import 'package:box_pusher/game_core/stage_objs/wizard.dart';
-import 'package:flame/components.dart' hide Block;
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/layout.dart';
-import 'package:flutter/material.dart' hide Image;
 
 class StageObjFactory {
   bool isReady = false;
-  final Map<StageObjType, SpriteAnimation> stageSpriteAnimatinos;
-  final Map<int, SpriteAnimation> breakingBlockAnimations;
-  final SpriteAnimation explodingBombAnimation;
+  late final Image errorImg;
   late final Image jewelsImg;
-  late final Map<int, SpriteAnimation> jewelLevelToAnimation;
-  final Map<int, SpriteAnimation> blockLevelToAnimation;
-
-  /// エラー画像アニメーション（該当アニメーションが無いとき等で使う）
-  SpriteAnimation errorAnimation;
-
-  /// 【ガーディアン】向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> guardianAnimation;
-
-  /// 【ガーディアン】攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> guardianAttackAnimation;
-
-  /// 【ガーディアン】攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
-  final Map<Move, Vector2> guardianAttackAnimationOffset;
-
-  /// 【剣を持つ敵】向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> swordsmanAnimation;
-
-  /// 【剣を持つ敵】攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> swordsmanAttackAnimation;
-
-  /// 【剣を持つ敵】回転斬り攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> swordsmanRoundAttackAnimation;
-
-  /// 【剣を持つ敵】攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
-  final Map<Move, Vector2> swordsmanAttackAnimationOffset;
-
-  /// 【剣を持つ敵】回転斬り攻撃時アニメーションのオフセット
-  final Vector2 swordsmanRoundAttackAnimationOffset;
-
-  /// 【弓を持つ敵】向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> archerAnimation;
-
-  /// 【弓を持つ敵】攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> archerAttackAnimation;
-
-  /// 【弓を持つ敵】攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
-  final Map<Move, Vector2> archerAttackAnimationOffset;
-
-  /// 【弓を持つ敵】矢のアニメーション
-  final SpriteAnimation archerArrowAnimation;
-
-  /// 【魔法使い】向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> wizardAnimation;
-
-  /// 【魔法使い】攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> wizardAttackAnimation;
-
-  /// 【魔法使い】攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
-  final Map<Move, Vector2> wizardAttackAnimationOffset;
-
-  /// 【魔法使い】矢のアニメーション
-  final SpriteAnimation wizardMagicAnimation;
+  late final Image archersImg;
+  late final Image attackArchersImg;
+  late final Image arrowImg;
+  late final Image beltImg;
+  late final Image blockImg;
+  late final Image drillImg;
+  late final Image floorImg;
+  late final Image bombImg;
+  late final Image guardianImg;
+  late final Image guardianAttackDImg;
+  late final Image guardianAttackLImg;
+  late final Image guardianAttackRImg;
+  late final Image guardianAttackUImg;
+  late final Image magmaImg;
+  late final Image playerImg;
+  late final Image spikeImg;
+  late final Image swordsmanImg;
+  late final Image swordsmanAttackDImg;
+  late final Image swordsmanAttackLImg;
+  late final Image swordsmanAttackRImg;
+  late final Image swordsmanAttackUImg;
+  late final Image swordsmanRoundAttackDImg;
+  late final Image swordsmanRoundAttackLImg;
+  late final Image swordsmanRoundAttackRImg;
+  late final Image swordsmanRoundAttackUImg;
+  late final Image trapImg;
+  late final Image treasureBoxImg;
+  late final Image warpImg;
+  late final Image waterImg;
+  late final Image wizardImg;
+  late final Image attackWizardImg;
+  late final Image magicImg;
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
   EffectController? baseMergable;
@@ -97,136 +69,82 @@ class StageObjFactory {
     isBaseMergableReverse = !isBaseMergableReverse;
   }
 
-  StageObjFactory({
-    required this.errorAnimation,
-    required this.stageSpriteAnimatinos,
-    required this.blockLevelToAnimation,
-    required this.breakingBlockAnimations,
-    required this.explodingBombAnimation,
-    required this.guardianAnimation,
-    required this.guardianAttackAnimation,
-    required this.guardianAttackAnimationOffset,
-    required this.swordsmanAnimation,
-    required this.swordsmanAttackAnimation,
-    required this.swordsmanAttackAnimationOffset,
-    required this.swordsmanRoundAttackAnimation,
-    required this.swordsmanRoundAttackAnimationOffset,
-    required this.archerAnimation,
-    required this.archerAttackAnimation,
-    required this.archerAttackAnimationOffset,
-    required this.archerArrowAnimation,
-    required this.wizardAnimation,
-    required this.wizardAttackAnimation,
-    required this.wizardAttackAnimationOffset,
-    required this.wizardMagicAnimation,
-  });
+  StageObjFactory();
 
   Future<void> onLoad() async {
+    errorImg = await Flame.images.load('noimage.png');
     jewelsImg = await Flame.images.load(Jewel.imageFileName);
-    jewelLevelToAnimation = Jewel.levelToAnimation(jewelsImg);
+    archersImg = await Flame.images.load(Archer.imageFileName);
+    attackArchersImg = await Flame.images.load(Archer.attackImageFileName);
+    arrowImg = await Flame.images.load(Archer.arrowImageFileName);
+    beltImg = await Flame.images.load(Belt.imageFileName);
+    blockImg = await Flame.images.load(Block.imageFileName);
+    bombImg = await Flame.images.load(Bomb.imageFileName);
+    drillImg = await Flame.images.load(Drill.imageFileName);
+    floorImg = await Flame.images.load(Floor.imageFileName);
+    guardianImg = await Flame.images.load(Guardian.imageFileName);
+    guardianAttackDImg = await Flame.images.load(Guardian.attackDImageFileName);
+    guardianAttackLImg = await Flame.images.load(Guardian.attackLImageFileName);
+    guardianAttackRImg = await Flame.images.load(Guardian.attackRImageFileName);
+    guardianAttackUImg = await Flame.images.load(Guardian.attackUImageFileName);
+    magmaImg = await Flame.images.load(Magma.imageFileName);
+    playerImg = await Flame.images.load(Player.imageFileName);
+    spikeImg = await Flame.images.load(Spike.imageFileName);
+    swordsmanImg = await Flame.images.load(Guardian.imageFileName);
+    swordsmanAttackDImg =
+        await Flame.images.load(Swordsman.attackDImageFileName);
+    swordsmanAttackLImg =
+        await Flame.images.load(Swordsman.attackLImageFileName);
+    swordsmanAttackRImg =
+        await Flame.images.load(Swordsman.attackRImageFileName);
+    swordsmanAttackUImg =
+        await Flame.images.load(Swordsman.attackUImageFileName);
+    swordsmanRoundAttackDImg =
+        await Flame.images.load(Swordsman.roundAttackDImageFileName);
+    swordsmanRoundAttackLImg =
+        await Flame.images.load(Swordsman.roundAttackLImageFileName);
+    swordsmanRoundAttackRImg =
+        await Flame.images.load(Swordsman.roundAttackRImageFileName);
+    swordsmanRoundAttackUImg =
+        await Flame.images.load(Swordsman.roundAttackUImageFileName);
+    trapImg = await Flame.images.load(Trap.imageFileName);
+    treasureBoxImg = await Flame.images.load(TreasureBox.imageFileName);
+    warpImg = await Flame.images.load(Warp.imageFileName);
+    waterImg = await Flame.images.load(Water.imageFileName);
+    wizardImg = await Flame.images.load(Wizard.imageFileName);
+    attackWizardImg = await Flame.images.load(Wizard.attackImageFileName);
+    magicImg = await Flame.images.load(Wizard.magicImageFileName);
     isReady = true;
   }
 
-  StageObj create({required StageObjTypeLevel typeLevel, required Point pos}) {
+  StageObj create({
+    required StageObjTypeLevel typeLevel,
+    required Point pos,
+    Move vector = Move.down,
+  }) {
     assert(isReady, 'StageObjFactory.onLoad() is not called!');
-    int priority = Stage.staticPriority;
-    // TODO: mergableとかで判定
-    double angle = 0;
-    Move beltV = Move.up;
-    switch (typeLevel.type) {
-      case StageObjType.jewel:
-      case StageObjType.trap:
-      case StageObjType.drill:
-      case StageObjType.player:
-      case StageObjType.spike:
-      case StageObjType.bomb:
-      case StageObjType.guardian:
-      case StageObjType.swordsman:
-      case StageObjType.archer:
-      case StageObjType.wizard:
-        priority = Stage.dynamicPriority;
-        break;
-      case StageObjType.none:
-      case StageObjType.block:
-      case StageObjType.treasureBox:
-      case StageObjType.warp:
-      case StageObjType.beltU:
-      case StageObjType.water:
-      case StageObjType.magma:
-        priority = Stage.staticPriority;
-        break;
-      case StageObjType.beltL:
-        priority = Stage.staticPriority;
-        beltV = Move.left;
-        angle = -0.5 * pi;
-        break;
-      case StageObjType.beltR:
-        priority = Stage.staticPriority;
-        beltV = Move.right;
-        angle = 0.5 * pi;
-        break;
-      case StageObjType.beltD:
-        priority = Stage.staticPriority;
-        beltV = Move.down;
-        angle = pi;
-        break;
-    }
-
-    final animation = SpriteAnimationComponent(
-      animation: stageSpriteAnimatinos[typeLevel.type],
-      priority: priority,
-      // TODO: mergableとかで判定
-      scale: (typeLevel.type == StageObjType.jewel ||
-                  typeLevel.type == StageObjType.trap ||
-                  typeLevel.type == StageObjType.drill ||
-                  typeLevel.type == StageObjType.bomb ||
-                  typeLevel.type == StageObjType.guardian) &&
-              isBaseMergableReverse
-          ? Vector2.all(Stage.mergableZoomRate)
-          : Vector2.all(1.0),
-      children: [
-        AlignComponent(
-          alignment: Anchor.center,
-          child: TextComponent(
-            text: typeLevel.level > 1 ? typeLevel.level.toString() : '',
-            textRenderer: TextPaint(
-              style: const TextStyle(
-                fontFamily: 'Aboreto',
-                color: Color(0xff000000),
-              ),
-            ),
-          ),
-        ),
-        if (typeLevel.type == StageObjType.jewel ||
-            typeLevel.type == StageObjType.trap ||
-            typeLevel.type == StageObjType.drill ||
-            typeLevel.type == StageObjType.bomb ||
-            typeLevel.type == StageObjType.guardian)
-          ScaleEffect.by(
-            isBaseMergableReverse
-                ? Vector2.all(1.0 / Stage.mergableZoomRate)
-                : Vector2.all(Stage.mergableZoomRate),
-            EffectController(
-              onMax: baseMergable == null ? setReverse : null,
-              onMin: baseMergable == null ? setReverse : null,
-              duration: Stage.mergableZoomDuration,
-              reverseDuration: Stage.mergableZoomDuration,
-              infinite: true,
-            ),
-          ),
-      ],
-      size: Stage.cellSize,
-      anchor: Anchor.center,
-      angle: angle,
-      position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-          Stage.cellSize / 2),
+    Vector2 scale = isBaseMergableReverse
+        ? Vector2.all(Stage.mergableZoomRate)
+        : Vector2.all(1.0);
+    final scaleEffect = ScaleEffect.by(
+      isBaseMergableReverse
+          ? Vector2.all(1.0 / Stage.mergableZoomRate)
+          : Vector2.all(Stage.mergableZoomRate),
+      EffectController(
+        onMax: baseMergable == null ? setReverse : null,
+        onMin: baseMergable == null ? setReverse : null,
+        duration: Stage.mergableZoomDuration,
+        reverseDuration: Stage.mergableZoomDuration,
+        infinite: true,
+      ),
     );
+
     if (typeLevel.type == StageObjType.jewel ||
         typeLevel.type == StageObjType.trap ||
         typeLevel.type == StageObjType.drill ||
         typeLevel.type == StageObjType.bomb ||
         typeLevel.type == StageObjType.guardian) {
-      final controller = (animation.children.last as Effect).controller;
+      final controller = scaleEffect.controller;
       baseMergable ??= controller;
       controller.advance((isBaseMergableReverse
               ? (1.0 - baseMergable!.progress)
@@ -234,139 +152,138 @@ class StageObjFactory {
           Stage.mergableZoomDuration);
     }
 
-    // TODO
-    final levelToAnimation = typeLevel.type == StageObjType.jewel
-        ? jewelLevelToAnimation
-        : typeLevel.type == StageObjType.block
-            ? blockLevelToAnimation
-            : {0: errorAnimation, 1: animation.animation!};
-    levelToAnimation[0] = errorAnimation;
-
     switch (typeLevel.type) {
       case StageObjType.none:
         return Floor(
-            animationComponent: animation,
+            floorImg: floorImg,
+            errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            level: typeLevel.level);
       case StageObjType.jewel:
         return Jewel(
-            animationComponent: animation,
-            pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+          jewelImg: jewelsImg,
+          errorImg: errorImg,
+          scale: scale,
+          scaleEffect: scaleEffect,
+          pos: pos,
+          level: typeLevel.level,
+        );
       case StageObjType.trap:
         return Trap(
-            animationComponent: animation,
+            trapImg: trapImg,
+            errorImg: errorImg,
+            scale: scale,
+            scaleEffect: scaleEffect,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            level: typeLevel.level);
       case StageObjType.player:
         return Player(
-            animationComponent: animation,
+            playerImg: playerImg,
+            errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            level: typeLevel.level);
       case StageObjType.block:
         return Block(
-            animationComponent: animation,
+            blockImg: blockImg,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: levelToAnimation,
-            breakingAnimations: breakingBlockAnimations);
+            errorImg: errorImg);
       case StageObjType.spike:
         return Spike(
-            animationComponent: animation,
+            spikeImg: spikeImg,
+            errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            level: typeLevel.level);
       case StageObjType.drill:
         return Drill(
-            animationComponent: animation,
+            drillImg: drillImg,
+            errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            scale: scale,
+            scaleEffect: scaleEffect,
+            level: typeLevel.level);
       case StageObjType.treasureBox:
         return TreasureBox(
-            animationComponent: animation,
+            treasureBoxImg: treasureBoxImg,
+            errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            level: typeLevel.level);
       case StageObjType.warp:
         return Warp(
-            animationComponent: animation,
+            warpImg: warpImg,
+            errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            level: typeLevel.level);
       case StageObjType.bomb:
         return Bomb(
-            animationComponent: animation,
+            bombImg: bombImg,
+            errorImg: errorImg,
+            scale: scale,
+            scaleEffect: scaleEffect,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
-      case StageObjType.beltL:
-      case StageObjType.beltR:
-      case StageObjType.beltU:
-      case StageObjType.beltD:
+            level: typeLevel.level);
+      case StageObjType.belt:
         return Belt(
-            animationComponent: animation,
+            levelToAnimationImg: beltImg,
             pos: pos,
             level: typeLevel.level,
-            levelToAnimations: levelToAnimation,
-            vector: beltV);
+            errorImg: errorImg,
+            vector: vector);
       case StageObjType.guardian:
         return Guardian(
-            animationComponent: animation,
-            vectorAnimation: guardianAnimation,
-            attackAnimation: guardianAttackAnimation,
-            levelToAnimations: levelToAnimation,
-            attackAnimationOffset: guardianAttackAnimationOffset,
+            guardianImg: guardianImg,
+            attackDImg: guardianAttackDImg,
+            attackLImg: guardianAttackLImg,
+            attackRImg: guardianAttackRImg,
+            attackUImg: guardianAttackUImg,
+            errorImg: errorImg,
+            scale: scale,
+            scaleEffect: scaleEffect,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.water:
         return Water(
-            animationComponent: animation,
+            waterImg: waterImg,
+            errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            level: typeLevel.level);
       case StageObjType.magma:
         return Magma(
-            animationComponent: animation,
+            magmaImg: magmaImg,
+            errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level,
-            levelToAnimations: levelToAnimation);
+            level: typeLevel.level);
       case StageObjType.swordsman:
         return Swordsman(
-          animationComponent: animation,
-          vectorAnimation: swordsmanAnimation,
-          attackAnimation: swordsmanAttackAnimation,
-          attackAnimationOffset: swordsmanAttackAnimationOffset,
-          roundAttackAnimation: swordsmanRoundAttackAnimation,
-          roundAttackAnimationOffset: swordsmanRoundAttackAnimationOffset,
-          levelToAnimations: levelToAnimation,
+          swordsmanImg: swordsmanImg,
+          attackDImg: swordsmanAttackDImg,
+          attackLImg: swordsmanAttackLImg,
+          attackRImg: swordsmanAttackRImg,
+          attackUImg: swordsmanAttackUImg,
+          roundAttackDImg: swordsmanRoundAttackDImg,
+          roundAttackLImg: swordsmanRoundAttackLImg,
+          roundAttackRImg: swordsmanRoundAttackRImg,
+          roundAttackUImg: swordsmanRoundAttackUImg,
+          errorImg: errorImg,
           pos: pos,
           level: typeLevel.level,
         );
       case StageObjType.archer:
         return Archer(
-          animationComponent: animation,
-          vectorAnimation: archerAnimation,
-          attackAnimation: archerAttackAnimation,
-          attackAnimationOffset: archerAttackAnimationOffset,
-          arrowAnimation: archerArrowAnimation,
-          levelToAnimations: levelToAnimation,
+          levelToAnimationImg: archersImg,
+          levelToAttackAnimationImg: attackArchersImg,
+          arrowImg: arrowImg,
+          errorImg: errorImg,
           pos: pos,
           level: typeLevel.level,
         );
       case StageObjType.wizard:
         return Wizard(
-          animationComponent: animation,
-          vectorAnimation: wizardAnimation,
-          attackAnimation: wizardAttackAnimation,
-          attackAnimationOffset: wizardAttackAnimationOffset,
-          magicAnimation: wizardMagicAnimation,
+          wizardImg: wizardImg,
+          attackImg: attackWizardImg,
+          magicImg: magicImg,
+          errorImg: errorImg,
           pos: pos,
-          levelToAnimations: levelToAnimation,
           level: typeLevel.level,
         );
     }
@@ -377,35 +294,6 @@ class StageObjFactory {
         typeLevel: StageObjTypeLevel.decode(src['typeLevel']),
         pos: Point.decode(src['pos']));
   }
-
-  SpriteAnimationComponent createExplodingBomb(Point pos) {
-    return SpriteAnimationComponent(
-      animation: explodingBombAnimation,
-      priority: Stage.dynamicPriority,
-      children: [
-        OpacityEffect.by(
-          -1.0,
-          EffectController(duration: 0.8),
-        ),
-        ScaleEffect.by(
-          Vector2.all(Stage.bombZoomRate),
-          EffectController(
-            duration: Stage.bombZoomDuration,
-            reverseDuration: Stage.bombZoomDuration,
-            infinite: true,
-          ),
-        ),
-        RemoveEffect(delay: 1.0),
-      ],
-      size: Stage.cellSize,
-      anchor: Anchor.center,
-      position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-          Stage.cellSize / 2),
-    );
-  }
-
-  SpriteAnimation getSpriteAnimation(StageObjType type) =>
-      stageSpriteAnimatinos[type]!;
 
   void setPosition(StageObj obj, {Vector2? offset}) {
     final pixel = offset ?? Vector2.zero();

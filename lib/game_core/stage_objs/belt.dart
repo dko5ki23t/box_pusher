@@ -1,42 +1,90 @@
+import 'dart:math';
+
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:flame/components.dart' hide Block;
+import 'package:flame/extensions.dart';
 
 class Belt extends StageObj {
-  Move _vector = Move.left;
+  /// 各レベルごとの画像のファイル名
+  static String get imageFileName => 'belt.png';
 
-  /// コンベアの向き
-  Move get vector => _vector;
-  set vector(Move v) {
-    _vector = v;
-    switch (_vector) {
+  void _setAngle() {
+    switch (vector) {
       case Move.right:
-        type = StageObjType.beltR;
+        animationComponent.angle = 0.5 * pi;
         break;
       case Move.up:
-        type = StageObjType.beltU;
+        animationComponent.angle = 0;
         break;
       case Move.down:
-        type = StageObjType.beltD;
+        animationComponent.angle = pi;
         break;
       case Move.left:
       default:
-        type = StageObjType.beltL;
+        animationComponent.angle = -0.5 * pi;
         break;
     }
   }
 
+  /// レベル
+  @override
+  set level(int l) {
+    super.level = l;
+    int key = levelToAnimations.containsKey(level) ? level : 0;
+    animationComponent.animation = levelToAnimations[key]![Move.up];
+    _setAngle();
+  }
+
+  /// コンベアの向き
+  @override
+  set vector(Move v) {
+    super.vector = v;
+    int key = levelToAnimations.containsKey(level) ? level : 0;
+    animationComponent.animation = levelToAnimations[key]![Move.up];
+    _setAngle();
+  }
+
   Belt({
-    required super.animationComponent,
-    required super.levelToAnimations,
     required super.pos,
     required Move vector,
+    required Image levelToAnimationImg,
+    required Image errorImg,
     int level = 1,
   }) : super(
+          animationComponent: SpriteAnimationComponent(
+            priority: Stage.staticPriority,
+            size: Stage.cellSize,
+            anchor: Anchor.center,
+            position:
+                (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                    Stage.cellSize / 2),
+          ),
+          levelToAnimations: {
+            0: {
+              Move.left:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.right:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.down:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.up:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            },
+            1: {
+              Move.up: SpriteAnimation.fromFrameData(
+                levelToAnimationImg,
+                SpriteAnimationData.sequenced(
+                    amount: 4,
+                    stepTime: Stage.objectStepTime,
+                    textureSize: Stage.cellSize),
+              ),
+            },
+          },
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.beltL,
+            type: StageObjType.belt,
             level: level,
           ),
         ) {

@@ -70,33 +70,6 @@ class GameSeq extends Sequence
   /// 現在押されている移動ボタンの移動方向
   Move pushingMoveButton = Move.none;
 
-  late final Image stageImg;
-  late final Image playerImg;
-  late final Image spikeImg;
-  late final Image blockImg;
-  late final Image bombImg;
-  late final Image beltImg;
-  late final Image guardianImg;
-  late final Image guardianAttackDImg;
-  late final Image guardianAttackUImg;
-  late final Image guardianAttackLImg;
-  late final Image guardianAttackRImg;
-  late final Image swordsmanImg;
-  late final Image swordsmanAttackDImg;
-  late final Image swordsmanAttackUImg;
-  late final Image swordsmanAttackLImg;
-  late final Image swordsmanAttackRImg;
-  late final Image swordsmanRoundAttackDImg;
-  late final Image swordsmanRoundAttackUImg;
-  late final Image swordsmanRoundAttackLImg;
-  late final Image swordsmanRoundAttackRImg;
-  late final Image archerImg;
-  late final Image archerAttackImg;
-  late final Image arrowImg;
-  late final Image wizardImg;
-  late final Image wizardAttackImg;
-  late final Image magicImg;
-  late final Image errorImg;
   late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
@@ -112,37 +85,6 @@ class GameSeq extends Sequence
 
   @override
   Future<void> onLoad() async {
-    stageImg = await Flame.images.load('stage_alpha.png');
-    playerImg = await Flame.images.load('player.png');
-    spikeImg = await Flame.images.load('spike.png');
-    blockImg = await Flame.images.load('block.png');
-    bombImg = await Flame.images.load('bomb.png');
-    beltImg = await Flame.images.load('belt.png');
-    guardianImg = await Flame.images.load('guardian.png');
-    guardianAttackDImg = await Flame.images.load('guardian_attackD.png');
-    guardianAttackUImg = await Flame.images.load('guardian_attackU.png');
-    guardianAttackLImg = await Flame.images.load('guardian_attackL.png');
-    guardianAttackRImg = await Flame.images.load('guardian_attackR.png');
-    swordsmanImg = await Flame.images.load('swordsman.png');
-    swordsmanAttackDImg = await Flame.images.load('swordsman_attackD.png');
-    swordsmanAttackUImg = await Flame.images.load('swordsman_attackU.png');
-    swordsmanAttackLImg = await Flame.images.load('swordsman_attackL.png');
-    swordsmanAttackRImg = await Flame.images.load('swordsman_attackR.png');
-    swordsmanRoundAttackDImg =
-        await Flame.images.load('swordsman_attack_roundD.png');
-    swordsmanRoundAttackUImg =
-        await Flame.images.load('swordsman_attack_roundU.png');
-    swordsmanRoundAttackLImg =
-        await Flame.images.load('swordsman_attack_roundL.png');
-    swordsmanRoundAttackRImg =
-        await Flame.images.load('swordsman_attack_roundR.png');
-    archerImg = await Flame.images.load('archer.png');
-    archerAttackImg = await Flame.images.load('archer_attack.png');
-    arrowImg = await Flame.images.load('arrow.png');
-    wizardImg = await Flame.images.load('wizard.png');
-    wizardAttackImg = await Flame.images.load('wizard_attack.png');
-    magicImg = await Flame.images.load('magic.png');
-    errorImg = await Flame.images.load('noimage.png');
     coinImg = await Flame.images.load('coin.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
@@ -182,35 +124,7 @@ class GameSeq extends Sequence
     removeAll(children);
     game.world.removeAll(game.world.children);
 
-    stage = Stage(
-      stageImg: stageImg,
-      playerImg: playerImg,
-      spikeImg: spikeImg,
-      blockImg: blockImg,
-      bombImg: bombImg,
-      beltImg: beltImg,
-      guardianImg: guardianImg,
-      guardianAttackDImg: guardianAttackDImg,
-      guardianAttackUImg: guardianAttackUImg,
-      guardianAttackLImg: guardianAttackLImg,
-      guardianAttackRImg: guardianAttackRImg,
-      swordsmanImg: swordsmanImg,
-      swordsmanAttackDImg: swordsmanAttackDImg,
-      swordsmanAttackUImg: swordsmanAttackUImg,
-      swordsmanAttackLImg: swordsmanAttackLImg,
-      swordsmanAttackRImg: swordsmanAttackRImg,
-      swordsmanRoundAttackDImg: swordsmanRoundAttackDImg,
-      swordsmanRoundAttackUImg: swordsmanRoundAttackUImg,
-      swordsmanRoundAttackLImg: swordsmanRoundAttackLImg,
-      swordsmanRoundAttackRImg: swordsmanRoundAttackRImg,
-      archerImg: archerImg,
-      archerAttackImg: archerAttackImg,
-      arrowImg: arrowImg,
-      wizardImg: wizardImg,
-      wizardAttackImg: wizardAttackImg,
-      magicImg: magicImg,
-      errorImg: errorImg,
-    );
+    stage = Stage();
     await stage.onLoad();
     stage.initialize(game.world, game.camera, game.stageData);
 

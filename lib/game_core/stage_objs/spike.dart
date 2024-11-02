@@ -3,23 +3,52 @@ import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
+import 'package:flame/extensions.dart';
 
 class Spike extends StageObj {
   final EnemyMovePattern movePattern = EnemyMovePattern.followPlayer;
 
+  /// 各レベルごとの画像のファイル名
+  static String get imageFileName => 'player.png';
+
   bool _playerStartMovingFlag = false;
 
   Spike({
-    required super.animationComponent,
-    required super.levelToAnimations,
+    required Image spikeImg,
+    required Image errorImg,
     required super.pos,
     int level = 1,
   }) : super(
+          animationComponent: SpriteAnimationComponent(
+            priority: Stage.dynamicPriority,
+            size: Stage.cellSize,
+            anchor: Anchor.center,
+            position:
+                (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                    Stage.cellSize / 2),
+          ),
+          levelToAnimations: {
+            0: {
+              Move.none:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            },
+            1: {
+              Move.none: SpriteAnimation.fromFrameData(
+                spikeImg,
+                SpriteAnimationData.sequenced(
+                    amount: 2,
+                    stepTime: Stage.objectStepTime,
+                    textureSize: Stage.cellSize),
+              ),
+            },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.spike,
             level: level,
           ),
-        );
+        ) {
+    vector = Move.none;
+  }
 
   @override
   void update(

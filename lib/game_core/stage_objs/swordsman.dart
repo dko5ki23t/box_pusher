@@ -3,6 +3,7 @@ import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
+import 'package:flame/extensions.dart';
 
 class Swordsman extends StageObj {
   /// 各レベルに対応する動きのパターン
@@ -12,42 +13,188 @@ class Swordsman extends StageObj {
     3: EnemyMovePattern.followPlayerAttackRound8,
   };
 
-  /// 向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> vectorAnimation;
+  /// 各レベルごとの画像のファイル名
+  static String get imageFileName => 'swordsman.png';
 
-  /// 攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> attackAnimation;
+  /// 各レベルごとの攻撃時の画像のファイル名
+  static String get attackDImageFileName => 'swordsman_attackD.png';
+  static String get attackLImageFileName => 'swordsman_attackL.png';
+  static String get attackRImageFileName => 'swordsman_attackR.png';
+  static String get attackUImageFileName => 'swordsman_attackU.png';
 
-  /// 回転斬り攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> roundAttackAnimation;
+  /// 各レベルごとの回転斬り時の画像のファイル名
+  static String get roundAttackDImageFileName => 'swordsman_attack_roundD.png';
+  static String get roundAttackLImageFileName => 'swordsman_attack_roundL.png';
+  static String get roundAttackRImageFileName => 'swordsman_attack_roundR.png';
+  static String get roundAttackUImageFileName => 'swordsman_attack_roundU.png';
+
+  /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
+  final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
+
+  /// オブジェクトのレベル->向き->回転斬り時アニメーションのマップ
+  final Map<int, Map<Move, SpriteAnimation>> levelToRoundAttackAnimations;
 
   /// 攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
-  final Map<Move, Vector2> attackAnimationOffset;
+  final Map<Move, Vector2> attackAnimationOffset = {
+    Move.up: Vector2(0, -16.0),
+    Move.down: Vector2(0, 16.0),
+    Move.left: Vector2(-16.0, 0),
+    Move.right: Vector2(16.0, 0)
+  };
 
   /// 回転斬り攻撃時アニメーションのオフセット
-  final Vector2 roundAttackAnimationOffset;
+  final Vector2 roundAttackAnimationOffset = Vector2.zero();
 
-  /// 向き
-  Move _vector = Move.down;
+  /// 攻撃の1コマの時間
+  static const double attackStepTime = 32.0 / Stage.playerSpeed / 5;
 
-  /// 向き
-  Move get vector => _vector;
-  set vector(Move v) {
-    _vector = v;
-    animationComponent.animation = vectorAnimation[_vector];
-  }
+  /// 回転斬りの1コマの時間
+  static const double roundAttackStepTime = 32.0 / Stage.playerSpeed / 20;
 
   Swordsman({
-    required super.animationComponent,
-    required this.vectorAnimation,
-    required this.attackAnimation,
-    required this.roundAttackAnimation,
-    required this.attackAnimationOffset,
-    required this.roundAttackAnimationOffset,
-    required super.levelToAnimations,
+    required Image swordsmanImg,
+    required Image attackDImg,
+    required Image attackLImg,
+    required Image attackRImg,
+    required Image attackUImg,
+    required Image roundAttackDImg,
+    required Image roundAttackLImg,
+    required Image roundAttackRImg,
+    required Image roundAttackUImg,
+    required Image errorImg,
     required super.pos,
     int level = 1,
-  }) : super(
+  })  : levelToAttackAnimations = {
+          0: {
+            Move.left:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.right:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.down:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.up:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+          },
+          1: {
+            Move.down: SpriteAnimation.fromFrameData(
+              attackDImg,
+              SpriteAnimationData.sequenced(
+                  amount: 5,
+                  stepTime: attackStepTime,
+                  textureSize: Vector2(96.0, 64.0)),
+            ),
+            Move.up: SpriteAnimation.fromFrameData(
+              attackUImg,
+              SpriteAnimationData.sequenced(
+                  amount: 5,
+                  stepTime: attackStepTime,
+                  textureSize: Vector2(96.0, 64.0)),
+            ),
+            Move.left: SpriteAnimation.fromFrameData(
+              attackLImg,
+              SpriteAnimationData.sequenced(
+                  amount: 5,
+                  stepTime: attackStepTime,
+                  textureSize: Vector2(64.0, 96.0)),
+            ),
+            Move.right: SpriteAnimation.fromFrameData(
+              attackRImg,
+              SpriteAnimationData.sequenced(
+                  amount: 5,
+                  stepTime: attackStepTime,
+                  textureSize: Vector2(64.0, 96.0)),
+            ),
+          },
+        },
+        levelToRoundAttackAnimations = {
+          0: {
+            Move.left:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.right:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.down:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.up:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+          },
+          1: {
+            Move.down: SpriteAnimation.fromFrameData(
+              roundAttackDImg,
+              SpriteAnimationData.sequenced(
+                  amount: 20,
+                  stepTime: roundAttackStepTime,
+                  textureSize: Vector2.all(96.0)),
+            ),
+            Move.up: SpriteAnimation.fromFrameData(
+              roundAttackUImg,
+              SpriteAnimationData.sequenced(
+                  amount: 20,
+                  stepTime: roundAttackStepTime,
+                  textureSize: Vector2.all(96.0)),
+            ),
+            Move.left: SpriteAnimation.fromFrameData(
+              roundAttackLImg,
+              SpriteAnimationData.sequenced(
+                  amount: 20,
+                  stepTime: roundAttackStepTime,
+                  textureSize: Vector2.all(96.0)),
+            ),
+            Move.right: SpriteAnimation.fromFrameData(
+              roundAttackRImg,
+              SpriteAnimationData.sequenced(
+                  amount: 20,
+                  stepTime: roundAttackStepTime,
+                  textureSize: Vector2.all(96.0)),
+            ),
+          },
+        },
+        super(
+          animationComponent: SpriteAnimationComponent(
+            priority: Stage.dynamicPriority,
+            size: Stage.cellSize,
+            anchor: Anchor.center,
+            position:
+                (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                    Stage.cellSize / 2),
+          ),
+          levelToAnimations: {
+            0: {
+              Move.left:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.right:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.down:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.up:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            },
+            1: {
+              Move.left: SpriteAnimation.spriteList([
+                Sprite(swordsmanImg,
+                    srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
+                Sprite(swordsmanImg,
+                    srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.right: SpriteAnimation.spriteList([
+                Sprite(swordsmanImg,
+                    srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
+                Sprite(swordsmanImg,
+                    srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.up: SpriteAnimation.spriteList([
+                Sprite(swordsmanImg,
+                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                Sprite(swordsmanImg,
+                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.down: SpriteAnimation.spriteList([
+                Sprite(swordsmanImg,
+                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+                Sprite(swordsmanImg,
+                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+            },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.swordsman,
             level: level,
@@ -79,13 +226,16 @@ class Swordsman extends StageObj {
         attacking = true;
         // 攻撃中のアニメーションに変更
         if (level <= 1) {
-          animationComponent.animation = attackAnimation[vector]!;
+          int key = levelToAttackAnimations.containsKey(level) ? level : 0;
+          animationComponent.animation = levelToAttackAnimations[key]![vector]!;
           animationComponent.size =
               animationComponent.animation!.frames.first.sprite.srcSize;
           stage.objFactory
               .setPosition(this, offset: attackAnimationOffset[vector]!);
         } else {
-          animationComponent.animation = roundAttackAnimation[vector]!;
+          int key = levelToRoundAttackAnimations.containsKey(level) ? level : 0;
+          animationComponent.animation =
+              levelToRoundAttackAnimations[key]![vector]!;
           animationComponent.size =
               animationComponent.animation!.frames.first.sprite.srcSize;
           stage.objFactory

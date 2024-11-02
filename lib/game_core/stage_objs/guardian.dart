@@ -3,41 +3,132 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
+import 'package:flame/extensions.dart';
 
 class Guardian extends StageObj {
-  /// 向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> vectorAnimation;
+  /// 各レベルごとの画像のファイル名
+  static String get imageFileName => 'guardian.png';
 
-  /// 攻撃時の向きに対応するアニメーション。上下左右のkeyが必須
-  final Map<Move, SpriteAnimation> attackAnimation;
+  /// 各レベルごとの攻撃時の画像のファイル名
+  static String get attackDImageFileName => 'guardian_attackD.png';
+  static String get attackLImageFileName => 'guardian_attackL.png';
+  static String get attackRImageFileName => 'guardian_attackR.png';
+  static String get attackUImageFileName => 'guardian_attackU.png';
+
+  /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
+  final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
 
   /// 攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
-  final Map<Move, Vector2> attackAnimationOffset;
+  final Map<Move, Vector2> attackAnimationOffset = {
+    Move.up: Vector2(0, -16.0),
+    Move.down: Vector2(0, 16.0),
+    Move.left: Vector2(-16.0, 0),
+    Move.right: Vector2(16.0, 0)
+  };
+
+  /// 攻撃の1コマの時間
+  static const double attackStepTime = 32.0 / Stage.playerSpeed / 5;
 
   Guardian({
-    required super.animationComponent,
-    required super.levelToAnimations,
     required super.pos,
-    required this.vectorAnimation,
-    required this.attackAnimation,
-    required this.attackAnimationOffset,
+    required Image guardianImg,
+    required Image attackDImg,
+    required Image attackLImg,
+    required Image attackRImg,
+    required Image attackUImg,
+    required Image errorImg,
+    required Vector2? scale,
+    required ScaleEffect scaleEffect,
     int level = 1,
-  }) : super(
+  })  : levelToAttackAnimations = {
+          0: {
+            Move.left:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.right:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.down:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            Move.up:
+                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+          },
+          1: {
+            Move.down: SpriteAnimation.fromFrameData(
+              attackDImg,
+              SpriteAnimationData.sequenced(
+                  amount: 5,
+                  stepTime: attackStepTime,
+                  textureSize: Vector2(96.0, 64.0)),
+            ),
+            Move.up: SpriteAnimation.fromFrameData(
+              attackUImg,
+              SpriteAnimationData.sequenced(
+                  amount: 5,
+                  stepTime: attackStepTime,
+                  textureSize: Vector2(96.0, 64.0)),
+            ),
+            Move.left: SpriteAnimation.fromFrameData(
+              attackLImg,
+              SpriteAnimationData.sequenced(
+                  amount: 5,
+                  stepTime: attackStepTime,
+                  textureSize: Vector2(64.0, 96.0)),
+            ),
+            Move.right: SpriteAnimation.fromFrameData(
+              attackRImg,
+              SpriteAnimationData.sequenced(
+                  amount: 5,
+                  stepTime: attackStepTime,
+                  textureSize: Vector2(64.0, 96.0)),
+            ),
+          },
+        },
+        super(
+          animationComponent: SpriteAnimationComponent(
+            priority: Stage.dynamicPriority,
+            size: Stage.cellSize,
+            scale: scale,
+            anchor: Anchor.center,
+            children: [scaleEffect],
+            position:
+                (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                    Stage.cellSize / 2),
+          ),
+          levelToAnimations: {
+            0: {
+              Move.left:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.right:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.down:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              Move.up:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            },
+            1: {
+              Move.left: SpriteAnimation.spriteList([
+                Sprite(guardianImg,
+                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.right: SpriteAnimation.spriteList([
+                Sprite(guardianImg,
+                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.up: SpriteAnimation.spriteList([
+                Sprite(guardianImg,
+                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.down: SpriteAnimation.spriteList([
+                Sprite(guardianImg,
+                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+            },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.guardian,
             level: level,
           ),
         );
-
-  /// 向き
-  Move _vector = Move.down;
-
-  /// 向き
-  Move get vector => _vector;
-  set vector(Move v) {
-    _vector = v;
-    animationComponent.animation = vectorAnimation[_vector];
-  }
 
   bool playerStartMovingFlag = false;
 
@@ -98,7 +189,8 @@ class Guardian extends StageObj {
         attacking = true;
         // 攻撃中のアニメーションに変更
         //if (typeLevel.level <= 1) {
-        animationComponent.animation = attackAnimation[vector]!;
+        int key = levelToAttackAnimations.containsKey(level) ? level : 0;
+        animationComponent.animation = levelToAttackAnimations[key]![vector]!;
         animationComponent.size =
             animationComponent.animation!.frames.first.sprite.srcSize;
         stage.objFactory

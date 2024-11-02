@@ -2,20 +2,52 @@ import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 
 class Jewel extends StageObj {
+  /// 各レベルごとの画像のファイル名
+  static String get imageFileName => 'jewels.png';
+
   Jewel({
-    required super.animationComponent,
-    required super.levelToAnimations,
+    required Image jewelImg,
+    required Image errorImg,
+    required Vector2? scale,
+    required ScaleEffect scaleEffect,
     required super.pos,
     int level = 1,
   }) : super(
+          animationComponent: SpriteAnimationComponent(
+            priority: Stage.dynamicPriority,
+            size: Stage.cellSize,
+            scale: scale,
+            anchor: Anchor.center,
+            children: [scaleEffect],
+            position:
+                (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                    Stage.cellSize / 2),
+          ),
+          levelToAnimations: {
+            0: {
+              Move.none:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            },
+            for (int i = 1; i <= 14; i++)
+              i: {
+                Move.none: SpriteAnimation.spriteList([
+                  Sprite(jewelImg,
+                      srcPosition: Vector2((i - 1) * 32, 0),
+                      srcSize: Stage.cellSize)
+                ], stepTime: 1.0)
+              },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.jewel,
             level: level,
           ),
-        );
+        ) {
+    vector = Move.none;
+  }
 
   @override
   void update(
@@ -27,20 +59,6 @@ class Jewel extends StageObj {
     bool playerStartMoving,
     List<Point> prohibitedPoints,
   ) {}
-
-  /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'jewels.png';
-
-  /// レベル->アニメーションのマップ
-  static Map<int, SpriteAnimation> levelToAnimation(Image img) {
-    final Map<int, SpriteAnimation> ret = {};
-    for (int i = 0; i < 14; i++) {
-      ret[i + 1] = SpriteAnimation.spriteList([
-        Sprite(img, srcPosition: Vector2(i * 32, 0), srcSize: Stage.cellSize)
-      ], stepTime: 1.0);
-    }
-    return ret;
-  }
 
   @override
   bool get pushable => true;

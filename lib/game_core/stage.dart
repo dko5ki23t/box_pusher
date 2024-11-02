@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/common.dart';
+import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
@@ -23,18 +24,6 @@ class Stage {
   /// 常に動くオブジェクトのアニメーションステップ時間
   static const double objectStepTime = 0.4;
 
-  static const double guardianAttackStepTime = 32.0 / playerSpeed / 5;
-
-  static const double swordsmanAttackStepTime = 32.0 / playerSpeed / 5;
-
-  static const double swordsmanRoundAttackStepTime = 32.0 / playerSpeed / 20;
-
-  static const double archerAttackStepTime = 32.0 / playerSpeed / 4;
-
-  static const double wizardAttackStepTime = 32.0 / playerSpeed / 4;
-
-  static const double magicStepTime = 32.0 / playerSpeed / 4;
-
   /// マージ可能なオブジェクトの拡大/縮小の時間(s)
   static const double mergableZoomDuration = 0.8;
 
@@ -54,34 +43,6 @@ class Stage {
   static const dynamicPriority = 2;
 
   bool isReady = false;
-
-  final Image stageImg;
-  final Image playerImg;
-  final Image spikeImg;
-  final Image blockImg;
-  final Image bombImg;
-  final Image beltImg;
-  final Image guardianImg;
-  final Image guardianAttackDImg;
-  final Image guardianAttackUImg;
-  final Image guardianAttackLImg;
-  final Image guardianAttackRImg;
-  final Image swordsmanImg;
-  final Image swordsmanAttackDImg;
-  final Image swordsmanAttackUImg;
-  final Image swordsmanAttackLImg;
-  final Image swordsmanAttackRImg;
-  final Image swordsmanRoundAttackDImg;
-  final Image swordsmanRoundAttackUImg;
-  final Image swordsmanRoundAttackLImg;
-  final Image swordsmanRoundAttackRImg;
-  final Image archerImg;
-  final Image archerAttackImg;
-  final Image arrowImg;
-  final Image wizardImg;
-  final Image wizardAttackImg;
-  final Image magicImg;
-  final Image errorImg;
 
   late StageObjFactory objFactory;
 
@@ -152,390 +113,8 @@ class Stage {
   /// 所持しているコイン数
   int coinNum = 0;
 
-  Stage({
-    required this.stageImg,
-    required this.playerImg,
-    required this.spikeImg,
-    required this.blockImg,
-    required this.bombImg,
-    required this.beltImg,
-    required this.guardianImg,
-    required this.guardianAttackDImg,
-    required this.guardianAttackUImg,
-    required this.guardianAttackLImg,
-    required this.guardianAttackRImg,
-    required this.swordsmanImg,
-    required this.swordsmanAttackDImg,
-    required this.swordsmanAttackUImg,
-    required this.swordsmanAttackLImg,
-    required this.swordsmanAttackRImg,
-    required this.swordsmanRoundAttackDImg,
-    required this.swordsmanRoundAttackUImg,
-    required this.swordsmanRoundAttackLImg,
-    required this.swordsmanRoundAttackRImg,
-    required this.archerImg,
-    required this.archerAttackImg,
-    required this.arrowImg,
-    required this.wizardImg,
-    required this.wizardAttackImg,
-    required this.magicImg,
-    required this.errorImg,
-  }) {
-    final Map<StageObjType, SpriteAnimation> stageSprites = {};
-    stageSprites[StageObjType.none] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(0, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.block] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(160, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.trap] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.player] = SpriteAnimation.fromFrameData(
-      playerImg,
-      SpriteAnimationData.sequenced(
-          amount: 2, stepTime: objectStepTime, textureSize: cellSize),
-    );
-    stageSprites[StageObjType.spike] = SpriteAnimation.fromFrameData(
-      spikeImg,
-      SpriteAnimationData.sequenced(
-          amount: 2, stepTime: objectStepTime, textureSize: cellSize),
-    );
-    stageSprites[StageObjType.drill] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(224, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.treasureBox] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(416, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.warp] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(480, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.bomb] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(512, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.beltL] = stageSprites[StageObjType.beltR] =
-        stageSprites[StageObjType.beltU] =
-            stageSprites[StageObjType.beltD] = SpriteAnimation.fromFrameData(
-      beltImg,
-      SpriteAnimationData.sequenced(
-          amount: 4, stepTime: objectStepTime, textureSize: cellSize),
-    );
-    stageSprites[StageObjType.guardian] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(576, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.water] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(608, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.magma] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(640, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.swordsman] = SpriteAnimation.spriteList([
-      Sprite(swordsmanImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
-      Sprite(swordsmanImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
-    ], stepTime: objectStepTime);
-    stageSprites[StageObjType.archer] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(704, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-    stageSprites[StageObjType.wizard] = SpriteAnimation.spriteList(
-        [Sprite(stageImg, srcPosition: Vector2(736, 0), srcSize: cellSize)],
-        stepTime: 1.0);
-
-    objFactory = StageObjFactory(
-      errorAnimation:
-          SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-      stageSpriteAnimatinos: stageSprites,
-      blockLevelToAnimation: {
-        1: SpriteAnimation.spriteList([
-          Sprite(blockImg, srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-        ], stepTime: 1.0),
-        2: SpriteAnimation.spriteList([
-          Sprite(blockImg, srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
-        ], stepTime: 1.0),
-      },
-      breakingBlockAnimations: {
-        1: SpriteAnimation.spriteList([
-          Sprite(blockImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
-          Sprite(blockImg, srcPosition: Vector2(96, 0), srcSize: cellSize)
-        ], stepTime: 1.0),
-      },
-      explodingBombAnimation: SpriteAnimation.spriteList(
-          [Sprite(bombImg, srcPosition: Vector2(32, 0), srcSize: cellSize)],
-          stepTime: 1.0),
-      guardianAnimation: {
-        Move.left: SpriteAnimation.spriteList([
-          Sprite(guardianImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.right: SpriteAnimation.spriteList([
-          Sprite(guardianImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.up: SpriteAnimation.spriteList([
-          Sprite(guardianImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.down: SpriteAnimation.spriteList([
-          Sprite(guardianImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-      },
-      guardianAttackAnimation: {
-        Move.down: SpriteAnimation.fromFrameData(
-          guardianAttackDImg,
-          SpriteAnimationData.sequenced(
-              amount: 5,
-              stepTime: guardianAttackStepTime,
-              textureSize: Vector2(96.0, 64.0)),
-        ),
-        Move.up: SpriteAnimation.fromFrameData(
-          guardianAttackUImg,
-          SpriteAnimationData.sequenced(
-              amount: 5,
-              stepTime: guardianAttackStepTime,
-              textureSize: Vector2(96.0, 64.0)),
-        ),
-        Move.left: SpriteAnimation.fromFrameData(
-          guardianAttackLImg,
-          SpriteAnimationData.sequenced(
-              amount: 5,
-              stepTime: guardianAttackStepTime,
-              textureSize: Vector2(64.0, 96.0)),
-        ),
-        Move.right: SpriteAnimation.fromFrameData(
-          guardianAttackRImg,
-          SpriteAnimationData.sequenced(
-              amount: 5,
-              stepTime: guardianAttackStepTime,
-              textureSize: Vector2(64.0, 96.0)),
-        ),
-      },
-      guardianAttackAnimationOffset: {
-        Move.up: Vector2(0, -16.0),
-        Move.down: Vector2(0, 16.0),
-        Move.left: Vector2(-16.0, 0),
-        Move.right: Vector2(16.0, 0)
-      },
-      swordsmanAnimation: {
-        Move.left: SpriteAnimation.spriteList([
-          Sprite(swordsmanImg, srcPosition: Vector2(128, 0), srcSize: cellSize),
-          Sprite(swordsmanImg, srcPosition: Vector2(160, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.right: SpriteAnimation.spriteList([
-          Sprite(swordsmanImg, srcPosition: Vector2(192, 0), srcSize: cellSize),
-          Sprite(swordsmanImg, srcPosition: Vector2(224, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.up: SpriteAnimation.spriteList([
-          Sprite(swordsmanImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
-          Sprite(swordsmanImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.down: SpriteAnimation.spriteList([
-          Sprite(swordsmanImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
-          Sprite(swordsmanImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-      },
-      swordsmanAttackAnimation: {
-        Move.down: SpriteAnimation.fromFrameData(
-          swordsmanAttackDImg,
-          SpriteAnimationData.sequenced(
-              amount: 5,
-              stepTime: swordsmanAttackStepTime,
-              textureSize: Vector2(96.0, 64.0)),
-        ),
-        Move.up: SpriteAnimation.fromFrameData(
-          swordsmanAttackUImg,
-          SpriteAnimationData.sequenced(
-              amount: 5,
-              stepTime: swordsmanAttackStepTime,
-              textureSize: Vector2(96.0, 64.0)),
-        ),
-        Move.left: SpriteAnimation.fromFrameData(
-          swordsmanAttackLImg,
-          SpriteAnimationData.sequenced(
-              amount: 5,
-              stepTime: swordsmanAttackStepTime,
-              textureSize: Vector2(64.0, 96.0)),
-        ),
-        Move.right: SpriteAnimation.fromFrameData(
-          swordsmanAttackRImg,
-          SpriteAnimationData.sequenced(
-              amount: 5,
-              stepTime: swordsmanAttackStepTime,
-              textureSize: Vector2(64.0, 96.0)),
-        ),
-      },
-      swordsmanAttackAnimationOffset: {
-        Move.up: Vector2(0, -16.0),
-        Move.down: Vector2(0, 16.0),
-        Move.left: Vector2(-16.0, 0),
-        Move.right: Vector2(16.0, 0)
-      },
-      swordsmanRoundAttackAnimation: {
-        Move.down: SpriteAnimation.fromFrameData(
-          swordsmanRoundAttackDImg,
-          SpriteAnimationData.sequenced(
-              amount: 20,
-              stepTime: swordsmanRoundAttackStepTime,
-              textureSize: Vector2.all(96.0)),
-        ),
-        Move.up: SpriteAnimation.fromFrameData(
-          swordsmanRoundAttackUImg,
-          SpriteAnimationData.sequenced(
-              amount: 20,
-              stepTime: swordsmanRoundAttackStepTime,
-              textureSize: Vector2.all(96.0)),
-        ),
-        Move.left: SpriteAnimation.fromFrameData(
-          swordsmanRoundAttackLImg,
-          SpriteAnimationData.sequenced(
-              amount: 20,
-              stepTime: swordsmanRoundAttackStepTime,
-              textureSize: Vector2.all(96.0)),
-        ),
-        Move.right: SpriteAnimation.fromFrameData(
-          swordsmanRoundAttackRImg,
-          SpriteAnimationData.sequenced(
-              amount: 20,
-              stepTime: swordsmanRoundAttackStepTime,
-              textureSize: Vector2.all(96.0)),
-        ),
-      },
-      swordsmanRoundAttackAnimationOffset: Vector2.zero(),
-      archerAnimation: {
-        Move.left: SpriteAnimation.spriteList([
-          Sprite(archerImg, srcPosition: Vector2(128, 0), srcSize: cellSize),
-          Sprite(archerImg, srcPosition: Vector2(160, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.right: SpriteAnimation.spriteList([
-          Sprite(archerImg, srcPosition: Vector2(192, 0), srcSize: cellSize),
-          Sprite(archerImg, srcPosition: Vector2(224, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.up: SpriteAnimation.spriteList([
-          Sprite(archerImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
-          Sprite(archerImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.down: SpriteAnimation.spriteList([
-          Sprite(archerImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
-          Sprite(archerImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-      },
-      archerAttackAnimation: {
-        Move.down: SpriteAnimation.spriteList([
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(0, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(32, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(64, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(96, 0), srcSize: cellSize),
-        ], stepTime: archerAttackStepTime),
-        Move.up: SpriteAnimation.spriteList([
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(128, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(160, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(192, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(224, 0), srcSize: cellSize),
-        ], stepTime: archerAttackStepTime),
-        Move.left: SpriteAnimation.spriteList([
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(256, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(288, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(320, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(352, 0), srcSize: cellSize),
-        ], stepTime: archerAttackStepTime),
-        Move.right: SpriteAnimation.spriteList([
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(384, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(416, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(448, 0), srcSize: cellSize),
-          Sprite(archerAttackImg,
-              srcPosition: Vector2(480, 0), srcSize: cellSize),
-        ], stepTime: archerAttackStepTime),
-      },
-      archerAttackAnimationOffset: {
-        Move.up: Vector2.zero(),
-        Move.down: Vector2.zero(),
-        Move.left: Vector2.zero(),
-        Move.right: Vector2.zero(),
-      },
-      archerArrowAnimation: SpriteAnimation.spriteList([
-        Sprite(arrowImg),
-      ], stepTime: 1.0),
-      wizardAnimation: {
-        Move.left: SpriteAnimation.spriteList([
-          Sprite(wizardImg, srcPosition: Vector2(128, 0), srcSize: cellSize),
-          Sprite(wizardImg, srcPosition: Vector2(160, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.right: SpriteAnimation.spriteList([
-          Sprite(wizardImg, srcPosition: Vector2(192, 0), srcSize: cellSize),
-          Sprite(wizardImg, srcPosition: Vector2(224, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.up: SpriteAnimation.spriteList([
-          Sprite(wizardImg, srcPosition: Vector2(64, 0), srcSize: cellSize),
-          Sprite(wizardImg, srcPosition: Vector2(96, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-        Move.down: SpriteAnimation.spriteList([
-          Sprite(wizardImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
-          Sprite(wizardImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
-        ], stepTime: objectStepTime),
-      },
-      wizardAttackAnimation: {
-        Move.down: SpriteAnimation.spriteList([
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(0, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(32, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(64, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(96, 0), srcSize: cellSize),
-        ], stepTime: wizardAttackStepTime),
-        Move.up: SpriteAnimation.spriteList([
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(128, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(160, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(192, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(224, 0), srcSize: cellSize),
-        ], stepTime: wizardAttackStepTime),
-        Move.left: SpriteAnimation.spriteList([
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(256, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(288, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(320, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(352, 0), srcSize: cellSize),
-        ], stepTime: wizardAttackStepTime),
-        Move.right: SpriteAnimation.spriteList([
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(384, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(416, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(448, 0), srcSize: cellSize),
-          Sprite(wizardAttackImg,
-              srcPosition: Vector2(480, 0), srcSize: cellSize),
-        ], stepTime: wizardAttackStepTime),
-      },
-      wizardAttackAnimationOffset: {
-        Move.up: Vector2.zero(),
-        Move.down: Vector2.zero(),
-        Move.left: Vector2.zero(),
-        Move.right: Vector2.zero(),
-      },
-      wizardMagicAnimation: SpriteAnimation.spriteList([
-        Sprite(magicImg, srcPosition: Vector2(0, 0), srcSize: cellSize),
-        Sprite(magicImg, srcPosition: Vector2(32, 0), srcSize: cellSize),
-      ], stepTime: magicStepTime),
-    );
+  Stage() {
+    objFactory = StageObjFactory();
   }
 
   Future<void> onLoad() async {
@@ -764,21 +343,18 @@ class Stage {
         // 宝石出現以外の位置にコンベア/ガーディアン/剣を持つ敵をそれぞれ最大1個出現させる
         for (final StageObjType type in [
           StageObjType.swordsman,
-          StageObjType.beltL,
+          StageObjType.belt,
           StageObjType.guardian,
         ]) {
           if (breakedRemain.isNotEmpty) {
             bool isAppear = Random().nextBool();
             final appear = breakedRemain.sample(1).first;
             if (isAppear) {
-              if (type == StageObjType.beltL) {
-                final trueType = [
-                  StageObjType.beltL,
-                  StageObjType.beltR,
-                  StageObjType.beltU,
-                  StageObjType.beltD,
-                ].sample(1).first;
-                setStaticType(appear, trueType, gameWorld);
+              if (type == StageObjType.belt) {
+                setStaticType(appear, type, gameWorld);
+                assert(get(appear).runtimeType == Belt,
+                    'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
+                get(appear).vector = MoveExtent.straights.sample(1).first;
                 beltPoints.add(appear);
               } else {
                 adding.add(objFactory.create(
@@ -857,8 +433,7 @@ class Stage {
       gameWorld.remove(merged.animationComponent);
       boxes.remove(merged);
       // 移動したオブジェクトのレベルを上げる
-      (box.animationComponent.children.first.children.first as TextComponent)
-          .text = (++box.level).toString();
+      box.level++;
     }
 
     // 破壊したブロックのアニメーションを描画

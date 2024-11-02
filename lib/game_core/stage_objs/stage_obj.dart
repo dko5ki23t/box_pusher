@@ -19,10 +19,7 @@ enum StageObjType {
   treasureBox,
   warp,
   bomb,
-  beltL,
-  beltR,
-  beltU,
-  beltD,
+  belt,
   guardian,
   water,
   magma,
@@ -43,10 +40,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.treasureBox: 'b',
     StageObjType.warp: 'w',
     StageObjType.bomb: 'B',
-    StageObjType.beltL: 'bL',
-    StageObjType.beltR: 'bR',
-    StageObjType.beltU: 'bU',
-    StageObjType.beltD: 'bD',
+    StageObjType.belt: 'blt',
     StageObjType.guardian: 'g',
     StageObjType.water: 'W',
     StageObjType.magma: 'm',
@@ -104,8 +98,10 @@ abstract class StageObj {
   Point pos; // 現在位置
   bool valid;
   SpriteAnimationComponent animationComponent;
-  Map<int, SpriteAnimation> levelToAnimations; // オブジェクトのレベル->アニメーションのマップ
+  Map<int, Map<Move, SpriteAnimation>>
+      levelToAnimations; // オブジェクトのレベル->向き->アニメーションのマップ
   Move moving = Move.none; // 移動中の向き
+  Move _vector = Move.down; // 向いている方向
   double movingAmount = 0;
   final List<StageObj> pushings = []; // 押しているオブジェクト
 
@@ -115,8 +111,12 @@ abstract class StageObj {
     required this.levelToAnimations,
     this.valid = true,
     required this.pos,
+    Move? vector,
   }) : _typeLevel = typeLevel {
     level = typeLevel.level;
+    if (vector != null) {
+      this.vector = vector;
+    }
   }
 
   /// タイプ
@@ -128,11 +128,19 @@ abstract class StageObj {
   set level(int l) {
     if (!levelToAnimations.containsKey(l)) {
       log('no animation for level $l in ${_typeLevel.type}');
-      animationComponent.animation = levelToAnimations[0]!;
+      animationComponent.animation = levelToAnimations[0]![vector];
     } else {
-      animationComponent.animation = levelToAnimations[l]!;
+      animationComponent.animation = levelToAnimations[l]![vector];
     }
     _typeLevel.level = l;
+  }
+
+  /// 向いている方向
+  Move get vector => _vector;
+  set vector(Move v) {
+    _vector = v;
+    int key = levelToAnimations.containsKey(level) ? level : 0;
+    animationComponent.animation = levelToAnimations[key]![v];
   }
 
   bool isSameTypeLevel(StageObj o) {
