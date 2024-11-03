@@ -180,11 +180,15 @@ class BoxPusherGame extends FlameGame
 
   @override
   void onScaleStart(ScaleStartInfo info) {
+    // ゲームシーケンス中のみ有効
+    if (_router.currentRoute.name != 'game') return;
     startZoom = camera.viewfinder.zoom;
   }
 
   @override
   void onScaleUpdate(ScaleUpdateInfo info) {
+    // ゲームシーケンス中のみ有効
+    if (_router.currentRoute.name != 'game') return;
     final currentScale = info.scale.global;
     if (!currentScale.isIdentity()) {
       camera.viewfinder.zoom = startZoom * currentScale.y;
