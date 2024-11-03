@@ -328,6 +328,10 @@ abstract class StageObj {
   }
 
   Map<String, dynamic> encode() {
-    return {'typeLevel': _typeLevel.encode(), 'pos': pos.encode()};
+    return {
+      'typeLevel': _typeLevel.encode(),
+      'pos': pos.encode(),
+      'vector': vector.index
+    };
   }
 }

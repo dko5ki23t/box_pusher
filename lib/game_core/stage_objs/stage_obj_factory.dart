@@ -240,7 +240,8 @@ class StageObjFactory {
             scale: scale,
             scaleEffect: scaleEffect,
             pos: pos,
-            level: typeLevel.level);
+            level: typeLevel.level)
+          ..vector = vector;
       case StageObjType.water:
         return Water(
             waterImg: waterImg,
@@ -267,7 +268,7 @@ class StageObjFactory {
           errorImg: errorImg,
           pos: pos,
           level: typeLevel.level,
-        );
+        )..vector = vector;
       case StageObjType.archer:
         return Archer(
           levelToAnimationImg: archersImg,
@@ -276,7 +277,7 @@ class StageObjFactory {
           errorImg: errorImg,
           pos: pos,
           level: typeLevel.level,
-        );
+        )..vector = vector;
       case StageObjType.wizard:
         return Wizard(
           wizardImg: wizardImg,
@@ -285,14 +286,16 @@ class StageObjFactory {
           errorImg: errorImg,
           pos: pos,
           level: typeLevel.level,
-        );
+        )..vector = vector;
     }
   }
 
   StageObj createFromMap(Map<String, dynamic> src) {
     return create(
-        typeLevel: StageObjTypeLevel.decode(src['typeLevel']),
-        pos: Point.decode(src['pos']));
+      typeLevel: StageObjTypeLevel.decode(src['typeLevel']),
+      pos: Point.decode(src['pos']),
+      vector: Move.values[src['vector']],
+    );
   }
 
   void setPosition(StageObj obj, {Vector2? offset}) {
