@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1060105225005",
+    "project_id": "box-pusher-2fddc",
+    "storage_bucket": "box-pusher-2fddc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1060105225005:android:41f11be2593cb4582809a4",
+        "android_client_info": {
+          "package_name": "com.example.box_pusher"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_XtB5NM9r4x8Njh9dVJl1tj7uC7PrWLM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
