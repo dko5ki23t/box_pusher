@@ -311,3 +311,135 @@ class GameSpriteButton extends ButtonComponent {
     _enabled = e;
   }
 }
+
+class GameSpriteOnOffButton extends ButtonComponent {
+  bool _isOn = true;
+  Sprite sprite;
+
+  void Function(bool isOn)? onChanged;
+
+  GameSpriteOnOffButton({
+    required super.size,
+    super.position,
+    super.anchor,
+    required this.sprite,
+    bool isOn = false,
+    this.onChanged,
+  }) : super(
+          button: !isOn
+              ? RectangleComponent(
+                  size: size,
+                  paint: Paint()
+                    ..color = Colors.blue
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 3,
+                  children: [
+                    RectangleComponent(
+                      size: size,
+                      paint: Paint()
+                        ..color = Colors.white
+                        ..style = PaintingStyle.fill,
+                    ),
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: SpriteComponent(
+                        sprite: sprite,
+                      ),
+                    ),
+                  ],
+                )
+              : RectangleComponent(
+                  size: size,
+                  paint: Paint()
+                    ..color = Colors.grey
+                    ..style = PaintingStyle.fill,
+                  children: [
+                    RectangleComponent(
+                      size: size,
+                      paint: Paint()
+                        ..color = Colors.transparent
+                        ..style = PaintingStyle.fill,
+                    ),
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: SpriteComponent(
+                        sprite: sprite,
+                      ),
+                    ),
+                  ],
+                ),
+          buttonDown: !isOn
+              ? RectangleComponent(
+                  size: size,
+                  paint: Paint()
+                    ..color = Colors.blueGrey
+                    ..style = PaintingStyle.fill
+                    ..strokeWidth = 2,
+                  children: [
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: SpriteComponent(
+                        sprite: sprite,
+                      ),
+                    ),
+                  ],
+                )
+              : RectangleComponent(
+                  size: size,
+                  paint: Paint()
+                    ..color = Colors.grey
+                    ..style = PaintingStyle.fill
+                    ..strokeWidth = 2,
+                  children: [
+                    RectangleComponent(
+                      size: size,
+                      paint: Paint()
+                        ..color = Colors.transparent
+                        ..style = PaintingStyle.fill,
+                    ),
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: SpriteComponent(
+                        sprite: sprite,
+                      ),
+                    ),
+                  ],
+                ),
+        ) {
+    _isOn = isOn;
+    super.onReleased = () {
+      this.isOn = !this.isOn;
+      if (onChanged != null) {
+        onChanged!(this.isOn);
+      }
+    };
+  }
+
+  bool get isOn => _isOn;
+
+  set isOn(bool b) {
+    if (b != _isOn) {
+      if (!b) {
+        (super.button! as RectangleComponent).paint = Paint()
+          ..color = Colors.blue
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3;
+        ((super.button! as RectangleComponent).firstChild()
+                as RectangleComponent)
+            .paint = Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill;
+      } else {
+        (super.button! as RectangleComponent).paint = Paint()
+          ..color = Colors.grey
+          ..style = PaintingStyle.fill;
+        ((super.button! as RectangleComponent).firstChild()
+                as RectangleComponent)
+            .paint = Paint()
+          ..color = Colors.transparent
+          ..style = PaintingStyle.fill;
+      }
+    }
+    _isOn = b;
+  }
+}

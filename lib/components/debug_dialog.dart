@@ -1,5 +1,4 @@
 import 'package:box_pusher/box_pusher_game.dart';
-import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:flutter/material.dart';
 
 class DebugDialog extends StatefulWidget {
@@ -78,14 +77,14 @@ class DebugDialogState extends State<DebugDialog> {
             widget.game.debugStageBoxNum =
                 int.tryParse(boxNumTextController.text) ??
                     widget.game.debugStageBoxNum;
-            widget.game.router.pop();
-            widget.game.pushAndInitGame(mode: GameMode.debug);
+            widget.game.popSeq();
+            widget.game.pushAndInitGame();
           },
         ),
         TextButton(
           child: const Text('キャンセル'),
           onPressed: () {
-            widget.game.router.pop();
+            widget.game.popSeq();
           },
         ),
       ],

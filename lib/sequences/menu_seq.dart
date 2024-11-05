@@ -1,10 +1,11 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
+import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 
-class MenuSeq extends Component with HasGameReference<BoxPusherGame> {
+class MenuSeq extends Sequence with HasGameReference<BoxPusherGame> {
   @override
   Future<void> onLoad() async {
     addAll([
@@ -36,33 +37,27 @@ class MenuSeq extends Component with HasGameReference<BoxPusherGame> {
         anchor: Anchor.center,
         text: "ゲームに戻る",
         // TODO: ここだけonPressedなのは、onReleasedだとこの後ボタンが表示されなくなるから。原因究明求む
-        onPressed: () => game.router.pop(),
+        onPressed: () => game.popSeq(),
       ),
       GameTextButton(
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 350.0),
         anchor: Anchor.center,
-        text: "最初から",
-        // TODO: ここだけonPressedなのは、onReleasedだとこの後ボタンが表示されなくなるから。原因究明求む
-        onPressed: () {
-          game.resetGame();
-          game.router.pop();
+        text: "一時中断する",
+        onReleased: () async {
+          await game.setAndSaveStageData();
+          game.pushSeqNamed('title');
         },
       ),
       GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 400.0),
-        anchor: Anchor.center,
-        text: "レベル選択へ",
-        onReleased: () => game.router.pushNamed('quest'),
-      ),
-      GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 450.0),
-        anchor: Anchor.center,
-        text: "タイトルへ",
-        onReleased: () => game.router.pushNamed('title'),
-      ),
+          size: Vector2(120.0, 30.0),
+          position: Vector2(180.0, 400.0),
+          anchor: Anchor.center,
+          text: "あきらめる",
+          onReleased: () async {
+            await game.clearAndSaveStageData();
+            game.pushSeqNamed('title');
+          }),
     ]);
   }
 }

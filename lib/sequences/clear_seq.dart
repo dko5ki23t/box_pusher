@@ -1,12 +1,11 @@
-import 'dart:math';
-
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
+import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 
-class ClearSeq extends Component with HasGameReference<BoxPusherGame> {
+class ClearSeq extends Sequence with HasGameReference<BoxPusherGame> {
   @override
   Future<void> onLoad() async {
     addAll([
@@ -36,24 +35,15 @@ class ClearSeq extends Component with HasGameReference<BoxPusherGame> {
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 300.0),
         anchor: Anchor.center,
-        text: "次のレベルへ",
-        enabled: game.gameLevel < 30,
-        onReleased: () =>
-            game.pushAndInitGame(level: min(game.gameLevel + 1, 30)),
+        text: "続ける",
+        onReleased: () => game.popSeq(),
       ),
       GameTextButton(
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 350.0),
         anchor: Anchor.center,
-        text: "レベル選択へ",
-        onReleased: () => game.router.pushNamed('quest'),
-      ),
-      GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 400.0),
-        anchor: Anchor.center,
         text: "タイトルへ",
-        onReleased: () => game.router.pushNamed('title'),
+        onReleased: () => game.pushSeqNamed('title'),
       ),
     ]);
   }

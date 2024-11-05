@@ -4,12 +4,17 @@ import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Route;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main({
   bool testMode = kDebugMode,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
   MobileAds.instance.initialize();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   Locale? locale;
   runApp(
     MaterialApp(
@@ -35,7 +40,7 @@ class MyApp extends StatefulWidget {
 
 class MyAppStateForLocale extends State<MyApp> {
   Locale? _locale;
-  bool showAd = true;
+  bool showAd = false;
 
   @override
   void initState() {
