@@ -74,4 +74,25 @@ void main() {
       expect(r1.contains(p8), true);
     });
   });
+
+  group('PointDistanceRange class の単体テスト', () {
+    final p1 = Point(3, 4);
+    final r1 = PointDistanceRange(p1, 3);
+    final r2 = PointDistanceRange(p1, 3);
+    final p2 = Point(1, 4); // 基準点からの距離内
+    final p3 = Point(1, 4); // 基準点
+    final p4 = Point(0, 4); // 基準点か距離ちょうどの点
+    final p5 = Point(0, 0); // 範囲外
+
+    test('等価', () {
+      expect(r1 == r2, true);
+    });
+
+    test('領域内かどうかの判定', () {
+      expect(r1.contains(p2), true);
+      expect(r1.contains(p3), true);
+      expect(r1.contains(p4), true);
+      expect(r1.contains(p5), false);
+    });
+  });
 }
