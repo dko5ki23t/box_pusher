@@ -9,8 +9,10 @@ import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj_factory.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart' hide Block;
+import 'package:flame/effects.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 
@@ -45,6 +47,9 @@ class Stage {
   bool isReady = false;
 
   late StageObjFactory objFactory;
+
+  /// マージ時のエフェクト画像
+  late Image mergeEffectImg;
 
   /// 静止物
   Map<Point, StageObj> staticObjs = {};
@@ -119,6 +124,7 @@ class Stage {
 
   Future<void> onLoad() async {
     await objFactory.onLoad();
+    mergeEffectImg = await Flame.images.load('merge_effect.png');
     isReady = true;
   }
 
@@ -438,6 +444,30 @@ class Stage {
 
     // 破壊したブロックのアニメーションを描画
     gameWorld.addAll(breakingAnimations);
+
+    // マージエフェクトを描画
+    gameWorld.add(
+      SpriteComponent(
+        sprite: Sprite(mergeEffectImg),
+        priority: Stage.dynamicPriority,
+        scale: Vector2.all(0.8),
+        children: [
+          ScaleEffect.by(
+            Vector2.all(1.5),
+            EffectController(duration: 0.5),
+          ),
+          OpacityEffect.by(
+            -1.0,
+            EffectController(duration: 1.0),
+          ),
+          RemoveEffect(delay: 1.0),
+        ],
+        size: Stage.cellSize,
+        anchor: Anchor.center,
+        position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+            Stage.cellSize / 2),
+      ),
+    );
   }
 /*
   StageObjTypeLevel get(Point p) {

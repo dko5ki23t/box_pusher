@@ -39,13 +39,13 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppStateForLocale extends State<MyApp> {
-  Locale? _locale;
+  //Locale? _locale;
   bool showAd = false;
 
   @override
   void initState() {
     super.initState();
-    _locale = widget.initialLocale;
+    //_locale = widget.initialLocale;
   }
 
   // This widget is the root of your application.
@@ -98,7 +98,7 @@ class MyAppStateForLocale extends State<MyApp> {
 
   void setLocale(Locale locale) {
     setState(() {
-      _locale = locale;
+      //_locale = locale;
     });
   }
 }
