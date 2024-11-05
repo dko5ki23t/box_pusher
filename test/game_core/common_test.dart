@@ -43,4 +43,35 @@ void main() {
       expect(Point.decode('-3,4'), b);
     });
   });
+
+  group('PointRectRange class の単体テスト', () {
+    final p1 = Point(3, 4);
+    final p2 = Point(-1, -2);
+    final r1 = PointRectRange(p1, p2);
+    final r2 = PointRectRange(p1, p2);
+    final p3 = Point(0, 1); // 四角形内
+    final p4 = Point(2, -3); // x座標は範囲内だが、y座標が範囲外
+    final p5 = Point(5, 3); // y座標は範囲内だが、x座標が範囲外
+    final p6 = Point(5, -3); // x座標、y座標とも範囲外
+    final p7 = Point(-1, 3); // 四角形の辺上
+    final p8 = Point(3, -2); // 四角形の頂点
+
+    test('左上座標と右下座標の自動交換', () {
+      expect(r1.lt, p2);
+      expect(r1.rb, p1);
+    });
+
+    test('等価', () {
+      expect(r1 == r2, true);
+    });
+
+    test('領域内かどうかの判定', () {
+      expect(r1.contains(p3), true);
+      expect(r1.contains(p4), false);
+      expect(r1.contains(p5), false);
+      expect(r1.contains(p6), false);
+      expect(r1.contains(p7), true);
+      expect(r1.contains(p8), true);
+    });
+  });
 }
