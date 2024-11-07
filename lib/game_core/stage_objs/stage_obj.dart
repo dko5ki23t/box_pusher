@@ -26,6 +26,7 @@ enum StageObjType {
   swordsman, // 剣を使う敵
   archer, // 弓を使う敵
   wizard, // 魔法を使う敵
+  gorilla,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -47,6 +48,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.swordsman: 'S',
     StageObjType.archer: 'a',
     StageObjType.wizard: 'M',
+    StageObjType.gorilla: 'G',
   };
 
   String get str => strMap[this]!;

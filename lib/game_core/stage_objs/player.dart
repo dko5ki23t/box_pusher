@@ -218,6 +218,10 @@ class Player extends StageObj {
             pos = stage.warpPoints[index];
             stage.objFactory.setPosition(this);
           }
+        } else if (stage.get(to).type == StageObjType.gorilla) {
+          // 移動先がゴリラだった場合
+          // 手の能力を習得
+          stage.setHandAbility(true);
         }
 
         // 各種移動中変数初期化

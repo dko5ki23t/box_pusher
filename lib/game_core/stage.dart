@@ -706,11 +706,7 @@ class Stage {
           staticObjs[Point(stageLT.x, player.pos.y)]!.animationComponent)) {
         stageLT.x--;
         for (int y = stageLT.y; y <= stageRB.y; y++) {
-          final adding = objFactory.create(
-              typeLevel: StageObjTypeLevel(
-                type: StageObjType.block,
-              ),
-              pos: Point(stageLT.x, y));
+          final adding = createStaticObjWithPattern(Point(stageLT.x, y));
           staticObjs[Point(stageLT.x, y)] = adding;
           gameWorld.add(adding.animationComponent);
         }
@@ -720,11 +716,7 @@ class Stage {
           staticObjs[Point(stageRB.x, player.pos.y)]!.animationComponent)) {
         stageRB.x++;
         for (int y = stageLT.y; y <= stageRB.y; y++) {
-          final adding = objFactory.create(
-              typeLevel: StageObjTypeLevel(
-                type: StageObjType.block,
-              ),
-              pos: Point(stageRB.x, y));
+          final adding = createStaticObjWithPattern(Point(stageRB.x, y));
           staticObjs[Point(stageRB.x, y)] = adding;
           gameWorld.add(adding.animationComponent);
         }
@@ -734,11 +726,7 @@ class Stage {
           staticObjs[Point(player.pos.x, stageLT.y)]!.animationComponent)) {
         stageLT.y--;
         for (int x = stageLT.x; x <= stageRB.x; x++) {
-          final adding = objFactory.create(
-              typeLevel: StageObjTypeLevel(
-                type: StageObjType.block,
-              ),
-              pos: Point(x, stageLT.y));
+          final adding = createStaticObjWithPattern(Point(x, stageLT.y));
           staticObjs[Point(x, stageLT.y)] = adding;
           gameWorld.add(adding.animationComponent);
         }
@@ -748,11 +736,7 @@ class Stage {
           staticObjs[Point(player.pos.x, stageRB.y)]!.animationComponent)) {
         stageRB.y++;
         for (int x = stageLT.x; x <= stageRB.x; x++) {
-          final adding = objFactory.create(
-              typeLevel: StageObjTypeLevel(
-                type: StageObjType.block,
-              ),
-              pos: Point(x, stageRB.y));
+          final adding = createStaticObjWithPattern(Point(x, stageRB.y));
           staticObjs[Point(x, stageRB.y)] = adding;
           gameWorld.add(adding.animationComponent);
         }
@@ -768,52 +752,61 @@ class Stage {
 
   /// 引数で指定した位置に、パターンに従った静止物を生成する
   StageObj createStaticObjWithPattern(Point point) {
-    // その他は定めたパターンに従う
-    for (final pattern in SettingVariables.blockFloorMap.entries) {
-      if (pattern.key.contains(point)) {
-        switch (pattern.value) {
-          case BlockFloorPattern.allBlockLevel1:
-            return objFactory.create(
-                typeLevel: StageObjTypeLevel(
-                  type: StageObjType.block,
-                ),
-                pos: point);
-          case BlockFloorPattern.floor2BlockLevel1:
-            if (Random().nextInt(50) == 0) {
-              return objFactory.create(
-                  typeLevel: StageObjTypeLevel(
-                    type: StageObjType.none,
-                  ),
-                  pos: point);
-            } else {
+    if (SettingVariables.animalsPoints.containsKey(point)) {
+      // 動物がいる位置（固定位置）
+      return objFactory.create(
+          typeLevel: StageObjTypeLevel(
+            type: SettingVariables.animalsPoints[point]!,
+          ),
+          pos: point);
+    } else {
+      // その他は定めたパターンに従う
+      for (final pattern in SettingVariables.blockFloorMap.entries) {
+        if (pattern.key.contains(point)) {
+          switch (pattern.value) {
+            case BlockFloorPattern.allBlockLevel1:
               return objFactory.create(
                   typeLevel: StageObjTypeLevel(
                     type: StageObjType.block,
                   ),
                   pos: point);
-            }
-          case BlockFloorPattern.floor2Block10Level2BlockLevel1:
-            int r = Random().nextInt(50);
-            if (r == 0) {
-              return objFactory.create(
-                  typeLevel: StageObjTypeLevel(
-                    type: StageObjType.none,
-                  ),
-                  pos: point);
-            } else if (r <= 5) {
-              return objFactory.create(
-                  typeLevel: StageObjTypeLevel(
-                    type: StageObjType.block,
-                    level: 2,
-                  ),
-                  pos: point);
-            } else {
-              return objFactory.create(
-                  typeLevel: StageObjTypeLevel(
-                    type: StageObjType.block,
-                  ),
-                  pos: point);
-            }
+            case BlockFloorPattern.floor2BlockLevel1:
+              if (Random().nextInt(50) == 0) {
+                return objFactory.create(
+                    typeLevel: StageObjTypeLevel(
+                      type: StageObjType.none,
+                    ),
+                    pos: point);
+              } else {
+                return objFactory.create(
+                    typeLevel: StageObjTypeLevel(
+                      type: StageObjType.block,
+                    ),
+                    pos: point);
+              }
+            case BlockFloorPattern.floor2Block10Level2BlockLevel1:
+              int r = Random().nextInt(50);
+              if (r == 0) {
+                return objFactory.create(
+                    typeLevel: StageObjTypeLevel(
+                      type: StageObjType.none,
+                    ),
+                    pos: point);
+              } else if (r <= 5) {
+                return objFactory.create(
+                    typeLevel: StageObjTypeLevel(
+                      type: StageObjType.block,
+                      level: 2,
+                    ),
+                    pos: point);
+              } else {
+                return objFactory.create(
+                    typeLevel: StageObjTypeLevel(
+                      type: StageObjType.block,
+                    ),
+                    pos: point);
+              }
+          }
         }
       }
     }

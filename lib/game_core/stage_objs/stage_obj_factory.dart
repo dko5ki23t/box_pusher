@@ -3,6 +3,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
+import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
@@ -58,6 +59,7 @@ class StageObjFactory {
   late final Image wizardImg;
   late final Image attackWizardImg;
   late final Image magicImg;
+  late final Image gorillaImg;
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
   EffectController? baseMergable;
@@ -114,6 +116,7 @@ class StageObjFactory {
     wizardImg = await Flame.images.load(Wizard.imageFileName);
     attackWizardImg = await Flame.images.load(Wizard.attackImageFileName);
     magicImg = await Flame.images.load(Wizard.magicImageFileName);
+    gorillaImg = await Flame.images.load(Gorilla.imageFileName);
     isReady = true;
   }
 
@@ -287,6 +290,12 @@ class StageObjFactory {
           pos: pos,
           level: typeLevel.level,
         )..vector = vector;
+      case StageObjType.gorilla:
+        return Gorilla(
+            gorillaImg: gorillaImg,
+            errorImg: errorImg,
+            pos: pos,
+            level: typeLevel.level);
     }
   }
 

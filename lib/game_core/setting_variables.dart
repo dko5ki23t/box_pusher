@@ -113,4 +113,9 @@ class SettingVariables {
   static bool canBreakBlock(Block block, StageObj mergeObj) {
     return block.level == 1 || mergeObj.level >= block.level * 2;
   }
+
+  /// 助け出す動物の場所マップ
+  static Map<Point, StageObjType> animalsPoints = {
+    Point(-5, -5): StageObjType.gorilla,
+  };
 }
