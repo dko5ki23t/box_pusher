@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:math' hide log;
 
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/setting_variables.dart';
@@ -292,6 +293,8 @@ abstract class StageObj {
   ) {
     // 今プレイヤーの移動先にいるなら移動しない
     if (pos == player.pos + player.moving.point) {
+      ret['move'] = Move.none;
+    } else if (Random().nextInt(6) == 0) {
       ret['move'] = Move.none;
     } else {
       // プレイヤーの方へ移動する/向きを変える

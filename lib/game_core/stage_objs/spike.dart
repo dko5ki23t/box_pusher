@@ -9,7 +9,7 @@ class Spike extends StageObj {
   final EnemyMovePattern movePattern = EnemyMovePattern.followPlayer;
 
   /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'player.png';
+  static String get imageFileName => 'spike.png';
 
   bool _playerStartMovingFlag = false;
 
@@ -33,13 +33,28 @@ class Spike extends StageObj {
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
             1: {
-              Move.none: SpriteAnimation.fromFrameData(
-                spikeImg,
-                SpriteAnimationData.sequenced(
-                    amount: 2,
-                    stepTime: Stage.objectStepTime,
-                    textureSize: Stage.cellSize),
-              ),
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(spikeImg,
+                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+                Sprite(spikeImg,
+                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
+              ], stepTime: Stage.objectStepTime),
+            },
+            2: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(spikeImg,
+                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                Sprite(spikeImg,
+                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize)
+              ], stepTime: Stage.objectStepTime),
+            },
+            3: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(spikeImg,
+                    srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
+                Sprite(spikeImg,
+                    srcPosition: Vector2(160, 0), srcSize: Stage.cellSize)
+              ], stepTime: Stage.objectStepTime),
             },
           },
           typeLevel: StageObjTypeLevel(
@@ -116,7 +131,7 @@ class Spike extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => true;

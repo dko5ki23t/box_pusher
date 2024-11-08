@@ -246,6 +246,7 @@ class Stage {
       case ObjInBlock.jewel1_2BeltGuardianSwordsman1:
       case ObjInBlock.jewel1_2Archer1:
       case ObjInBlock.jewel1_2Wizard1:
+      case ObjInBlock.jewel1_2Trap1:
         // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
         final jewelAppears = breaked.sample((breaked.length / 2).ceil());
         breakedRemain.removeWhere((element) => jewelAppears.contains(element));
@@ -264,6 +265,19 @@ class Stage {
     // その他オブジェクトの出現について
     switch (pattern) {
       case ObjInBlock.jewel1_2:
+        break;
+      case ObjInBlock.jewel1_2Trap1:
+        // 宝石出現以外の位置に最大1個罠を出現させる
+        if (breakedRemain.isNotEmpty) {
+          bool trap = Random().nextBool();
+          final appear = breakedRemain.sample(1).first;
+          if (trap) {
+            adding.add(objFactory.create(
+                typeLevel: StageObjTypeLevel(type: StageObjType.trap, level: 1),
+                pos: appear));
+            boxes.add(adding.last);
+          }
+        }
         break;
       case ObjInBlock.jewel1_2SpikeOrTrap1:
         // 宝石出現以外の位置に最大1個の敵/罠を出現させる

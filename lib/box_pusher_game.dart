@@ -17,8 +17,7 @@ import 'package:flutter/material.dart' hide Route, OverlayRoute;
 import 'package:path_provider/path_provider.dart';
 import 'package:flame_audio/flame_audio.dart';
 
-class BoxPusherGame extends FlameGame
-    with SingleGameInstance, /*PanDetector,*/ ScaleDetector {
+class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
   late final RouterComponent _router;
   static final Vector2 offset = Vector2(15, 50);
   late final Map<String, OverlayRoute> _overlays;
@@ -109,7 +108,8 @@ class BoxPusherGame extends FlameGame
 
     // BGMの準備
     FlameAudio.bgm.initialize();
-    await FlameAudio.audioCache.load('maou_bgm_8bit29.mp3');
+    await FlameAudio.audioCache
+        .loadAll(['kettei.mp3', 'merge.mp3', 'maou_bgm_8bit29.mp3']);
   }
 
   /// ハイスコアの更新・セーブデータに保存
