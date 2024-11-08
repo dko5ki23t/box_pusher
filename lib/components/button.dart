@@ -1,6 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart' hide Image;
 
 class GameTextButton extends ButtonComponent {
@@ -19,7 +20,10 @@ class GameTextButton extends ButtonComponent {
     void Function()? onReleased,
     void Function()? onCancelled,
   }) : super(
-          onPressed: onPressed,
+          onPressed: () {
+            FlameAudio.play('kettei.mp3');
+            if (onPressed != null) onPressed();
+          },
           onReleased: onReleased,
           onCancelled: onCancelled,
           button: enabled

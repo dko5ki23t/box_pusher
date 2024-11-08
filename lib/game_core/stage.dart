@@ -15,6 +15,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
+import 'package:flame_audio/flame_audio.dart';
 
 class Stage {
   /// マスのサイズ
@@ -468,19 +469,10 @@ class Stage {
             Stage.cellSize / 2),
       ),
     );
+
+    // 効果音を鳴らす
+    FlameAudio.play('merge.mp3');
   }
-/*
-  StageObjTypeLevel get(Point p) {
-    final box = boxes.firstWhereOrNull((element) => element.pos == p);
-    final enemy = enemies.firstWhereOrNull((element) => element.pos == p);
-    if (enemy != null) {
-      return enemy.typeLevel;
-    } else if (box != null) {
-      return box.typeLevel;
-    } else {
-      return staticObjs[p]!.typeLevel;
-    }
-  }*/
 
   StageObj get(Point p) {
     final box = boxes.firstWhereOrNull((element) => element.pos == p);
