@@ -3,9 +3,26 @@ import 'dart:developer';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/game_core/stage_objs/archer.dart';
+import 'package:box_pusher/game_core/stage_objs/belt.dart';
+import 'package:box_pusher/game_core/stage_objs/bomb.dart';
+import 'package:box_pusher/game_core/stage_objs/drill.dart';
+import 'package:box_pusher/game_core/stage_objs/floor.dart';
+import 'package:box_pusher/game_core/stage_objs/block.dart';
+import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
+import 'package:box_pusher/game_core/stage_objs/guardian.dart';
+import 'package:box_pusher/game_core/stage_objs/jewel.dart';
+import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
+import 'package:box_pusher/game_core/stage_objs/spike.dart';
+import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
+import 'package:box_pusher/game_core/stage_objs/trap.dart';
+import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
+import 'package:box_pusher/game_core/stage_objs/warp.dart';
+import 'package:box_pusher/game_core/stage_objs/water.dart';
+import 'package:box_pusher/game_core/stage_objs/wizard.dart';
 import 'package:collection/collection.dart';
-import 'package:flame/components.dart';
+import 'package:flame/components.dart' hide Block;
 
 /// ステージ上オブジェクトの種類
 enum StageObjType {
@@ -52,6 +69,88 @@ extension StageObjTypeExtent on StageObjType {
   };
 
   String get str => strMap[this]!;
+
+  Type get type {
+    switch (this) {
+      case StageObjType.none:
+        return Floor;
+      case StageObjType.block:
+        return Block;
+      case StageObjType.trap:
+        return Trap;
+      case StageObjType.jewel:
+        return Jewel;
+      case StageObjType.player:
+        return Player;
+      case StageObjType.spike:
+        return Spike;
+      case StageObjType.drill:
+        return Drill;
+      case StageObjType.treasureBox:
+        return TreasureBox;
+      case StageObjType.warp:
+        return Warp;
+      case StageObjType.bomb:
+        return Bomb;
+      case StageObjType.belt:
+        return Belt;
+      case StageObjType.guardian:
+        return Guardian;
+      case StageObjType.water:
+        return Water;
+      case StageObjType.magma:
+        return Magma;
+      case StageObjType.swordsman:
+        return Swordsman;
+      case StageObjType.archer:
+        return Archer;
+      case StageObjType.wizard:
+        return Wizard;
+      case StageObjType.gorilla:
+        return Gorilla;
+    }
+  }
+
+  String get baseImageFileName {
+    switch (this) {
+      case StageObjType.none:
+        return Floor.imageFileName;
+      case StageObjType.block:
+        return Block.imageFileName;
+      case StageObjType.trap:
+        return Trap.imageFileName;
+      case StageObjType.jewel:
+        return Jewel.imageFileName;
+      case StageObjType.player:
+        return Player.imageFileName;
+      case StageObjType.spike:
+        return Spike.imageFileName;
+      case StageObjType.drill:
+        return Drill.imageFileName;
+      case StageObjType.treasureBox:
+        return TreasureBox.imageFileName;
+      case StageObjType.warp:
+        return Warp.imageFileName;
+      case StageObjType.bomb:
+        return Bomb.imageFileName;
+      case StageObjType.belt:
+        return Belt.imageFileName;
+      case StageObjType.guardian:
+        return Guardian.imageFileName;
+      case StageObjType.water:
+        return Water.imageFileName;
+      case StageObjType.magma:
+        return Magma.imageFileName;
+      case StageObjType.swordsman:
+        return Swordsman.imageFileName;
+      case StageObjType.archer:
+        return Archer.imageFileName;
+      case StageObjType.wizard:
+        return Wizard.imageFileName;
+      case StageObjType.gorilla:
+        return Gorilla.imageFileName;
+    }
+  }
 
   static StageObjType fromStr(String str) {
     for (final entry in strMap.entries) {

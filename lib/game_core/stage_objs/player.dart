@@ -161,7 +161,6 @@ class Player extends StageObj {
       Vector2 offset = moving.vector * movingAmount;
       // プレイヤー位置変更
       stage.objFactory.setPosition(this, offset: offset);
-      // TODO: 箱の方に実装？
       for (final pushing in pushings) {
         // 押している箱の位置変更
         stage.objFactory.setPosition(pushing, offset: offset);
@@ -178,7 +177,6 @@ class Player extends StageObj {
         stage.objFactory.setPosition(this);
 
         // 押したオブジェクト位置更新
-        // TODO:箱の方に実装？
         for (final pushing in pushings) {
           // 押した先のオブジェクトを調べる
           if (pushing.mergable && pushing.isSameTypeLevel(stage.get(toTo))) {
@@ -222,6 +220,8 @@ class Player extends StageObj {
           // 移動先がゴリラだった場合
           // 手の能力を習得
           stage.setHandAbility(true);
+          // ゴリラ、いなくなる
+          stage.setStaticType(to, StageObjType.none, gameWorld);
         }
 
         // 各種移動中変数初期化

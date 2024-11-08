@@ -26,24 +26,12 @@ import 'package:flame/flame.dart';
 class StageObjFactory {
   bool isReady = false;
   late final Image errorImg;
-  late final Image jewelsImg;
-  late final Image archersImg;
   late final Image attackArchersImg;
   late final Image arrowImg;
-  late final Image beltImg;
-  late final Image blockImg;
-  late final Image drillImg;
-  late final Image floorImg;
-  late final Image bombImg;
-  late final Image guardianImg;
   late final Image guardianAttackDImg;
   late final Image guardianAttackLImg;
   late final Image guardianAttackRImg;
   late final Image guardianAttackUImg;
-  late final Image magmaImg;
-  late final Image playerImg;
-  late final Image spikeImg;
-  late final Image swordsmanImg;
   late final Image swordsmanAttackDImg;
   late final Image swordsmanAttackLImg;
   late final Image swordsmanAttackRImg;
@@ -52,14 +40,9 @@ class StageObjFactory {
   late final Image swordsmanRoundAttackLImg;
   late final Image swordsmanRoundAttackRImg;
   late final Image swordsmanRoundAttackUImg;
-  late final Image trapImg;
-  late final Image treasureBoxImg;
-  late final Image warpImg;
-  late final Image waterImg;
-  late final Image wizardImg;
   late final Image attackWizardImg;
   late final Image magicImg;
-  late final Image gorillaImg;
+  Map<StageObjType, Image> baseImages = {};
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
   EffectController? baseMergable;
@@ -75,24 +58,15 @@ class StageObjFactory {
 
   Future<void> onLoad() async {
     errorImg = await Flame.images.load('noimage.png');
-    jewelsImg = await Flame.images.load(Jewel.imageFileName);
-    archersImg = await Flame.images.load(Archer.imageFileName);
+    for (final objType in StageObjType.values) {
+      baseImages[objType] = await Flame.images.load(objType.baseImageFileName);
+    }
     attackArchersImg = await Flame.images.load(Archer.attackImageFileName);
     arrowImg = await Flame.images.load(Archer.arrowImageFileName);
-    beltImg = await Flame.images.load(Belt.imageFileName);
-    blockImg = await Flame.images.load(Block.imageFileName);
-    bombImg = await Flame.images.load(Bomb.imageFileName);
-    drillImg = await Flame.images.load(Drill.imageFileName);
-    floorImg = await Flame.images.load(Floor.imageFileName);
-    guardianImg = await Flame.images.load(Guardian.imageFileName);
     guardianAttackDImg = await Flame.images.load(Guardian.attackDImageFileName);
     guardianAttackLImg = await Flame.images.load(Guardian.attackLImageFileName);
     guardianAttackRImg = await Flame.images.load(Guardian.attackRImageFileName);
     guardianAttackUImg = await Flame.images.load(Guardian.attackUImageFileName);
-    magmaImg = await Flame.images.load(Magma.imageFileName);
-    playerImg = await Flame.images.load(Player.imageFileName);
-    spikeImg = await Flame.images.load(Spike.imageFileName);
-    swordsmanImg = await Flame.images.load(Guardian.imageFileName);
     swordsmanAttackDImg =
         await Flame.images.load(Swordsman.attackDImageFileName);
     swordsmanAttackLImg =
@@ -109,14 +83,8 @@ class StageObjFactory {
         await Flame.images.load(Swordsman.roundAttackRImageFileName);
     swordsmanRoundAttackUImg =
         await Flame.images.load(Swordsman.roundAttackUImageFileName);
-    trapImg = await Flame.images.load(Trap.imageFileName);
-    treasureBoxImg = await Flame.images.load(TreasureBox.imageFileName);
-    warpImg = await Flame.images.load(Warp.imageFileName);
-    waterImg = await Flame.images.load(Water.imageFileName);
-    wizardImg = await Flame.images.load(Wizard.imageFileName);
     attackWizardImg = await Flame.images.load(Wizard.attackImageFileName);
     magicImg = await Flame.images.load(Wizard.magicImageFileName);
-    gorillaImg = await Flame.images.load(Gorilla.imageFileName);
     isReady = true;
   }
 
@@ -126,6 +94,7 @@ class StageObjFactory {
     Move vector = Move.down,
   }) {
     assert(isReady, 'StageObjFactory.onLoad() is not called!');
+    final type = typeLevel.type;
     Vector2 scale = isBaseMergableReverse
         ? Vector2.all(Stage.mergableZoomRate)
         : Vector2.all(1.0);
@@ -142,11 +111,11 @@ class StageObjFactory {
       ),
     );
 
-    if (typeLevel.type == StageObjType.jewel ||
-        typeLevel.type == StageObjType.trap ||
-        typeLevel.type == StageObjType.drill ||
-        typeLevel.type == StageObjType.bomb ||
-        typeLevel.type == StageObjType.guardian) {
+    if (type == StageObjType.jewel ||
+        type == StageObjType.trap ||
+        type == StageObjType.drill ||
+        type == StageObjType.bomb ||
+        type == StageObjType.guardian) {
       final controller = scaleEffect.controller;
       baseMergable ??= controller;
       controller.advance((isBaseMergableReverse
@@ -155,16 +124,16 @@ class StageObjFactory {
           Stage.mergableZoomDuration);
     }
 
-    switch (typeLevel.type) {
+    switch (type) {
       case StageObjType.none:
         return Floor(
-            floorImg: floorImg,
+            floorImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.jewel:
         return Jewel(
-          jewelImg: jewelsImg,
+          jewelImg: baseImages[type]!,
           errorImg: errorImg,
           scale: scale,
           scaleEffect: scaleEffect,
@@ -173,7 +142,7 @@ class StageObjFactory {
         );
       case StageObjType.trap:
         return Trap(
-            trapImg: trapImg,
+            trapImg: baseImages[type]!,
             errorImg: errorImg,
             scale: scale,
             scaleEffect: scaleEffect,
@@ -181,25 +150,25 @@ class StageObjFactory {
             level: typeLevel.level);
       case StageObjType.player:
         return Player(
-            playerImg: playerImg,
+            playerImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.block:
         return Block(
-            blockImg: blockImg,
+            blockImg: baseImages[type]!,
             pos: pos,
             level: typeLevel.level,
             errorImg: errorImg);
       case StageObjType.spike:
         return Spike(
-            spikeImg: spikeImg,
+            spikeImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.drill:
         return Drill(
-            drillImg: drillImg,
+            drillImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             scale: scale,
@@ -207,19 +176,19 @@ class StageObjFactory {
             level: typeLevel.level);
       case StageObjType.treasureBox:
         return TreasureBox(
-            treasureBoxImg: treasureBoxImg,
+            treasureBoxImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.warp:
         return Warp(
-            warpImg: warpImg,
+            warpImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.bomb:
         return Bomb(
-            bombImg: bombImg,
+            bombImg: baseImages[type]!,
             errorImg: errorImg,
             scale: scale,
             scaleEffect: scaleEffect,
@@ -227,14 +196,14 @@ class StageObjFactory {
             level: typeLevel.level);
       case StageObjType.belt:
         return Belt(
-            levelToAnimationImg: beltImg,
+            levelToAnimationImg: baseImages[type]!,
             pos: pos,
             level: typeLevel.level,
             errorImg: errorImg,
             vector: vector);
       case StageObjType.guardian:
         return Guardian(
-            guardianImg: guardianImg,
+            guardianImg: baseImages[type]!,
             attackDImg: guardianAttackDImg,
             attackLImg: guardianAttackLImg,
             attackRImg: guardianAttackRImg,
@@ -247,19 +216,19 @@ class StageObjFactory {
           ..vector = vector;
       case StageObjType.water:
         return Water(
-            waterImg: waterImg,
+            waterImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.magma:
         return Magma(
-            magmaImg: magmaImg,
+            magmaImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.swordsman:
         return Swordsman(
-          swordsmanImg: swordsmanImg,
+          swordsmanImg: baseImages[type]!,
           attackDImg: swordsmanAttackDImg,
           attackLImg: swordsmanAttackLImg,
           attackRImg: swordsmanAttackRImg,
@@ -274,7 +243,7 @@ class StageObjFactory {
         )..vector = vector;
       case StageObjType.archer:
         return Archer(
-          levelToAnimationImg: archersImg,
+          levelToAnimationImg: baseImages[type]!,
           levelToAttackAnimationImg: attackArchersImg,
           arrowImg: arrowImg,
           errorImg: errorImg,
@@ -283,7 +252,7 @@ class StageObjFactory {
         )..vector = vector;
       case StageObjType.wizard:
         return Wizard(
-          wizardImg: wizardImg,
+          wizardImg: baseImages[type]!,
           attackImg: attackWizardImg,
           magicImg: magicImg,
           errorImg: errorImg,
@@ -292,7 +261,7 @@ class StageObjFactory {
         )..vector = vector;
       case StageObjType.gorilla:
         return Gorilla(
-            gorillaImg: gorillaImg,
+            gorillaImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
