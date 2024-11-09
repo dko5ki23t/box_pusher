@@ -9,6 +9,9 @@ enum EnemyMovePattern {
   /// ランダムに動くorその場にとどまる
   walkRandomOrStop,
 
+  /// マージを目的に動く/ランダムに動くorその場にとどまる
+  mergeWalkRandomOrStop,
+
   /// プレイヤーの方へ動くor向く
   followPlayer,
 
@@ -88,7 +91,8 @@ class SettingVariables {
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, ObjInBlock> objInBlockMap = {
     PointDistanceRange(Point(0, 0), 5): ObjInBlock.jewel1_2,
-    PointDistanceRange(Point(0, 0), 10): ObjInBlock.jewel1_2Trap1,
+    //PointDistanceRange(Point(0, 0), 10): ObjInBlock.jewel1_2Trap1,
+    PointDistanceRange(Point(0, 0), 20): ObjInBlock.jewel1_2SpikeOrTrap1,
     PointRectRange(Point(-10, -10), Point(-5, -5)):
         ObjInBlock.jewel1_2SpikeOrTrap1,
     PointRectRange(Point(5, 5), Point(10, 10)):

@@ -42,6 +42,25 @@ class Point {
     return (x.abs() + y.abs());
   }
 
+  /// リストの中から最も近い点のリストを返す
+  List<Point> closests(List<Point> points) {
+    if (points.isEmpty) return [];
+    Point myP = copy();
+    final List<Point> ret = [];
+    int closestD = (myP - points.first).distance();
+    for (final point in points) {
+      int d = (myP - point).distance();
+      if (d == closestD) {
+        ret.add(point);
+      } else if (d < closestD) {
+        ret.clear();
+        ret.add(point);
+        closestD = d;
+      }
+    }
+    return ret;
+  }
+
   String encode() {
     return "$x,$y";
   }

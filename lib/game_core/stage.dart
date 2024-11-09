@@ -674,20 +674,7 @@ class Stage {
           // レベルを上げる
           t.first.animationComponent
               .removeAll(t.first.animationComponent.children);
-          t.first.animationComponent.add(
-            AlignComponent(
-              alignment: Anchor.center,
-              child: TextComponent(
-                text: (++t.first.level).toString(),
-                textRenderer: TextPaint(
-                  style: const TextStyle(
-                    fontFamily: 'Aboreto',
-                    color: Color(0xff000000),
-                  ),
-                ),
-              ),
-            ),
-          );
+          t.first.level++;
         }
       }
       // マージされた敵を削除

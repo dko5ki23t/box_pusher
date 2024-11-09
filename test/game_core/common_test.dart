@@ -6,6 +6,9 @@ void main() {
     final a1 = Point(1, -2);
     final a2 = Point(1, -2);
     final b = Point(-3, 4);
+    final c = Point(-2, 4);
+    final d = Point(-4, 4);
+    final e = Point(-2, 5);
 
     test('等価', () {
       expect(a1 == a2, true);
@@ -33,6 +36,13 @@ void main() {
 
     test('原点からの距離', () {
       expect(b.distance(), 7);
+    });
+
+    test('距離が近い点のリスト取得', () {
+      expect(b.closests([]).isEmpty, true);
+      expect(b.closests([b, c]), [b]);
+      expect(b.closests([c, e]), [c]);
+      expect(b.closests([c, d, e]), [c, d]);
     });
 
     test('エンコード', () {

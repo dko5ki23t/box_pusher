@@ -6,7 +6,12 @@ import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 
 class Spike extends StageObj {
-  final EnemyMovePattern movePattern = EnemyMovePattern.followPlayer;
+  /// 各レベルに対応する動きのパターン
+  final Map<int, EnemyMovePattern> movePatterns = {
+    1: EnemyMovePattern.mergeWalkRandomOrStop,
+    2: EnemyMovePattern.walkRandomOrStop,
+    3: EnemyMovePattern.followPlayer,
+  };
 
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'spike.png';
@@ -78,8 +83,8 @@ class Spike extends StageObj {
     // 移動し始めのフレームの場合
     if (playerStartMoving) {
       // 移動を決定する
-      final ret = super.enemyMove(
-          movePattern, Move.none, stage.player, stage, prohibitedPoints);
+      final ret = super.enemyMove(movePatterns[level]!, Move.none, stage.player,
+          stage, prohibitedPoints);
       if (ret.containsKey('move')) {
         moving = ret['move'] as Move;
       }

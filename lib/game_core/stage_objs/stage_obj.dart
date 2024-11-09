@@ -245,6 +245,7 @@ abstract class StageObj {
     animationComponent.animation = levelToAnimations[key]![v];
   }
 
+  /// 対象とタイプ・レベルが一致しているかどうか
   bool isSameTypeLevel(StageObj o) {
     return o._typeLevel == _typeLevel;
   }
@@ -283,22 +284,67 @@ abstract class StageObj {
   /// コンベアで動くかどうか
   bool get beltMove;
 
-  void _enemyMoveFollow(
+  void _enemyMoveRondom(
     Map<String, dynamic> ret,
     EnemyMovePattern pattern,
     Move vector,
     Player player,
     Stage stage,
     List<Point> prohibitedPoints,
+    bool containStop,
   ) {
+    final List<Move> cand = [];
     // 今プレイヤーの移動先にいるなら移動しない
     if (pos == player.pos + player.moving.point) {
+      cand.add(Move.none);
+    } else {
+      if (containStop) {
+        cand.add(Move.none);
+      }
+      for (final move in MoveExtent.straights) {
+        Point eTo = pos + move.point;
+        final eToObj = stage.get(eTo);
+        if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
+            player.pushings.isNotEmpty &&
+            player.pushings.first.pos == eTo) {
+          // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+        } else if (!eToObj.puttable &&
+            (eToObj.type != type || eToObj.level != level)) {
+          continue;
+        }
+        if (prohibitedPoints.contains(eTo)) {
+          continue;
+        }
+        cand.add(move);
+      }
+    }
+    if (cand.isNotEmpty) {
+      final move = cand.sample(1).first;
+      ret['move'] = move;
+      // 向きも変更
+      ret['vector'] = move;
+      // 自身の移動先は、他のオブジェクトの移動先にならないようにする
+      prohibitedPoints.add(pos + move.point);
+    }
+  }
+
+  void _enemyMoveFollow(
+    Map<String, dynamic> ret,
+    EnemyMovePattern pattern,
+    Move vector,
+    StageObj target,
+    Player player,
+    Stage stage,
+    List<Point> prohibitedPoints,
+  ) {
+    // 今ターゲットの移動先にいるなら移動しない
+    if (pos == target.pos + target.moving.point) {
       ret['move'] = Move.none;
     } else if (Random().nextInt(6) == 0) {
       ret['move'] = Move.none;
     } else {
-      // プレイヤーの方へ移動する/向きを変える
-      final delta = player.pos - pos;
+      // ターゲットの方へ移動する/向きを変える
+      final delta = target.pos - pos;
       final List<Move> tmpCand = [];
       if (delta.x > 0) {
         tmpCand.add(Move.right);
@@ -353,41 +399,35 @@ abstract class StageObj {
 
     switch (pattern) {
       case EnemyMovePattern.walkRandom:
+        _enemyMoveRondom(
+            ret, pattern, vector, player, stage, prohibitedPoints, false);
+        break;
       case EnemyMovePattern.walkRandomOrStop:
-        final List<Move> cand = [];
-        // 今プレイヤーの移動先にいるなら移動しない
-        if (pos == player.pos + player.moving.point) {
-          cand.add(Move.none);
+        _enemyMoveRondom(
+            ret, pattern, vector, player, stage, prohibitedPoints, true);
+        break;
+      case EnemyMovePattern.mergeWalkRandomOrStop:
+        // マージできる、同じタイプ・レベルの敵を探す
+        final sameEnemies = stage.enemies
+            .where((e) => e != this && e.isSameTypeLevel(this) && e.mergable);
+        if (sameEnemies.isEmpty) {
+          _enemyMoveRondom(
+              ret, pattern, vector, player, stage, prohibitedPoints, true);
         } else {
-          if (pattern == EnemyMovePattern.walkRandomOrStop) {
-            cand.add(Move.none);
-          }
-          for (final move in MoveExtent.straights) {
-            Point eTo = pos + move.point;
-            final eToObj = stage.get(eTo);
-            if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
-                player.pushings.isNotEmpty &&
-                player.pushings.first.pos == eTo) {
-              // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-            } else if (!eToObj.puttable &&
-                (eToObj.type != type || eToObj.level != level)) {
-              continue;
-            }
-            if (prohibitedPoints.contains(eTo)) {
-              continue;
-            }
-            cand.add(move);
-          }
-        }
-        if (cand.isNotEmpty) {
-          final move = cand.sample(1).first;
-          ret['move'] = move;
-          // 自身の移動先は、他のオブジェクトの移動先にならないようにする
-          prohibitedPoints.add(pos + move.point);
+          // 対象の動いている向きも加味して最も近い敵を探す
+          final closests = pos.closests([
+            for (final enemy in sameEnemies) enemy.pos + enemy.moving.point
+          ]);
+          Point closest = closests.sample(1).first;
+          StageObj closestEnemy =
+              sameEnemies.where((e) => e.pos + e.moving.point == closest).first;
+          _enemyMoveFollow(ret, pattern, vector, closestEnemy, player, stage,
+              prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayer:
-        _enemyMoveFollow(ret, pattern, vector, player, stage, prohibitedPoints);
+        _enemyMoveFollow(
+            ret, pattern, vector, player, player, stage, prohibitedPoints);
         break;
       case EnemyMovePattern.followPlayerAttackForward3:
         // 向いている方向の3マスにプレイヤーがいるなら攻撃
@@ -403,7 +443,7 @@ abstract class StageObj {
           ret['attack'] = true;
         } else {
           _enemyMoveFollow(
-              ret, pattern, vector, player, stage, prohibitedPoints);
+              ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackRound8:
@@ -414,7 +454,7 @@ abstract class StageObj {
           ret['attack'] = true;
         } else {
           _enemyMoveFollow(
-              ret, pattern, vector, player, stage, prohibitedPoints);
+              ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackStraight5:
@@ -423,7 +463,7 @@ abstract class StageObj {
           ret['attack'] = true;
         } else {
           _enemyMoveFollow(
-              ret, pattern, vector, player, stage, prohibitedPoints);
+              ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
     }
