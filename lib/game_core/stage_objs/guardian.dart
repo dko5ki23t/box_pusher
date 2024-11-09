@@ -276,6 +276,9 @@ class Guardian extends StageObj {
   bool get puttable => false;
 
   @override
+  bool get enemyMovable => false;
+
+  @override
   bool get mergable => level < maxLevel;
 
   @override

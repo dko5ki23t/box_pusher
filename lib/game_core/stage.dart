@@ -13,8 +13,6 @@ import 'package:flame/effects.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/layout.dart';
-import 'package:flutter/material.dart' hide Image;
 import 'package:flame_audio/flame_audio.dart';
 
 class Stage {

@@ -243,6 +243,9 @@ class Player extends StageObj {
   bool get puttable => false;
 
   @override
+  bool get enemyMovable => true;
+
+  @override
   bool get mergable => false;
 
   @override

@@ -269,6 +269,9 @@ abstract class StageObj {
   /// このオブジェクトは押したオブジェクトの移動先になり得るか
   bool get puttable;
 
+  /// このオブジェクトは敵の移動先になり得るか
+  bool get enemyMovable;
+
   /// このオブジェクトは同じレベルの同じオブジェクトとマージできるか
   bool get mergable;
 
@@ -308,7 +311,7 @@ abstract class StageObj {
             player.pushings.isNotEmpty &&
             player.pushings.first.pos == eTo) {
           // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-        } else if (!eToObj.puttable &&
+        } else if (!eToObj.enemyMovable &&
             (eToObj.type != type || eToObj.level != level)) {
           continue;
         }
@@ -364,7 +367,7 @@ abstract class StageObj {
             player.pushings.isNotEmpty &&
             player.pushings.first.pos == eTo) {
           // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-        } else if (!eToObj.puttable &&
+        } else if (!eToObj.enemyMovable &&
             !(eToObj.type == type && eToObj.level == level)) {
           continue;
         }

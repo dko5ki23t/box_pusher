@@ -76,6 +76,9 @@ class Trap extends StageObj {
   bool get puttable => false;
 
   @override
+  bool get enemyMovable => true;
+
+  @override
   bool get mergable => level < maxLevel;
 
   @override

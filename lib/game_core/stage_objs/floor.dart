@@ -63,6 +63,9 @@ class Floor extends StageObj {
   bool get puttable => true;
 
   @override
+  bool get enemyMovable => true;
+
+  @override
   bool get mergable => false;
 
   @override

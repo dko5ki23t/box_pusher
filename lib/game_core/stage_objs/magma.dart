@@ -61,6 +61,9 @@ class Magma extends StageObj {
   bool get puttable => true;
 
   @override
+  bool get enemyMovable => false;
+
+  @override
   bool get mergable => false;
 
   @override
