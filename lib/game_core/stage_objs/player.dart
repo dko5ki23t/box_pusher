@@ -87,6 +87,8 @@ class Player extends StageObj {
       }
 
       pushings.clear();
+      // マージするからここまでは押せるよ、なpushingsのリスト
+      List<StageObj> pushingsSave = [];
       int end = pushableNum;
       if (end < 0) {
         final range = stage.stageRB - stage.stageLT;
@@ -95,6 +97,7 @@ class Player extends StageObj {
       for (int i = 0; i < end; i++) {
         bool stopBecauseMergeOrDrill =
             false; // マージが発生する/ドリルでブロックを壊すため、以降の判定をしなくて良いことを示すフラグ
+        bool needSave = false;
         // オブジェクトが押せるか
         if (toObj.pushable) {
           // ドリルの場合は少し違う処理
@@ -112,12 +115,18 @@ class Player extends StageObj {
                   (!toObj.isSameTypeLevel(toToObj) || !toObj.mergable))) {
             // 押した先が敵等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
             // これまでにpushingsに追加したものも含めて一切押せない
+            // ただし、途中でマージできるものがあるならそこまでは押せる
             pushings.clear();
+            if (pushingsSave.isNotEmpty) {
+              pushings.addAll(pushingsSave);
+              break;
+            }
             return;
           }
-          // マージできる場合は、一気に押せるオブジェクト（pushings）はここまで
+          // マージできる場合は、pushingsをセーブする
           if (toToObj.isSameTypeLevel(toObj) && toObj.mergable) {
-            stopBecauseMergeOrDrill = true;
+            needSave = true;
+            //stopBecauseMergeOrDrill = true;
           }
         } else {
           // 押せない場合
@@ -131,6 +140,10 @@ class Player extends StageObj {
           // マージする/ドリルでブロックを壊す場合
           break;
         }
+        if (needSave) {
+          // マージできる場合は、pushingsをセーブする
+          pushingsSave = [...pushings];
+        }
         // 1つ先へ
         to = toTo.copy();
         toTo = to + moveInput.point;
@@ -143,6 +156,11 @@ class Player extends StageObj {
         }
         toObj = stage.get(to);
         toToObj = stage.get(toTo);
+      }
+      // 押せる可能範囲全て押せるとしても、途中でマージするならそこまでしか押せない
+      if (pushingsSave.isNotEmpty) {
+        pushings.clear();
+        pushings.addAll(pushingsSave);
       }
       moving = moveInput;
       movingAmount = 0.0;
@@ -170,16 +188,32 @@ class Player extends StageObj {
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
         final Point to = pos + moving.point;
-        Point toTo = to + moving.point;
         // プレーヤー位置更新
         // ※merge()より前で更新することで、敵出現位置を、プレイヤーの目前にさせない
         pos = to.copy();
         stage.objFactory.setPosition(this);
 
-        // 押したオブジェクト位置更新
-        for (final pushing in pushings) {
+        // 押したオブジェクトの中でマージするインデックスを探す
+        int mergeIndex = -1; // -1はマージなし
+        Point toTo = to + moving.point * pushings.length;
+        // 押すオブジェクトのうち、なるべく遠くのオブジェクトをマージするために逆順でforループ
+        for (int i = pushings.length - 1; i >= 0; i--) {
+          final pushing = pushings[i];
           // 押した先のオブジェクトを調べる
           if (pushing.mergable && pushing.isSameTypeLevel(stage.get(toTo))) {
+            // マージするインデックスを保存
+            mergeIndex = i;
+            break; // 1回だけマージ
+          }
+          toTo -= moving.point;
+        }
+
+        // 押したオブジェクト位置更新
+        toTo = to + moving.point;
+        for (int i = 0; i < pushings.length; i++) {
+          final pushing = pushings[i];
+          // 上で探したインデックスと一致するならマージ
+          if (i == mergeIndex) {
             // マージ
             stage.merge(toTo, pushing, gameWorld);
           }
