@@ -271,8 +271,10 @@ class Swordsman extends StageObj {
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
         pos += moving.point;
-        // 攻撃中ならゲームオーバー判定
-        if (attacking) {
+        // ゲームオーバー判定
+        if (stage.player.pos == pos) {
+          stage.isGameover = true;
+        } else if (attacking) {
           if (level <= 1) {
             // 前方3マス
             final tmp = MoveExtent.straights;
