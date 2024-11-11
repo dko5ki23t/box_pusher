@@ -61,7 +61,8 @@ class Bomb extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
     // プレイヤー位置がボムの周囲5×5マスより遠い位置なら爆発
     if ((stage.player.pos.x < pos.x - 2) ||

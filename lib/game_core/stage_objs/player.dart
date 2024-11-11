@@ -67,7 +67,8 @@ class Player extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
     if (moving == Move.none) {
       // 移動中でない場合
@@ -139,7 +140,7 @@ class Player extends StageObj {
         // 押すオブジェクトリストに追加
         pushings.add(stage.boxes.firstWhere((element) => element.pos == to));
         // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
-        prohibitedPoints.add(toTo);
+        prohibitedPoints[toTo] = Move.none;
         if (stopBecauseMergeOrDrill) {
           // マージする/ドリルでブロックを壊す場合
           break;
@@ -165,6 +166,17 @@ class Player extends StageObj {
       if (pushingsSave.isNotEmpty) {
         pushings.clear();
         pushings.addAll(pushingsSave);
+      }
+
+      // オブジェクトを押した場合、そのオブジェクトをすり抜けてプレイヤーの移動先には移動できないようにする
+      if (pushings.isNotEmpty) {
+        if (!prohibitedPoints.containsKey(pos + moveInput.point)) {
+          prohibitedPoints[pos + moveInput.point] = moveInput.oppsite;
+        }
+      }
+      // プレイヤーとはすれ違えないようにする
+      if (!prohibitedPoints.containsKey(pos)) {
+        prohibitedPoints[pos] = moveInput.oppsite;
       }
       moving = moveInput;
       movingAmount = 0.0;

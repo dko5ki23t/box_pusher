@@ -178,7 +178,8 @@ class Wizard extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
     if (playerStartMoving) {
       playerStartMovingFlag = true;

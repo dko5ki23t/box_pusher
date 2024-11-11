@@ -214,7 +214,8 @@ class Swordsman extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
     // 移動し始めのフレームの場合
     if (playerStartMoving) {

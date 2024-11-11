@@ -55,15 +55,17 @@ class Trap extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
-    // TODO: 毎フレームで判定するのはやめる
     // このオブジェクトと同じ位置の敵を消す
-    final killings =
-        stage.enemies.where((element) => element.pos == pos).toList();
-    for (final killing in killings) {
-      gameWorld.remove(killing.animationComponent);
-      stage.enemies.remove(killing);
+    if (playerEndMoving) {
+      final killings =
+          stage.enemies.where((element) => element.pos == pos).toList();
+      for (final killing in killings) {
+        gameWorld.remove(killing.animationComponent);
+        stage.enemies.remove(killing);
+      }
     }
   }
 

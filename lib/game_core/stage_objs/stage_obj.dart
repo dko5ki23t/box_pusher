@@ -257,7 +257,9 @@ abstract class StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints, // 今は移動可能だが、他のオブジェクトが同時期に移動してくるため移動不可な座標のリスト
+    bool playerEndMoving,
+    Map<Point, Move>
+        prohibitedPoints, // 今は移動可能だが、他のオブジェクトが同時期に移動してくるため移動不可な座標と向きのMap（例えば、移動しているオブジェクトに対してその交差するように移動できないようにするためのMap）
   );
 
   /// このオブジェクトは押せるか
@@ -293,7 +295,7 @@ abstract class StageObj {
     Move vector,
     Player player,
     Stage stage,
-    List<Point> prohibitedPoints,
+    Map<Point, Move> prohibitedPoints,
     bool containStop,
   ) {
     final List<Move> cand = [];
@@ -315,7 +317,9 @@ abstract class StageObj {
             (eToObj.type != type || eToObj.level != level)) {
           continue;
         }
-        if (prohibitedPoints.contains(eTo)) {
+        if (prohibitedPoints.containsKey(eTo) &&
+            (prohibitedPoints[eTo] == Move.none ||
+                prohibitedPoints[eTo] == move)) {
           continue;
         }
         cand.add(move);
@@ -327,7 +331,11 @@ abstract class StageObj {
       // 向きも変更
       ret['vector'] = move;
       // 自身の移動先は、他のオブジェクトの移動先にならないようにする
-      prohibitedPoints.add(pos + move.point);
+      prohibitedPoints[pos + move.point] = Move.none;
+      // 他オブジェクトとすれ違えないようにする
+      if (!prohibitedPoints.containsKey(pos)) {
+        prohibitedPoints[pos] = move.oppsite;
+      }
     }
   }
 
@@ -338,7 +346,7 @@ abstract class StageObj {
     StageObj target,
     Player player,
     Stage stage,
-    List<Point> prohibitedPoints,
+    Map<Point, Move> prohibitedPoints,
   ) {
     // 今ターゲットの移動先にいるなら移動しない
     if (pos == target.pos + target.moving.point) {
@@ -371,7 +379,9 @@ abstract class StageObj {
             !(eToObj.type == type && eToObj.level == level)) {
           continue;
         }
-        if (prohibitedPoints.contains(eTo)) {
+        if (prohibitedPoints.containsKey(eTo) &&
+            (prohibitedPoints[eTo] == Move.none ||
+                prohibitedPoints[eTo] == move)) {
           continue;
         }
         cand.add(move);
@@ -382,7 +392,11 @@ abstract class StageObj {
         // 向きも変更
         ret['vector'] = move;
         // 自身の移動先は、他のオブジェクトの移動先にならないようにする
-        prohibitedPoints.add(pos + move.point);
+        prohibitedPoints[pos + move.point] = Move.none;
+        // 他オブジェクトとすれ違えないようにする
+        if (!prohibitedPoints.containsKey(pos)) {
+          prohibitedPoints[pos] = move.oppsite;
+        }
       } else {
         // ランダムに移動を試みる
         _enemyMoveRondom(
@@ -402,7 +416,7 @@ abstract class StageObj {
     Move vector,
     Player player,
     Stage stage,
-    List<Point> prohibitedPoints,
+    Map<Point, Move> prohibitedPoints,
   ) {
     Map<String, dynamic> ret = {};
 

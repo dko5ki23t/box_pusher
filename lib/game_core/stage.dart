@@ -485,21 +485,22 @@ class Stage {
     // クリア済みなら何もしない
     if (isClear()) return;
     Move before = player.moving;
-    final List<Point> prohibitedPoints = [];
+    final Map<Point, Move> prohibitedPoints = {};
     // プレイヤー更新
     player.update(
-        dt, moveInput, gameWorld, camera, this, false, prohibitedPoints);
+        dt, moveInput, gameWorld, camera, this, false, false, prohibitedPoints);
     bool playerStartMoving =
         (before == Move.none && player.moving != Move.none);
+    bool playerEndMoving = (before != Move.none && player.moving == Move.none);
     // コンベア更新
     for (final belt in beltPoints) {
       staticObjs[belt]!.update(dt, moveInput, gameWorld, camera, this,
-          playerStartMoving, prohibitedPoints);
+          playerStartMoving, playerEndMoving, prohibitedPoints);
     }
     // 敵更新
     for (final enemy in enemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
-          playerStartMoving, prohibitedPoints);
+          playerStartMoving, playerEndMoving, prohibitedPoints);
     }
     if (playerStartMoving) {
       // 動き始めたらプレイヤーに再フォーカス
@@ -539,12 +540,14 @@ class Stage {
       }
     }
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
-    // TODO: これらは他オブジェクトの移動完了時のみ動かせばよい
+    // これらはプレイヤーの移動完了時のみ動かす
     // update()でboxesリストが変化する可能性がある(ボムの爆発等)ためコピーを使う
-    final boxesCopied = [for (final box in boxes) box];
-    for (final box in boxesCopied) {
-      box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
-          prohibitedPoints);
+    if (playerEndMoving) {
+      final boxesCopied = [for (final box in boxes) box];
+      for (final box in boxesCopied) {
+        box.update(dt, player.moving, gameWorld, camera, this,
+            playerStartMoving, playerEndMoving, prohibitedPoints);
+      }
     }
 
     // 移動完了時

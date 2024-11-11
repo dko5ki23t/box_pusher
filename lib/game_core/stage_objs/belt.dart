@@ -103,7 +103,8 @@ class Belt extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
     // プレイヤー移動開始時
     if (playerStartMoving) {
@@ -130,7 +131,11 @@ class Belt extends StageObj {
         // 押すオブジェクトリストに追加
         pushings.add(obj);
         // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
-        prohibitedPoints.add(to);
+        prohibitedPoints[to] = Move.none;
+        // 上にオブジェクトがなくなったコンベアには、押した方向と逆方向からの移動は禁ずる
+        if (!prohibitedPoints.containsKey(pos)) {
+          prohibitedPoints[pos] = vector.oppsite;
+        }
       }
     }
 
