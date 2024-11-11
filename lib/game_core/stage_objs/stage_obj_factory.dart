@@ -10,6 +10,7 @@ import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
+import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
@@ -262,6 +263,12 @@ class StageObjFactory {
       case StageObjType.gorilla:
         return Gorilla(
             gorillaImg: baseImages[type]!,
+            errorImg: errorImg,
+            pos: pos,
+            level: typeLevel.level);
+      case StageObjType.rabbit:
+        return Rabbit(
+            rabbitImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);

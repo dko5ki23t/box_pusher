@@ -15,6 +15,7 @@ import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
 import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
+import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
@@ -45,6 +46,7 @@ enum StageObjType {
   archer, // 弓を使う敵
   wizard, // 魔法を使う敵
   gorilla,
+  rabbit,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -67,6 +69,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.archer: 'a',
     StageObjType.wizard: 'M',
     StageObjType.gorilla: 'G',
+    StageObjType.rabbit: 'R',
   };
 
   String get str => strMap[this]!;
@@ -109,6 +112,8 @@ extension StageObjTypeExtent on StageObjType {
         return Wizard;
       case StageObjType.gorilla:
         return Gorilla;
+      case StageObjType.rabbit:
+        return Rabbit;
     }
   }
 
@@ -150,6 +155,8 @@ extension StageObjTypeExtent on StageObjType {
         return Wizard.imageFileName;
       case StageObjType.gorilla:
         return Gorilla.imageFileName;
+      case StageObjType.rabbit:
+        return Rabbit.imageFileName;
     }
   }
 

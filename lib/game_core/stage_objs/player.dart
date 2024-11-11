@@ -272,6 +272,12 @@ class Player extends StageObj {
           stage.setHandAbility(true);
           // ゴリラ、いなくなる
           stage.setStaticType(to, StageObjType.none, gameWorld);
+        } else if (stage.get(to).type == StageObjType.rabbit) {
+          // 移動先がうさぎだった場合
+          // 足の能力を習得
+          stage.setLegAbility(true);
+          // うさぎ、いなくなる
+          stage.setStaticType(to, StageObjType.none, gameWorld);
         }
 
         // 各種移動中変数初期化

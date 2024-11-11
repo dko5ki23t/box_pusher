@@ -121,5 +121,6 @@ class SettingVariables {
   /// 助け出す動物の場所マップ
   static Map<Point, StageObjType> animalsPoints = {
     Point(-5, -5): StageObjType.gorilla,
+    Point(5, 5): StageObjType.rabbit,
   };
 }
