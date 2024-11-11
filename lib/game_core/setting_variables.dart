@@ -25,50 +25,27 @@ enum EnemyMovePattern {
   followPlayerAttackStraight5,
 }
 
-enum BlockFloorPattern {
-  /// 全てレベル1のブロック
-  allBlockLevel1,
+class BlockFloorPattern {
+  /// 床の割合
+  final int floorPercent;
 
-  /// 2%が床、それ以外はレベル1のブロック
-  floor2BlockLevel1,
+  /// ブロックのレベル->出現割合のMap
+  final Map<int, int> blockPercents;
 
-  /// 2%が床、10%がレベル2のブロック、それ以外はレベル1のブロック
-  floor2Block10Level2BlockLevel1,
+  BlockFloorPattern(this.floorPercent, this.blockPercents);
 }
 
-enum ObjInBlock {
-  /// 破壊した数/2(切り上げ)個の宝石が出現
-  jewel1_2,
+class ObjInBlock {
+  /// 破壊した数の内、宝石が含まれる割合
+  final int jewelPercent;
 
-  /// 破壊した数/2(切り上げ)個の宝石、罠が1個以下出現
-  jewel1_2Trap1,
+  /// 宝石以外で出現するアイテム
+  final List<StageObjTypeLevel> items1;
 
-  /// 破壊した数/2(切り上げ)個の宝石、敵/罠いずれかが1個以下出現
-  jewel1_2SpikeOrTrap1,
+  /// 宝石以外で出現するアイテムの最大個数
+  final int itemsMaxNum1;
 
-  /// 破壊した数/2(切り上げ)個の宝石、ドリルが1個以下出現
-  jewel1_2Drill1,
-
-  /// 破壊した数/2(切り上げ)個の宝石、宝箱が1個以下出現
-  jewel1_2Treasure1,
-
-  /// 破壊した数/2(切り上げ)個の宝石、ワープが1個以下出現
-  jewel1_2Warp1,
-
-  /// 破壊した数/2(切り上げ)個の宝石、ボムが1個以下出現
-  jewel1_2Bomb1,
-
-  /// 破壊した数/2(切り上げ)個の宝石、ガーディアンが1個以下出現
-  jewel1_2Guardian1,
-
-  /// 破壊した数/2(切り上げ)個の宝石、コンベア/ガーディアン/剣を持つ敵がそれぞれ1個以下出現
-  jewel1_2BeltGuardianSwordsman1,
-
-  /// 破壊した数/2(切り上げ)個の宝石、弓を持つ敵が1個以下出現
-  jewel1_2Archer1,
-
-  /// 破壊した数/2(切り上げ)個の宝石、魔法使いが1個以下出現
-  jewel1_2Wizard1,
+  ObjInBlock(this.jewelPercent, this.items1, this.itemsMaxNum1);
 }
 
 class SettingVariables {
@@ -82,24 +59,43 @@ class SettingVariables {
 
   /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, BlockFloorPattern> blockFloorMap = {
-    PointDistanceRange(Point(0, 0), 8): BlockFloorPattern.allBlockLevel1,
-    PointDistanceRange(Point(0, 0), 10): BlockFloorPattern.floor2BlockLevel1,
-    PointDistanceRange(Point(0, 0), 100):
-        BlockFloorPattern.floor2Block10Level2BlockLevel1,
+    PointDistanceRange(Point(0, 0), 8): BlockFloorPattern(0, {1: 100}),
+    PointDistanceRange(Point(0, 0), 10): BlockFloorPattern(2, {1: 98}),
+    PointDistanceRange(Point(0, 0), 10): BlockFloorPattern(5, {1: 95}),
+    PointDistanceRange(Point(0, 0), 100): BlockFloorPattern(2, {1: 88, 2: 10}),
   };
 
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, ObjInBlock> objInBlockMap = {
-    PointDistanceRange(Point(0, 0), 5): ObjInBlock.jewel1_2,
+    PointDistanceRange(Point(0, 0), 5): ObjInBlock(50, [], 0),
     //PointDistanceRange(Point(0, 0), 10): ObjInBlock.jewel1_2Trap1,
-    PointDistanceRange(Point(0, 0), 20): ObjInBlock.jewel1_2SpikeOrTrap1,
-    PointRectRange(Point(-10, -10), Point(-5, -5)):
-        ObjInBlock.jewel1_2SpikeOrTrap1,
-    PointRectRange(Point(5, 5), Point(10, 10)):
-        ObjInBlock.jewel1_2BeltGuardianSwordsman1,
-    PointDistanceRange(Point(0, 0), 10): ObjInBlock.jewel1_2,
-    PointDistanceRange(Point(0, 0), 15): ObjInBlock.jewel1_2Wizard1,
-    PointDistanceRange(Point(0, 0), 100): ObjInBlock.jewel1_2Guardian1,
+    PointDistanceRange(Point(0, 0), 20): ObjInBlock(
+        50,
+        [
+          StageObjTypeLevel(type: StageObjType.spike),
+          StageObjTypeLevel(type: StageObjType.trap)
+        ],
+        2),
+    PointRectRange(Point(-10, -10), Point(-5, -5)): ObjInBlock(
+        50,
+        [
+          StageObjTypeLevel(type: StageObjType.spike),
+          StageObjTypeLevel(type: StageObjType.trap)
+        ],
+        1),
+    PointRectRange(Point(5, 5), Point(10, 10)): ObjInBlock(
+        50,
+        [
+          StageObjTypeLevel(type: StageObjType.belt),
+          StageObjTypeLevel(type: StageObjType.guardian),
+          StageObjTypeLevel(type: StageObjType.swordsman)
+        ],
+        1),
+    PointDistanceRange(Point(0, 0), 10): ObjInBlock(50, [], 0),
+    PointDistanceRange(Point(0, 0), 15):
+        ObjInBlock(50, [StageObjTypeLevel(type: StageObjType.wizard)], 0),
+    PointDistanceRange(Point(0, 0), 100):
+        ObjInBlock(50, [StageObjTypeLevel(type: StageObjType.guardian)], 0),
   };
 
   /// ステージ上範囲->ブロック破壊時の出現宝石のレベル（範囲が重複する場合は先に存在するキーを優先）

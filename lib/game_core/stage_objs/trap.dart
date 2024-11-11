@@ -57,6 +57,7 @@ class Trap extends StageObj {
     bool playerStartMoving,
     List<Point> prohibitedPoints,
   ) {
+    // TODO: 毎フレームで判定するのはやめる
     // このオブジェクトと同じ位置の敵を消す
     final killings =
         stage.enemies.where((element) => element.pos == pos).toList();

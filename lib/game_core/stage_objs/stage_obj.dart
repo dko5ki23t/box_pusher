@@ -383,9 +383,15 @@ abstract class StageObj {
         ret['vector'] = move;
         // 自身の移動先は、他のオブジェクトの移動先にならないようにする
         prohibitedPoints.add(pos + move.point);
-      } else if (tmpCand.isNotEmpty) {
-        // 向きだけ変更
-        ret['vector'] = tmpCand.sample(1).first;
+      } else {
+        // ランダムに移動を試みる
+        _enemyMoveRondom(
+            ret, pattern, vector, player, stage, prohibitedPoints, true);
+        if ((!ret.containsKey('move') || ret['move'] == Move.none) &&
+            tmpCand.isNotEmpty) {
+          // 向きだけ変更
+          ret['vector'] = tmpCand.sample(1).first;
+        }
       }
     }
   }

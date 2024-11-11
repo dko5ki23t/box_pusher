@@ -111,8 +111,12 @@ class Player extends StageObj {
             stopBecauseMergeOrDrill = true;
           } else if (toToObj.stopping ||
               (i == end - 1 &&
-                  !toToObj.puttable &&
-                  (!toObj.isSameTypeLevel(toToObj) || !toObj.mergable))) {
+                      !toToObj.puttable && // 押した先が、何かを置けるオブジェクト ではない
+                      !(toObj.isSameTypeLevel(toToObj) &&
+                          toObj.mergable)) && // 押した先とマージ できない
+                  !(toToObj.isEnemy && toObj.enemyMovable)) {
+            // 押した先が敵かつ押すオブジェクトに敵が移動可能
+
             // 押した先が敵等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
             // これまでにpushingsに追加したものも含めて一切押せない
             // ただし、途中でマージできるものがあるならそこまでは押せる

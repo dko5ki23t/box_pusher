@@ -211,7 +211,7 @@ class Stage {
       }
     }
     // 引数位置を元に、どういうオブジェクトが出現するか決定
-    ObjInBlock pattern = ObjInBlock.jewel1_2;
+    late ObjInBlock pattern;
     int jewelLevel = 1;
     for (final objInBlock in SettingVariables.objInBlockMap.entries) {
       if (objInBlock.key.contains(pos)) {
@@ -233,196 +233,54 @@ class Stage {
     final breakedRemain = [...breaked];
 
     // 宝石の出現について
-    switch (pattern) {
-      case ObjInBlock.jewel1_2:
-      case ObjInBlock.jewel1_2SpikeOrTrap1:
-      case ObjInBlock.jewel1_2Drill1:
-      case ObjInBlock.jewel1_2Treasure1:
-      case ObjInBlock.jewel1_2Warp1:
-      case ObjInBlock.jewel1_2Bomb1:
-      case ObjInBlock.jewel1_2Guardian1:
-      case ObjInBlock.jewel1_2BeltGuardianSwordsman1:
-      case ObjInBlock.jewel1_2Archer1:
-      case ObjInBlock.jewel1_2Wizard1:
-      case ObjInBlock.jewel1_2Trap1:
-        // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
-        final jewelAppears = breaked.sample((breaked.length / 2).ceil());
-        breakedRemain.removeWhere((element) => jewelAppears.contains(element));
-        for (final jewelAppear in jewelAppears) {
-          adding.add(objFactory.create(
-              typeLevel: StageObjTypeLevel(
-                type: StageObjType.jewel,
-                level: jewelLevel,
-              ),
-              pos: jewelAppear));
-          boxes.add(adding.last);
-        }
-        break;
+    // 破壊したブロックの数/2(切り上げ)個の宝石を出現させる
+    final jewelAppears =
+        breaked.sample((breaked.length * pattern.jewelPercent / 100).ceil());
+    breakedRemain.removeWhere((element) => jewelAppears.contains(element));
+    for (final jewelAppear in jewelAppears) {
+      adding.add(objFactory.create(
+          typeLevel: StageObjTypeLevel(
+            type: StageObjType.jewel,
+            level: jewelLevel,
+          ),
+          pos: jewelAppear));
+      boxes.add(adding.last);
     }
 
     // その他オブジェクトの出現について
-    switch (pattern) {
-      case ObjInBlock.jewel1_2:
-        break;
-      case ObjInBlock.jewel1_2Trap1:
-        // 宝石出現以外の位置に最大1個罠を出現させる
+    if (pattern.items1.isNotEmpty) {
+      for (int i = 0; i < pattern.itemsMaxNum1; i++) {
+        // リストの中から出現させるアイテムを選ぶ
+        StageObjTypeLevel typeLevel = pattern.items1.sample(1).first;
+        // 宝石出現以外の位置に最大1個アイテムを出現させる
         if (breakedRemain.isNotEmpty) {
-          bool trap = Random().nextBool();
+          bool canAppear = Random().nextBool();
           final appear = breakedRemain.sample(1).first;
-          if (trap) {
-            adding.add(objFactory.create(
-                typeLevel: StageObjTypeLevel(type: StageObjType.trap, level: 1),
-                pos: appear));
-            boxes.add(adding.last);
-          }
-        }
-        break;
-      case ObjInBlock.jewel1_2SpikeOrTrap1:
-        // 宝石出現以外の位置に最大1個の敵/罠を出現させる
-        if (breakedRemain.isNotEmpty) {
-          int spikeOrTrap = Random().nextInt(4);
-          final appear = breakedRemain.sample(1).first;
-          if (spikeOrTrap == 0) {
-            adding.add(objFactory.create(
-                typeLevel:
-                    StageObjTypeLevel(type: StageObjType.spike, level: 1),
-                pos: appear));
-            enemies.add(adding.last);
-          } else if (spikeOrTrap == 1) {
-            adding.add(objFactory.create(
-                typeLevel: StageObjTypeLevel(type: StageObjType.trap, level: 1),
-                pos: appear));
-            boxes.add(adding.last);
-          }
-        }
-        break;
-      case ObjInBlock.jewel1_2Drill1:
-        // 宝石出現以外の位置に最大1個のドリルを出現させる
-        if (breakedRemain.isNotEmpty) {
-          bool drill = Random().nextBool();
-          final appear = breakedRemain.sample(1).first;
-          if (drill) {
-            adding.add(objFactory.create(
-                typeLevel:
-                    StageObjTypeLevel(type: StageObjType.drill, level: 1),
-                pos: appear));
-            boxes.add(adding.last);
-          }
-        }
-        break;
-      case ObjInBlock.jewel1_2Treasure1:
-        // 宝石出現以外の位置に最大1個の宝箱を出現させる
-        if (breakedRemain.isNotEmpty) {
-          bool treasure = Random().nextBool();
-          final appear = breakedRemain.sample(1).first;
-          if (treasure) {
-            setStaticType(appear, StageObjType.treasureBox, gameWorld);
-          }
-        }
-        break;
-      case ObjInBlock.jewel1_2Warp1:
-        // 宝石出現以外の位置に最大1個のワープを出現させる
-        if (breakedRemain.isNotEmpty) {
-          bool warp = Random().nextBool();
-          final appear = breakedRemain.sample(1).first;
-          if (warp) {
-            setStaticType(appear, StageObjType.warp, gameWorld);
-            warpPoints.add(appear);
-          }
-        }
-        break;
-      case ObjInBlock.jewel1_2Bomb1:
-        // 宝石出現以外の位置に最大1個のボムを出現させる
-        if (breakedRemain.isNotEmpty) {
-          bool bomb = Random().nextBool();
-          final appear = breakedRemain.sample(1).first;
-          if (bomb) {
-            adding.add(objFactory.create(
-                typeLevel: StageObjTypeLevel(type: StageObjType.bomb, level: 1),
-                pos: appear));
-            boxes.add(adding.last);
-          }
-        }
-        break;
-      case ObjInBlock.jewel1_2Guardian1:
-        // 宝石出現以外の位置に最大1個のガーディアンを出現させる
-        if (breakedRemain.isNotEmpty) {
-          bool guardian = Random().nextBool();
-          final appear = breakedRemain.sample(1).first;
-          if (guardian) {
-            adding.add(objFactory.create(
-                typeLevel:
-                    StageObjTypeLevel(type: StageObjType.guardian, level: 1),
-                pos: appear));
-            boxes.add(adding.last);
-          }
-        }
-        break;
-      case ObjInBlock.jewel1_2BeltGuardianSwordsman1:
-        // 宝石出現以外の位置にコンベア/ガーディアン/剣を持つ敵をそれぞれ最大1個出現させる
-        for (final StageObjType type in [
-          StageObjType.swordsman,
-          StageObjType.belt,
-          StageObjType.guardian,
-        ]) {
-          if (breakedRemain.isNotEmpty) {
-            bool isAppear = Random().nextBool();
-            final appear = breakedRemain.sample(1).first;
-            if (isAppear) {
-              if (type == StageObjType.belt) {
-                setStaticType(appear, type, gameWorld);
-                assert(get(appear).runtimeType == Belt,
-                    'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
-                get(appear).vector = MoveExtent.straights.sample(1).first;
-                beltPoints.add(appear);
+          if (canAppear) {
+            if (typeLevel.type == StageObjType.treasureBox) {
+              setStaticType(appear, StageObjType.treasureBox, gameWorld);
+            } else if (typeLevel.type == StageObjType.treasureBox) {
+              setStaticType(appear, StageObjType.treasureBox, gameWorld);
+              warpPoints.add(appear);
+            } else if (typeLevel.type == StageObjType.belt) {
+              setStaticType(appear, StageObjType.belt, gameWorld);
+              assert(get(appear).runtimeType == Belt,
+                  'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
+              get(appear).vector = MoveExtent.straights.sample(1).first;
+              beltPoints.add(appear);
+            } else {
+              adding.add(objFactory.create(typeLevel: typeLevel, pos: appear));
+              if (adding.last.isEnemy) {
+                enemies.add(adding.last);
               } else {
-                adding.add(objFactory.create(
-                    typeLevel: StageObjTypeLevel(type: type, level: 1),
-                    pos: appear));
-                switch (type) {
-                  case StageObjType.guardian:
-                    boxes.add(adding.last);
-                    break;
-                  case StageObjType.swordsman:
-                    enemies.add(adding.last);
-                    break;
-                  default:
-                    break;
-                }
+                boxes.add(adding.last);
               }
             }
+            // アイテム出現場所を取り除く
             breakedRemain.remove(appear);
           }
         }
-        break;
-      case ObjInBlock.jewel1_2Archer1:
-        // 宝石出現以外の位置に最大1個の弓を持つ敵を出現させる
-        if (breakedRemain.isNotEmpty) {
-          bool archer = Random().nextBool();
-          final appear = breakedRemain.sample(1).first;
-          if (archer) {
-            adding.add(objFactory.create(
-                typeLevel:
-                    StageObjTypeLevel(type: StageObjType.archer, level: 1),
-                pos: appear));
-            enemies.add(adding.last);
-          }
-        }
-        break;
-      case ObjInBlock.jewel1_2Wizard1:
-        // 宝石出現以外の位置に最大1個の魔法使いを出現させる
-        if (breakedRemain.isNotEmpty) {
-          bool archer = Random().nextBool();
-          final appear = breakedRemain.sample(1).first;
-          if (archer) {
-            adding.add(objFactory.create(
-                typeLevel:
-                    StageObjTypeLevel(type: StageObjType.wizard, level: 1),
-                pos: appear));
-            enemies.add(adding.last);
-          }
-        }
-        break;
+      }
     }
     gameWorld.addAll([for (final e in adding) e.animationComponent]);
 
@@ -754,50 +612,27 @@ class Stage {
       // その他は定めたパターンに従う
       for (final pattern in SettingVariables.blockFloorMap.entries) {
         if (pattern.key.contains(point)) {
-          switch (pattern.value) {
-            case BlockFloorPattern.allBlockLevel1:
+          int rand = Random().nextInt(100);
+          int threshold = pattern.value.floorPercent;
+          if (rand < threshold) {
+            return objFactory.create(
+                typeLevel: StageObjTypeLevel(
+                  type: StageObjType.none,
+                ),
+                pos: point);
+          }
+          for (final p in pattern.value.blockPercents.entries) {
+            threshold += p.value;
+            if (rand < threshold) {
               return objFactory.create(
                   typeLevel: StageObjTypeLevel(
                     type: StageObjType.block,
+                    level: p.key,
                   ),
                   pos: point);
-            case BlockFloorPattern.floor2BlockLevel1:
-              if (Random().nextInt(50) == 0) {
-                return objFactory.create(
-                    typeLevel: StageObjTypeLevel(
-                      type: StageObjType.none,
-                    ),
-                    pos: point);
-              } else {
-                return objFactory.create(
-                    typeLevel: StageObjTypeLevel(
-                      type: StageObjType.block,
-                    ),
-                    pos: point);
-              }
-            case BlockFloorPattern.floor2Block10Level2BlockLevel1:
-              int r = Random().nextInt(50);
-              if (r == 0) {
-                return objFactory.create(
-                    typeLevel: StageObjTypeLevel(
-                      type: StageObjType.none,
-                    ),
-                    pos: point);
-              } else if (r <= 5) {
-                return objFactory.create(
-                    typeLevel: StageObjTypeLevel(
-                      type: StageObjType.block,
-                      level: 2,
-                    ),
-                    pos: point);
-              } else {
-                return objFactory.create(
-                    typeLevel: StageObjTypeLevel(
-                      type: StageObjType.block,
-                    ),
-                    pos: point);
-              }
+            }
           }
+          assert(false, 'arienai!');
         }
       }
     }
