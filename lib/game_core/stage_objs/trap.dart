@@ -38,6 +38,12 @@ class Trap extends StageObj {
                     srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
               ], stepTime: 1.0)
             },
+            2: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(trapImg,
+                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
+              ], stepTime: 1.0)
+            },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.trap,
@@ -58,10 +64,11 @@ class Trap extends StageObj {
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
   ) {
-    // このオブジェクトと同じ位置の敵を消す
+    // このオブジェクトと同じ位置の、罠レベル以下の敵を消す
     if (playerEndMoving) {
-      final killings =
-          stage.enemies.where((element) => element.pos == pos).toList();
+      final killings = stage.enemies
+          .where((element) => element.pos == pos && element.level <= level)
+          .toList();
       for (final killing in killings) {
         gameWorld.remove(killing.animationComponent);
         stage.enemies.remove(killing);
@@ -85,7 +92,7 @@ class Trap extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => false;

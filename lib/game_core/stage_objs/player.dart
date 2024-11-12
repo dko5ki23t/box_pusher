@@ -110,14 +110,15 @@ class Player extends StageObj {
             stage.setStaticType(toTo, StageObjType.none, gameWorld);
             executing = true;
             stopBecauseMergeOrDrill = true;
-          } else if (toToObj.stopping ||
-              (i == end - 1 &&
+          } else if (toToObj.stopping || // 押した先が停止物
+                  (toToObj.isEnemy &&
+                      !toObj
+                          .enemyMovable) || // 押した先が敵かつ押すオブジェクトに敵が移動可能ではない(≒停止物)
+                  (i == end - 1 &&
                       !toToObj.puttable && // 押した先が、何かを置けるオブジェクト ではない
                       !(toObj.isSameTypeLevel(toToObj) &&
-                          toObj.mergable)) && // 押した先とマージ できない
-                  !(toToObj.isEnemy && toObj.enemyMovable)) {
-            // 押した先が敵かつ押すオブジェクトに敵が移動可能
-
+                          toObj.mergable)) // 押した先とマージ できない)
+              ) {
             // 押した先が敵等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
             // これまでにpushingsに追加したものも含めて一切押せない
             // ただし、途中でマージできるものがあるならそこまでは押せる
