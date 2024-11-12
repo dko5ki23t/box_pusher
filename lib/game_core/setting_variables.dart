@@ -57,6 +57,9 @@ class SettingVariables {
   /// に敵が移動することを許すかどうか
   static bool allowEnemyMoveToMovingEnemyPoint = true;
 
+  /// 斜め移動ボタンの範囲を広く取るかどうか（広く取ると上下左右のボタンを台形にして小さくするので複雑になるし、斜めボタンを誤タップしやすくなる）
+  static bool wideDiagonalMoveButton = false;
+
   /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, BlockFloorPattern> blockFloorMap = {
     PointDistanceRange(Point(0, 0), 8): BlockFloorPattern(0, {1: 100}),

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
+import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
@@ -81,7 +82,9 @@ class GameSeq extends Sequence
   ClipComponent? playerControllButtonsArea;
   ClipComponent? clipByDiagonalMoveButton;
   List<ButtonComponent>? playerStraightMoveButtons;
-  List<ClipComponent>? playerDiagonalMoveButtons;
+  List<PositionComponent>? playerDiagonalMoveButtons;
+  late GameSpriteOnOffButton handAbilityOnOffButton;
+  late GameSpriteOnOffButton legAbilityOnOffButton;
 
   @override
   Future<void> onLoad() async {
@@ -132,8 +135,7 @@ class GameSeq extends Sequence
     final clipSize = Vector2(
         yButtonAreaSize.x, 640.0 - topPaddingSize.y - menuButtonAreaSize.y);
     final tv = Vector2(0.3, 0.3 * 9 / 16);
-    playerControllButtonsArea ??=
-        playerControllButtonsArea = ClipComponent.rectangle(
+    playerControllButtonsArea ??= ClipComponent.rectangle(
       position: Vector2(0, topPaddingSize.y),
       size: clipSize,
     );
@@ -186,84 +188,123 @@ class GameSeq extends Sequence
     // 斜めの移動ボタン
     playerDiagonalMoveButtons ??= [
       // 画面左上の操作ボタン
-      ClipComponent.polygon(
-        points: [
-          Vector2(0, 0),
-          Vector2(tv.x, 0),
-          Vector2(0, tv.y),
-          Vector2(0, 0),
-        ],
-        size: clipSize,
-        children: [
-          playerControllButton(
-            size: dButtonAreaSize,
-            position: Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
-            anchor: Anchor.center,
-            angle: -0.25 * pi,
-            move: Move.upLeft,
-          ),
-        ],
-      ),
+      SettingVariables.wideDiagonalMoveButton
+          ? ClipComponent.polygon(
+              points: [
+                Vector2(0, 0),
+                Vector2(tv.x, 0),
+                Vector2(0, tv.y),
+                Vector2(0, 0),
+              ],
+              size: clipSize,
+              children: [
+                playerControllButton(
+                  size: dButtonAreaSize,
+                  position:
+                      Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
+                  anchor: Anchor.center,
+                  angle: -0.25 * pi,
+                  move: Move.upLeft,
+                ),
+              ],
+            )
+          : playerControllButton(
+              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+              position: Vector2(0, 0),
+              arrowAngle: -0.25 * pi,
+              move: Move.upLeft,
+            ),
       // 画面右上の操作ボタン
-      ClipComponent.polygon(
-        points: [
-          Vector2(1, 0),
-          Vector2(1 - tv.x, 0),
-          Vector2(1, tv.y),
-          Vector2(1, 0),
-        ],
-        size: clipSize,
-        children: [
-          playerControllButton(
-            size: dButtonAreaSize,
-            position: Vector2(
-                clipSize.x - xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
-            anchor: Anchor.center,
-            angle: 0.25 * pi,
-            move: Move.upRight,
-          ),
-        ],
-      ),
+      SettingVariables.wideDiagonalMoveButton
+          ? ClipComponent.polygon(
+              points: [
+                Vector2(1, 0),
+                Vector2(1 - tv.x, 0),
+                Vector2(1, tv.y),
+                Vector2(1, 0),
+              ],
+              size: clipSize,
+              children: [
+                playerControllButton(
+                  size: dButtonAreaSize,
+                  position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                      yButtonAreaSize.y * 0.5),
+                  anchor: Anchor.center,
+                  angle: 0.25 * pi,
+                  move: Move.upRight,
+                ),
+              ],
+            )
+          : playerControllButton(
+              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+              position: Vector2(360.0 - xButtonAreaSize.x, 0),
+              arrowAngle: 0.25 * pi,
+              move: Move.upRight,
+            ),
       // 画面左下の操作ボタン
-      ClipComponent.polygon(
-        points: [
-          Vector2(0, 1 - tv.y),
-          Vector2(tv.x, 1),
-          Vector2(0, 1),
-          Vector2(0, 1 - tv.y),
-        ],
-        size: clipSize,
-        children: [
-          playerControllButton(
-            size: dButtonAreaSize,
-            position: Vector2(
-                xButtonAreaSize.x * 0.5, clipSize.y - yButtonAreaSize.y * 0.5),
-            anchor: Anchor.center,
-            angle: -0.75 * pi,
-            move: Move.downLeft,
-          ),
-        ],
-      ),
+      SettingVariables.wideDiagonalMoveButton
+          ? ClipComponent.polygon(
+              points: [
+                Vector2(0, 1 - tv.y),
+                Vector2(tv.x, 1),
+                Vector2(0, 1),
+                Vector2(0, 1 - tv.y),
+              ],
+              size: clipSize,
+              children: [
+                playerControllButton(
+                  size: dButtonAreaSize,
+                  position: Vector2(xButtonAreaSize.x * 0.5,
+                      clipSize.y - yButtonAreaSize.y * 0.5),
+                  anchor: Anchor.center,
+                  angle: -0.75 * pi,
+                  move: Move.downLeft,
+                ),
+              ],
+            )
+          : playerControllButton(
+              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+              position: Vector2(
+                  0,
+                  640.0 -
+                      topPaddingSize.y -
+                      menuButtonAreaSize.y -
+                      yButtonAreaSize.y),
+              arrowAngle: -0.75 * pi,
+              move: Move.downLeft,
+            ),
       // 画面右下の操作ボタン
-      ClipComponent.polygon(
-        points: [
-          Vector2(1, 1 - tv.y),
-          Vector2(1, 1),
-          Vector2(1 - tv.x, 1),
-          Vector2(1, 1 - tv.y),
-        ],
-        size: clipSize,
-        children: [
-          playerControllButton(
-            size: dButtonAreaSize,
-            position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
-                clipSize.y - yButtonAreaSize.y * 0.5),
-            anchor: Anchor.center,
-            angle: 0.75 * pi,
-            move: Move.downRight,
-          ),
-        ],
-      ),
+      SettingVariables.wideDiagonalMoveButton
+          ? ClipComponent.polygon(
+              points: [
+                Vector2(1, 1 - tv.y),
+                Vector2(1, 1),
+                Vector2(1 - tv.x, 1),
+                Vector2(1, 1 - tv.y),
+              ],
+              size: clipSize,
+              children: [
+                playerControllButton(
+                  size: dButtonAreaSize,
+                  position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                      clipSize.y - yButtonAreaSize.y * 0.5),
+                  anchor: Anchor.center,
+                  angle: 0.75 * pi,
+                  move: Move.downRight,
+                ),
+              ],
+            )
+          : playerControllButton(
+              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+              position: Vector2(
+                  360.0 - xButtonAreaSize.x,
+                  640.0 -
+                      topPaddingSize.y -
+                      menuButtonAreaSize.y -
+                      yButtonAreaSize.y),
+              arrowAngle: 0.75 * pi,
+              move: Move.downRight,
+            ),
     ];
     // 上下左右の操作ボタン領域(斜めボタンの領域は削る)
     clipByDiagonalMoveButton ??= ClipComponent.polygon(
@@ -284,9 +325,14 @@ class GameSeq extends Sequence
     // 斜め移動可能かどうかで操作ボタンの表示を変える
     playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
     if (stage.getLegAbility()) {
-      clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-      playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-      playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+      if (SettingVariables.wideDiagonalMoveButton) {
+        clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+        playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+      } else {
+        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+      }
     } else {
       playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
     }
@@ -333,24 +379,30 @@ class GameSeq extends Sequence
       ],
     ));
     // 手の能力ボタン領域
-    add(GameSpriteOnOffButton(
+    handAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getHandAbility(),
       onChanged: (bool isOn) => stage.setHandAbility(isOn),
       size: handAbilityButtonAreaSize,
       position: Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y),
       sprite: Sprite(handAbilityImg),
-    ));
+    );
+    add(handAbilityOnOffButton);
     // 足の能力ボタン領域
-    add(GameSpriteOnOffButton(
+    legAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getLegAbility(),
       onChanged: (bool isOn) {
         stage.setLegAbility(isOn);
         playerControllButtonsArea!
             .removeAll(playerControllButtonsArea!.children);
         if (stage.getLegAbility()) {
-          clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-          playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+          if (SettingVariables.wideDiagonalMoveButton) {
+            clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+            playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+          } else {
+            playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+          }
         } else {
           playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
         }
@@ -360,7 +412,8 @@ class GameSeq extends Sequence
           xPaddingSize.x + handAbilityButtonAreaSize.x + paddingAbilityButtons,
           640.0 - menuButtonAreaSize.y),
       sprite: Sprite(legAbilityImg),
-    ));
+    );
+    add(legAbilityOnOffButton);
     // コインのアイコン領域
     add(RectangleComponent(
       size: coinIconAreaSize,
@@ -438,7 +491,27 @@ class GameSeq extends Sequence
     if (stage.isClear()) return;
     // ゲームオーバー済みなら何もしない
     if (stage.isGameover) return;
+    bool beforeLegAbility = stage.getLegAbility();
     stage.update(dt, pushingMoveButton, game.world, game.camera);
+    // 手の能力取得状況更新
+    handAbilityOnOffButton.isOn = stage.getHandAbility();
+    // 足の能力取得状況更新
+    if (beforeLegAbility != stage.getLegAbility()) {
+      legAbilityOnOffButton.isOn = stage.getLegAbility();
+      playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
+      if (stage.getLegAbility()) {
+        if (SettingVariables.wideDiagonalMoveButton) {
+          clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+          playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+        } else {
+          playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+        }
+      } else {
+        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+      }
+    }
     // スコア表示更新
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示
@@ -485,7 +558,7 @@ class GameSeq extends Sequence
     }
     // コイン数表示更新
     coinNumText.text = "${stage.coinNum}";
-    // 【テストモード】
+    // 【テストモード】現在座標表示
     if (game.testMode) {
       currentPosText.text = "pos:(${stage.player.pos.x},${stage.player.pos.y})";
     }
