@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -273,12 +274,16 @@ class Player extends StageObj {
           stage.setHandAbility(true);
           // ゴリラ、いなくなる
           stage.setStaticType(to, StageObjType.none, gameWorld);
+          // 効果音を鳴らす
+          Audio.playSound(Sound.getSkill);
         } else if (stage.get(to).type == StageObjType.rabbit) {
           // 移動先がうさぎだった場合
           // 足の能力を習得
           stage.setLegAbility(true);
           // うさぎ、いなくなる
           stage.setStaticType(to, StageObjType.none, gameWorld);
+          // 効果音を鳴らす
+          Audio.playSound(Sound.getSkill);
         }
 
         // 各種移動中変数初期化

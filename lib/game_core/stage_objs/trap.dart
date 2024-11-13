@@ -1,3 +1,4 @@
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -72,6 +73,12 @@ class Trap extends StageObj {
       for (final killing in killings) {
         gameWorld.remove(killing.animationComponent);
         stage.enemies.remove(killing);
+        // 効果音を鳴らす
+        switch (level) {
+          default:
+            Audio.playSound(Sound.trap1);
+            break;
+        }
       }
     }
   }

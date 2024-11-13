@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
@@ -15,7 +16,6 @@ import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart' hide Route, OverlayRoute;
 import 'package:path_provider/path_provider.dart';
-import 'package:flame_audio/flame_audio.dart';
 
 class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
   late final RouterComponent _router;
@@ -106,10 +106,8 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
       setAndSaveHighScore(0);
     }
 
-    // BGMの準備
-    FlameAudio.bgm.initialize();
-    await FlameAudio.audioCache
-        .loadAll(['kettei.mp3', 'merge.mp3', 'maou_bgm_8bit29.mp3']);
+    // オーディオの準備
+    await Audio.onLoad();
   }
 
   /// ハイスコアの更新・セーブデータに保存

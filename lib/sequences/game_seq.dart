@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
@@ -14,7 +15,6 @@ import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
 import 'package:flame/palette.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart' hide Image;
 
 class GameSeq extends Sequence
@@ -95,7 +95,7 @@ class GameSeq extends Sequence
     legAbilityImg = await Flame.images.load('leg_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     // BGM再生
-    FlameAudio.bgm.play('maou_bgm_8bit29.mp3');
+    Audio.playBGM(Bgm.game);
     await initialize();
   }
 
@@ -103,23 +103,23 @@ class GameSeq extends Sequence
   void onFocus(String? before) {
     if (before == 'menu') {
       // BGM再開
-      FlameAudio.bgm.resume();
+      Audio.resumeBGM();
     } else {
       // BGM再生
-      FlameAudio.bgm.play('maou_bgm_8bit29.mp3');
+      Audio.playBGM(Bgm.game);
     }
   }
 
   @override
   void onUnFocus() {
     // BGM中断
-    FlameAudio.bgm.pause();
+    Audio.pauseBGM();
   }
 
   @override
   void onRemove() {
     // BGM停止
-    FlameAudio.bgm.stop();
+    Audio.stopBGM();
   }
 
   // 初期化（というよりリセット）

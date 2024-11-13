@@ -1,3 +1,4 @@
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -105,6 +106,8 @@ class Bomb extends StageObj {
         breakBottomOffset: 2,
         onlyDelete: true,
       );
+      // 効果音を鳴らす
+      Audio.playSound(Sound.explode);
     }
   }
 
