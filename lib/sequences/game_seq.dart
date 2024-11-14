@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:box_pusher/audio.dart';
+import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
@@ -14,7 +15,6 @@ import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
-import 'package:flame/palette.dart';
 import 'package:flutter/material.dart' hide Image;
 
 class GameSeq extends Sequence
@@ -339,25 +339,32 @@ class GameSeq extends Sequence
 
     add(playerControllButtonsArea!);
     // 画面上部、ボタンではない領域
-    add(
-      ButtonComponent(
-        button: RectangleComponent(
-            size: topPaddingSize,
-            paint: Paint()
-              ..color = const Color(0x80000000)
-              ..style = PaintingStyle.fill),
-      ),
-    );
-    // メニュー領域
     scoreText = TextComponent(
       text: "${stage.scoreVisual}",
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: 'Aboreto',
-          color: Color(0xff000000),
+          color: Color(0xffffffff),
         ),
       ),
     );
+    add(
+      ButtonComponent(
+        button: RectangleComponent(
+          size: topPaddingSize,
+          paint: Paint()
+            ..color = const Color(0x80000000)
+            ..style = PaintingStyle.fill,
+          children: [
+            AlignComponent(
+              alignment: Anchor.bottomCenter,
+              child: scoreText,
+            ),
+          ],
+        ),
+      ),
+    );
+    // メニュー領域
     add(RectangleComponent(
       size: menuButtonAreaSize,
       position: Vector2(0, 640.0 - menuButtonAreaSize.y),
@@ -371,10 +378,6 @@ class GameSeq extends Sequence
           paint: Paint()
             ..color = Colors.white
             ..style = PaintingStyle.fill,
-        ),
-        AlignComponent(
-          alignment: Anchor.center,
-          child: scoreText,
         ),
       ],
     ));
@@ -516,8 +519,8 @@ class GameSeq extends Sequence
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示
     int addedScore = stage.addedScore;
-    if (addedScore > 0) {
-      final addingScoreText = CaTextComponent(
+    if (addedScore > 0 && SettingVariables.showAddedScoreOnScore) {
+      final addingScoreText = OpacityEffectTextComponent(
         text: "+$addedScore",
         textRenderer: TextPaint(
           style: const TextStyle(
@@ -644,42 +647,4 @@ class GameSeq extends Sequence
   // TapCallbacks実装時には必要(PositionComponentでは不要)
   @override
   bool containsLocalPoint(Vector2 point) => true;
-}
-
-// TextComponentにOpacityEffectを適用させるためのワークアラウンド
-// https://github.com/flame-engine/flame/issues/1013
-mixin HasOpacityProvider on Component implements OpacityProvider {
-  double _opacity = 1;
-  Paint _paint = BasicPalette.white.paint();
-
-  @override
-  double get opacity => _opacity;
-
-  @override
-  set opacity(double value) {
-    if (value == _opacity) return;
-    _opacity = value;
-    _paint = Paint()..color = Colors.white.withOpacity(value);
-  }
-
-  @override
-  void renderTree(Canvas canvas) {
-    canvas.saveLayer(null, Paint()..blendMode = BlendMode.srcOver);
-    super.renderTree(canvas);
-    canvas.drawPaint(_paint..blendMode = BlendMode.modulate);
-    canvas.restore();
-  }
-}
-
-class CaTextComponent extends TextComponent with HasOpacityProvider {
-  CaTextComponent(
-      {super.anchor,
-      super.angle,
-      super.children,
-      super.position,
-      super.priority,
-      super.scale,
-      super.size,
-      super.text,
-      super.textRenderer});
 }

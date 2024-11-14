@@ -57,13 +57,13 @@ bool isLoaded = false;
 class Audio {
   static Future<void> onLoad() async {
     assert(!isLoaded, '[Audioクラス]onLoad()が2回呼ばれた');
-    // BGMの準備
-    FlameAudio.bgm.initialize();
     // 各種音楽ファイル読み込み
     await FlameAudio.audioCache
         .loadAll([for (final bgm in Bgm.values) bgm.fileName]);
     await FlameAudio.audioCache
         .loadAll([for (final sound in Sound.values) sound.fileName]);
+    // BGMの準備
+    FlameAudio.bgm.initialize();
     isLoaded = true;
   }
 

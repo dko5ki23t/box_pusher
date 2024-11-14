@@ -1,3 +1,4 @@
+import 'package:flame/components.dart' hide Block;
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -59,6 +60,15 @@ class SettingVariables {
 
   /// 斜め移動ボタンの範囲を広く取るかどうか（広く取ると上下左右のボタンを台形にして小さくするので複雑になるし、斜めボタンを誤タップしやすくなる）
   static bool wideDiagonalMoveButton = false;
+
+  /// スコア加算表示(+100とか)を現在のスコアの上に表示するかどうか
+  static bool showAddedScoreOnScore = false;
+
+  /// スコア加算表示(+100とか)をマージ位置に表示するかどうか
+  static bool showAddedScoreOnMergePos = true;
+
+  /// スコア加算表示(+100とか)エフェクトの移動量
+  static Vector2 addedScoreEffectMove = Vector2(0, -10.0);
 
   /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, BlockFloorPattern> blockFloorMap = {
