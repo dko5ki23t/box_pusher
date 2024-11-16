@@ -19,7 +19,7 @@ class Player extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
-            priority: Stage.dynamicPriority,
+            priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,
             position:
@@ -32,23 +32,37 @@ class Player extends StageObj {
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
             1: {
-              Move.none: SpriteAnimation.fromFrameData(
-                playerImg,
-                SpriteAnimationData.sequenced(
-                    amount: 2,
-                    stepTime: Stage.objectStepTime,
-                    textureSize: Stage.cellSize),
-              ),
+              Move.down: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.up: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.left: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.right: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
             },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.player,
             level: level,
           ),
-        ) {
-    // TODO
-    vector = Move.none;
-  }
+        );
 
   /// 押しているオブジェクトを「行使」しているかどうか
   /// ex.) ドリルによるブロックの破壊
@@ -59,6 +73,15 @@ class Player extends StageObj {
 
   /// 足の能力が有効か
   bool isLegAbilityOn = false;
+
+  /// ポケットの能力が有効か
+  bool isPocketAbilityOn = false;
+
+  /// ポケットの能力で保持しているアイテム
+  StageObj? pocketItem;
+
+  /// アーマーの能力が有効か
+  bool isArmerAbilityOn = false;
 
   @override
   void update(
@@ -80,6 +103,9 @@ class Player extends StageObj {
       if (moveInput == Move.none) {
         return;
       }
+      // 動けないとしても、向きは変更
+      vector = moveInput.toStraightLR();
+
       StageObj toObj = stage.get(to);
       StageObj toToObj = stage.get(toTo);
 
@@ -284,6 +310,14 @@ class Player extends StageObj {
           stage.setStaticType(to, StageObjType.none, gameWorld);
           // 効果音を鳴らす
           Audio.playSound(Sound.getSkill);
+        } else if (stage.get(to).type == StageObjType.kangaroo) {
+          // 移動先がカンガルーだった場合
+          // ポケットの能力を習得
+          stage.setPocketAbility(true);
+          // カンガルー、いなくなる
+          stage.setStaticType(to, StageObjType.none, gameWorld);
+          // 効果音を鳴らす
+          Audio.playSound(Sound.getSkill);
         }
 
         // 各種移動中変数初期化
@@ -293,6 +327,16 @@ class Player extends StageObj {
         executing = false;
       }
     }
+  }
+
+  @override
+  Map<String, dynamic> encode() {
+    Map<String, dynamic> ret = super.encode();
+    ret['handAbility'] = pushableNum;
+    ret['legAbility'] = isLegAbilityOn;
+    ret['pocketAbility'] = isPocketAbilityOn;
+    ret['pocketItem'] = pocketItem?.encode();
+    return ret;
   }
 
   @override

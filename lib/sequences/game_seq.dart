@@ -46,11 +46,17 @@ class GameSeq extends Sequence
   /// 足の能力ボタン領域
   static Vector2 get legAbilityButtonAreaSize => Vector2(40.0, 40.0);
 
-  /// コインのアイコン領域
-  static Vector2 get coinIconAreaSize => Vector2(40.0, 40.0);
+  /// アーマー能力ボタン領域
+  static Vector2 get armerAbilityButtonAreaSize => Vector2(40.0, 40.0);
 
-  /// コイン数領域
-  static Vector2 get coinNumAreaSize => Vector2(40.0, 40.0);
+  /// ポケット能力ボタン領域
+  static Vector2 get pocketAbilityButtonAreaSize => Vector2(40.0, 40.0);
+
+  /// スコア領域
+  static Vector2 get scoreAreaSize => Vector2(70.0, 35.0);
+
+  /// コインのアイコン+コイン数領域
+  static Vector2 get coinsAreaSize => Vector2(50.0, 35.0);
 
   /// 能力ボタン間の余白
   static double get paddingAbilityButtons => 10.0;
@@ -75,6 +81,8 @@ class GameSeq extends Sequence
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
   late final Image legAbilityImg;
+  late final Image armerAbilityImg;
+  late final Image pocketAbilityImg;
   late final Image settingsImg;
   late TextComponent currentPosText;
   late TextComponent scoreText;
@@ -85,6 +93,8 @@ class GameSeq extends Sequence
   List<PositionComponent>? playerDiagonalMoveButtons;
   late GameSpriteOnOffButton handAbilityOnOffButton;
   late GameSpriteOnOffButton legAbilityOnOffButton;
+  late GameSpriteOnOffButton armerAbilityOnOffButton;
+  late GameSpriteOnOffButton pocketAbilityOnOffButton;
 
   @override
   Future<void> onLoad() async {
@@ -93,6 +103,8 @@ class GameSeq extends Sequence
         await Flame.images.load('player_controll_arrow.png');
     handAbilityImg = await Flame.images.load('hand_ability.png');
     legAbilityImg = await Flame.images.load('leg_ability.png');
+    armerAbilityImg = await Flame.images.load('armer_ability.png');
+    pocketAbilityImg = await Flame.images.load('pocket_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     // BGM再生
     Audio.playBGM(Bgm.game);
@@ -339,8 +351,19 @@ class GameSeq extends Sequence
 
     add(playerControllButtonsArea!);
     // 画面上部、ボタンではない領域
+    // スコア
     scoreText = TextComponent(
       text: "${stage.scoreVisual}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          color: Color(0xffffffff),
+        ),
+      ),
+    );
+    // コイン数
+    coinNumText = TextComponent(
+      text: "${stage.coinNum}",
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: 'Aboreto',
@@ -356,9 +379,34 @@ class GameSeq extends Sequence
             ..color = const Color(0x80000000)
             ..style = PaintingStyle.fill,
           children: [
+            // スコア（中央に配置）
             AlignComponent(
               alignment: Anchor.bottomCenter,
-              child: scoreText,
+              child: PositionComponent(
+                size: scoreAreaSize,
+                children: [
+                  AlignComponent(
+                    alignment: Anchor.center,
+                    child: scoreText,
+                  )
+                ],
+              ),
+            ),
+            // コイン（右側に配置）
+            AlignComponent(
+              alignment: Anchor.bottomRight,
+              child: PositionComponent(
+                size: coinsAreaSize,
+                children: [
+                  AlignComponent(
+                      alignment: Anchor.centerLeft,
+                      child: SpriteComponent.fromImage(coinImg)),
+                  AlignComponent(
+                    alignment: Anchor.centerRight,
+                    child: coinNumText,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -381,16 +429,20 @@ class GameSeq extends Sequence
         ),
       ],
     ));
+    Vector2 abilityButtonPos =
+        Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y);
     // 手の能力ボタン領域
     handAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getHandAbility(),
       onChanged: (bool isOn) => stage.setHandAbility(isOn),
       size: handAbilityButtonAreaSize,
-      position: Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y),
+      position: abilityButtonPos,
       sprite: Sprite(handAbilityImg),
     );
     add(handAbilityOnOffButton);
     // 足の能力ボタン領域
+    abilityButtonPos +=
+        Vector2(handAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     legAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getLegAbility(),
       onChanged: (bool isOn) {
@@ -411,56 +463,32 @@ class GameSeq extends Sequence
         }
       },
       size: legAbilityButtonAreaSize,
-      position: Vector2(
-          xPaddingSize.x + handAbilityButtonAreaSize.x + paddingAbilityButtons,
-          640.0 - menuButtonAreaSize.y),
+      position: abilityButtonPos,
       sprite: Sprite(legAbilityImg),
     );
     add(legAbilityOnOffButton);
-    // コインのアイコン領域
-    add(RectangleComponent(
-      size: coinIconAreaSize,
-      position: Vector2(
-          360.0 -
-              xPaddingSize.x -
-              settingsButtonAreaSize.x -
-              paddingAbilityButtons * 2 -
-              coinNumAreaSize.x -
-              coinIconAreaSize.x,
-          640.0 - menuButtonAreaSize.y),
-      children: [
-        AlignComponent(
-          alignment: Anchor.center,
-          child: SpriteComponent.fromImage(coinImg),
-        ),
-      ],
-    ));
-    // コイン数領域
-    coinNumText = TextComponent(
-      text: "${stage.coinNum}",
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: 'Aboreto',
-          color: Color(0xff000000),
-        ),
-      ),
+    // アーマー能力ボタン領域
+    abilityButtonPos +=
+        Vector2(legAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    armerAbilityOnOffButton = GameSpriteOnOffButton(
+      isOn: stage.getHandAbility(),
+      onChanged: (bool isOn) => stage.setHandAbility(isOn),
+      size: armerAbilityButtonAreaSize,
+      position: abilityButtonPos,
+      sprite: Sprite(armerAbilityImg),
     );
-    add(RectangleComponent(
-      size: coinNumAreaSize,
-      position: Vector2(
-          360.0 -
-              xPaddingSize.x -
-              settingsButtonAreaSize.x -
-              paddingAbilityButtons -
-              coinNumAreaSize.x,
-          640.0 - menuButtonAreaSize.y),
-      children: [
-        AlignComponent(
-          alignment: Anchor.center,
-          child: coinNumText,
-        ),
-      ],
-    ));
+    add(armerAbilityOnOffButton);
+    // ポケット能力ボタン領域
+    abilityButtonPos +=
+        Vector2(armerAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    pocketAbilityOnOffButton = GameSpriteOnOffButton(
+      isOn: stage.getHandAbility(),
+      onChanged: (bool isOn) => stage.setHandAbility(isOn),
+      size: pocketAbilityButtonAreaSize,
+      position: abilityButtonPos,
+      sprite: Sprite(pocketAbilityImg),
+    );
+    add(pocketAbilityOnOffButton);
     // メニューボタン領域
     add(GameSpriteButton(
       size: settingsButtonAreaSize,

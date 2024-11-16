@@ -25,7 +25,7 @@ class Spike extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
-            priority: Stage.dynamicPriority,
+            priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,
             position:

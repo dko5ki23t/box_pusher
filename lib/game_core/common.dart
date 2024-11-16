@@ -198,6 +198,20 @@ extension MoveExtent on Move {
     }
   }
 
+  /// 斜めの向きを直線向き（左右）に変換
+  Move toStraightLR() {
+    switch (this) {
+      case Move.downLeft:
+      case Move.upLeft:
+        return Move.left;
+      case Move.downRight:
+      case Move.upRight:
+        return Move.right;
+      default:
+        return this;
+    }
+  }
+
   /// 対応するベクトル
   Vector2 get vector {
     switch (this) {

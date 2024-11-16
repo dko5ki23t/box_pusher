@@ -150,7 +150,7 @@ class Swordsman extends StageObj {
         },
         super(
           animationComponent: SpriteAnimationComponent(
-            priority: Stage.dynamicPriority,
+            priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,
             position:

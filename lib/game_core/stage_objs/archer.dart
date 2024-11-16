@@ -111,7 +111,7 @@ class Archer extends StageObj {
         },
         super(
           animationComponent: SpriteAnimationComponent(
-            priority: Stage.dynamicPriority,
+            priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,
             position:
@@ -240,7 +240,7 @@ class Archer extends StageObj {
         }
         gameWorld.add(SpriteAnimationComponent(
           animation: arrowAnimation,
-          priority: Stage.dynamicPriority,
+          priority: Stage.movingPriority,
           children: [
             MoveEffect.by(
               Vector2(Stage.cellSize.x * vector.vector.x * 5,

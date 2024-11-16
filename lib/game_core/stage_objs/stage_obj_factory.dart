@@ -8,6 +8,7 @@ import 'package:box_pusher/game_core/stage_objs/jewel.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/guardian.dart';
+import 'package:box_pusher/game_core/stage_objs/kangaroo.dart';
 import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
@@ -150,11 +151,14 @@ class StageObjFactory {
             pos: pos,
             level: typeLevel.level);
       case StageObjType.player:
+        assert(
+            isReady, 'Playerはこの関数で作成せず、StageObjFactory.createPlayer()で作成すること。');
         return Player(
             playerImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
-            level: typeLevel.level);
+            level: typeLevel.level)
+          ..vector = vector;
       case StageObjType.block:
         return Block(
             blockImg: baseImages[type]!,
@@ -272,7 +276,25 @@ class StageObjFactory {
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
+      case StageObjType.kangaroo:
+        return Kangaroo(
+            kangarooImg: baseImages[type]!,
+            errorImg: errorImg,
+            pos: pos,
+            level: typeLevel.level);
     }
+  }
+
+  Player createPlayer({
+    required Point pos,
+    required Move vector,
+  }) {
+    assert(isReady, 'StageObjFactory.onLoad() is not called!');
+    return Player(
+      playerImg: baseImages[StageObjType.player]!,
+      errorImg: errorImg,
+      pos: pos,
+    )..vector = vector;
   }
 
   StageObj createFromMap(Map<String, dynamic> src) {
@@ -281,6 +303,17 @@ class StageObjFactory {
       pos: Point.decode(src['pos']),
       vector: Move.values[src['vector']],
     );
+  }
+
+  Player createPlayerFromMap(Map<String, dynamic> src) {
+    return createPlayer(
+      pos: Point.decode(src['pos']),
+      vector: Move.values[src['vector']],
+    )
+      ..pushableNum = src['handAbility']
+      ..isLegAbilityOn = src['legAbility']
+      ..isPocketAbilityOn = src['pocketAbility']
+      ..pocketItem = src['pocketItem'];
   }
 
   void setPosition(StageObj obj, {Vector2? offset}) {

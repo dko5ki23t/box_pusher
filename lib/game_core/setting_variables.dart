@@ -135,5 +135,6 @@ class SettingVariables {
   static Map<Point, StageObjType> animalsPoints = {
     Point(-5, -5): StageObjType.gorilla,
     Point(5, 5): StageObjType.rabbit,
+    Point(-5, 5): StageObjType.kangaroo,
   };
 }

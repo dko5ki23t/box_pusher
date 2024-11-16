@@ -114,7 +114,7 @@ class Wizard extends StageObj {
         },
         super(
           animationComponent: SpriteAnimationComponent(
-            priority: Stage.dynamicPriority,
+            priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,
             position:
@@ -228,7 +228,7 @@ class Wizard extends StageObj {
           movingAmount >= Stage.cellSize.x / 2) {
         gameWorld.add(SpriteAnimationComponent(
           animation: magicAnimation,
-          priority: Stage.dynamicPriority,
+          priority: Stage.movingPriority,
           children: [
             MoveEffect.by(
               Vector2(Stage.cellSize.x * vector.vector.x * 5,

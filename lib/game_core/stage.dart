@@ -43,11 +43,14 @@ class Stage {
   /// 静止物のzインデックス
   static const staticPriority = 1;
 
-  /// 動く物のzインデックス
+  /// 動かせる物のzインデックス（トラップなど）
   static const dynamicPriority = 2;
 
+  /// 動く物のzインデックス（プレイヤー、敵など）
+  static const movingPriority = 3;
+
   /// 画面前面に表示する物（スコア加算表示等）のzインデックス
-  static const frontPriority = 3;
+  static const frontPriority = 4;
 
   bool isReady = false;
 
@@ -87,9 +90,6 @@ class Stage {
   /// ステージの右下座標(プレイヤーの動きにつれて拡張されていく)
   Point stageRB = Point(0, 0);
 
-  /// スコア
-  int _score = 0;
-
   /// スコア(加算途中の、表示上のスコア)
   double _scoreVisual = 0;
 
@@ -99,8 +99,26 @@ class Stage {
   /// スコア加算時間(s)
   final double _scorePlusTime = 0.3;
 
+  /// コイン数の最大値
+  static int maxCoinNum = 99;
+
+  int _coinNum = 0;
+
+  /// 所持しているコイン数
+  set coinNum(int num) {
+    _coinNum = num.clamp(0, maxCoinNum);
+  }
+
+  int get coinNum => _coinNum;
+
+  /// スコアの最大値
+  static int maxScore = 99999999;
+
+  int _score = 0;
+
+  /// スコア
   set score(int s) {
-    _score = s;
+    _score = s.clamp(0, maxScore);
     _addedScore += (_score - _scoreVisual).round();
     _scorePlusSpeed = (_score - _scoreVisual) / _scorePlusTime;
   }
@@ -119,9 +137,6 @@ class Stage {
     _addedScore = 0;
     return ret;
   }
-
-  /// 所持しているコイン数
-  int coinNum = 0;
 
   Stage() {
     objFactory = StageObjFactory();
@@ -155,6 +170,7 @@ class Stage {
   Map<String, dynamic> encodeStageData() {
     final Map<String, dynamic> ret = {};
     ret['score'] = score;
+    ret['coin'] = coinNum;
     ret['stageLT'] = stageLT.encode();
     ret['stageRB'] = stageRB.encode();
     final Map<String, dynamic> staticObjsMap = {};
@@ -179,8 +195,6 @@ class Stage {
     ];
     ret['beltPoints'] = beltPointsList;
     ret['player'] = player.encode();
-    ret['handAbility'] = player.pushableNum;
-    ret['legAbility'] = player.isLegAbilityOn;
     return ret;
   }
 
@@ -423,6 +437,8 @@ class Stage {
     // スコア設定
     _score = stageData['score'];
     _scoreVisual = _score.toDouble();
+    // コイン数設定
+    coinNum = stageData['coin'];
 
     // 各種ステージオブジェクト設定
     staticObjs.clear();
@@ -449,9 +465,7 @@ class Stage {
     gameWorld.addAll([for (final e in boxes) e.animationComponent]);
     gameWorld.addAll([for (final e in enemies) e.animationComponent]);
     // プレイヤー作成
-    player = objFactory.createFromMap(stageData['player']) as Player;
-    player.pushableNum = stageData['handAbility'];
-    player.isLegAbilityOn = stageData['legAbility'];
+    player = objFactory.createPlayerFromMap(stageData['player']);
     gameWorld.addAll([player.animationComponent]);
     // カメラはプレイヤーに追従
     camera.follow(
@@ -509,9 +523,7 @@ class Stage {
     //gameWorld.addAll([for (final e in enemies) e.animationComponent]);
 
     // プレイヤー作成
-    player = objFactory.create(
-        typeLevel: StageObjTypeLevel(type: StageObjType.player, level: 1),
-        pos: Point(0, 0)) as Player;
+    player = objFactory.createPlayer(pos: Point(0, 0), vector: Move.down);
     gameWorld.addAll([player.animationComponent]);
     // カメラはプレイヤーに追従
     camera.follow(
@@ -716,6 +728,22 @@ class Stage {
 
   bool getLegAbility() {
     return player.isLegAbilityOn;
+  }
+
+  void setPocketAbility(bool isOn) {
+    player.isPocketAbilityOn = isOn;
+  }
+
+  bool getPocketAbility() {
+    return player.isPocketAbilityOn;
+  }
+
+  void setArmerAbility(bool isOn) {
+    player.isArmerAbilityOn = isOn;
+  }
+
+  bool getArmerAbility() {
+    return player.isArmerAbilityOn;
   }
 
   bool isClear() {
