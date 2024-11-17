@@ -297,7 +297,7 @@ class Player extends StageObj {
         } else if (stage.get(to).type == StageObjType.gorilla) {
           // 移動先がゴリラだった場合
           // 手の能力を習得
-          stage.setHandAbility(true);
+          pushableNum = -1;
           // ゴリラ、いなくなる
           stage.setStaticType(to, StageObjType.none, gameWorld);
           // 効果音を鳴らす
@@ -305,7 +305,7 @@ class Player extends StageObj {
         } else if (stage.get(to).type == StageObjType.rabbit) {
           // 移動先がうさぎだった場合
           // 足の能力を習得
-          stage.setLegAbility(true);
+          isLegAbilityOn = true;
           // うさぎ、いなくなる
           stage.setStaticType(to, StageObjType.none, gameWorld);
           // 効果音を鳴らす
@@ -313,7 +313,7 @@ class Player extends StageObj {
         } else if (stage.get(to).type == StageObjType.kangaroo) {
           // 移動先がカンガルーだった場合
           // ポケットの能力を習得
-          stage.setPocketAbility(true);
+          isPocketAbilityOn = true;
           // カンガルー、いなくなる
           stage.setStaticType(to, StageObjType.none, gameWorld);
           // 効果音を鳴らす
@@ -325,6 +325,35 @@ class Player extends StageObj {
         pushings.clear();
         movingAmount = 0;
         executing = false;
+      }
+    }
+  }
+
+  void usePocketAbility(Stage stage, World gameWorld) {
+    // ポケットの能力を取得していないならreturn
+    if (!isPocketAbilityOn) return;
+    // 移動中ならreturn
+    if (moving != Move.none) return;
+
+    if (pocketItem == null) {
+      // 目の前のオブジェクトをポケットに入れる
+      final target = stage.get(pos + vector.point);
+      // 押せるものなら入れることができる
+      if (target.pushable) {
+        pocketItem = target;
+        gameWorld.remove(target.animationComponent);
+        stage.boxes.remove(target);
+      }
+    } else {
+      // 目の前に置く
+      final target = stage.get(pos + vector.point);
+      // 置ける場所/敵なら置く
+      if (target.puttable || (target.isEnemy && pocketItem!.enemyMovable)) {
+        stage.boxes.add(pocketItem!);
+        pocketItem!.pos = pos + vector.point;
+        stage.objFactory.setPosition(pocketItem!);
+        gameWorld.add(pocketItem!.animationComponent);
+        pocketItem = null;
       }
     }
   }

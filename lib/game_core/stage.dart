@@ -730,12 +730,16 @@ class Stage {
     return player.isLegAbilityOn;
   }
 
-  void setPocketAbility(bool isOn) {
-    player.isPocketAbilityOn = isOn;
+  void usePocketAbility(World gameWorld) {
+    player.usePocketAbility(this, gameWorld);
   }
 
-  bool getPocketAbility() {
-    return player.isPocketAbilityOn;
+  /// 現在のポケット能力で有しているオブジェクトの画像
+  SpriteAnimation? getPocketAbilitySpriteAnimation() {
+    if (!player.isPocketAbilityOn || player.pocketItem == null) {
+      return null;
+    }
+    return player.pocketItem!.animationComponent.animation;
   }
 
   void setArmerAbility(bool isOn) {

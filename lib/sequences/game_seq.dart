@@ -94,7 +94,7 @@ class GameSeq extends Sequence
   late GameSpriteOnOffButton handAbilityOnOffButton;
   late GameSpriteOnOffButton legAbilityOnOffButton;
   late GameSpriteOnOffButton armerAbilityOnOffButton;
-  late GameSpriteOnOffButton pocketAbilityOnOffButton;
+  late GameSpriteAnimationButton pocketAbilityButton;
 
   @override
   Future<void> onLoad() async {
@@ -481,14 +481,14 @@ class GameSeq extends Sequence
     // ポケット能力ボタン領域
     abilityButtonPos +=
         Vector2(armerAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
-    pocketAbilityOnOffButton = GameSpriteOnOffButton(
-      isOn: stage.getHandAbility(),
-      onChanged: (bool isOn) => stage.setHandAbility(isOn),
+    pocketAbilityButton = GameSpriteAnimationButton(
+      onReleased: () => stage.usePocketAbility(game.world),
       size: pocketAbilityButtonAreaSize,
       position: abilityButtonPos,
-      sprite: Sprite(pocketAbilityImg),
+      animation:
+          SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0),
     );
-    add(pocketAbilityOnOffButton);
+    add(pocketAbilityButton);
     // メニューボタン領域
     add(GameSpriteButton(
       size: settingsButtonAreaSize,
@@ -543,6 +543,10 @@ class GameSeq extends Sequence
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
       }
     }
+    // ポケットの能力状況更新
+    final pocketItemAnimation = stage.getPocketAbilitySpriteAnimation() ??
+        SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0);
+    pocketAbilityButton.animation = pocketItemAnimation;
     // スコア表示更新
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示
