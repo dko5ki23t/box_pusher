@@ -188,7 +188,7 @@ class StageObjTypeLevel {
     return {'type': type.str, 'level': level};
   }
 
-  static decode(Map<String, dynamic> src) {
+  static StageObjTypeLevel decode(Map<String, dynamic> src) {
     return StageObjTypeLevel(
       type: StageObjTypeExtent.fromStr(src['type']),
       level: src['level'],

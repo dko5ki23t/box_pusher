@@ -45,6 +45,14 @@ class Trap extends StageObj {
                     srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
               ], stepTime: 1.0)
             },
+            3: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(trapImg,
+                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                Sprite(trapImg,
+                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize)
+              ], stepTime: Stage.objectStepTime)
+            },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.trap,
