@@ -320,7 +320,8 @@ class StageObjFactory {
       ..pushableNum = src['handAbility']
       ..isLegAbilityOn = src['legAbility']
       ..isPocketAbilityOn = src['pocketAbility']
-      ..pocketItem = createFromMap(src['pocketItem']);
+      ..pocketItem =
+          src['pocketItem'] != null ? createFromMap(src['pocketItem']) : null;
   }
 
   void setPosition(StageObj obj, {Vector2? offset}) {

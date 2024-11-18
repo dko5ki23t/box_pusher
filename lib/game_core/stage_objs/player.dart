@@ -147,8 +147,8 @@ class Player extends StageObj {
                   (toToObj.isEnemy &&
                       !toObj
                           .enemyMovable) || // 押した先が敵かつ押すオブジェクトに敵が移動可能ではない(≒停止物)
-                  (i == end - 1 &&
-                      !toToObj.puttable && // 押した先が、何かを置けるオブジェクト ではない
+                  (!toToObj.puttable && // 押した先が、何かを置けるオブジェクト ではない
+                      !toToObj.pushable && // 押した先が押せない
                       !(toObj.isSameTypeLevel(toToObj) &&
                           toObj.mergable)) // 押した先とマージ できない)
               ) {
