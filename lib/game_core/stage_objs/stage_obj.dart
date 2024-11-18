@@ -21,6 +21,7 @@ import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
+import 'package:box_pusher/game_core/stage_objs/turtle.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:box_pusher/game_core/stage_objs/water.dart';
 import 'package:box_pusher/game_core/stage_objs/wizard.dart';
@@ -49,6 +50,7 @@ enum StageObjType {
   gorilla,
   rabbit,
   kangaroo,
+  turtle,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -73,6 +75,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.gorilla: 'G',
     StageObjType.rabbit: 'R',
     StageObjType.kangaroo: 'k',
+    StageObjType.turtle: 't',
   };
 
   String get str => strMap[this]!;
@@ -119,6 +122,8 @@ extension StageObjTypeExtent on StageObjType {
         return Rabbit;
       case StageObjType.kangaroo:
         return Kangaroo;
+      case StageObjType.turtle:
+        return Turtle;
     }
   }
 
@@ -164,6 +169,8 @@ extension StageObjTypeExtent on StageObjType {
         return Rabbit.imageFileName;
       case StageObjType.kangaroo:
         return Kangaroo.imageFileName;
+      case StageObjType.turtle:
+        return Turtle.imageFileName;
     }
   }
 

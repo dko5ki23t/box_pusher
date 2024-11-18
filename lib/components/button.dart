@@ -476,7 +476,7 @@ class GameSpriteAnimationButton extends ButtonComponent {
 
 class GameSpriteOnOffButton extends ButtonComponent {
   bool _isOn = true;
-  Sprite sprite;
+  Sprite _sprite;
 
   void Function(bool isOn)? onChanged;
 
@@ -484,10 +484,11 @@ class GameSpriteOnOffButton extends ButtonComponent {
     required super.size,
     super.position,
     super.anchor,
-    required this.sprite,
+    required Sprite sprite,
     bool isOn = false,
     this.onChanged,
-  }) : super(
+  })  : _sprite = sprite,
+        super(
           button: !isOn
               ? RectangleComponent(
                   size: size,
@@ -603,5 +604,17 @@ class GameSpriteOnOffButton extends ButtonComponent {
       }
     }
     _isOn = b;
+  }
+
+  // TODO:このへんかなり強引
+  Sprite get sprite => _sprite;
+  set sprite(Sprite s) {
+    _sprite = s;
+    (super.button!.children.whereType<AlignComponent>().first.child
+            as SpriteComponent)
+        .sprite = _sprite;
+    (super.buttonDown!.children.whereType<AlignComponent>().first.child
+            as SpriteComponent)
+        .sprite = _sprite;
   }
 }

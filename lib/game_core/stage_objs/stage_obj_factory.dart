@@ -18,6 +18,7 @@ import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
+import 'package:box_pusher/game_core/stage_objs/turtle.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:box_pusher/game_core/stage_objs/water.dart';
 import 'package:box_pusher/game_core/stage_objs/wizard.dart';
@@ -279,6 +280,12 @@ class StageObjFactory {
       case StageObjType.kangaroo:
         return Kangaroo(
             kangarooImg: baseImages[type]!,
+            errorImg: errorImg,
+            pos: pos,
+            level: typeLevel.level);
+      case StageObjType.turtle:
+        return Turtle(
+            turtleImg: baseImages[type]!,
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);

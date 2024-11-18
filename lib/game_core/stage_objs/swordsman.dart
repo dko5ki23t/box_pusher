@@ -273,10 +273,11 @@ class Swordsman extends StageObj {
         pos += moving.point;
         // ゲームオーバー判定
         if (stage.player.pos == pos) {
+          // 同じマスにいる場合はアーマー関係なくゲームオーバー
           stage.isGameover = true;
         } else if (attacking) {
           if (level <= 1) {
-            // 前方3マス
+            // 前方3マスに攻撃
             final tmp = MoveExtent.straights;
             tmp.remove(vector);
             tmp.remove(vector.oppsite);
@@ -286,12 +287,12 @@ class Swordsman extends StageObj {
               attackables.add(attackable + v.point);
             }
             if (attackables.contains(stage.player.pos)) {
-              stage.isGameover = true;
+              stage.isGameover = stage.player.hit();
             }
           } else if (PointRectRange((pos - Point(1, 1)), pos + Point(1, 1))
               .contains(stage.player.pos)) {
-            // 回転斬りの場合は周囲8マス
-            stage.isGameover = true;
+            // 回転斬りの場合は周囲8マスに攻撃
+            stage.isGameover = stage.player.hit();
           }
         }
         moving = Move.none;

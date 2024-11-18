@@ -263,12 +263,13 @@ class Archer extends StageObj {
         pos += moving.point;
         // ゲームオーバー判定
         if (stage.player.pos == pos) {
+          // 同じマスにいる場合はアーマー関係なくゲームオーバー
           stage.isGameover = true;
         } else if (attacking) {
-          // 前方直線5マス
+          // 前方直線5マスに攻撃
           if (PointRectRange(pos, pos + vector.point * 5)
               .contains(stage.player.pos)) {
-            stage.isGameover = true;
+            stage.isGameover = stage.player.hit();
           }
         }
         moving = Move.none;

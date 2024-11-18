@@ -74,8 +74,15 @@ class SettingVariables {
   static Map<PointRange, BlockFloorPattern> blockFloorMap = {
     PointDistanceRange(Point(0, 0), 8): BlockFloorPattern(0, {1: 100}),
     PointDistanceRange(Point(0, 0), 10): BlockFloorPattern(2, {1: 98}),
-    PointDistanceRange(Point(0, 0), 10): BlockFloorPattern(5, {1: 95}),
-    PointDistanceRange(Point(0, 0), 100): BlockFloorPattern(2, {1: 88, 2: 10}),
+    PointDistanceRange(Point(0, 0), 15): BlockFloorPattern(2, {1: 88, 2: 10}),
+    PointDistanceRange(Point(0, 0), 20):
+        BlockFloorPattern(2, {1: 88, 2: 9, 3: 1}),
+    PointDistanceRange(Point(0, 0), 25):
+        BlockFloorPattern(2, {1: 86, 2: 10, 3: 2}),
+    PointDistanceRange(Point(0, 0), 30):
+        BlockFloorPattern(2, {1: 80, 2: 14, 3: 3, 4: 1}),
+    PointDistanceRange(Point(0, 0), 100):
+        BlockFloorPattern(2, {1: 50, 2: 25, 3: 16, 4: 7}),
   };
 
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
@@ -85,7 +92,7 @@ class SettingVariables {
     PointDistanceRange(Point(0, 0), 20): ObjInBlock(
         50,
         [
-          StageObjTypeLevel(type: StageObjType.spike),
+          StageObjTypeLevel(type: StageObjType.wizard),
           StageObjTypeLevel(type: StageObjType.trap)
         ],
         2),
@@ -128,7 +135,18 @@ class SettingVariables {
 
   /// マージしたオブジェクトが、対象のブロックを破壊できるかどうか
   static bool canBreakBlock(Block block, StageObj mergeObj) {
-    return block.level == 1 || mergeObj.level >= block.level * 2;
+    switch (block.level) {
+      case 1:
+        return true;
+      case 2:
+        return mergeObj.level >= 4;
+      case 3:
+        return mergeObj.level >= 8;
+      case 4:
+        return mergeObj.level >= 13;
+      default:
+        return false;
+    }
   }
 
   /// 助け出す動物の場所マップ
@@ -136,5 +154,6 @@ class SettingVariables {
     Point(-5, -5): StageObjType.gorilla,
     Point(5, 5): StageObjType.rabbit,
     Point(-5, 5): StageObjType.kangaroo,
+    Point(5, -5): StageObjType.turtle,
   };
 }

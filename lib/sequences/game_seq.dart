@@ -471,11 +471,12 @@ class GameSeq extends Sequence
     abilityButtonPos +=
         Vector2(legAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     armerAbilityOnOffButton = GameSpriteOnOffButton(
-      isOn: stage.getHandAbility(),
-      onChanged: (bool isOn) => stage.setHandAbility(isOn),
+      isOn: stage.getArmerAbility(),
+      onChanged: (bool isOn) => stage.setArmerAbility(isOn),
       size: armerAbilityButtonAreaSize,
       position: abilityButtonPos,
-      sprite: Sprite(armerAbilityImg),
+      sprite: Sprite(armerAbilityImg,
+          srcPosition: Vector2.zero(), srcSize: Vector2.all(32)),
     );
     add(armerAbilityOnOffButton);
     // ポケット能力ボタン領域
@@ -485,6 +486,7 @@ class GameSeq extends Sequence
       onReleased: () => stage.usePocketAbility(game.world),
       size: pocketAbilityButtonAreaSize,
       position: abilityButtonPos,
+      enabled: stage.getPocketAbility(),
       animation:
           SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0),
     );
@@ -543,10 +545,16 @@ class GameSeq extends Sequence
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
       }
     }
+    // アーマーの能力状況更新
+    armerAbilityOnOffButton.isOn = stage.getArmerAbility();
+    armerAbilityOnOffButton.sprite = Sprite(armerAbilityImg,
+        srcPosition: Vector2(stage.getArmerAbilityRecoveryTurns() * 32, 0),
+        srcSize: Vector2.all(32));
     // ポケットの能力状況更新
     final pocketItemAnimation = stage.getPocketAbilitySpriteAnimation() ??
         SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0);
     pocketAbilityButton.animation = pocketItemAnimation;
+    pocketAbilityButton.enabled = stage.getPocketAbility();
     // スコア表示更新
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示

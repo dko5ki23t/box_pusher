@@ -83,6 +83,12 @@ class Player extends StageObj {
   /// アーマーの能力が有効か
   bool isArmerAbilityOn = false;
 
+  /// アーマー回復までの残りターン数
+  int armerRecoveryTurns = 0;
+
+  /// アーマー回復に要するターン数
+  static int armerNeedRecoveryTurns = 3;
+
   @override
   void update(
     double dt,
@@ -318,6 +324,14 @@ class Player extends StageObj {
           stage.setStaticType(to, StageObjType.none, gameWorld);
           // 効果音を鳴らす
           Audio.playSound(Sound.getSkill);
+        } else if (stage.get(to).type == StageObjType.turtle) {
+          // 移動先が亀だった場合
+          // アーマーの能力を習得
+          isArmerAbilityOn = true;
+          // 亀、いなくなる
+          stage.setStaticType(to, StageObjType.none, gameWorld);
+          // 効果音を鳴らす
+          Audio.playSound(Sound.getSkill);
         }
 
         // 各種移動中変数初期化
@@ -325,6 +339,11 @@ class Player extends StageObj {
         pushings.clear();
         movingAmount = 0;
         executing = false;
+
+        // アーマー回復
+        if (armerRecoveryTurns > 0) {
+          armerRecoveryTurns--;
+        }
       }
     }
   }
@@ -355,6 +374,17 @@ class Player extends StageObj {
         gameWorld.add(pocketItem!.animationComponent);
         pocketItem = null;
       }
+    }
+  }
+
+  /// 敵の攻撃がプレイヤーに当たる
+  /// 戻り値：ゲームオーバーになるかどうか
+  bool hit() {
+    if (isArmerAbilityOn && armerRecoveryTurns == 0) {
+      armerRecoveryTurns = armerNeedRecoveryTurns;
+      return false;
+    } else {
+      return true;
     }
   }
 

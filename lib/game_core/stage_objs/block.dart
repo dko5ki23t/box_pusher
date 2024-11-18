@@ -21,11 +21,19 @@ class Block extends StageObj {
           0: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
           1: SpriteAnimation.spriteList([
             Sprite(blockImg,
-                srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
           ], stepTime: 1.0),
           2: SpriteAnimation.spriteList([
             Sprite(blockImg,
-                srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
+                srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
+          ], stepTime: 1.0),
+          3: SpriteAnimation.spriteList([
+            Sprite(blockImg,
+                srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
+          ], stepTime: 1.0),
+          4: SpriteAnimation.spriteList([
+            Sprite(blockImg,
+                srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
           ], stepTime: 1.0),
         },
         super(
@@ -52,6 +60,18 @@ class Block extends StageObj {
               Move.none: SpriteAnimation.spriteList([
                 Sprite(blockImg,
                     srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
+              ], stepTime: 1.0),
+            },
+            3: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(blockImg,
+                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize)
+              ], stepTime: 1.0),
+            },
+            4: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(blockImg,
+                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize)
               ], stepTime: 1.0),
             },
           },
@@ -111,7 +131,7 @@ class Block extends StageObj {
   bool get mergable => false;
 
   @override
-  int get maxLevel => 3;
+  int get maxLevel => 4;
 
   @override
   bool get isEnemy => false;

@@ -730,6 +730,10 @@ class Stage {
     return player.isLegAbilityOn;
   }
 
+  bool getPocketAbility() {
+    return player.isPocketAbilityOn;
+  }
+
   void usePocketAbility(World gameWorld) {
     player.usePocketAbility(this, gameWorld);
   }
@@ -748,6 +752,10 @@ class Stage {
 
   bool getArmerAbility() {
     return player.isArmerAbilityOn;
+  }
+
+  int getArmerAbilityRecoveryTurns() {
+    return player.armerRecoveryTurns;
   }
 
   bool isClear() {
