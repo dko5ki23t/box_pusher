@@ -134,6 +134,7 @@ class Player extends StageObj {
         bool needSave = false;
         // オブジェクトが押せるか
         if (toObj.pushable) {
+          bool breakPushing = false;
           // ドリルの場合は少し違う処理
           if (toObj.type == StageObjType.drill &&
               toToObj.type == StageObjType.block) {
@@ -143,24 +144,31 @@ class Player extends StageObj {
             stage.setStaticType(toTo, StageObjType.none, gameWorld);
             executing = true;
             stopBecauseMergeOrDrill = true;
-          } else if (toToObj.stopping || // 押した先が停止物
-                  (toToObj.isEnemy &&
-                      !toObj
-                          .enemyMovable) || // 押した先が敵かつ押すオブジェクトに敵が移動可能ではない(≒停止物)
-                  (!toToObj.puttable && // 押した先が、何かを置けるオブジェクト ではない
-                      !toToObj.pushable && // 押した先が押せない
-                      !(toObj.isSameTypeLevel(toToObj) &&
-                          toObj.mergable)) // 押した先とマージ できない)
-              ) {
-            // 押した先が敵等 or 一気に押せる数の端だがマージできないオブジェクトの場合は、
-            // これまでにpushingsに追加したものも含めて一切押せない
-            // ただし、途中でマージできるものがあるならそこまでは押せる
-            pushings.clear();
-            if (pushingsSave.isNotEmpty) {
-              pushings.addAll(pushingsSave);
-              break;
+          } else {
+            if (toToObj.stopping) {
+              // 押した先が停止物
+              breakPushing = true;
+            } else if (toToObj.isEnemy && toObj.enemyMovable) {
+              // 押した先が敵かつ押すオブジェクトに敵が移動可能(->敵にオブジェクトを重ねる（トラップ等）)
+            } else if (toToObj.puttable) {
+              // 押した先が、何かを置けるオブジェクト
+            } else if (toObj.isSameTypeLevel(toToObj) && toObj.mergable) {
+              // 押した先とマージ できる
+            } else if (i < end - 1 && toToObj.pushable) {
+              // 押した先も押せる
+            } else {
+              breakPushing = true;
             }
-            return;
+            if (breakPushing) {
+              // これまでにpushingsに追加したものも含めて一切押せない
+              // ただし、途中でマージできるものがあるならそこまでは押せる
+              pushings.clear();
+              if (pushingsSave.isNotEmpty) {
+                pushings.addAll(pushingsSave);
+                break;
+              }
+              return;
+            }
           }
           // マージできる場合は、pushingsをセーブする
           if (toToObj.isSameTypeLevel(toObj) && toObj.mergable) {
