@@ -88,17 +88,25 @@ class SettingVariables {
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, ObjInBlock> objInBlockMap = {
     PointDistanceRange(Point(0, 0), 5): ObjInBlock(50, [], 0),
-    PointDistanceRange(Point(0, 0), 15): ObjInBlock(
+    PointDistanceRange(Point(0, 0), 10): ObjInBlock(
         50,
         [
           StageObjTypeLevel(type: StageObjType.spike),
           StageObjTypeLevel(type: StageObjType.trap)
         ],
         2),
-    PointRectRange(Point(5, 5), Point(10, 10)): ObjInBlock(
+    PointRectRange(Point(5, 5), Point(20, 20)): ObjInBlock(
         40,
         [
           StageObjTypeLevel(type: StageObjType.belt),
+          StageObjTypeLevel(type: StageObjType.guardian),
+          StageObjTypeLevel(type: StageObjType.swordsman)
+        ],
+        1),
+    PointRectRange(Point(-5, -5), Point(-20, -20)): ObjInBlock(
+        40,
+        [
+          StageObjTypeLevel(type: StageObjType.drill),
           StageObjTypeLevel(type: StageObjType.guardian),
           StageObjTypeLevel(type: StageObjType.swordsman)
         ],
@@ -107,11 +115,21 @@ class SettingVariables {
         40,
         [
           StageObjTypeLevel(type: StageObjType.swordsman),
-          StageObjTypeLevel(type: StageObjType.guardian)
+          StageObjTypeLevel(type: StageObjType.guardian),
+          StageObjTypeLevel(type: StageObjType.bomb),
         ],
-        0),
+        1),
     PointDistanceRange(Point(0, 0), 100):
         ObjInBlock(50, [StageObjTypeLevel(type: StageObjType.guardian)], 0),
+  };
+
+  /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限
+  static Map<PointRange, Map<StageObjTypeLevel, int>> maxObjectNumFromBlockMap =
+      {
+    PointDistanceRange(Point(0, 0), 20): {
+      StageObjTypeLevel(type: StageObjType.bomb): 1
+    },
+    PointDistanceRange(Point(0, 0), 1000): {},
   };
 
   /// ステージ上範囲->ブロック破壊時の出現宝石のレベル（範囲が重複する場合は先に存在するキーを優先）

@@ -129,8 +129,7 @@ class Player extends StageObj {
         end = max(range.x, range.y);
       }
       for (int i = 0; i < end; i++) {
-        bool stopBecauseMergeOrDrill =
-            false; // マージが発生する/ドリルでブロックを壊すため、以降の判定をしなくて良いことを示すフラグ
+        bool stopBecauseDrill = false; // ドリルでブロックを壊すため、以降の判定をしなくて良いことを示すフラグ
         bool needSave = false;
         // オブジェクトが押せるか
         if (toObj.pushable) {
@@ -143,7 +142,7 @@ class Player extends StageObj {
             gameWorld.add((toToObj as Block).createBreakingBlock());
             stage.setStaticType(toTo, StageObjType.none, gameWorld);
             executing = true;
-            stopBecauseMergeOrDrill = true;
+            stopBecauseDrill = true;
           } else {
             if (toToObj.stopping) {
               // 押した先が停止物
@@ -173,7 +172,6 @@ class Player extends StageObj {
           // マージできる場合は、pushingsをセーブする
           if (toToObj.isSameTypeLevel(toObj) && toObj.mergable) {
             needSave = true;
-            //stopBecauseMergeOrDrill = true;
           }
         } else {
           // 押せない場合
@@ -183,8 +181,8 @@ class Player extends StageObj {
         pushings.add(stage.boxes.firstWhere((element) => element.pos == to));
         // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
         prohibitedPoints[toTo] = Move.none;
-        if (stopBecauseMergeOrDrill) {
-          // マージする/ドリルでブロックを壊す場合
+        if (stopBecauseDrill) {
+          // ドリルでブロックを壊す場合
           break;
         }
         if (needSave) {

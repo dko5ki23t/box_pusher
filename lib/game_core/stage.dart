@@ -78,6 +78,9 @@ class Stage {
   /// コンベアの場所リスト
   List<Point> beltPoints = [];
 
+  /// ブロック破壊時に出現した各アイテムの累計個数
+  Map<StageObjTypeLevel, int> appearedItemsMap = {};
+
   /// プレイヤー
   late Player player;
 
@@ -268,10 +271,29 @@ class Stage {
     }
 
     // その他オブジェクトの出現について
-    if (pattern.items1.isNotEmpty) {
+    // 該当範囲内での出現個数制限を調べる
+    List<StageObjTypeLevel> typelevels = [];
+    late Map<StageObjTypeLevel, int> objMaxNumPattern;
+    for (final objMaxNum in SettingVariables.maxObjectNumFromBlockMap.entries) {
+      if (objMaxNum.key.contains(pos)) {
+        objMaxNumPattern = objMaxNum.value;
+        break;
+      }
+    }
+    for (final typeLevel in pattern.items1) {
+      if (objMaxNumPattern.containsKey(typeLevel) &&
+          appearedItemsMap.containsKey(typeLevel) &&
+          objMaxNumPattern[typeLevel]! <= appearedItemsMap[typeLevel]!) {
+        // 制限された個数以上のアイテムがすでに出現しているなら、今回の出現対象には含めない
+        continue;
+      } else {
+        typelevels.add(typeLevel);
+      }
+    }
+    if (typelevels.isNotEmpty) {
       for (int i = 0; i < pattern.itemsMaxNum1; i++) {
         // リストの中から出現させるアイテムを選ぶ
-        StageObjTypeLevel typeLevel = pattern.items1.sample(1).first;
+        StageObjTypeLevel typeLevel = typelevels.sample(1).first;
         // 宝石出現以外の位置に最大1個アイテムを出現させる
         if (breakedRemain.isNotEmpty) {
           bool canAppear = Random().nextBool();
@@ -298,6 +320,12 @@ class Stage {
             }
             // アイテム出現場所を取り除く
             breakedRemain.remove(appear);
+            // 出現したアイテムを記録
+            if (appearedItemsMap.containsKey(typeLevel)) {
+              appearedItemsMap[typeLevel] = appearedItemsMap[typeLevel]! + 1;
+            } else {
+              appearedItemsMap[typeLevel] = 1;
+            }
           }
         }
       }
@@ -574,14 +602,13 @@ class Stage {
     }
     {
       // 同じレベルの敵同士が同じ位置になったらマージしてレベルアップ
-      // TODO: 敵がお互いにすれ違ってマージしない場合あり
-      // TODO: レベルがMAXでマージできない場合はそもそも同じマスに移動できないようにするべき
       final List<Point> mergingPosList = [];
       final List<StageObj> mergedEnemies = [];
       for (final enemy in enemies) {
         if (mergingPosList.contains(enemy.pos)) {
           continue;
         }
+        if (!enemy.mergable) continue;
         final t = enemies.where((element) =>
             element != enemy &&
             element.pos == enemy.pos &&
@@ -605,12 +632,11 @@ class Stage {
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
     // これらはプレイヤーの移動完了時のみ動かす
     // update()でboxesリストが変化する可能性がある(ボムの爆発等)ためコピーを使う
-    if (playerEndMoving) {
-      final boxesCopied = [for (final box in boxes) box];
-      for (final box in boxesCopied) {
-        box.update(dt, player.moving, gameWorld, camera, this,
-            playerStartMoving, playerEndMoving, prohibitedPoints);
-      }
+    // TODO:毎フレームコピーしないようにしたい
+    final boxesCopied = [for (final box in boxes) box];
+    for (final box in boxesCopied) {
+      box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
+          playerEndMoving, prohibitedPoints);
     }
 
     // 移動完了時
