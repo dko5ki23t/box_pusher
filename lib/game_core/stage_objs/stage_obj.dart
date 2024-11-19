@@ -335,7 +335,8 @@ abstract class StageObj {
             player.pushings.first.pos == eTo) {
           // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
         } else if (!eToObj.enemyMovable &&
-            (eToObj.type != type || eToObj.level != level)) {
+            !(mergable && eToObj.type == type && eToObj.level == level)) {
+          // 敵が移動可能でない、かつマージできない
           continue;
         }
         if (prohibitedPoints.containsKey(eTo) &&
@@ -397,7 +398,8 @@ abstract class StageObj {
             player.pushings.first.pos == eTo) {
           // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
         } else if (!eToObj.enemyMovable &&
-            !(eToObj.type == type && eToObj.level == level)) {
+            !(mergable && eToObj.type == type && eToObj.level == level)) {
+          // 敵が移動可能でない、かつマージできない
           continue;
         }
         if (prohibitedPoints.containsKey(eTo) &&
