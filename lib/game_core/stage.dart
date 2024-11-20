@@ -81,6 +81,9 @@ class Stage {
   /// ブロック破壊時に出現した各アイテムの累計個数
   Map<StageObjTypeLevel, int> appearedItemsMap = {};
 
+  /// マージした回数
+  int mergedCount = 0;
+
   /// プレイヤー
   late Player player;
 
@@ -198,6 +201,13 @@ class Stage {
     ];
     ret['beltPoints'] = beltPointsList;
     ret['player'] = player.encode();
+    final List<Map<String, dynamic>> appearedItemsList = [
+      for (final e in appearedItemsMap.keys) e.encode()
+    ];
+    ret['appearedItems'] = appearedItemsList;
+    final List<int> appearedItemsCountList = appearedItemsMap.values.toList();
+    ret['appearedItemsCounts'] = appearedItemsCountList;
+    ret['mergedCount'] = mergedCount;
     return ret;
   }
 
@@ -331,6 +341,63 @@ class Stage {
       }
     }
     gameWorld.addAll([for (final e in adding) e.animationComponent]);
+
+    mergedCount++;
+    // ステージ中央付近に宝石をランダムに配置
+    if (mergedCount > 10) {
+      // ステージ中央から時計回りに渦巻き状に移動して床があれば宝石設置
+      Point p = Point(0, 0);
+      bool decide = false;
+      for (int moveCount = 1; moveCount < 100; moveCount++) {
+        // whileでいいが、念のため
+        // 上に移動
+        for (int i = 0; i < moveCount; i++) {
+          p += Move.up.point;
+          if (get(p).type == StageObjType.none) {
+            decide = true;
+            break;
+          }
+        }
+        if (decide) break;
+        // 右に移動
+        for (int i = 0; i < moveCount; i++) {
+          p += Move.right.point;
+          if (get(p).type == StageObjType.none) {
+            decide = true;
+            break;
+          }
+        }
+        if (decide) break;
+        // 下に移動
+        for (int i = 0; i < moveCount + 1; i++) {
+          p += Move.down.point;
+          if (get(p).type == StageObjType.none) {
+            decide = true;
+            break;
+          }
+        }
+        if (decide) break;
+        // 左に移動
+        for (int i = 0; i < moveCount + 1; i++) {
+          p += Move.left.point;
+          if (get(p).type == StageObjType.none) {
+            decide = true;
+            break;
+          }
+        }
+        if (decide) break;
+      }
+      if (decide) {
+        final jewel = objFactory.create(
+            typeLevel: StageObjTypeLevel(
+              type: StageObjType.jewel,
+              level: jewelLevel,
+            ),
+            pos: p);
+        boxes.add(jewel);
+        gameWorld.add(jewel.animationComponent);
+      }
+    }
 
     // TODO:削除というか別の方法で
     // 床をランダムに水やマグマに変える
@@ -492,6 +559,19 @@ class Stage {
     gameWorld.addAll([for (final e in staticObjs.values) e.animationComponent]);
     gameWorld.addAll([for (final e in boxes) e.animationComponent]);
     gameWorld.addAll([for (final e in enemies) e.animationComponent]);
+    // ブロック破壊時に出現した各アイテムの累計個数設定
+    final appearedItems = stageData['appearedItems'] as List<dynamic>;
+    final appearedItemsCounts =
+        stageData['appearedItemsCounts'] as List<dynamic>;
+    assert(appearedItems.length == appearedItemsCounts.length,
+        'ブロック破壊時出現アイテム個数の保存が正しく行われなかった。');
+    appearedItemsMap.clear();
+    for (int i = 0; i < appearedItems.length; i++) {
+      appearedItemsMap[StageObjTypeLevel.decode(appearedItems[i])] =
+          appearedItemsCounts[i];
+    }
+    // マージした回数
+    mergedCount = stageData['mergedCount'];
     // プレイヤー作成
     player = objFactory.createPlayerFromMap(stageData['player']);
     gameWorld.addAll([player.animationComponent]);
@@ -632,11 +712,13 @@ class Stage {
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
     // これらはプレイヤーの移動完了時のみ動かす
     // update()でboxesリストが変化する可能性がある(ボムの爆発等)ためコピーを使う
-    // TODO:毎フレームコピーしないようにしたい
-    final boxesCopied = [for (final box in boxes) box];
-    for (final box in boxesCopied) {
-      box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
-          playerEndMoving, prohibitedPoints);
+    // TODO:コピーしないようにしたい
+    if (playerStartMoving || playerEndMoving) {
+      final boxesCopied = [for (final box in boxes) box];
+      for (final box in boxesCopied) {
+        box.update(dt, player.moving, gameWorld, camera, this,
+            playerStartMoving, playerEndMoving, prohibitedPoints);
+      }
     }
 
     // 移動完了時

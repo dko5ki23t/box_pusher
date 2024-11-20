@@ -127,9 +127,13 @@ class SettingVariables {
   static Map<PointRange, Map<StageObjTypeLevel, int>> maxObjectNumFromBlockMap =
       {
     PointDistanceRange(Point(0, 0), 20): {
-      StageObjTypeLevel(type: StageObjType.bomb): 1
+      StageObjTypeLevel(type: StageObjType.trap): 5,
+      StageObjTypeLevel(type: StageObjType.bomb): 1,
     },
-    PointDistanceRange(Point(0, 0), 1000): {},
+    PointDistanceRange(Point(0, 0), 1000): {
+      StageObjTypeLevel(type: StageObjType.trap): 5,
+      StageObjTypeLevel(type: StageObjType.bomb): 2
+    },
   };
 
   /// ステージ上範囲->ブロック破壊時の出現宝石のレベル（範囲が重複する場合は先に存在するキーを優先）
