@@ -221,7 +221,7 @@ class Stage {
     int breakBottomOffset = 1,
     bool onlyDelete = false,
   }) {
-    // 引数位置を中心として周囲のブロックを爆破する
+    // 引数位置を中心として周囲のブロックを破壊する
     /// 破壊されたブロックの位置のリスト
     final List<Point> breaked = [];
     final List<Component> breakingAnimations = [];
@@ -787,13 +787,12 @@ class Stage {
       for (final pattern in SettingVariables.blockFloorMap.entries) {
         if (pattern.key.contains(point)) {
           int rand = Random().nextInt(100);
-          int threshold = pattern.value.floorPercent;
-          if (rand < threshold) {
-            return objFactory.create(
-                typeLevel: StageObjTypeLevel(
-                  type: StageObjType.none,
-                ),
-                pos: point);
+          int threshold = 0;
+          for (final floorPercent in pattern.value.floorPercents.entries) {
+            threshold += floorPercent.value;
+            if (rand < threshold) {
+              return objFactory.create(typeLevel: floorPercent.key, pos: point);
+            }
           }
           for (final p in pattern.value.blockPercents.entries) {
             threshold += p.value;

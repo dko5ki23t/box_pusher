@@ -28,12 +28,12 @@ enum EnemyMovePattern {
 
 class BlockFloorPattern {
   /// 床の割合
-  final int floorPercent;
+  final Map<StageObjTypeLevel, int> floorPercents;
 
   /// ブロックのレベル->出現割合のMap
   final Map<int, int> blockPercents;
 
-  BlockFloorPattern(this.floorPercent, this.blockPercents);
+  BlockFloorPattern(this.floorPercents, this.blockPercents);
 }
 
 class ObjInBlock {
@@ -72,17 +72,33 @@ class SettingVariables {
 
   /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, BlockFloorPattern> blockFloorMap = {
-    PointDistanceRange(Point(0, 0), 8): BlockFloorPattern(0, {1: 100}),
-    PointDistanceRange(Point(0, 0), 10): BlockFloorPattern(2, {1: 98}),
-    PointDistanceRange(Point(0, 0), 15): BlockFloorPattern(2, {1: 88, 2: 10}),
-    PointDistanceRange(Point(0, 0), 20):
-        BlockFloorPattern(2, {1: 88, 2: 9, 3: 1}),
-    PointDistanceRange(Point(0, 0), 25):
-        BlockFloorPattern(2, {1: 86, 2: 10, 3: 2}),
-    PointDistanceRange(Point(0, 0), 30):
-        BlockFloorPattern(2, {1: 80, 2: 14, 3: 3, 4: 1}),
-    PointDistanceRange(Point(0, 0), 100):
-        BlockFloorPattern(2, {1: 50, 2: 25, 3: 16, 4: 7}),
+    PointDistanceRange(Point(0, 0), 8): BlockFloorPattern({}, {1: 100}),
+    PointDistanceRange(Point(0, 0), 10): BlockFloorPattern(
+        {StageObjTypeLevel(type: StageObjType.none): 2}, {1: 98}),
+    PointDistanceRange(Point(0, 0), 15): BlockFloorPattern(
+        {StageObjTypeLevel(type: StageObjType.none): 2}, {1: 88, 2: 10}),
+    PointDistanceRange(Point(0, 0), 20): BlockFloorPattern(
+        {StageObjTypeLevel(type: StageObjType.none): 2}, {1: 88, 2: 9, 3: 1}),
+    PointDistanceRange(Point(0, 0), 25): BlockFloorPattern({
+      StageObjTypeLevel(type: StageObjType.none): 1,
+      StageObjTypeLevel(type: StageObjType.water): 1
+    }, {
+      1: 86,
+      2: 10,
+      3: 2
+    }),
+    PointDistanceRange(Point(0, 0), 30): BlockFloorPattern({
+      StageObjTypeLevel(type: StageObjType.none): 1,
+      StageObjTypeLevel(type: StageObjType.magma): 1
+    }, {
+      1: 80,
+      2: 14,
+      3: 3,
+      4: 1
+    }),
+    PointDistanceRange(Point(0, 0), 100): BlockFloorPattern(
+        {StageObjTypeLevel(type: StageObjType.magma): 5},
+        {1: 50, 2: 25, 3: 16, 4: 7}),
   };
 
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
