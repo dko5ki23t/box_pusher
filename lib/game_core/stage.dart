@@ -96,6 +96,12 @@ class Stage {
   /// ステージの右下座標(プレイヤーの動きにつれて拡張されていく)
   Point stageRB = Point(0, 0);
 
+  /// ステージの横幅
+  int get stageWidth => stageRB.x - stageLT.x;
+
+  /// ステージの縦幅
+  int get stageHeight => stageRB.y - stageLT.y;
+
   /// スコア(加算途中の、表示上のスコア)
   double _scoreVisual = 0;
 
@@ -343,17 +349,19 @@ class Stage {
     gameWorld.addAll([for (final e in adding) e.animationComponent]);
 
     mergedCount++;
-    // ステージ中央付近に宝石をランダムに配置
-    if (mergedCount > 10) {
-      // ステージ中央から時計回りに渦巻き状に移動して床があれば宝石設置
+    // ステージ上に宝石をランダムに配置
+    if (mergedCount > 0 && mergedCount % 10 == 0) {
+      // ステージ中央から時計回りに渦巻き状に移動して床があればランダムで宝石設置
       Point p = Point(0, 0);
       bool decide = false;
-      for (int moveCount = 1; moveCount < 100; moveCount++) {
+      final maxMoveCount = max(stageWidth, stageHeight);
+      for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
         // whileでいいが、念のため
         // 上に移動
         for (int i = 0; i < moveCount; i++) {
           p += Move.up.point;
-          if (get(p).type == StageObjType.none) {
+          if (get(p).type == StageObjType.none &&
+              Random().nextInt(maxMoveCount) < moveCount) {
             decide = true;
             break;
           }
@@ -362,7 +370,8 @@ class Stage {
         // 右に移動
         for (int i = 0; i < moveCount; i++) {
           p += Move.right.point;
-          if (get(p).type == StageObjType.none) {
+          if (get(p).type == StageObjType.none &&
+              Random().nextInt(maxMoveCount) < moveCount) {
             decide = true;
             break;
           }
@@ -371,7 +380,8 @@ class Stage {
         // 下に移動
         for (int i = 0; i < moveCount + 1; i++) {
           p += Move.down.point;
-          if (get(p).type == StageObjType.none) {
+          if (get(p).type == StageObjType.none &&
+              Random().nextInt(maxMoveCount) < moveCount) {
             decide = true;
             break;
           }
@@ -380,7 +390,8 @@ class Stage {
         // 左に移動
         for (int i = 0; i < moveCount + 1; i++) {
           p += Move.left.point;
-          if (get(p).type == StageObjType.none) {
+          if (get(p).type == StageObjType.none &&
+              Random().nextInt(maxMoveCount) < moveCount) {
             decide = true;
             break;
           }
@@ -398,19 +409,6 @@ class Stage {
         gameWorld.add(jewel.animationComponent);
       }
     }
-
-    // TODO:削除というか別の方法で
-    // 床をランダムに水やマグマに変える
-    /*for (final pos in breaked) {
-      final StageObjType type = [
-        StageObjType.none,
-        StageObjType.none,
-        StageObjType.none,
-        StageObjType.water,
-        StageObjType.magma,
-      ].sample(1).first;
-      setStaticType(pos, type, gameWorld);
-    }*/
 
     // スコア加算
     int gettingScore = pow(2, (box.level - 1)).toInt() * 100;
@@ -628,6 +626,7 @@ class Stage {
     }
     gameWorld.addAll([for (final e in staticObjs.values) e.animationComponent]);
     gameWorld.addAll([for (final e in boxes) e.animationComponent]);
+    // ↓初期状態では敵いないのでコメントアウトしてる
     //gameWorld.addAll([for (final e in enemies) e.animationComponent]);
 
     // プレイヤー作成
