@@ -155,6 +155,7 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
     processLifecycleEvents();
     Flame.images.clearCache();
     Flame.assets.clearCache();
+    Audio.onRemove();
   }
 
   /*@override

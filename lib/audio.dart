@@ -57,6 +57,8 @@ bool isLoaded = false;
 class Audio {
   static Future<void> onLoad() async {
     assert(!isLoaded, '[Audioクラス]onLoad()が2回呼ばれた');
+    // キャッシュクリア
+    await FlameAudio.audioCache.clearAll();
     // 各種音楽ファイル読み込み
     await FlameAudio.audioCache
         .loadAll([for (final bgm in Bgm.values) bgm.fileName]);
@@ -90,5 +92,11 @@ class Audio {
   static Future<void> resumeBGM() {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
     return FlameAudio.bgm.resume();
+  }
+
+  static Future<void> onRemove() async {
+    assert(!isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
+    // キャッシュクリア
+    await FlameAudio.audioCache.clearAll();
   }
 }
