@@ -52,6 +52,9 @@ class GameSeq extends Sequence
   /// ポケット能力ボタン領域
   static Vector2 get pocketAbilityButtonAreaSize => Vector2(40.0, 40.0);
 
+  /// 次マージ時出現アイテム領域
+  static Vector2 get nextItemAreaSize => Vector2(100.0, 35.0);
+
   /// スコア領域
   static Vector2 get scoreAreaSize => Vector2(70.0, 35.0);
 
@@ -85,6 +88,8 @@ class GameSeq extends Sequence
   late final Image pocketAbilityImg;
   late final Image settingsImg;
   late TextComponent currentPosText;
+  late TextComponent remainMergeCountText;
+  late SpriteAnimationComponent nextMergeItem;
   late TextComponent scoreText;
   late TextComponent coinNumText;
   ClipComponent? playerControllButtonsArea;
@@ -351,6 +356,20 @@ class GameSeq extends Sequence
 
     add(playerControllButtonsArea!);
     // 画面上部、ボタンではない領域
+    // 次アイテム出現までのマージ回数
+    remainMergeCountText = TextComponent(
+      text: "NEXT: ${stage.remainMergeCount}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          color: Color(0xffffffff),
+        ),
+      ),
+    );
+    // 次マージ時出現アイテム
+    nextMergeItem = SpriteAnimationComponent(
+        size: Vector2.all(32),
+        animation: stage.getNextMergeItemSpriteAnimation());
     // スコア
     scoreText = TextComponent(
       text: "${stage.scoreVisual}",
@@ -379,6 +398,23 @@ class GameSeq extends Sequence
             ..color = const Color(0x80000000)
             ..style = PaintingStyle.fill,
           children: [
+            // 次マージ時出現アイテム（左側に配置）
+            AlignComponent(
+              alignment: Anchor.bottomLeft,
+              child: PositionComponent(
+                size: nextItemAreaSize,
+                children: [
+                  AlignComponent(
+                    alignment: Anchor.centerLeft,
+                    child: remainMergeCountText,
+                  ),
+                  AlignComponent(
+                    alignment: Anchor.centerRight,
+                    child: nextMergeItem,
+                  ),
+                ],
+              ),
+            ),
             // スコア（中央に配置）
             AlignComponent(
               alignment: Anchor.bottomCenter,
@@ -555,6 +591,10 @@ class GameSeq extends Sequence
         SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0);
     pocketAbilityButton.animation = pocketItemAnimation;
     pocketAbilityButton.enabled = stage.getPocketAbility();
+    // 次アイテム出現までのマージ回数更新
+    remainMergeCountText.text = "NEXT: ${stage.remainMergeCount}";
+    // 次マージ時出現アイテム更新
+    nextMergeItem.animation = stage.getNextMergeItemSpriteAnimation();
     // スコア表示更新
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示

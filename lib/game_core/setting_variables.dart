@@ -190,4 +190,10 @@ class SettingVariables {
     Point(-5, 5): StageObjType.kangaroo,
     Point(5, -5): StageObjType.turtle,
   };
+
+  /// マージ回数->出現アイテムのマップ
+  static Map<int, StageObjTypeLevel> mergeAppearItems = {
+    10: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
+    20: StageObjTypeLevel(type: StageObjType.jewel, level: 2),
+  };
 }

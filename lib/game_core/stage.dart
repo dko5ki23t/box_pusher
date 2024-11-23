@@ -84,6 +84,12 @@ class Stage {
   /// マージした回数
   int mergedCount = 0;
 
+  /// 次オブジェクトが出現するまでのマージ回数
+  int remainMergeCount = 0;
+
+  /// 次マージ時に出現するオブジェクト
+  StageObj? nextMergeItem;
+
   /// プレイヤー
   late Player player;
 
@@ -213,8 +219,22 @@ class Stage {
     ret['appearedItems'] = appearedItemsList;
     final List<int> appearedItemsCountList = appearedItemsMap.values.toList();
     ret['appearedItemsCounts'] = appearedItemsCountList;
+    ret['remainMergeCount'] = remainMergeCount;
     ret['mergedCount'] = mergedCount;
     return ret;
+  }
+
+  /// 次のマージ時出現アイテムを更新
+  void _updateNextMergeItem() {
+    StageObjTypeLevel tl = SettingVariables.mergeAppearItems.values.last;
+    for (final entry in SettingVariables.mergeAppearItems.entries) {
+      remainMergeCount = max(entry.key - mergedCount, 0);
+      if (remainMergeCount > 0) {
+        tl = entry.value;
+        break;
+      }
+    }
+    nextMergeItem = objFactory.create(typeLevel: tl, pos: Point(0, 0));
   }
 
   void merge(
@@ -349,9 +369,9 @@ class Stage {
     gameWorld.addAll([for (final e in adding) e.animationComponent]);
 
     mergedCount++;
-    // ステージ上に宝石をランダムに配置
-    if (mergedCount > 0 && mergedCount % 10 == 0) {
-      // ステージ中央から時計回りに渦巻き状に移動して床があればランダムで宝石設置
+    // ステージ上にアイテムをランダムに配置
+    if (remainMergeCount - 1 == 0) {
+      // ステージ中央から時計回りに渦巻き状に移動して床があればランダムでアイテム設置
       Point p = Point(0, 0);
       bool decide = false;
       final maxMoveCount = max(stageWidth, stageHeight);
@@ -399,15 +419,19 @@ class Stage {
         if (decide) break;
       }
       if (decide) {
-        final jewel = objFactory.create(
+        final item = objFactory.create(
             typeLevel: StageObjTypeLevel(
-              type: StageObjType.jewel,
-              level: jewelLevel,
+              type: nextMergeItem!.type,
+              level: nextMergeItem!.level,
             ),
             pos: p);
-        boxes.add(jewel);
-        gameWorld.add(jewel.animationComponent);
+        boxes.add(item);
+        gameWorld.add(item.animationComponent);
+        // 次のマージ時出現アイテムを作成
+        _updateNextMergeItem();
       }
+    } else {
+      if (remainMergeCount > 0) remainMergeCount--;
     }
 
     // スコア加算
@@ -570,6 +594,10 @@ class Stage {
     }
     // マージした回数
     mergedCount = stageData['mergedCount'];
+    // マージした回数
+    mergedCount = stageData['mergedCount'];
+    // マージによる出現アイテム更新
+    _updateNextMergeItem();
     // プレイヤー作成
     player = objFactory.createPlayerFromMap(stageData['player']);
     gameWorld.addAll([player.animationComponent]);
@@ -593,6 +621,12 @@ class Stage {
     // スコア初期化
     _score = 0;
     _scoreVisual = 0;
+    // マージ数初期化
+    mergedCount = 0;
+    // ブロック破壊時出現アイテム個数初期化
+    appearedItemsMap.clear();
+    // 次マージ時に出現するアイテム初期化
+    _updateNextMergeItem();
     staticObjs.clear();
     boxes.clear();
     enemies.clear();
@@ -862,6 +896,11 @@ class Stage {
 
   int getArmerAbilityRecoveryTurns() {
     return player.armerRecoveryTurns;
+  }
+
+  /// 次マージ時に出現するオブジェクトの画像
+  SpriteAnimation? getNextMergeItemSpriteAnimation() {
+    return nextMergeItem!.animationComponent.animation;
   }
 
   bool isClear() {
