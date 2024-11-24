@@ -187,8 +187,8 @@ class SettingVariables {
   static Map<Point, StageObjType> animalsPoints = {
     Point(-5, -5): StageObjType.gorilla,
     Point(5, 5): StageObjType.rabbit,
-    Point(-5, 5): StageObjType.kangaroo,
-    Point(5, -5): StageObjType.turtle,
+    Point(-15, 15): StageObjType.kangaroo,
+    Point(15, -15): StageObjType.turtle,
   };
 
   /// マージ回数->出現アイテムのマップ

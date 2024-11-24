@@ -31,10 +31,7 @@ class StageObjFactory {
   late final Image errorImg;
   late final Image attackArchersImg;
   late final Image arrowImg;
-  late final Image guardianAttackDImg;
-  late final Image guardianAttackLImg;
-  late final Image guardianAttackRImg;
-  late final Image guardianAttackUImg;
+  late final List<Map<Move, Image>> guardianAttackImgs;
   late final Image swordsmanAttackDImg;
   late final Image swordsmanAttackLImg;
   late final Image swordsmanAttackRImg;
@@ -66,10 +63,14 @@ class StageObjFactory {
     }
     attackArchersImg = await Flame.images.load(Archer.attackImageFileName);
     arrowImg = await Flame.images.load(Archer.arrowImageFileName);
-    guardianAttackDImg = await Flame.images.load(Guardian.attackDImageFileName);
-    guardianAttackLImg = await Flame.images.load(Guardian.attackLImageFileName);
-    guardianAttackRImg = await Flame.images.load(Guardian.attackRImageFileName);
-    guardianAttackUImg = await Flame.images.load(Guardian.attackUImageFileName);
+    guardianAttackImgs = [];
+    for (final names in Guardian.attackImageFileNames) {
+      Map<Move, Image> images = {};
+      for (final entry in names.entries) {
+        images[entry.key] = await Flame.images.load(entry.value);
+      }
+      guardianAttackImgs.add(images);
+    }
     swordsmanAttackDImg =
         await Flame.images.load(Swordsman.attackDImageFileName);
     swordsmanAttackLImg =
@@ -210,10 +211,7 @@ class StageObjFactory {
       case StageObjType.guardian:
         return Guardian(
             guardianImg: baseImages[type]!,
-            attackDImg: guardianAttackDImg,
-            attackLImg: guardianAttackLImg,
-            attackRImg: guardianAttackRImg,
-            attackUImg: guardianAttackUImg,
+            attackImgs: guardianAttackImgs,
             errorImg: errorImg,
             scale: scale,
             scaleEffect: scaleEffect,

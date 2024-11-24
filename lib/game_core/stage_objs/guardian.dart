@@ -11,10 +11,15 @@ class Guardian extends StageObj {
   static String get imageFileName => 'guardian.png';
 
   /// 各レベルごとの攻撃時の画像のファイル名
-  static String get attackDImageFileName => 'guardian_attackD.png';
-  static String get attackLImageFileName => 'guardian_attackL.png';
-  static String get attackRImageFileName => 'guardian_attackR.png';
-  static String get attackUImageFileName => 'guardian_attackU.png';
+  static List<Map<Move, String>> get attackImageFileNames => [
+        for (int i = 1; i <= 3; i++)
+          {
+            Move.down: 'guardian_attackD$i.png',
+            Move.left: 'guardian_attackL$i.png',
+            Move.right: 'guardian_attackR$i.png',
+            Move.up: 'guardian_attackU$i.png',
+          }
+      ];
 
   /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
   final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
@@ -33,55 +38,48 @@ class Guardian extends StageObj {
   Guardian({
     required super.pos,
     required Image guardianImg,
-    required Image attackDImg,
-    required Image attackLImg,
-    required Image attackRImg,
-    required Image attackUImg,
+    required List<Map<Move, Image>> attackImgs,
     required Image errorImg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     int level = 1,
   })  : levelToAttackAnimations = {
           0: {
-            Move.left:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.right:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.down:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.up:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            for (final move in MoveExtent.straights)
+              move:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
           },
-          1: {
-            Move.down: SpriteAnimation.fromFrameData(
-              attackDImg,
-              SpriteAnimationData.sequenced(
-                  amount: 5,
-                  stepTime: attackStepTime,
-                  textureSize: Vector2(96.0, 64.0)),
-            ),
-            Move.up: SpriteAnimation.fromFrameData(
-              attackUImg,
-              SpriteAnimationData.sequenced(
-                  amount: 5,
-                  stepTime: attackStepTime,
-                  textureSize: Vector2(96.0, 64.0)),
-            ),
-            Move.left: SpriteAnimation.fromFrameData(
-              attackLImg,
-              SpriteAnimationData.sequenced(
-                  amount: 5,
-                  stepTime: attackStepTime,
-                  textureSize: Vector2(64.0, 96.0)),
-            ),
-            Move.right: SpriteAnimation.fromFrameData(
-              attackRImg,
-              SpriteAnimationData.sequenced(
-                  amount: 5,
-                  stepTime: attackStepTime,
-                  textureSize: Vector2(64.0, 96.0)),
-            ),
-          },
+          for (int i = 1; i <= 3; i++)
+            i: {
+              Move.down: SpriteAnimation.fromFrameData(
+                attackImgs[i - 1][Move.down]!,
+                SpriteAnimationData.sequenced(
+                    amount: 5,
+                    stepTime: attackStepTime,
+                    textureSize: Vector2(96.0, 64.0)),
+              ),
+              Move.up: SpriteAnimation.fromFrameData(
+                attackImgs[i - 1][Move.up]!,
+                SpriteAnimationData.sequenced(
+                    amount: 5,
+                    stepTime: attackStepTime,
+                    textureSize: Vector2(96.0, 64.0)),
+              ),
+              Move.left: SpriteAnimation.fromFrameData(
+                attackImgs[i - 1][Move.left]!,
+                SpriteAnimationData.sequenced(
+                    amount: 5,
+                    stepTime: attackStepTime,
+                    textureSize: Vector2(64.0, 96.0)),
+              ),
+              Move.right: SpriteAnimation.fromFrameData(
+                attackImgs[i - 1][Move.right]!,
+                SpriteAnimationData.sequenced(
+                    amount: 5,
+                    stepTime: attackStepTime,
+                    textureSize: Vector2(64.0, 96.0)),
+              ),
+            },
         },
         super(
           animationComponent: SpriteAnimationComponent(
@@ -96,41 +94,39 @@ class Guardian extends StageObj {
           ),
           levelToAnimations: {
             0: {
-              Move.left:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.right:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.down:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.up:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
             },
-            1: {
-              Move.left: SpriteAnimation.spriteList([
-                Sprite(guardianImg,
-                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.right: SpriteAnimation.spriteList([
-                Sprite(guardianImg,
-                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.up: SpriteAnimation.spriteList([
-                Sprite(guardianImg,
-                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.down: SpriteAnimation.spriteList([
-                Sprite(guardianImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-            },
+            for (int i = 0; i < 3; i++)
+              i + 1: {
+                Move.left: SpriteAnimation.spriteList([
+                  Sprite(guardianImg,
+                      srcPosition: Vector2(i * 128 + 64, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.right: SpriteAnimation.spriteList([
+                  Sprite(guardianImg,
+                      srcPosition: Vector2(i * 128 + 96, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.up: SpriteAnimation.spriteList([
+                  Sprite(guardianImg,
+                      srcPosition: Vector2(i * 128 + 32, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.down: SpriteAnimation.spriteList([
+                  Sprite(guardianImg,
+                      srcPosition: Vector2(i * 128, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+              },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.guardian,
             level: level,
           ),
         );
-
-  bool playerStartMovingFlag = false;
 
   /// 攻撃中か
   bool attacking = false;
@@ -146,9 +142,8 @@ class Guardian extends StageObj {
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
   ) {
-    // 移動し始めのフレームの場合
+    // プレイヤー移動し始めのフレームの場合
     if (playerStartMoving) {
-      playerStartMovingFlag = true;
       // 周囲8マスに敵がいる場合、そちらを向いて攻撃を始める
       final enemyCounts = {
         Move.up: 0,
@@ -206,63 +201,46 @@ class Guardian extends StageObj {
       movingAmount = 0;
     }
 
-    if (playerStartMovingFlag) {
-      // 移動中（攻撃中）の場合(このフレームで移動開始した場合を含む)
-      // 移動量加算
-      movingAmount += dt * Stage.playerSpeed;
-      if (movingAmount >= Stage.cellSize.x) {
-        movingAmount = Stage.cellSize.x;
-      }
-
-      //if (moving != Move.none) {
-      //  // ※※※画像の移動ここから※※※
-      //  // 移動中の場合は画素も考慮
-      //  Vector2 offset = moving.vector * movingAmount;
-      //  stage.objFactory.setPosition(this, offset: offset);
-      //  // ※※※画像の移動ここまで※※※
-      //}
-
+    // プレイヤー移動終了フレームの場合
+    if (playerEndMoving) {
       // 攻撃終了
-      if (movingAmount >= Stage.cellSize.x) {
-        // 前方3マスの敵のレベルを、ガーディアンのレベル分だけ下げる
-        // レベルが0以下になった敵は消す
-        if (attacking) {
-          //if (typeLevel.level <= 1) {
-          final tmp = MoveExtent.straights;
-          tmp.remove(vector);
-          tmp.remove(vector.oppsite);
-          final attackable = pos + vector.point;
-          final attackables = [attackable];
-          for (final v in tmp) {
-            attackables.add(attackable + v.point);
-          }
-          for (final p in attackables) {
-            final obj = stage.get(p);
-            if (obj.isEnemy && obj.killable) {
-              obj.level -= level;
-              if (obj.level <= 0) {
-                gameWorld.remove(obj.animationComponent);
-                stage.enemies.remove(obj);
-              }
+      // 前方3マスの敵のレベルを、ガーディアンのレベル分だけ下げる
+      // レベルが0以下になった敵は消す
+      if (attacking) {
+        //if (typeLevel.level <= 1) {
+        final tmp = MoveExtent.straights;
+        tmp.remove(vector);
+        tmp.remove(vector.oppsite);
+        final attackable = pos + vector.point;
+        final attackables = [attackable];
+        for (final v in tmp) {
+          attackables.add(attackable + v.point);
+        }
+        for (final p in attackables) {
+          final obj = stage.get(p);
+          if (obj.isEnemy && obj.killable) {
+            obj.level -= level;
+            if (obj.level <= 0) {
+              gameWorld.remove(obj.animationComponent);
+              stage.enemies.remove(obj);
             }
           }
-          //} else if (PointRectRange((pos - Point(1, 1)), pos + Point(1, 1))
-          //    .contains(stage.player.pos)) {
-          //  // 回転斬りの場合は周囲8マス
-          //  stage.isGameover = true;
-          //}
         }
-        moving = Move.none;
-        movingAmount = 0;
-        pushings.clear();
-        playerStartMovingFlag = false;
-        if (attacking) {
-          // アニメーションを元に戻す
-          vector = vector;
-          animationComponent.size = Stage.cellSize;
-          stage.objFactory.setPosition(this);
-          attacking = false;
-        }
+        //} else if (PointRectRange((pos - Point(1, 1)), pos + Point(1, 1))
+        //    .contains(stage.player.pos)) {
+        //  // 回転斬りの場合は周囲8マス
+        //  stage.isGameover = true;
+        //}
+      }
+      moving = Move.none;
+      movingAmount = 0;
+      pushings.clear();
+      if (attacking) {
+        // アニメーションを元に戻す
+        vector = vector;
+        animationComponent.size = Stage.cellSize;
+        stage.objFactory.setPosition(this);
+        attacking = false;
       }
     }
   }
@@ -283,7 +261,7 @@ class Guardian extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => false;
