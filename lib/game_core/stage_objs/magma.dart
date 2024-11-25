@@ -38,7 +38,9 @@ class Magma extends StageObj {
             type: StageObjType.magma,
             level: level,
           ),
-        );
+        ) {
+    vector = Move.none;
+  }
 
   @override
   void update(
