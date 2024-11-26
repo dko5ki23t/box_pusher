@@ -144,17 +144,13 @@ class SettingVariables {
       {
     PointDistanceRange(Point(0, 0), 20): {
       StageObjTypeLevel(type: StageObjType.trap): 5,
-      StageObjTypeLevel(type: StageObjType.bomb): 1,
-    },
-    PointDistanceRange(Point(0, 0), 30): {
-      StageObjTypeLevel(type: StageObjType.trap): 5,
       StageObjTypeLevel(type: StageObjType.guardian): 5,
       StageObjTypeLevel(type: StageObjType.bomb): 1,
     },
     PointDistanceRange(Point(0, 0), 1000): {
       StageObjTypeLevel(type: StageObjType.trap): 5,
       StageObjTypeLevel(type: StageObjType.guardian): 5,
-      StageObjTypeLevel(type: StageObjType.bomb): 2
+      StageObjTypeLevel(type: StageObjType.bomb): 2,
     },
   };
 

@@ -32,14 +32,8 @@ class StageObjFactory {
   late final Image attackArchersImg;
   late final Image arrowImg;
   late final List<Map<Move, Image>> guardianAttackImgs;
-  late final Image swordsmanAttackDImg;
-  late final Image swordsmanAttackLImg;
-  late final Image swordsmanAttackRImg;
-  late final Image swordsmanAttackUImg;
-  late final Image swordsmanRoundAttackDImg;
-  late final Image swordsmanRoundAttackLImg;
-  late final Image swordsmanRoundAttackRImg;
-  late final Image swordsmanRoundAttackUImg;
+  late final List<Map<Move, Image>> swordsmanAttackImgs;
+  late final List<Image> swordsmanRoundAttackImgs;
   late final Image attackWizardImg;
   late final Image magicImg;
   Map<StageObjType, Image> baseImages = {};
@@ -71,22 +65,18 @@ class StageObjFactory {
       }
       guardianAttackImgs.add(images);
     }
-    swordsmanAttackDImg =
-        await Flame.images.load(Swordsman.attackDImageFileName);
-    swordsmanAttackLImg =
-        await Flame.images.load(Swordsman.attackLImageFileName);
-    swordsmanAttackRImg =
-        await Flame.images.load(Swordsman.attackRImageFileName);
-    swordsmanAttackUImg =
-        await Flame.images.load(Swordsman.attackUImageFileName);
-    swordsmanRoundAttackDImg =
-        await Flame.images.load(Swordsman.roundAttackDImageFileName);
-    swordsmanRoundAttackLImg =
-        await Flame.images.load(Swordsman.roundAttackLImageFileName);
-    swordsmanRoundAttackRImg =
-        await Flame.images.load(Swordsman.roundAttackRImageFileName);
-    swordsmanRoundAttackUImg =
-        await Flame.images.load(Swordsman.roundAttackUImageFileName);
+    swordsmanAttackImgs = [];
+    for (final names in Swordsman.attackImgFileNames) {
+      Map<Move, Image> images = {};
+      for (final entry in names.entries) {
+        images[entry.key] = await Flame.images.load(entry.value);
+      }
+      swordsmanAttackImgs.add(images);
+    }
+    swordsmanRoundAttackImgs = [
+      for (final name in Swordsman.roundAttackImgFileNames)
+        await Flame.images.load(name)
+    ];
     attackWizardImg = await Flame.images.load(Wizard.attackImageFileName);
     magicImg = await Flame.images.load(Wizard.magicImageFileName);
     isReady = true;
@@ -233,14 +223,8 @@ class StageObjFactory {
       case StageObjType.swordsman:
         return Swordsman(
           swordsmanImg: baseImages[type]!,
-          attackDImg: swordsmanAttackDImg,
-          attackLImg: swordsmanAttackLImg,
-          attackRImg: swordsmanAttackRImg,
-          attackUImg: swordsmanAttackUImg,
-          roundAttackDImg: swordsmanRoundAttackDImg,
-          roundAttackLImg: swordsmanRoundAttackLImg,
-          roundAttackRImg: swordsmanRoundAttackRImg,
-          roundAttackUImg: swordsmanRoundAttackUImg,
+          attackImgs: swordsmanAttackImgs,
+          roundAttackImgs: swordsmanRoundAttackImgs,
           errorImg: errorImg,
           pos: pos,
           level: typeLevel.level,

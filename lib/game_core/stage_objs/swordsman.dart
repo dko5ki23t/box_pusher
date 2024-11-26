@@ -17,16 +17,19 @@ class Swordsman extends StageObj {
   static String get imageFileName => 'swordsman.png';
 
   /// 各レベルごとの攻撃時の画像のファイル名
-  static String get attackDImageFileName => 'swordsman_attackD.png';
-  static String get attackLImageFileName => 'swordsman_attackL.png';
-  static String get attackRImageFileName => 'swordsman_attackR.png';
-  static String get attackUImageFileName => 'swordsman_attackU.png';
+  static List<Map<Move, String>> get attackImgFileNames => [
+        for (int i = 1; i <= 3; i++)
+          {
+            Move.down: 'swordsman_attackD$i.png',
+            Move.left: 'swordsman_attackL$i.png',
+            Move.right: 'swordsman_attackR$i.png',
+            Move.up: 'swordsman_attackU$i.png',
+          }
+      ];
 
   /// 各レベルごとの回転斬り時の画像のファイル名
-  static String get roundAttackDImageFileName => 'swordsman_attack_roundD.png';
-  static String get roundAttackLImageFileName => 'swordsman_attack_roundL.png';
-  static String get roundAttackRImageFileName => 'swordsman_attack_roundR.png';
-  static String get roundAttackUImageFileName => 'swordsman_attack_roundU.png';
+  static List<String> get roundAttackImgFileNames =>
+      [for (int i = 1; i <= 3; i++) 'swordsman_attack_round$i.png'];
 
   /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
   final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
@@ -53,100 +56,92 @@ class Swordsman extends StageObj {
 
   Swordsman({
     required Image swordsmanImg,
-    required Image attackDImg,
-    required Image attackLImg,
-    required Image attackRImg,
-    required Image attackUImg,
-    required Image roundAttackDImg,
-    required Image roundAttackLImg,
-    required Image roundAttackRImg,
-    required Image roundAttackUImg,
+    required List<Map<Move, Image>> attackImgs,
+    required List<Image> roundAttackImgs,
     required Image errorImg,
     required super.pos,
     int level = 1,
   })  : levelToAttackAnimations = {
           0: {
-            Move.left:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.right:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.down:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.up:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            for (final move in MoveExtent.straights)
+              move:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
           },
-          1: {
-            Move.down: SpriteAnimation.fromFrameData(
-              attackDImg,
-              SpriteAnimationData.sequenced(
-                  amount: 5,
-                  stepTime: attackStepTime,
-                  textureSize: Vector2(96.0, 64.0)),
-            ),
-            Move.up: SpriteAnimation.fromFrameData(
-              attackUImg,
-              SpriteAnimationData.sequenced(
-                  amount: 5,
-                  stepTime: attackStepTime,
-                  textureSize: Vector2(96.0, 64.0)),
-            ),
-            Move.left: SpriteAnimation.fromFrameData(
-              attackLImg,
-              SpriteAnimationData.sequenced(
-                  amount: 5,
-                  stepTime: attackStepTime,
-                  textureSize: Vector2(64.0, 96.0)),
-            ),
-            Move.right: SpriteAnimation.fromFrameData(
-              attackRImg,
-              SpriteAnimationData.sequenced(
-                  amount: 5,
-                  stepTime: attackStepTime,
-                  textureSize: Vector2(64.0, 96.0)),
-            ),
-          },
+          for (int i = 1; i <= 3; i++)
+            i: {
+              Move.down: SpriteAnimation.fromFrameData(
+                attackImgs[i - 1][Move.down]!,
+                SpriteAnimationData.sequenced(
+                    amount: 5,
+                    stepTime: attackStepTime,
+                    textureSize: Vector2(96.0, 64.0)),
+              ),
+              Move.up: SpriteAnimation.fromFrameData(
+                attackImgs[i - 1][Move.up]!,
+                SpriteAnimationData.sequenced(
+                    amount: 5,
+                    stepTime: attackStepTime,
+                    textureSize: Vector2(96.0, 64.0)),
+              ),
+              Move.left: SpriteAnimation.fromFrameData(
+                attackImgs[i - 1][Move.left]!,
+                SpriteAnimationData.sequenced(
+                    amount: 5,
+                    stepTime: attackStepTime,
+                    textureSize: Vector2(64.0, 96.0)),
+              ),
+              Move.right: SpriteAnimation.fromFrameData(
+                attackImgs[i - 1][Move.right]!,
+                SpriteAnimationData.sequenced(
+                    amount: 5,
+                    stepTime: attackStepTime,
+                    textureSize: Vector2(64.0, 96.0)),
+              ),
+            },
         },
         levelToRoundAttackAnimations = {
           0: {
-            Move.left:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.right:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.down:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            Move.up:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            for (final move in MoveExtent.straights)
+              move:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
           },
-          1: {
-            Move.down: SpriteAnimation.fromFrameData(
-              roundAttackDImg,
-              SpriteAnimationData.sequenced(
-                  amount: 20,
-                  stepTime: roundAttackStepTime,
-                  textureSize: Vector2.all(96.0)),
-            ),
-            Move.up: SpriteAnimation.fromFrameData(
-              roundAttackUImg,
-              SpriteAnimationData.sequenced(
-                  amount: 20,
-                  stepTime: roundAttackStepTime,
-                  textureSize: Vector2.all(96.0)),
-            ),
-            Move.left: SpriteAnimation.fromFrameData(
-              roundAttackLImg,
-              SpriteAnimationData.sequenced(
-                  amount: 20,
-                  stepTime: roundAttackStepTime,
-                  textureSize: Vector2.all(96.0)),
-            ),
-            Move.right: SpriteAnimation.fromFrameData(
-              roundAttackRImg,
-              SpriteAnimationData.sequenced(
-                  amount: 20,
-                  stepTime: roundAttackStepTime,
-                  textureSize: Vector2.all(96.0)),
-            ),
-          },
+          for (int i = 1; i <= 3; i++)
+            i: {
+              Move.down: SpriteAnimation.fromFrameData(
+                roundAttackImgs[i - 1],
+                SpriteAnimationData.sequenced(
+                    amount: 20,
+                    stepTime: roundAttackStepTime,
+                    textureSize: Vector2.all(96.0)),
+              ),
+              Move.up: SpriteAnimation.spriteList(
+                [
+                  for (int j = 10; j < 30; j++)
+                    Sprite(roundAttackImgs[i - 1],
+                        srcPosition: Vector2((j % 20) * 96, 0),
+                        srcSize: Vector2.all(96.0))
+                ],
+                stepTime: roundAttackStepTime,
+              ),
+              Move.left: SpriteAnimation.spriteList(
+                [
+                  for (int j = 15; j < 35; j++)
+                    Sprite(roundAttackImgs[i - 1],
+                        srcPosition: Vector2((j % 20) * 96, 0),
+                        srcSize: Vector2.all(96.0))
+                ],
+                stepTime: roundAttackStepTime,
+              ),
+              Move.right: SpriteAnimation.spriteList(
+                [
+                  for (int j = 5; j < 15; j++)
+                    Sprite(roundAttackImgs[i - 1],
+                        srcPosition: Vector2((j % 20) * 96, 0),
+                        srcSize: Vector2.all(96.0))
+                ],
+                stepTime: roundAttackStepTime,
+              ),
+            },
         },
         super(
           animationComponent: SpriteAnimationComponent(
@@ -159,41 +154,45 @@ class Swordsman extends StageObj {
           ),
           levelToAnimations: {
             0: {
-              Move.left:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.right:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.down:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.up:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0)
             },
-            1: {
-              Move.left: SpriteAnimation.spriteList([
-                Sprite(swordsmanImg,
-                    srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
-                Sprite(swordsmanImg,
-                    srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.right: SpriteAnimation.spriteList([
-                Sprite(swordsmanImg,
-                    srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
-                Sprite(swordsmanImg,
-                    srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.up: SpriteAnimation.spriteList([
-                Sprite(swordsmanImg,
-                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
-                Sprite(swordsmanImg,
-                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.down: SpriteAnimation.spriteList([
-                Sprite(swordsmanImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
-                Sprite(swordsmanImg,
-                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-            },
+            for (int i = 0; i < 3; i++)
+              i + 1: {
+                Move.left: SpriteAnimation.spriteList([
+                  Sprite(swordsmanImg,
+                      srcPosition: Vector2(i * 256 + 128, 0),
+                      srcSize: Stage.cellSize),
+                  Sprite(swordsmanImg,
+                      srcPosition: Vector2(i * 256 + 160, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.right: SpriteAnimation.spriteList([
+                  Sprite(swordsmanImg,
+                      srcPosition: Vector2(i * 256 + 192, 0),
+                      srcSize: Stage.cellSize),
+                  Sprite(swordsmanImg,
+                      srcPosition: Vector2(i * 256 + 224, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.up: SpriteAnimation.spriteList([
+                  Sprite(swordsmanImg,
+                      srcPosition: Vector2(i * 256 + 64, 0),
+                      srcSize: Stage.cellSize),
+                  Sprite(swordsmanImg,
+                      srcPosition: Vector2(i * 256 + 96, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.down: SpriteAnimation.spriteList([
+                  Sprite(swordsmanImg,
+                      srcPosition: Vector2(i * 256 + 0, 0),
+                      srcSize: Stage.cellSize),
+                  Sprite(swordsmanImg,
+                      srcPosition: Vector2(i * 256 + 32, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+              },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.swordsman,
