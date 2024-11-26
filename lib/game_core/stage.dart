@@ -425,7 +425,11 @@ class Stage {
               level: nextMergeItem!.level,
             ),
             pos: p);
-        boxes.add(item);
+        if (item.isEnemy) {
+          enemies.add(item);
+        } else {
+          boxes.add(item);
+        }
         gameWorld.add(item.animationComponent);
         // 次のマージ時出現アイテムを作成
         _updateNextMergeItem();

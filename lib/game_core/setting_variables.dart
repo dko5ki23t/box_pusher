@@ -196,6 +196,13 @@ class SettingVariables {
   /// マージ回数->出現アイテムのマップ
   static Map<int, StageObjTypeLevel> mergeAppearItems = {
     10: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
-    20: StageObjTypeLevel(type: StageObjType.jewel, level: 2),
+    20: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
+    30: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
+    35: StageObjTypeLevel(type: StageObjType.jewel, level: 2),
+    40: StageObjTypeLevel(type: StageObjType.jewel, level: 2),
+    45: StageObjTypeLevel(type: StageObjType.jewel, level: 2),
+    50: StageObjTypeLevel(type: StageObjType.spike, level: 2),
+    55: StageObjTypeLevel(type: StageObjType.jewel, level: 3),
+    60: StageObjTypeLevel(type: StageObjType.jewel, level: 3),
   };
 }
