@@ -259,6 +259,16 @@ class Guardian extends StageObj {
     }
   }
 
+  /// 敵の攻撃がプレイヤーに当たる
+  /// obj: 攻撃したオブジェクト
+  /// 戻り値：倒されるかどうか
+  bool hit(StageObj obj) {
+    if (obj.isEnemy) {
+      level -= obj.level;
+    }
+    return level <= 0;
+  }
+
   @override
   bool get pushable => true;
 

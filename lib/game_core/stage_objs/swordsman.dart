@@ -1,6 +1,7 @@
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
@@ -285,8 +286,22 @@ class Swordsman extends StageObj {
             for (final v in tmp) {
               attackables.add(attackable + v.point);
             }
+            // プレイヤーへ攻撃が当たった
             if (attackables.contains(stage.player.pos)) {
               stage.isGameover = stage.player.hit();
+            }
+            // ガーディアンに攻撃が当たった
+            for (final guardian in stage.boxes.where(
+              (element) =>
+                  element.type == StageObjType.guardian &&
+                  attackables.contains(element.pos),
+            )) {
+              // TODO:ここで消すのはまずい
+              if ((guardian as Guardian).hit(this)) {
+                gameWorld.remove(guardian.animationComponent);
+                // TODO
+                //guardian.valid = false;
+              }
             }
           } else if (PointRectRange((pos - Point(1, 1)), pos + Point(1, 1))
               .contains(stage.player.pos)) {
