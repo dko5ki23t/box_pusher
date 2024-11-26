@@ -236,8 +236,10 @@ class Player extends StageObj {
       // プレイヤー位置変更
       stage.objFactory.setPosition(this, offset: offset);
       for (final pushing in pushings) {
-        // 押している箱の位置変更
+        // 押しているオブジェクトの位置変更
         stage.objFactory.setPosition(pushing, offset: offset);
+        // 押しているオブジェクトの向き変更
+        pushing.vector = moving;
       }
       // ※※※画像の移動ここまで※※※
 

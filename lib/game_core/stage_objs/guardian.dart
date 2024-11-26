@@ -144,59 +144,73 @@ class Guardian extends StageObj {
   ) {
     // プレイヤー移動し始めのフレームの場合
     if (playerStartMoving) {
-      // 周囲8マスに敵がいる場合、そちらを向いて攻撃を始める
-      final enemyCounts = {
-        Move.up: 0,
-        Move.down: 0,
-        Move.left: 0,
-        Move.right: 0,
-      };
       // TODO:この動きもstageObj.enemyMove()に追加？
-      for (final move in MoveExtent.straights) {
-        // 該当向きの3マスにいる敵の数をカウントする
-        final t = pos + move.point;
-        final tmps = MoveExtent.straights;
-        tmps.remove(move);
-        tmps.remove(move.oppsite);
-        List<Point> attackPoints = [t];
-        for (final tmp in tmps) {
-          attackPoints.add(t + tmp.point);
+      // 1.向いている方に敵がいる場合、その方向に攻撃する
+      final t = pos + vector.point;
+      final tmps = MoveExtent.straights;
+      tmps.remove(vector);
+      tmps.remove(vector.oppsite);
+      List<Point> attackPoints = [t];
+      for (final tmp in tmps) {
+        attackPoints.add(t + tmp.point);
+      }
+      for (final attackPoint in attackPoints) {
+        final obj = stage.get(attackPoint);
+        if (obj.isEnemy && obj.killable) {
+          attacking = true;
+          // 攻撃中のアニメーションに変更
+          //if (typeLevel.level <= 1) {
+          int key = levelToAttackAnimations.containsKey(level) ? level : 0;
+          animationComponent.animation = levelToAttackAnimations[key]![vector]!;
+          animationComponent.size =
+              animationComponent.animation!.frames.first.sprite.srcSize;
+          stage.objFactory
+              .setPosition(this, offset: attackAnimationOffset[vector]!);
+          //} else {
+          //  animation.animation = roundAttackAnimation[vector]!;
+          //  animation.size = animation.animation!.frames.first.sprite.srcSize;
+          //  stage.objFactory
+          //      .setPosition(this, offset: roundAttackAnimationOffset);
+          //}
+          break;
         }
-        for (final attackPoint in attackPoints) {
-          final obj = stage.get(attackPoint);
-          if (obj.isEnemy && obj.killable) {
-            enemyCounts[move] = enemyCounts[move]! + 1;
+      }
+      // 2.向いている方に敵がいない、かつ周囲8マスにいる場合はそちらを向く
+      if (!attacking) {
+        final enemyCounts = {};
+        for (final move in MoveExtent.straights) {
+          if (move == vector) continue;
+          enemyCounts[move] = 0;
+          // 該当向きの3マスにいる敵の数をカウントする
+          final t = pos + move.point;
+          final tmps = MoveExtent.straights;
+          tmps.remove(move);
+          tmps.remove(move.oppsite);
+          List<Point> attackPoints = [t];
+          for (final tmp in tmps) {
+            attackPoints.add(t + tmp.point);
+          }
+          for (final attackPoint in attackPoints) {
+            final obj = stage.get(attackPoint);
+            if (obj.isEnemy && obj.killable) {
+              enemyCounts[move] = enemyCounts[move]! + 1;
+            }
           }
         }
-      }
-      // 最も敵が多い向きの中からランダムに1つを選ぶ
-      List<Move> bestVectors = [];
-      int bestEnemyCount = 1;
-      for (final entry in enemyCounts.entries) {
-        if (entry.value > bestEnemyCount) {
-          bestEnemyCount = entry.value;
-          bestVectors = [entry.key];
-        } else if (entry.value == bestEnemyCount) {
-          bestVectors.add(entry.key);
+        // 最も敵が多い向きの中からランダムに1つを選ぶ
+        List<Move> bestVectors = [];
+        int bestEnemyCount = 1;
+        for (final entry in enemyCounts.entries) {
+          if (entry.value > bestEnemyCount) {
+            bestEnemyCount = entry.value;
+            bestVectors = [entry.key];
+          } else if (entry.value == bestEnemyCount) {
+            bestVectors.add(entry.key);
+          }
         }
-      }
-      if (bestVectors.isNotEmpty) {
-        vector = bestVectors.sample(1).first;
-        attacking = true;
-        // 攻撃中のアニメーションに変更
-        //if (typeLevel.level <= 1) {
-        int key = levelToAttackAnimations.containsKey(level) ? level : 0;
-        animationComponent.animation = levelToAttackAnimations[key]![vector]!;
-        animationComponent.size =
-            animationComponent.animation!.frames.first.sprite.srcSize;
-        stage.objFactory
-            .setPosition(this, offset: attackAnimationOffset[vector]!);
-        //} else {
-        //  animation.animation = roundAttackAnimation[vector]!;
-        //  animation.size = animation.animation!.frames.first.sprite.srcSize;
-        //  stage.objFactory
-        //      .setPosition(this, offset: roundAttackAnimationOffset);
-        //}
+        if (bestVectors.isNotEmpty) {
+          vector = bestVectors.sample(1).first;
+        }
       }
       movingAmount = 0;
     }

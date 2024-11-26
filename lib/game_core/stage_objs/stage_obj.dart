@@ -234,15 +234,10 @@ abstract class StageObj {
     required this.levelToAnimations,
     this.valid = true,
     required this.pos,
-    Move? vector,
+    Move vector = Move.down,
   }) : _typeLevel = typeLevel {
     level = typeLevel.level;
-    if (vector != null) {
-      this.vector = vector;
-    }
-    if (!hasVector) {
-      this.vector = Move.none;
-    }
+    this.vector = vector;
   }
 
   /// タイプ
@@ -266,9 +261,11 @@ abstract class StageObj {
   set vector(Move v) {
     if (hasVector) {
       _vector = v;
-      int key = levelToAnimations.containsKey(level) ? level : 0;
-      animationComponent.animation = levelToAnimations[key]![v];
+    } else {
+      _vector = Move.none;
     }
+    int key = levelToAnimations.containsKey(level) ? level : 0;
+    animationComponent.animation = levelToAnimations[key]![_vector];
   }
 
   /// 対象とタイプ・レベルが一致しているかどうか
