@@ -66,9 +66,7 @@ class Spike extends StageObj {
             type: StageObjType.spike,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -151,4 +149,7 @@ class Spike extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

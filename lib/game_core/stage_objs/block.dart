@@ -79,9 +79,7 @@ class Block extends StageObj {
             type: StageObjType.block,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -141,4 +139,7 @@ class Block extends StageObj {
 
   @override
   bool get beltMove => false;
+
+  @override
+  bool get hasVector => false;
 }

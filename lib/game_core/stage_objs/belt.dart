@@ -87,9 +87,8 @@ class Belt extends StageObj {
             type: StageObjType.belt,
             level: level,
           ),
-        ) {
-    this.vector = vector;
-  }
+          vector: vector,
+        );
 
   /// 押しているオブジェクトを「行使」しているかどうか
   /// ex.) ドリルによるブロックの破壊
@@ -228,4 +227,7 @@ class Belt extends StageObj {
 
   @override
   bool get beltMove => false;
+
+  @override
+  bool get hasVector => true;
 }

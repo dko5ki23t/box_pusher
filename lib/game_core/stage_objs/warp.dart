@@ -38,9 +38,7 @@ class Warp extends StageObj {
             type: StageObjType.warp,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -80,4 +78,7 @@ class Warp extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

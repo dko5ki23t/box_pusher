@@ -43,9 +43,7 @@ class Drill extends StageObj {
             type: StageObjType.drill,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -85,4 +83,8 @@ class Drill extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  // TODO: 押して見た目の向き変えた方が良い
+  @override
+  bool get hasVector => false;
 }

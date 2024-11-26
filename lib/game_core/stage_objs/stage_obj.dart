@@ -240,6 +240,9 @@ abstract class StageObj {
     if (vector != null) {
       this.vector = vector;
     }
+    if (!hasVector) {
+      this.vector = Move.none;
+    }
   }
 
   /// タイプ
@@ -261,9 +264,11 @@ abstract class StageObj {
   /// 向いている方向
   Move get vector => _vector;
   set vector(Move v) {
-    _vector = v;
-    int key = levelToAnimations.containsKey(level) ? level : 0;
-    animationComponent.animation = levelToAnimations[key]![v];
+    if (hasVector) {
+      _vector = v;
+      int key = levelToAnimations.containsKey(level) ? level : 0;
+      animationComponent.animation = levelToAnimations[key]![v];
+    }
   }
 
   /// 対象とタイプ・レベルが一致しているかどうか
@@ -309,6 +314,9 @@ abstract class StageObj {
 
   /// コンベアで動くかどうか
   bool get beltMove;
+
+  /// 向きがあるかどうか
+  bool get hasVector;
 
   void _enemyMoveRondom(
     Map<String, dynamic> ret,

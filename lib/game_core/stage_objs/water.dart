@@ -38,9 +38,7 @@ class Water extends StageObj {
             type: StageObjType.water,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -80,4 +78,7 @@ class Water extends StageObj {
 
   @override
   bool get beltMove => false;
+
+  @override
+  bool get hasVector => false;
 }

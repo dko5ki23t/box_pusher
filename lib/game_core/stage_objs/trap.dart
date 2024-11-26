@@ -58,9 +58,7 @@ class Trap extends StageObj {
             type: StageObjType.trap,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -117,4 +115,7 @@ class Trap extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

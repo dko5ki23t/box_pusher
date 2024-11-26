@@ -50,9 +50,7 @@ class Bomb extends StageObj {
             type: StageObjType.bomb,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -137,4 +135,7 @@ class Bomb extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

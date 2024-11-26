@@ -300,4 +300,7 @@ class Wizard extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => true;
 }

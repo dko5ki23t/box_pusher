@@ -41,9 +41,7 @@ class Turtle extends StageObj {
             type: StageObjType.turtle,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -83,4 +81,7 @@ class Turtle extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

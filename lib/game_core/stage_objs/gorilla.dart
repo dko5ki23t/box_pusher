@@ -41,9 +41,7 @@ class Gorilla extends StageObj {
             type: StageObjType.gorilla,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -83,4 +81,7 @@ class Gorilla extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

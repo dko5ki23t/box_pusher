@@ -38,9 +38,7 @@ class TreasureBox extends StageObj {
             type: StageObjType.treasureBox,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -80,4 +78,7 @@ class TreasureBox extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }
