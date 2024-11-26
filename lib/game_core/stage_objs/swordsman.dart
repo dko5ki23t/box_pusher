@@ -286,7 +286,7 @@ class Swordsman extends StageObj {
             for (final v in tmp) {
               attackables.add(attackable + v.point);
             }
-            // プレイヤーへ攻撃が当たった
+            // プレイヤーに攻撃が当たった
             if (attackables.contains(stage.player.pos)) {
               stage.isGameover = stage.player.hit();
             }
@@ -296,17 +296,31 @@ class Swordsman extends StageObj {
                   element.type == StageObjType.guardian &&
                   attackables.contains(element.pos),
             )) {
-              // TODO:ここで消すのはまずい
               if ((guardian as Guardian).hit(this)) {
-                gameWorld.remove(guardian.animationComponent);
-                // TODO
-                //guardian.valid = false;
+                // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
+                guardian.removeAfterFrame();
               }
             }
-          } else if (PointRectRange((pos - Point(1, 1)), pos + Point(1, 1))
-              .contains(stage.player.pos)) {
+          } else {
             // 回転斬りの場合は周囲8マスに攻撃
-            stage.isGameover = stage.player.hit();
+            final range =
+                PointRectRange((pos - Point(1, 1)), pos + Point(1, 1));
+            // プレイヤーに攻撃が当たった
+            if (range.contains(stage.player.pos)) {
+              // 回転斬りの場合は周囲8マスに攻撃
+              stage.isGameover = stage.player.hit();
+            }
+            // ガーディアンに攻撃が当たった
+            for (final guardian in stage.boxes.where(
+              (element) =>
+                  element.type == StageObjType.guardian &&
+                  range.contains(element.pos),
+            )) {
+              if ((guardian as Guardian).hit(this)) {
+                // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
+                guardian.removeAfterFrame();
+              }
+            }
           }
         }
         moving = Move.none;

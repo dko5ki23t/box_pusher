@@ -77,8 +77,8 @@ class Trap extends StageObj {
           .where((element) => element.pos == pos && element.level <= level)
           .toList();
       for (final killing in killings) {
-        gameWorld.remove(killing.animationComponent);
-        stage.enemies.remove(killing);
+        // 敵側の処理が残っているかもしれないので、フレームの最後に消す
+        killing.removeAfterFrame();
         // 効果音を鳴らす
         switch (level) {
           default:

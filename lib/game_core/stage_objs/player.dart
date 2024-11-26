@@ -239,7 +239,7 @@ class Player extends StageObj {
         // 押しているオブジェクトの位置変更
         stage.objFactory.setPosition(pushing, offset: offset);
         // 押しているオブジェクトの向き変更
-        pushing.vector = moving;
+        pushing.vector = moving.toStraightLR();
       }
       // ※※※画像の移動ここまで※※※
 
@@ -283,8 +283,7 @@ class Player extends StageObj {
             // ドリルのオブジェクトレベルダウン、0になったら消す
             pushing.level--;
             if (pushing.level <= 0) {
-              gameWorld.remove(pushing.animationComponent);
-              stage.boxes.remove(pushing);
+              pushing.remove();
             }
           }
           toTo += moving.point;
@@ -368,14 +367,14 @@ class Player extends StageObj {
       // 押せるものなら入れることができる
       if (target.pushable) {
         pocketItem = target;
-        gameWorld.remove(target.animationComponent);
-        stage.boxes.remove(target);
+        target.remove();
       }
     } else {
       // 目の前に置く
       final target = stage.get(pos + vector.point);
       // 置ける場所/敵なら置く
       if (target.puttable || (target.isEnemy && pocketItem!.enemyMovable)) {
+        pocketItem!.valid = true;
         stage.boxes.add(pocketItem!);
         pocketItem!.pos = pos + vector.point;
         stage.objFactory.setPosition(pocketItem!);

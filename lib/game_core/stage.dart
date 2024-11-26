@@ -18,6 +18,41 @@ import 'package:flame/flame.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 
+/// 有効なオブジェクトのみを扱えるようにするリスト
+class StageObjList {
+  final List<StageObj> _objs = [];
+
+  void add(StageObj obj) => _objs.add(obj);
+
+  Iterable<StageObj> get iterable => _objs.where((element) => element.valid);
+  int get length => iterable.length;
+  Iterable<StageObj> where(bool Function(StageObj) test) =>
+      iterable.where(test);
+  StageObj firstWhere(bool Function(StageObj) test) =>
+      iterable.firstWhere(test);
+  StageObj? firstWhereOrNull(bool Function(StageObj) test) =>
+      iterable.firstWhereOrNull(test);
+
+  /// 基本的には使用禁止。代わりに対象StageObjのremove()を呼び出す。
+  bool forceRemove(Object? e) => _objs.remove(e);
+
+  /// 基本的には使用禁止。代わりに対象StageObjのremove()を呼び出す。
+  void forceRemoveWhere(bool Function(StageObj) test) =>
+      _objs.removeWhere(test);
+
+  /// 基本的には使用禁止。代わりに対象StageObjのremove()を呼び出す。
+  void forceClear() => _objs.clear();
+
+  /// 無効になったオブジェクトを一括削除
+  void removeAllInvalidObjects(World gameWorld) {
+    for (final obj in _objs
+        .where((element) => !element.valid || !element.validAfterFrame)) {
+      gameWorld.remove(obj.animationComponent);
+    }
+    _objs.removeWhere((element) => !element.valid || !element.validAfterFrame);
+  }
+}
+
 class Stage {
   /// マスのサイズ
   static Vector2 get cellSize => Vector2(32.0, 32.0);
@@ -67,10 +102,10 @@ class Stage {
   List<StageObj> effectBase = [];
 
   /// 箱
-  List<StageObj> boxes = [];
+  StageObjList boxes = StageObjList();
 
   /// 敵
-  List<StageObj> enemies = [];
+  StageObjList enemies = StageObjList();
 
   /// ワープの場所リスト
   List<Point> warpPoints = [];
@@ -197,11 +232,11 @@ class Stage {
     }
     ret['staticObjs'] = staticObjsMap;
     final List<Map<String, dynamic>> boxesList = [
-      for (final e in boxes) e.encode()
+      for (final e in boxes.iterable) e.encode()
     ];
     ret['boxes'] = boxesList;
     final List<Map<String, dynamic>> enemiesList = [
-      for (final e in enemies) e.encode()
+      for (final e in enemies.iterable) e.encode()
     ];
     ret['enemies'] = enemiesList;
     final List<String> warpPointsList = [
@@ -488,13 +523,11 @@ class Stage {
 
     if (onlyDelete) {
       // 対象オブジェクトを消す
-      gameWorld.remove(box.animationComponent);
-      boxes.remove(box);
+      box.remove();
     } else {
       // 当該位置のオブジェクトを消す
       final merged = boxes.firstWhere((element) => element.pos == pos);
-      gameWorld.remove(merged.animationComponent);
-      boxes.remove(merged);
+      merged.remove();
       // 移動したオブジェクトのレベルを上げる
       box.level++;
     }
@@ -568,14 +601,12 @@ class Stage {
       staticObjs[Point.decode(entry.key)] =
           objFactory.createFromMap(entry.value);
     }
-    boxes = [
-      for (final e in stageData['boxes'] as List<dynamic>)
-        objFactory.createFromMap(e)
-    ];
-    enemies = [
-      for (final e in stageData['enemies'] as List<dynamic>)
-        objFactory.createFromMap(e)
-    ];
+    for (final e in stageData['boxes'] as List<dynamic>) {
+      boxes.add(objFactory.createFromMap(e));
+    }
+    for (final e in stageData['enemies'] as List<dynamic>) {
+      enemies.add(objFactory.createFromMap(e));
+    }
     warpPoints = [
       for (final e in stageData['warpPoints'] as List<dynamic>) Point.decode(e)
     ];
@@ -583,8 +614,8 @@ class Stage {
       for (final e in stageData['beltPoints'] as List<dynamic>) Point.decode(e)
     ];
     gameWorld.addAll([for (final e in staticObjs.values) e.animationComponent]);
-    gameWorld.addAll([for (final e in boxes) e.animationComponent]);
-    gameWorld.addAll([for (final e in enemies) e.animationComponent]);
+    gameWorld.addAll([for (final e in boxes.iterable) e.animationComponent]);
+    gameWorld.addAll([for (final e in enemies.iterable) e.animationComponent]);
     // ブロック破壊時に出現した各アイテムの累計個数設定
     final appearedItems = stageData['appearedItems'] as List<dynamic>;
     final appearedItemsCounts =
@@ -632,8 +663,8 @@ class Stage {
     // 次マージ時に出現するアイテム初期化
     _updateNextMergeItem();
     staticObjs.clear();
-    boxes.clear();
-    enemies.clear();
+    boxes.forceClear();
+    enemies.forceClear();
     for (int y = stageLT.y; y <= stageRB.y; y++) {
       for (int x = stageLT.x; x <= stageRB.x; x++) {
         if (x == 0 && y == 0) {
@@ -663,7 +694,7 @@ class Stage {
       }
     }
     gameWorld.addAll([for (final e in staticObjs.values) e.animationComponent]);
-    gameWorld.addAll([for (final e in boxes) e.animationComponent]);
+    gameWorld.addAll([for (final e in boxes.iterable) e.animationComponent]);
     // ↓初期状態では敵いないのでコメントアウトしてる
     //gameWorld.addAll([for (final e in enemies) e.animationComponent]);
 
@@ -706,7 +737,7 @@ class Stage {
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
     // 敵更新
-    for (final enemy in enemies) {
+    for (final enemy in enemies.iterable) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
@@ -721,7 +752,7 @@ class Stage {
       // 同じレベルの敵同士が同じ位置になったらマージしてレベルアップ
       final List<Point> mergingPosList = [];
       final List<StageObj> mergedEnemies = [];
-      for (final enemy in enemies) {
+      for (final enemy in enemies.iterable) {
         if (mergingPosList.contains(enemy.pos)) {
           continue;
         }
@@ -734,32 +765,27 @@ class Stage {
           mergingPosList.add(enemy.pos);
           mergedEnemies.add(enemy);
           // マージされた敵を削除
-          gameWorld.remove(enemy.animationComponent);
+          enemy.remove();
           // レベルを上げる
-          t.first.animationComponent
-              .removeAll(t.first.animationComponent.children);
           t.first.level++;
         }
       }
-      // マージされた敵を削除
-      for (final enemy in mergedEnemies) {
-        enemies.remove(enemy);
-      }
     }
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
-    // これらはプレイヤーの移動完了時のみ動かす
-    // update()でboxesリストが変化する可能性がある(ボムの爆発等)ためコピーを使う
-    // TODO:コピーしないようにしたい
+    // これらはプレイヤーの移動開始/完了時のみ動かす
     if (playerStartMoving || playerEndMoving) {
-      final boxesCopied = [for (final box in boxes) box];
-      for (final box in boxesCopied) {
+      for (final box in boxes.iterable) {
         box.update(dt, player.moving, gameWorld, camera, this,
             playerStartMoving, playerEndMoving, prohibitedPoints);
       }
     }
 
+    // 無効になったオブジェクト/敵を削除
+    boxes.removeAllInvalidObjects(gameWorld);
+    enemies.removeAllInvalidObjects(gameWorld);
+
     // 移動完了時
-    if (before != Move.none && player.moving == Move.none) {
+    if (playerEndMoving) {
       // 移動によって新たな座標が見えそうなら追加する
       // 左端
       if (camera.canSee(

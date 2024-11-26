@@ -173,8 +173,7 @@ class Belt extends StageObj {
             // ドリルのオブジェクトレベルダウン、0になったら消す
             pushing.level--;
             if (pushing.level <= 0) {
-              gameWorld.remove(pushing.animationComponent);
-              stage.boxes.remove(pushing);
+              pushing.remove();
             }
           }
         }

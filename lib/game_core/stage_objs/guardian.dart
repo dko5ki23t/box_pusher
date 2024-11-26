@@ -235,8 +235,8 @@ class Guardian extends StageObj {
           if (obj.isEnemy && obj.killable) {
             obj.level -= level;
             if (obj.level <= 0) {
-              gameWorld.remove(obj.animationComponent);
-              stage.enemies.remove(obj);
+              // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
+              obj.removeAfterFrame();
             }
           }
         }

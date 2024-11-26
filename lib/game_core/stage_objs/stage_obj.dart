@@ -218,21 +218,39 @@ class StageObjTypeLevel {
 /// ステージ上オブジェクト
 abstract class StageObj {
   final StageObjTypeLevel _typeLevel;
-  Point pos; // 現在位置
+
+  /// 現在位置
+  Point pos;
+
+  /// 有効/無効
+  /// 無効なオブジェクトはStage.update()の最後にまとめて削除すること
   bool valid;
+
+  /// このフレーム終了後の有効/無効
+  /// falseの場合、このフレーム内処理終了までは有効。
+  /// Stage.update()の最後にまとめて削除すること
+  bool validAfterFrame;
   SpriteAnimationComponent animationComponent;
-  Map<int, Map<Move, SpriteAnimation>>
-      levelToAnimations; // オブジェクトのレベル->向き->アニメーションのマップ
-  Move moving = Move.none; // 移動中の向き
-  Move _vector = Move.down; // 向いている方向
+
+  /// オブジェクトのレベル->向き->アニメーションのマップ
+  Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
+
+  /// 移動中の向き
+  Move moving = Move.none;
+
+  /// 向いている方向
+  Move _vector = Move.down;
   double movingAmount = 0;
-  final List<StageObj> pushings = []; // 押しているオブジェクト
+
+  /// 押しているオブジェクト
+  final List<StageObj> pushings = [];
 
   StageObj({
     required typeLevel,
     required this.animationComponent,
     required this.levelToAnimations,
     this.valid = true,
+    this.validAfterFrame = true,
     required this.pos,
     Move vector = Move.down,
   }) : _typeLevel = typeLevel {
@@ -314,6 +332,12 @@ abstract class StageObj {
 
   /// 向きがあるかどうか
   bool get hasVector;
+
+  /// このオブジェクトを削除
+  void remove() => valid = false;
+
+  /// 今フレームの終わりにこのオブジェクトを削除
+  void removeAfterFrame() => validAfterFrame = false;
 
   void _enemyMoveRondom(
     Map<String, dynamic> ret,
