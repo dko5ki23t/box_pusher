@@ -125,6 +125,10 @@ class Stage {
   /// 次マージ時に出現するオブジェクト
   StageObj? nextMergeItem;
 
+  /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限(累計版)
+  final Map<PointRange, Map<StageObjTypeLevel, int>>
+      maxObjectTotalNumFromBlockMap;
+
   /// プレイヤー
   late Player player;
 
@@ -191,7 +195,9 @@ class Stage {
     return ret;
   }
 
-  Stage() {
+  Stage()
+      : maxObjectTotalNumFromBlockMap =
+            SettingVariables.getMaxObjectTotalNumFromBlockMap() {
     objFactory = StageObjFactory();
   }
 
@@ -345,7 +351,7 @@ class Stage {
     // 該当範囲内での出現個数制限を調べる
     List<StageObjTypeLevel> typelevels = [];
     late Map<StageObjTypeLevel, int> objMaxNumPattern;
-    for (final objMaxNum in SettingVariables.maxObjectNumFromBlockMap.entries) {
+    for (final objMaxNum in maxObjectTotalNumFromBlockMap.entries) {
       if (objMaxNum.key.contains(pos)) {
         objMaxNumPattern = objMaxNum.value;
         break;
@@ -774,7 +780,8 @@ class Stage {
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
     // これらはプレイヤーの移動開始/完了時のみ動かす
     if (playerStartMoving || playerEndMoving) {
-      for (final box in boxes.iterable) {
+      final currentBoxes = [...boxes.iterable];
+      for (final box in currentBoxes) {
         box.update(dt, player.moving, gameWorld, camera, this,
             playerStartMoving, playerEndMoving, prohibitedPoints);
       }

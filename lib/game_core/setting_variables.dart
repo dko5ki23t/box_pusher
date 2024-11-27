@@ -70,6 +70,12 @@ class SettingVariables {
   /// スコア加算表示(+100とか)エフェクトの移動量
   static Vector2 addedScoreEffectMove = Vector2(0, -10.0);
 
+  /// ボムが起爆しない正方形範囲の辺の長さ(必ず奇数で)
+  static int bombNotStartAreaWidth = 7;
+
+  /// ボムの爆発正方形範囲の辺の長さ(必ず奇数で)
+  static int bombExplodingAreaWidth = 7;
+
   /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, BlockFloorPattern> blockFloorMap = {
     PointDistanceRange(Point(0, 0), 8): BlockFloorPattern({}, {1: 100}),
@@ -135,24 +141,56 @@ class SettingVariables {
           StageObjTypeLevel(type: StageObjType.bomb),
         ],
         1),
+    PointDistanceRange(Point(0, 0), 25): ObjInBlock(
+        40,
+        [
+          StageObjTypeLevel(type: StageObjType.swordsman, level: 2),
+          StageObjTypeLevel(type: StageObjType.archer),
+          StageObjTypeLevel(type: StageObjType.drill),
+          StageObjTypeLevel(type: StageObjType.trap),
+          StageObjTypeLevel(type: StageObjType.bomb),
+          StageObjTypeLevel(type: StageObjType.warp),
+        ],
+        2),
     PointDistanceRange(Point(0, 0), 100):
         ObjInBlock(50, [StageObjTypeLevel(type: StageObjType.guardian)], 0),
   };
 
-  /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限
-  static Map<PointRange, Map<StageObjTypeLevel, int>> maxObjectNumFromBlockMap =
-      {
+  /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限(差分版)
+  static final Map<PointRange, Map<StageObjTypeLevel, int>>
+      _maxObjectNumFromBlockMap = {
     PointDistanceRange(Point(0, 0), 20): {
       StageObjTypeLevel(type: StageObjType.trap): 5,
       StageObjTypeLevel(type: StageObjType.guardian): 5,
       StageObjTypeLevel(type: StageObjType.bomb): 1,
     },
+    PointDistanceRange(Point(0, 0), 30): {
+      StageObjTypeLevel(type: StageObjType.trap): 3,
+      StageObjTypeLevel(type: StageObjType.bomb): 1,
+      StageObjTypeLevel(type: StageObjType.warp): 2,
+    },
     PointDistanceRange(Point(0, 0), 1000): {
-      StageObjTypeLevel(type: StageObjType.trap): 5,
-      StageObjTypeLevel(type: StageObjType.guardian): 5,
-      StageObjTypeLevel(type: StageObjType.bomb): 2,
+      StageObjTypeLevel(type: StageObjType.bomb): 1,
     },
   };
+
+  /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限(累計版)
+  static Map<PointRange, Map<StageObjTypeLevel, int>>
+      getMaxObjectTotalNumFromBlockMap() {
+    final Map<PointRange, Map<StageObjTypeLevel, int>> ret = {};
+    final Map<StageObjTypeLevel, int> currentValues = {};
+    for (final entry in _maxObjectNumFromBlockMap.entries) {
+      for (final en in entry.value.entries) {
+        if (currentValues.containsKey(en.key)) {
+          currentValues[en.key] = currentValues[en.key]! + en.value;
+        } else {
+          currentValues[en.key] = en.value;
+        }
+      }
+      ret[entry.key] = {for (final e in currentValues.entries) e.key: e.value};
+    }
+    return ret;
+  }
 
   /// ステージ上範囲->ブロック破壊時の出現宝石のレベル（範囲が重複する場合は先に存在するキーを優先）
   static Map<PointRange, int> jewelLevelInBlockMap = {
@@ -204,5 +242,14 @@ class SettingVariables {
     50: StageObjTypeLevel(type: StageObjType.spike, level: 2),
     55: StageObjTypeLevel(type: StageObjType.jewel, level: 3),
     60: StageObjTypeLevel(type: StageObjType.jewel, level: 3),
+    65: StageObjTypeLevel(type: StageObjType.jewel, level: 4),
+    70: StageObjTypeLevel(type: StageObjType.jewel, level: 4),
+    75: StageObjTypeLevel(type: StageObjType.jewel, level: 4),
+    80: StageObjTypeLevel(type: StageObjType.swordsman, level: 2),
+    85: StageObjTypeLevel(type: StageObjType.jewel, level: 5),
+    90: StageObjTypeLevel(type: StageObjType.jewel, level: 5),
+    95: StageObjTypeLevel(type: StageObjType.jewel, level: 5),
+    100: StageObjTypeLevel(type: StageObjType.archer, level: 2),
+    105: StageObjTypeLevel(type: StageObjType.jewel, level: 6),
   };
 }
