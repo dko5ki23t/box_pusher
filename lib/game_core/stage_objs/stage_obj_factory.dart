@@ -29,12 +29,12 @@ import 'package:flame/flame.dart';
 class StageObjFactory {
   bool isReady = false;
   late final Image errorImg;
-  late final Image attackArchersImg;
+  late final List<Image> attackArchersImgs;
   late final Image arrowImg;
   late final List<Map<Move, Image>> guardianAttackImgs;
   late final List<Map<Move, Image>> swordsmanAttackImgs;
   late final List<Image> swordsmanRoundAttackImgs;
-  late final Image attackWizardImg;
+  late final List<Image> attackWizardImgs;
   late final Image magicImg;
   Map<StageObjType, Image> baseImages = {};
 
@@ -55,7 +55,10 @@ class StageObjFactory {
     for (final objType in StageObjType.values) {
       baseImages[objType] = await Flame.images.load(objType.baseImageFileName);
     }
-    attackArchersImg = await Flame.images.load(Archer.attackImageFileName);
+    attackArchersImgs = [
+      for (final name in Archer.attackImageFileNames)
+        await Flame.images.load(name)
+    ];
     arrowImg = await Flame.images.load(Archer.arrowImageFileName);
     guardianAttackImgs = [];
     for (final names in Guardian.attackImageFileNames) {
@@ -77,7 +80,10 @@ class StageObjFactory {
       for (final name in Swordsman.roundAttackImgFileNames)
         await Flame.images.load(name)
     ];
-    attackWizardImg = await Flame.images.load(Wizard.attackImageFileName);
+    attackWizardImgs = [
+      for (final name in Wizard.attackImageFileNames)
+        await Flame.images.load(name)
+    ];
     magicImg = await Flame.images.load(Wizard.magicImageFileName);
     isReady = true;
   }
@@ -232,7 +238,7 @@ class StageObjFactory {
       case StageObjType.archer:
         return Archer(
           levelToAnimationImg: baseImages[type]!,
-          levelToAttackAnimationImg: attackArchersImg,
+          levelToAttackAnimationImgs: attackArchersImgs,
           arrowImg: arrowImg,
           errorImg: errorImg,
           pos: pos,
@@ -241,7 +247,7 @@ class StageObjFactory {
       case StageObjType.wizard:
         return Wizard(
           wizardImg: baseImages[type]!,
-          attackImg: attackWizardImg,
+          attackImgs: attackWizardImgs,
           magicImg: magicImg,
           errorImg: errorImg,
           pos: pos,

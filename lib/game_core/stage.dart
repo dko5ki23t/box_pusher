@@ -224,31 +224,7 @@ class Stage {
         _objFactory.create(typeLevel: typeLevel, pos: pos, vector: vector);
     // ComponentをWorldに追加
     if (addToGameWorld) {
-      if (testMode) {
-        // ブロックはタップで破壊できるようにする
-        if (typeLevel.type == StageObjType.block) {
-          gameWorld.add(
-            ButtonComponent(
-                button: ret.animationComponent,
-                onReleased: () {
-                  print("OK");
-                  merge(
-                    ret.pos,
-                    ret,
-                    gameWorld,
-                    /*breakLeftOffset: 0,
-                      breakRightOffset: 0,
-                      breakBottomOffset: 0,
-                      breakTopOffset: 0*/
-                  );
-                }),
-          );
-        } else {
-          gameWorld.add(ret.animationComponent);
-        }
-      } else {
-        gameWorld.add(ret.animationComponent);
-      }
+      gameWorld.add(ret.animationComponent);
     }
     return ret;
   }
@@ -263,41 +239,7 @@ class Stage {
     final ret = _objFactory.createFromMap(src);
     // ComponentをWorldに追加
     if (addToGameWorld) {
-      /*if (testMode) {
-        // ブロックはタップで破壊できるようにする
-        if (ret.type == StageObjType.block) {
-          final position = ret.animationComponent.position.clone();
-          ret.animationComponent.position = Vector2.all(0);
-          gameWorld.add(
-            ButtonComponent(
-              onPressed: () => print("OK2"),
-              onReleased: () {
-                print("OK");
-                merge(
-                  ret.pos,
-                  ret,
-                  gameWorld,
-                  /*breakLeftOffset: 0,
-                      breakRightOffset: 0,
-                      breakBottomOffset: 0,
-                      breakTopOffset: 0*/
-                );
-              },
-              position: position,
-              size: cellSize,
-              anchor: Anchor.center,
-              button: RectangleComponent(
-                size: cellSize,
-                children: [ret.animationComponent],
-              ),
-            ),
-          );
-        } else {
-          gameWorld.add(ret.animationComponent);
-        }
-      } else {*/
       gameWorld.add(ret.animationComponent);
-      //}
     }
     return ret;
   }
