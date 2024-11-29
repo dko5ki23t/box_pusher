@@ -150,7 +150,7 @@ class Belt extends StageObj {
       Vector2 offset = vector.vector * movingAmount;
       for (final pushing in pushings) {
         // 押しているオブジェクトの位置変更
-        stage.objFactory.setPosition(pushing, offset: offset);
+        stage.setObjectPosition(pushing, offset: offset);
       }
       // ※※※画像の移動ここまで※※※
 
@@ -167,7 +167,7 @@ class Belt extends StageObj {
           }
           // 押したものの位置を設定
           pushing.pos = to;
-          stage.objFactory.setPosition(pushing);
+          stage.setObjectPosition(pushing);
           if (pushing.type == StageObjType.drill && executing) {
             // ドリル使用時
             // ドリルのオブジェクトレベルダウン、0になったら消す
@@ -188,7 +188,7 @@ class Belt extends StageObj {
               index = 0;
             }
             pos = stage.warpPoints[index];
-            stage.objFactory.setPosition(this);
+            stage.setObjectPosition(this);
           }
         }*/
 

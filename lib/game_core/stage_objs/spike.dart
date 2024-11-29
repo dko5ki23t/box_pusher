@@ -103,7 +103,7 @@ class Spike extends StageObj {
       // 移動中の場合は画素も考慮
       if (moving != Move.none) {
         Vector2 offset = moving.vector * movingAmount;
-        stage.objFactory.setPosition(this, offset: offset);
+        stage.setObjectPosition(this, offset: offset);
       }
       // ※※※画像の移動ここまで※※※
 

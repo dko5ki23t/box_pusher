@@ -7,6 +7,7 @@ import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/game_core/setting_variables.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -144,7 +145,7 @@ class GameSeq extends Sequence
     removeAll(children);
     game.world.removeAll(game.world.children);
 
-    stage = Stage();
+    stage = Stage(testMode: game.testMode);
     await stage.onLoad();
     stage.initialize(game.world, game.camera, game.stageData);
 
@@ -727,4 +728,30 @@ class GameSeq extends Sequence
   // TapCallbacks実装時には必要(PositionComponentでは不要)
   @override
   bool containsLocalPoint(Vector2 point) => true;
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    super.onTapUp(event);
+    // テストモード時のみ、ブロックをタップで破壊
+    if (game.testMode) {
+      final cameraPos =
+          game.camera.globalToLocal(event.canvasPosition) / Stage.cellSize.x;
+      final Point stagePos = Point(cameraPos.x.floor(), cameraPos.y.floor());
+      final tapObject = stage.get(stagePos);
+      if (tapObject.type == StageObjType.block) {
+        stage.breakBlocks(stagePos, (block) => true,
+            PointDistanceRange(stagePos, 0), game.world);
+        /*stage.merge(
+          stagePos,
+          tapObject,
+          game.world,
+          breakLeftOffset: 0,
+          breakRightOffset: 0,
+          breakTopOffset: 0,
+          breakBottomOffset: 0,
+          onlyDelete: true,
+        );*/
+      }
+    }
+  }
 }

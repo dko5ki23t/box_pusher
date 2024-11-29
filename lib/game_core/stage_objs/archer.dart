@@ -191,8 +191,7 @@ class Archer extends StageObj {
         animationComponent.animation = levelToAttackAnimations[key]![vector]!;
         animationComponent.size =
             animationComponent.animation!.frames.first.sprite.srcSize;
-        stage.objFactory
-            .setPosition(this, offset: attackAnimationOffset[vector]!);
+        stage.setObjectPosition(this, offset: attackAnimationOffset[vector]!);
       }
       if (ret.containsKey('move')) {
         moving = ret['move'] as Move;
@@ -216,7 +215,7 @@ class Archer extends StageObj {
         // ※※※画像の移動ここから※※※
         // 移動中の場合は画素も考慮
         Vector2 offset = moving.vector * movingAmount;
-        stage.objFactory.setPosition(this, offset: offset);
+        stage.setObjectPosition(this, offset: offset);
         // ※※※画像の移動ここまで※※※
       }
 
@@ -280,7 +279,7 @@ class Archer extends StageObj {
           // アニメーションを元に戻す
           vector = vector;
           animationComponent.size = Stage.cellSize;
-          stage.objFactory.setPosition(this);
+          stage.setObjectPosition(this);
           attacking = false;
         }
       }

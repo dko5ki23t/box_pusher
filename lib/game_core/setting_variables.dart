@@ -209,6 +209,7 @@ class SettingVariables {
 
   /// マージしたオブジェクトが、対象のブロックを破壊できるかどうか
   static bool canBreakBlock(Block block, StageObj mergeObj) {
+    if (mergeObj.type == StageObjType.block) return true;
     switch (block.level) {
       case 1:
         return true;

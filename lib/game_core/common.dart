@@ -75,6 +75,9 @@ class Point {
 abstract class PointRange {
   /// 引数の座標が範囲内にあるか
   bool contains(Point p);
+
+  /// 範囲内座標のリスト
+  List<Point> get list;
 }
 
 /// 整数座標による四角形表現
@@ -108,6 +111,15 @@ class PointRectRange extends PointRange {
   bool contains(Point p) {
     return (p.x >= lt.x && p.x <= rb.x && p.y >= lt.y && p.y <= rb.y);
   }
+
+  /// 四角形内座標のリスト
+  @override
+  List<Point> get list {
+    return [
+      for (int y = lt.y; y <= rb.y; y++)
+        for (int x = lt.x; x <= rb.x; x++) Point(x, y)
+    ];
+  }
 }
 
 /// 整数座標による等距離範囲（≒円）表現
@@ -133,6 +145,20 @@ class PointDistanceRange extends PointRange {
   @override
   bool contains(Point p) {
     return (p - center).distance() <= distance;
+  }
+
+  // TODO:テスト
+  /// 範囲内座標のリスト
+  @override
+  List<Point> get list {
+    List<Point> ret = [];
+    for (int dy = -distance; dy <= distance; dy++) {
+      int d2 = distance - dy.abs();
+      for (int dx = -d2; dx <= d2; dx++) {
+        ret.add(center + Point(dx, dy));
+      }
+    }
+    return ret;
   }
 }
 

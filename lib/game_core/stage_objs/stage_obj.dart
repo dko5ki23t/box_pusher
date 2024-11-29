@@ -242,6 +242,9 @@ abstract class StageObj {
   Move _vector = Move.down;
   double movingAmount = 0;
 
+  /// 向いている方向による、animationComponentの回転
+  Map<Move, double> vectorToAnimationAngles = {};
+
   /// 押しているオブジェクト
   final List<StageObj> pushings = [];
 
@@ -271,6 +274,7 @@ abstract class StageObj {
     } else {
       animationComponent.animation = levelToAnimations[l]![vector];
     }
+    animationComponent.angle = vectorToAnimationAngles[vector] ?? 0;
     _typeLevel.level = l;
   }
 
@@ -283,7 +287,8 @@ abstract class StageObj {
       _vector = Move.none;
     }
     int key = levelToAnimations.containsKey(level) ? level : 0;
-    animationComponent.animation = levelToAnimations[key]![_vector];
+    animationComponent.animation = levelToAnimations[key]![vector];
+    animationComponent.angle = vectorToAnimationAngles[vector] ?? 0;
   }
 
   /// 対象とタイプ・レベルが一致しているかどうか

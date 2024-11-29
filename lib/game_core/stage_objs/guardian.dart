@@ -164,8 +164,7 @@ class Guardian extends StageObj {
           animationComponent.animation = levelToAttackAnimations[key]![vector]!;
           animationComponent.size =
               animationComponent.animation!.frames.first.sprite.srcSize;
-          stage.objFactory
-              .setPosition(this, offset: attackAnimationOffset[vector]!);
+          stage.setObjectPosition(this, offset: attackAnimationOffset[vector]!);
           //} else {
           //  animation.animation = roundAttackAnimation[vector]!;
           //  animation.size = animation.animation!.frames.first.sprite.srcSize;
@@ -253,7 +252,7 @@ class Guardian extends StageObj {
         // アニメーションを元に戻す
         vector = vector;
         animationComponent.size = Stage.cellSize;
-        stage.objFactory.setPosition(this);
+        stage.setObjectPosition(this);
         attacking = false;
       }
     }

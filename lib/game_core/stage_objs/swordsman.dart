@@ -231,16 +231,14 @@ class Swordsman extends StageObj {
           animationComponent.animation = levelToAttackAnimations[key]![vector]!;
           animationComponent.size =
               animationComponent.animation!.frames.first.sprite.srcSize;
-          stage.objFactory
-              .setPosition(this, offset: attackAnimationOffset[vector]!);
+          stage.setObjectPosition(this, offset: attackAnimationOffset[vector]!);
         } else {
           int key = levelToRoundAttackAnimations.containsKey(level) ? level : 0;
           animationComponent.animation =
               levelToRoundAttackAnimations[key]![vector]!;
           animationComponent.size =
               animationComponent.animation!.frames.first.sprite.srcSize;
-          stage.objFactory
-              .setPosition(this, offset: roundAttackAnimationOffset);
+          stage.setObjectPosition(this, offset: roundAttackAnimationOffset);
         }
       }
       if (ret.containsKey('move')) {
@@ -264,7 +262,7 @@ class Swordsman extends StageObj {
         // ※※※画像の移動ここから※※※
         // 移動中の場合は画素も考慮
         Vector2 offset = moving.vector * movingAmount;
-        stage.objFactory.setPosition(this, offset: offset);
+        stage.setObjectPosition(this, offset: offset);
         // ※※※画像の移動ここまで※※※
       }
 
@@ -331,7 +329,7 @@ class Swordsman extends StageObj {
           // アニメーションを元に戻す
           vector = vector;
           animationComponent.size = Stage.cellSize;
-          stage.objFactory.setPosition(this);
+          stage.setObjectPosition(this);
           attacking = false;
         }
       }

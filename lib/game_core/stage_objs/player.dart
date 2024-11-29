@@ -234,10 +234,10 @@ class Player extends StageObj {
       // 移動中の場合は画素も考慮
       Vector2 offset = moving.vector * movingAmount;
       // プレイヤー位置変更
-      stage.objFactory.setPosition(this, offset: offset);
+      stage.setObjectPosition(this, offset: offset);
       for (final pushing in pushings) {
         // 押しているオブジェクトの位置変更
-        stage.objFactory.setPosition(pushing, offset: offset);
+        stage.setObjectPosition(pushing, offset: offset);
         // 押しているオブジェクトの向き変更
         pushing.vector = moving.toStraightLR();
       }
@@ -249,7 +249,7 @@ class Player extends StageObj {
         // プレーヤー位置更新
         // ※merge()より前で更新することで、敵出現位置を、プレイヤーの目前にさせない
         pos = to.copy();
-        stage.objFactory.setPosition(this);
+        stage.setObjectPosition(this);
 
         // 押したオブジェクトの中でマージするインデックスを探す
         int mergeIndex = -1; // -1はマージなし
@@ -277,7 +277,7 @@ class Player extends StageObj {
           }
           // 押したものの位置を設定
           pushing.pos = toTo;
-          stage.objFactory.setPosition(pushing);
+          stage.setObjectPosition(pushing);
           if (pushing.type == StageObjType.drill && executing) {
             // ドリル使用時
             // ドリルのオブジェクトレベルダウン、0になったら消す
@@ -305,7 +305,7 @@ class Player extends StageObj {
               index = 0;
             }
             pos = stage.warpPoints[index];
-            stage.objFactory.setPosition(this);
+            stage.setObjectPosition(this);
           }
         } else if (stage.get(to).type == StageObjType.gorilla) {
           // 移動先がゴリラだった場合
@@ -377,7 +377,7 @@ class Player extends StageObj {
         pocketItem!.valid = true;
         stage.boxes.add(pocketItem!);
         pocketItem!.pos = pos + vector.point;
-        stage.objFactory.setPosition(pocketItem!);
+        stage.setObjectPosition(pocketItem!);
         gameWorld.add(pocketItem!.animationComponent);
         pocketItem = null;
       }
