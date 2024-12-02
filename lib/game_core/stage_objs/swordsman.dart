@@ -1,5 +1,5 @@
 import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/game_core/setting_variables.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';

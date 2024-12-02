@@ -5,7 +5,7 @@ import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
-import 'package:box_pusher/game_core/setting_variables.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/sequence.dart';
@@ -114,6 +114,9 @@ class GameSeq extends Sequence
     settingsImg = await Flame.images.load('settings.png');
     // BGM再生
     Audio.playBGM(Bgm.game);
+    // 各種ゲーム用設定読み込み
+    await Config().initialize();
+    // 画面コンポーネント初期化
     await initialize();
   }
 
@@ -206,7 +209,7 @@ class GameSeq extends Sequence
     // 斜めの移動ボタン
     playerDiagonalMoveButtons ??= [
       // 画面左上の操作ボタン
-      SettingVariables.wideDiagonalMoveButton
+      Config().wideDiagonalMoveButton
           ? ClipComponent.polygon(
               points: [
                 Vector2(0, 0),
@@ -233,7 +236,7 @@ class GameSeq extends Sequence
               move: Move.upLeft,
             ),
       // 画面右上の操作ボタン
-      SettingVariables.wideDiagonalMoveButton
+      Config().wideDiagonalMoveButton
           ? ClipComponent.polygon(
               points: [
                 Vector2(1, 0),
@@ -260,7 +263,7 @@ class GameSeq extends Sequence
               move: Move.upRight,
             ),
       // 画面左下の操作ボタン
-      SettingVariables.wideDiagonalMoveButton
+      Config().wideDiagonalMoveButton
           ? ClipComponent.polygon(
               points: [
                 Vector2(0, 1 - tv.y),
@@ -292,7 +295,7 @@ class GameSeq extends Sequence
               move: Move.downLeft,
             ),
       // 画面右下の操作ボタン
-      SettingVariables.wideDiagonalMoveButton
+      Config().wideDiagonalMoveButton
           ? ClipComponent.polygon(
               points: [
                 Vector2(1, 1 - tv.y),
@@ -343,7 +346,7 @@ class GameSeq extends Sequence
     // 斜め移動可能かどうかで操作ボタンの表示を変える
     playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
     if (stage.getLegAbility()) {
-      if (SettingVariables.wideDiagonalMoveButton) {
+      if (Config().wideDiagonalMoveButton) {
         clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
         playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
         playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
@@ -487,7 +490,7 @@ class GameSeq extends Sequence
         playerControllButtonsArea!
             .removeAll(playerControllButtonsArea!.children);
         if (stage.getLegAbility()) {
-          if (SettingVariables.wideDiagonalMoveButton) {
+          if (Config().wideDiagonalMoveButton) {
             clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
             playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
             playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
@@ -570,7 +573,7 @@ class GameSeq extends Sequence
       legAbilityOnOffButton.isOn = stage.getLegAbility();
       playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
       if (stage.getLegAbility()) {
-        if (SettingVariables.wideDiagonalMoveButton) {
+        if (Config().wideDiagonalMoveButton) {
           clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
           playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
           playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
@@ -600,7 +603,7 @@ class GameSeq extends Sequence
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示
     int addedScore = stage.addedScore;
-    if (addedScore > 0 && SettingVariables.showAddedScoreOnScore) {
+    if (addedScore > 0 && Config().showAddedScoreOnScore) {
       final addingScoreText = OpacityEffectTextComponent(
         text: "+$addedScore",
         textRenderer: TextPaint(

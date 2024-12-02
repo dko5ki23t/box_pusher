@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/opacity_effect_text_component.dart';
-import 'package:box_pusher/game_core/setting_variables.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
@@ -15,7 +15,6 @@ import 'package:flame/effects.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 
@@ -126,10 +125,6 @@ class Stage {
   /// 次マージ時に出現するオブジェクト
   StageObj? nextMergeItem;
 
-  /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限(累計版)
-  final Map<PointRange, Map<StageObjTypeLevel, int>>
-      maxObjectTotalNumFromBlockMap;
-
   /// プレイヤー
   late Player player;
 
@@ -199,9 +194,7 @@ class Stage {
   /// テストモードかどうか
   final bool testMode;
 
-  Stage({required this.testMode})
-      : maxObjectTotalNumFromBlockMap =
-            SettingVariables.getMaxObjectTotalNumFromBlockMap() {
+  Stage({required this.testMode}) {
     _objFactory = StageObjFactory();
   }
 
@@ -304,8 +297,8 @@ class Stage {
 
   /// 次のマージ時出現アイテムを更新
   void _updateNextMergeItem({required World gameWorld}) {
-    StageObjTypeLevel tl = SettingVariables.mergeAppearItems.values.last;
-    for (final entry in SettingVariables.mergeAppearItems.entries) {
+    StageObjTypeLevel tl = Config().mergeAppearObjMap.values.last;
+    for (final entry in Config().mergeAppearObjMap.entries) {
       remainMergeCount = max(entry.key - mergedCount, 0);
       if (remainMergeCount > 0) {
         tl = entry.value;
@@ -345,13 +338,13 @@ class Stage {
     // basePointを元に、どういうオブジェクトが出現するか決定
     late ObjInBlock pattern;
     int jewelLevel = 1;
-    for (final objInBlock in SettingVariables.objInBlockMap.entries) {
+    for (final objInBlock in Config().objInBlockMap.entries) {
       if (objInBlock.key.contains(basePoint)) {
         pattern = objInBlock.value;
         break;
       }
     }
-    for (final level in SettingVariables.jewelLevelInBlockMap.entries) {
+    for (final level in Config().jewelLevelInBlockMap.entries) {
       if (level.key.contains(basePoint)) {
         jewelLevel = level.value;
         break;
@@ -382,7 +375,7 @@ class Stage {
     // 該当範囲内での出現個数制限を調べる
     List<StageObjTypeLevel> typelevels = [];
     late Map<StageObjTypeLevel, int> objMaxNumPattern;
-    for (final objMaxNum in maxObjectTotalNumFromBlockMap.entries) {
+    for (final objMaxNum in Config().maxObjNumFromBlockMap.entries) {
       if (objMaxNum.key.contains(basePoint)) {
         objMaxNumPattern = objMaxNum.value;
         break;
@@ -456,7 +449,7 @@ class Stage {
     // マージ位置を中心に四角形範囲のブロックを破壊する
     breakBlocks(
       pos,
-      (block) => SettingVariables.canBreakBlock(block, merging),
+      (block) => Config.canBreakBlock(block, merging),
       PointRectRange(pos + Point(breakLeftOffset, breakTopOffset),
           pos + Point(breakRightOffset, breakBottomOffset)),
       gameWorld,
@@ -536,7 +529,7 @@ class Stage {
     score += gettingScore;
 
     // スコア加算表示
-    if (gettingScore > 0 && SettingVariables.showAddedScoreOnMergePos) {
+    if (gettingScore > 0 && Config().showAddedScoreOnMergePos) {
       final addingScoreText = OpacityEffectTextComponent(
         text: "+$gettingScore",
         textRenderer: TextPaint(
@@ -551,7 +544,7 @@ class Stage {
         anchor: Anchor.center,
         position: Vector2(pos.x * cellSize.x, pos.y * cellSize.y) +
             cellSize / 2 -
-            SettingVariables.addedScoreEffectMove,
+            Config().addedScoreEffectMove,
         paint: Paint()
           ..color = Colors.transparent
           ..style = PaintingStyle.fill,
@@ -567,7 +560,7 @@ class Stage {
           ),
           SequenceEffect([
             MoveEffect.by(
-                SettingVariables.addedScoreEffectMove,
+                Config().addedScoreEffectMove,
                 EffectController(
                   duration: 0.3,
                 )),
@@ -901,18 +894,16 @@ class Stage {
   /// 引数で指定した位置に、パターンに従った静止物を生成する
   StageObj createStaticObjWithPattern(Point point, World gameWorld,
       {bool addToGameWorld = true}) {
-    if (SettingVariables.animalsPoints.containsKey(point)) {
+    if (Config().fixedObjMap.containsKey(point)) {
       // 動物がいる位置（固定位置）
       return createObject(
-          typeLevel: StageObjTypeLevel(
-            type: SettingVariables.animalsPoints[point]!,
-          ),
+          typeLevel: Config().fixedObjMap[point]!,
           pos: point,
           gameWorld: gameWorld,
           addToGameWorld: addToGameWorld);
     } else {
       // その他は定めたパターンに従う
-      for (final pattern in SettingVariables.blockFloorMap.entries) {
+      for (final pattern in Config().blockFloorMap.entries) {
         if (pattern.key.contains(point)) {
           int rand = Random().nextInt(100);
           int threshold = 0;

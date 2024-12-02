@@ -78,6 +78,19 @@ abstract class PointRange {
 
   /// 範囲内座標のリスト
   List<Point> get list;
+
+  static PointRange createFromStrings(List<String> data) {
+    switch (data[0]) {
+      case 'rect':
+        return PointRectRange(Point(int.parse(data[1]), int.parse(data[2])),
+            Point(int.parse(data[3]), int.parse(data[4])));
+      case 'distance':
+        return PointDistanceRange(
+            Point(int.parse(data[1]), int.parse(data[2])), int.parse(data[5]));
+      default:
+        throw ('[PointRange]無効な文字列が範囲タイプとして入力された');
+    }
+  }
 }
 
 /// 整数座標による四角形表現

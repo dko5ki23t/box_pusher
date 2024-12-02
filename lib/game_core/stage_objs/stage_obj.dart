@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'dart:math' hide log;
 
 import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/game_core/setting_variables.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
@@ -55,27 +55,27 @@ enum StageObjType {
 
 extension StageObjTypeExtent on StageObjType {
   static Map<StageObjType, String> strMap = {
-    StageObjType.none: ' ',
-    StageObjType.block: '#',
-    StageObjType.trap: '.',
-    StageObjType.jewel: 'o',
-    StageObjType.player: 'p',
-    StageObjType.spike: 's',
-    StageObjType.drill: 'd',
-    StageObjType.treasureBox: 'b',
-    StageObjType.warp: 'w',
-    StageObjType.bomb: 'B',
-    StageObjType.belt: 'blt',
-    StageObjType.guardian: 'g',
-    StageObjType.water: 'W',
-    StageObjType.magma: 'm',
-    StageObjType.swordsman: 'S',
-    StageObjType.archer: 'a',
-    StageObjType.wizard: 'M',
-    StageObjType.gorilla: 'G',
-    StageObjType.rabbit: 'R',
-    StageObjType.kangaroo: 'k',
-    StageObjType.turtle: 't',
+    StageObjType.none: 'floor',
+    StageObjType.block: 'block',
+    StageObjType.trap: 'trap',
+    StageObjType.jewel: 'jewel',
+    StageObjType.player: 'player',
+    StageObjType.spike: 'spike',
+    StageObjType.drill: 'drill',
+    StageObjType.treasureBox: 'treasure',
+    StageObjType.warp: 'warp',
+    StageObjType.bomb: 'bomb',
+    StageObjType.belt: 'belt',
+    StageObjType.guardian: 'guardian',
+    StageObjType.water: 'water',
+    StageObjType.magma: 'magma',
+    StageObjType.swordsman: 'swordsman',
+    StageObjType.archer: 'archer',
+    StageObjType.wizard: 'wizard',
+    StageObjType.gorilla: 'gorilla',
+    StageObjType.rabbit: 'rabbit',
+    StageObjType.kangaroo: 'kangaroo',
+    StageObjType.turtle: 'turtle',
   };
 
   String get str => strMap[this]!;
@@ -180,8 +180,7 @@ extension StageObjTypeExtent on StageObjType {
         return entry.key;
       }
     }
-    assert(false, 'invalid str');
-    return StageObjType.none;
+    throw ('[StageObjType]オブジェクトタイプとして無効な文字列が入力された');
   }
 }
 
@@ -364,7 +363,7 @@ abstract class StageObj {
       for (final move in MoveExtent.straights) {
         Point eTo = pos + move.point;
         final eToObj = stage.get(eTo);
-        if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
+        if (Config().allowEnemyMoveToPushingObjectPoint &&
             player.pushings.isNotEmpty &&
             player.pushings.first.pos == eTo) {
           // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
@@ -427,7 +426,7 @@ abstract class StageObj {
       for (final move in tmpCand) {
         Point eTo = pos + move.point;
         final eToObj = stage.get(eTo);
-        if (SettingVariables.allowEnemyMoveToPushingObjectPoint &&
+        if (Config().allowEnemyMoveToPushingObjectPoint &&
             player.pushings.isNotEmpty &&
             player.pushings.first.pos == eTo) {
           // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする

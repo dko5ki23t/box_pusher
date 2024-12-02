@@ -1,6 +1,6 @@
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/game_core/setting_variables.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
@@ -65,7 +65,7 @@ class Bomb extends StageObj {
     Map<Point, Move> prohibitedPoints,
   ) {
     // プレイヤー位置がボムの周囲非起爆範囲より遠い位置なら爆発
-    int n = ((SettingVariables.bombNotStartAreaWidth - 1) / 2).floor();
+    int n = ((Config().bombNotStartAreaWidth - 1) / 2).floor();
     if ((stage.player.pos.x < pos.x - n) ||
         (stage.player.pos.x > pos.x + n) ||
         (stage.player.pos.y < pos.y - n) ||
@@ -96,7 +96,7 @@ class Bomb extends StageObj {
       );
       gameWorld.add(explodingAnimation);
       // 爆発
-      int m = ((SettingVariables.bombExplodingAreaWidth - 1) / 2).floor();
+      int m = ((Config().bombExplodingAreaWidth - 1) / 2).floor();
       stage.merge(
         pos,
         this,
