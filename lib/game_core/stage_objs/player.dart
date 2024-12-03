@@ -64,9 +64,9 @@ class Player extends StageObj {
           ),
         );
 
-  /// 押しているオブジェクトを「行使」しているかどうか
+  /// 押している各オブジェクトを「行使」しているかどうか
   /// ex.) ドリルによるブロックの破壊
-  bool executing = false;
+  List<bool> executings = [];
 
   /// 一度にいくつのオブジェクトを押せるか(-1なら制限なし)
   int pushableNum = 1;
@@ -123,6 +123,7 @@ class Player extends StageObj {
       pushings.clear();
       // マージするからここまでは押せるよ、なpushingsのリスト
       List<StageObj> pushingsSave = [];
+      List<bool> executingsSave = [];
       int end = pushableNum;
       if (end < 0) {
         final range = stage.stageRB - stage.stageLT;
@@ -131,17 +132,21 @@ class Player extends StageObj {
       for (int i = 0; i < end; i++) {
         bool stopBecauseDrill = false; // ドリルでブロックを壊すため、以降の判定をしなくて良いことを示すフラグ
         bool needSave = false;
+        bool executing = false;
         // オブジェクトが押せるか
         if (toObj.pushable) {
           bool breakPushing = false;
           // ドリルの場合は少し違う処理
           if (toObj.type == StageObjType.drill &&
               toToObj.type == StageObjType.block) {
-            // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
-            // 破壊するブロックのアニメーションを描画
-            gameWorld.add((toToObj as Block).createBreakingBlock());
-            stage.setStaticType(toTo, StageObjType.none, gameWorld);
-            executing = true;
+            if (pushingsSave.isEmpty) {
+              // ここまでpushingsに加えた中でマージしていないのであれば、
+              // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
+              // 破壊するブロックのアニメーションを描画
+              gameWorld.add((toToObj as Block).createBreakingBlock());
+              stage.setStaticType(toTo, StageObjType.none, gameWorld);
+              executing = true;
+            }
             stopBecauseDrill = true;
           } else {
             if (toToObj.stopping) {
@@ -162,8 +167,10 @@ class Player extends StageObj {
               // これまでにpushingsに追加したものも含めて一切押せない
               // ただし、途中でマージできるものがあるならそこまでは押せる
               pushings.clear();
+              executings.clear();
               if (pushingsSave.isNotEmpty) {
                 pushings.addAll(pushingsSave);
+                executings.addAll(executingsSave);
                 break;
               }
               return;
@@ -179,6 +186,7 @@ class Player extends StageObj {
         }
         // 押すオブジェクトリストに追加
         pushings.add(stage.boxes.firstWhere((element) => element.pos == to));
+        executings.add(executing);
         // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
         prohibitedPoints[toTo] = Move.none;
         if (stopBecauseDrill) {
@@ -188,6 +196,7 @@ class Player extends StageObj {
         if (needSave) {
           // マージできる場合は、pushingsをセーブする
           pushingsSave = [...pushings];
+          executingsSave = [...executings];
         }
         // 1つ先へ
         to = toTo.copy();
@@ -205,7 +214,9 @@ class Player extends StageObj {
       // 押せる可能範囲全て押せるとしても、途中でマージするならそこまでしか押せない
       if (pushingsSave.isNotEmpty) {
         pushings.clear();
+        executings.clear();
         pushings.addAll(pushingsSave);
+        executings.addAll(executingsSave);
       }
 
       // オブジェクトを押した場合、そのオブジェクトをすり抜けてプレイヤーの移動先には移動できないようにする
@@ -278,7 +289,7 @@ class Player extends StageObj {
           // 押したものの位置を設定
           pushing.pos = toTo;
           stage.setObjectPosition(pushing);
-          if (pushing.type == StageObjType.drill && executing) {
+          if (pushing.type == StageObjType.drill && executings[i]) {
             // ドリル使用時
             // ドリルのオブジェクトレベルダウン、0になったら消す
             pushing.level--;
@@ -345,7 +356,7 @@ class Player extends StageObj {
         moving = Move.none;
         pushings.clear();
         movingAmount = 0;
-        executing = false;
+        executings.clear();
 
         // アーマー回復
         if (armerRecoveryTurns > 0) {

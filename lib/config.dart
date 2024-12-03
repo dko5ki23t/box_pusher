@@ -143,6 +143,8 @@ class Config {
     showAddedScoreOnMergePos = jsonData['showAddedScoreOnMergePos']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
+    bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
+    bombExplodingAreaWidth = jsonData['bombExplodingAreaWidth']['value'];
     blockFloorMap =
         loadBlockFloorMap(await _importCSV(blockFloorMapConfigFileName));
     objInBlockMap =
