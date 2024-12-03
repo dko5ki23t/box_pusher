@@ -366,36 +366,21 @@ class Config {
   }
 
   /// マージ回数->出現オブジェクトのマップ
-  late Map<int, StageObjTypeLevel>
-      mergeAppearObjMap; /* = {
-    10: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
-    20: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
-    30: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
-    35: StageObjTypeLevel(type: StageObjType.jewel, level: 2),
-    40: StageObjTypeLevel(type: StageObjType.jewel, level: 2),
-    45: StageObjTypeLevel(type: StageObjType.jewel, level: 2),
-    50: StageObjTypeLevel(type: StageObjType.spike, level: 2),
-    55: StageObjTypeLevel(type: StageObjType.jewel, level: 3),
-    60: StageObjTypeLevel(type: StageObjType.jewel, level: 3),
-    65: StageObjTypeLevel(type: StageObjType.jewel, level: 4),
-    70: StageObjTypeLevel(type: StageObjType.jewel, level: 4),
-    75: StageObjTypeLevel(type: StageObjType.jewel, level: 4),
-    80: StageObjTypeLevel(type: StageObjType.swordsman, level: 2),
-    85: StageObjTypeLevel(type: StageObjType.jewel, level: 5),
-    90: StageObjTypeLevel(type: StageObjType.jewel, level: 5),
-    95: StageObjTypeLevel(type: StageObjType.jewel, level: 5),
-    100: StageObjTypeLevel(type: StageObjType.archer, level: 2),
-    105: StageObjTypeLevel(type: StageObjType.jewel, level: 6),
-  };*/
+  late Map<int, List<StageObjTypeLevel>> mergeAppearObjMap;
 
-  Map<int, StageObjTypeLevel> loadMergeAppearObjMap(List<List<String>> data) {
-    final Map<int, StageObjTypeLevel> ret = {};
+  Map<int, List<StageObjTypeLevel>> loadMergeAppearObjMap(
+      List<List<String>> data) {
+    final Map<int, List<StageObjTypeLevel>> ret = {};
     // 最初の2行は無視
     for (int i = 2; i < data.length; i++) {
       final vals = data[i];
-      ret[int.parse(vals[0])] = StageObjTypeLevel(
-          type: StageObjTypeExtent.fromStr(vals[1]),
-          level: int.tryParse(vals[2]) ?? 1);
+      final List<StageObjTypeLevel> objs = [];
+      for (int j = 1; j < vals.length; j += 2) {
+        objs.add(StageObjTypeLevel(
+            type: StageObjTypeExtent.fromStr(vals[j]),
+            level: int.tryParse(vals[j + 1]) ?? 1));
+      }
+      ret[int.parse(vals[0])] = objs;
     }
     return ret;
   }

@@ -54,7 +54,7 @@ class GameSeq extends Sequence
   static Vector2 get pocketAbilityButtonAreaSize => Vector2(40.0, 40.0);
 
   /// 次マージ時出現アイテム領域
-  static Vector2 get nextItemAreaSize => Vector2(100.0, 35.0);
+  static Vector2 get nextItemAreaSize => Vector2(150.0, 35.0);
 
   /// スコア領域
   static Vector2 get scoreAreaSize => Vector2(70.0, 35.0);
@@ -91,6 +91,8 @@ class GameSeq extends Sequence
   late TextComponent currentPosText;
   late TextComponent remainMergeCountText;
   late SpriteAnimationComponent nextMergeItem;
+  late SpriteAnimationComponent nextMergeItem2;
+  late SpriteAnimationComponent nextMergeItem3;
   late TextComponent scoreText;
   late TextComponent coinNumText;
   ClipComponent? playerControllButtonsArea;
@@ -371,9 +373,19 @@ class GameSeq extends Sequence
       ),
     );
     // 次マージ時出現アイテム
+    final a = stage.getNextMergeItemSpriteAnimations();
     nextMergeItem = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
         size: Vector2.all(32),
-        animation: stage.getNextMergeItemSpriteAnimation());
+        animation: a.isNotEmpty ? a.first : null);
+    nextMergeItem2 = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
+        size: Vector2.all(32),
+        animation: a.length > 1 ? a[1] : null);
+    nextMergeItem3 = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
+        size: Vector2.all(32),
+        animation: a.length > 2 ? a[2] : null);
     // スコア
     scoreText = TextComponent(
       text: "${stage.scoreVisual}",
@@ -414,7 +426,24 @@ class GameSeq extends Sequence
                   ),
                   AlignComponent(
                     alignment: Anchor.centerRight,
-                    child: nextMergeItem,
+                    child: PositionComponent(
+                      size:
+                          Vector2(Stage.cellSize.x * 3, Stage.cellSize.y) * 0.8,
+                      children: [
+                        AlignComponent(
+                          alignment: Anchor.centerLeft,
+                          child: nextMergeItem,
+                        ),
+                        AlignComponent(
+                          alignment: Anchor.center,
+                          child: nextMergeItem2,
+                        ),
+                        AlignComponent(
+                          alignment: Anchor.centerRight,
+                          child: nextMergeItem3,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -598,7 +627,10 @@ class GameSeq extends Sequence
     // 次アイテム出現までのマージ回数更新
     remainMergeCountText.text = "NEXT: ${stage.remainMergeCount}";
     // 次マージ時出現アイテム更新
-    nextMergeItem.animation = stage.getNextMergeItemSpriteAnimation();
+    final a = stage.getNextMergeItemSpriteAnimations();
+    nextMergeItem.animation = a.isNotEmpty ? a.first : null;
+    nextMergeItem2.animation = a.length > 1 ? a[1] : null;
+    nextMergeItem3.animation = a.length > 2 ? a[2] : null;
     // スコア表示更新
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示

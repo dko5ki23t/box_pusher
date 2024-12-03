@@ -123,7 +123,7 @@ class Stage {
   int remainMergeCount = 0;
 
   /// 次マージ時に出現するオブジェクト
-  StageObj? nextMergeItem;
+  final List<StageObj> nextMergeItems = [];
 
   /// プレイヤー
   late Player player;
@@ -297,20 +297,23 @@ class Stage {
 
   /// 次のマージ時出現アイテムを更新
   void _updateNextMergeItem({required World gameWorld}) {
-    StageObjTypeLevel tl = Config().mergeAppearObjMap.values.last;
+    List<StageObjTypeLevel> tls = Config().mergeAppearObjMap.values.last;
     for (final entry in Config().mergeAppearObjMap.entries) {
       remainMergeCount = max(entry.key - mergedCount, 0);
       if (remainMergeCount > 0) {
-        tl = entry.value;
+        tls = entry.value;
         break;
       }
     }
-    nextMergeItem = createObject(
-      typeLevel: tl,
-      pos: Point(0, 0),
-      gameWorld: gameWorld,
-      addToGameWorld: false,
-    );
+    nextMergeItems.clear();
+    for (final tl in tls) {
+      nextMergeItems.add(createObject(
+        typeLevel: tl,
+        pos: Point(0, 0),
+        gameWorld: gameWorld,
+        addToGameWorld: false,
+      ));
+    }
   }
 
   /// 指定した範囲のブロックを破壊する
@@ -459,67 +462,68 @@ class Stage {
     if (remainMergeCount - 1 == 0) {
       // ステージ中央から時計回りに渦巻き状に移動して床があればランダムでアイテム設置
       Point p = Point(0, 0);
-      bool decide = false;
+      List<Point> decidedPoints = [];
       final maxMoveCount = max(stageWidth, stageHeight);
+      // whileでいいが、念のため
       for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
-        // whileでいいが、念のため
         // 上に移動
         for (int i = 0; i < moveCount; i++) {
           p += Move.up.point;
           if (get(p).type == StageObjType.none &&
               Random().nextInt(maxMoveCount) < moveCount) {
-            decide = true;
-            break;
+            decidedPoints.add(p.copy());
+            if (decidedPoints.length >= nextMergeItems.length) break;
           }
         }
-        if (decide) break;
+        if (decidedPoints.length >= nextMergeItems.length) break;
         // 右に移動
         for (int i = 0; i < moveCount; i++) {
           p += Move.right.point;
           if (get(p).type == StageObjType.none &&
               Random().nextInt(maxMoveCount) < moveCount) {
-            decide = true;
-            break;
+            decidedPoints.add(p.copy());
+            if (decidedPoints.length >= nextMergeItems.length) break;
           }
         }
-        if (decide) break;
+        if (decidedPoints.length >= nextMergeItems.length) break;
         // 下に移動
         for (int i = 0; i < moveCount + 1; i++) {
           p += Move.down.point;
           if (get(p).type == StageObjType.none &&
               Random().nextInt(maxMoveCount) < moveCount) {
-            decide = true;
-            break;
+            decidedPoints.add(p.copy());
+            if (decidedPoints.length >= nextMergeItems.length) break;
           }
         }
-        if (decide) break;
+        if (decidedPoints.length >= nextMergeItems.length) break;
         // 左に移動
         for (int i = 0; i < moveCount + 1; i++) {
           p += Move.left.point;
           if (get(p).type == StageObjType.none &&
               Random().nextInt(maxMoveCount) < moveCount) {
-            decide = true;
-            break;
+            decidedPoints.add(p.copy());
+            if (decidedPoints.length >= nextMergeItems.length) break;
           }
         }
-        if (decide) break;
+        if (decidedPoints.length >= nextMergeItems.length) break;
       }
-      if (decide) {
+      for (int i = 0; i < decidedPoints.length; i++) {
+        final nextMergeItem = nextMergeItems[i];
         final item = createObject(
             typeLevel: StageObjTypeLevel(
-              type: nextMergeItem!.type,
-              level: nextMergeItem!.level,
+              type: nextMergeItem.type,
+              level: nextMergeItem.level,
             ),
-            pos: p,
+            pos: decidedPoints[i],
             gameWorld: gameWorld);
         if (item.isEnemy) {
           enemies.add(item);
         } else {
           boxes.add(item);
         }
-        // 次のマージ時出現アイテムを作成
-        _updateNextMergeItem(gameWorld: gameWorld);
       }
+      // 次のマージ時出現アイテムを作成
+      _updateNextMergeItem(gameWorld: gameWorld);
     } else {
       if (remainMergeCount > 0) remainMergeCount--;
     }
@@ -993,8 +997,11 @@ class Stage {
   }
 
   /// 次マージ時に出現するオブジェクトの画像
-  SpriteAnimation? getNextMergeItemSpriteAnimation() {
-    return nextMergeItem!.animationComponent.animation;
+  List<SpriteAnimation?> getNextMergeItemSpriteAnimations() {
+    return [
+      for (final nextMergeItem in nextMergeItems)
+        nextMergeItem.animationComponent.animation
+    ];
   }
 
   bool isClear() {
