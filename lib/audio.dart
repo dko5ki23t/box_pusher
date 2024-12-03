@@ -98,5 +98,6 @@ class Audio {
     assert(!isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
     // キャッシュクリア
     await FlameAudio.audioCache.clearAll();
+    FlameAudio.bgm.dispose();
   }
 }
