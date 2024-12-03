@@ -119,6 +119,7 @@ class Spike extends StageObj {
         moving = Move.none;
         movingAmount = 0;
         pushings.clear();
+        _playerStartMovingFlag = false;
       }
     }
   }

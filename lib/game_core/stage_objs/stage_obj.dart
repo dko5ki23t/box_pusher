@@ -10,6 +10,7 @@ import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
+import 'package:box_pusher/game_core/stage_objs/ghost.dart';
 import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
 import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
@@ -47,6 +48,7 @@ enum StageObjType {
   swordsman, // 剣を使う敵
   archer, // 弓を使う敵
   wizard, // 魔法を使う敵
+  ghost, // オブジェクトをすり抜けて移動できる敵
   gorilla,
   rabbit,
   kangaroo,
@@ -72,6 +74,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.swordsman: 'swordsman',
     StageObjType.archer: 'archer',
     StageObjType.wizard: 'wizard',
+    StageObjType.ghost: 'ghost',
     StageObjType.gorilla: 'gorilla',
     StageObjType.rabbit: 'rabbit',
     StageObjType.kangaroo: 'kangaroo',
@@ -116,6 +119,8 @@ extension StageObjTypeExtent on StageObjType {
         return Archer;
       case StageObjType.wizard:
         return Wizard;
+      case StageObjType.ghost:
+        return Ghost;
       case StageObjType.gorilla:
         return Gorilla;
       case StageObjType.rabbit:
@@ -163,6 +168,8 @@ extension StageObjTypeExtent on StageObjType {
         return Archer.imageFileName;
       case StageObjType.wizard:
         return Wizard.imageFileName;
+      case StageObjType.ghost:
+        return Ghost.imageFileName;
       case StageObjType.gorilla:
         return Gorilla.imageFileName;
       case StageObjType.rabbit:
@@ -466,14 +473,116 @@ abstract class StageObj {
     }
   }
 
+  void _enemyMoveFollowWithGhosting(
+    Map<String, dynamic> ret,
+    EnemyMovePattern pattern,
+    Move vector,
+    StageObj target,
+    Player player,
+    Stage stage,
+    Map<Point, Move> prohibitedPoints,
+    bool isGhost,
+  ) {
+    // 今ターゲットの移動先にいるなら移動しない、ゴーストなら解除する
+    if (pos == target.pos + target.moving.point) {
+      ret['move'] = Move.none;
+      ret['ghost'] = false;
+    } else if (Random().nextInt(6) == 0) {
+      ret['move'] = Move.none;
+      ret['ghost'] = isGhost;
+    } else {
+      // ゴースト解除できるかどうかの判定
+      bool canUnGhost(Point p, Move move) {
+        final obj = stage.get(p);
+        if (Config().allowEnemyMoveToPushingObjectPoint &&
+            player.pushings.isNotEmpty &&
+            player.pushings.first.pos == p) {
+          // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+          return true;
+        } else if (!obj.enemyMovable && !(mergable && isSameTypeLevel(obj))) {
+          // 敵が移動可能でない、かつマージできない
+          return false;
+        }
+        if (prohibitedPoints.containsKey(p) &&
+            (prohibitedPoints[p] == Move.none || prohibitedPoints[p] == move)) {
+          return false;
+        }
+        return true;
+      }
+
+      // 今いる位置でゴースト解除できるか
+      bool canUnGhostNow = canUnGhost(pos, Move.none);
+      // ターゲットの方へ移動する/向きを変える
+      final delta = target.pos - pos;
+
+      /// 動く向きの候補->ゴースト化が必要かどうかのマップ
+      final Map<Move, bool> candWithGhosting = {};
+      if (delta.x > 0) {
+        candWithGhosting[Move.right] = true;
+      } else if (delta.x < 0) {
+        candWithGhosting[Move.left] = true;
+      }
+      if (delta.y > 0) {
+        candWithGhosting[Move.down] = true;
+      } else if (delta.y < 0) {
+        candWithGhosting[Move.up] = true;
+      }
+      for (final entry in candWithGhosting.entries) {
+        final move = entry.key;
+        Point eTo = pos + move.point;
+
+        if (canUnGhost(eTo, move)) {
+          candWithGhosting[move] = false;
+        }
+        /*final eToObj = stage.get(eTo);
+        if (Config().allowEnemyMoveToPushingObjectPoint &&
+            player.pushings.isNotEmpty &&
+            player.pushings.first.pos == eTo) {
+          // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+        } else if (!eToObj.enemyMovable &&
+            !(mergable && isSameTypeLevel(eToObj))) {
+          // 敵が移動可能でない、かつマージできない
+          continue;
+        }
+        if (prohibitedPoints.containsKey(eTo) &&
+            (prohibitedPoints[eTo] == Move.none ||
+                prohibitedPoints[eTo] == move)) {
+          continue;
+        }
+        candWithGhosting[move] = false;*/
+      }
+      if (candWithGhosting.isNotEmpty) {
+        final move = candWithGhosting.keys.sample(1).first;
+        ret['move'] = move;
+        // 向きも変更
+        ret['vector'] = move;
+        // ゴースト化が必要かどうか
+        ret['ghost'] = candWithGhosting[move]!;
+        // ゴースト解除ができないなら
+        if (isGhost && !canUnGhostNow) {
+          ret['ghost'] = true;
+        }
+        if (!ret['ghost']!) {
+          // 自身の移動先は、他のオブジェクトの移動先にならないようにする
+          prohibitedPoints[pos + move.point] = Move.none;
+          // 他オブジェクトとすれ違えないようにする
+          if (!prohibitedPoints.containsKey(pos)) {
+            prohibitedPoints[pos] = move.oppsite;
+          }
+        }
+      }
+    }
+  }
+
   /// 敵の動きを決定する
   Map<String, dynamic> enemyMove(
     EnemyMovePattern pattern,
     Move vector,
     Player player,
     Stage stage,
-    Map<Point, Move> prohibitedPoints,
-  ) {
+    Map<Point, Move> prohibitedPoints, {
+    bool isGhost = false,
+  }) {
     Map<String, dynamic> ret = {};
 
     switch (pattern) {
@@ -544,6 +653,11 @@ abstract class StageObj {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
+        break;
+      case EnemyMovePattern.followPlayerWithGhosting:
+        // プレイヤーの方へ動くor向く、通れない場合はゴースト化する/通れるならゴースト解除する
+        _enemyMoveFollowWithGhosting(ret, pattern, vector, player, player,
+            stage, prohibitedPoints, isGhost);
         break;
     }
 

@@ -3,6 +3,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
+import 'package:box_pusher/game_core/stage_objs/ghost.dart';
 import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
@@ -253,6 +254,12 @@ class StageObjFactory {
           pos: pos,
           level: typeLevel.level,
         )..vector = vector;
+      case StageObjType.ghost:
+        return Ghost(
+            ghostImg: baseImages[type]!,
+            errorImg: errorImg,
+            pos: pos,
+            level: typeLevel.level);
       case StageObjType.gorilla:
         return Gorilla(
             gorillaImg: baseImages[type]!,

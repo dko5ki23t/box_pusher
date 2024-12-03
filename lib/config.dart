@@ -41,6 +41,9 @@ enum EnemyMovePattern {
 
   /// プレイヤーの方へ動くor向く、直線5マスを攻撃する
   followPlayerAttackStraight5,
+
+  /// プレイヤーの方へ動くor向く、通れない場合はゴースト化する/通れるならゴースト解除する
+  followPlayerWithGhosting,
 }
 
 class BlockFloorPattern {

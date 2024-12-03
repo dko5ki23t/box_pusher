@@ -1,7 +1,7 @@
 ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
 rangeType, point1X, point1Y, point2X, point2Y, distance, jewels, maxNum, obj1, level1, obj2, level2, ...
 distance, 0, 0, 0, 0, 5, 50, 0
-distance, 0, 0, 0, 0, 10, 50, 2, spike, 1, trap, 1
+distance, 0, 0, 0, 0, 10, 50, 2, spike, 1, ghost, 1, trap, 1
 rect, 5, 5, 20, 20, 0, 40, 1, belt, 1, guardian, 1, swordsman, 1
 rect, -5, -5, -20, -20, 0, 40, 1, drill, 1, guardian, 1, swordsman, 1
 distance, 0, 0, 0, 0, 20, 40, 1, swordsman, 1, guardian, 1, bomb, 1
