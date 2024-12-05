@@ -335,8 +335,12 @@ class Stage {
       if (get(p).type == StageObjType.block &&
           canBreakBlockFunc(get(p) as Block)) {
         breakingAnimations.add((get(p) as Block).createBreakingBlock());
+        // TODO: 敵が生み出したブロック（に限らず）破壊したブロックの種類によって出現するアイテムを分けれるように設定できるようにすべし
+        if (get(p).level < 100) {
+          // 敵が生み出したブロック以外のみアイテム出現位置に含める
+          breaked.add(p);
+        }
         setStaticType(p, StageObjType.none, gameWorld);
-        breaked.add(p);
       }
     }
     // basePointを元に、どういうオブジェクトが出現するか決定
@@ -901,10 +905,10 @@ class Stage {
   /// 引数で指定した位置に、パターンに従った静止物を生成する
   StageObj createStaticObjWithPattern(Point point, World gameWorld,
       {bool addToGameWorld = true}) {
-    if (Config().fixedObjMap.containsKey(point)) {
-      // 動物がいる位置（固定位置）
+    if (Config().fixedStaticObjMap.containsKey(point)) {
+      // 固定位置のオブジェクト
       return createObject(
-          typeLevel: Config().fixedObjMap[point]!,
+          typeLevel: Config().fixedStaticObjMap[point]!,
           pos: point,
           gameWorld: gameWorld,
           addToGameWorld: addToGameWorld);

@@ -7,6 +7,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
+import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
@@ -49,6 +50,7 @@ enum StageObjType {
   archer, // 弓を使う敵
   wizard, // 魔法を使う敵
   ghost, // オブジェクトをすり抜けて移動できる敵
+  builder, // 一定間隔でブロックを置く敵
   gorilla,
   rabbit,
   kangaroo,
@@ -75,6 +77,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.archer: 'archer',
     StageObjType.wizard: 'wizard',
     StageObjType.ghost: 'ghost',
+    StageObjType.builder: 'builder',
     StageObjType.gorilla: 'gorilla',
     StageObjType.rabbit: 'rabbit',
     StageObjType.kangaroo: 'kangaroo',
@@ -121,6 +124,8 @@ extension StageObjTypeExtent on StageObjType {
         return Wizard;
       case StageObjType.ghost:
         return Ghost;
+      case StageObjType.builder:
+        return Builder;
       case StageObjType.gorilla:
         return Gorilla;
       case StageObjType.rabbit:
@@ -170,6 +175,8 @@ extension StageObjTypeExtent on StageObjType {
         return Wizard.imageFileName;
       case StageObjType.ghost:
         return Ghost.imageFileName;
+      case StageObjType.builder:
+        return Builder.imageFileName;
       case StageObjType.gorilla:
         return Gorilla.imageFileName;
       case StageObjType.rabbit:
@@ -288,6 +295,9 @@ abstract class StageObj {
   Move get vector => _vector;
   set vector(Move v) {
     if (hasVector) {
+      if (!MoveExtent.straights.contains(v)) {
+        return;
+      }
       _vector = v;
     } else {
       _vector = Move.none;

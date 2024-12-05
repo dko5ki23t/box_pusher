@@ -15,8 +15,8 @@ const String maxObjNumFromBlockMapConfigFileName =
     'assets/texts/config_max_obj_num_from_block_map.csv';
 const String jewelLevelInBlockMapConfigFileName =
     'assets/texts/config_jewel_level_in_block_map.csv';
-const String fixedObjMapConfigFileName =
-    'assets/texts/config_fixed_obj_map.csv';
+const String fixedStaticObjMapConfigFileName =
+    'assets/texts/config_fixed_static_obj_map.csv';
 const String mergeAppearObjMapConfigFileName =
     'assets/texts/config_merge_appear_obj_map.csv';
 
@@ -145,6 +145,7 @@ class Config {
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
     bombExplodingAreaWidth = jsonData['bombExplodingAreaWidth']['value'];
+    builderBuildBlockTurn = jsonData['builderBuildBlockTurn']['value'];
     blockFloorMap =
         loadBlockFloorMap(await _importCSV(blockFloorMapConfigFileName));
     objInBlockMap =
@@ -153,7 +154,8 @@ class Config {
         await _importCSV(maxObjNumFromBlockMapConfigFileName));
     jewelLevelInBlockMap = loadJewelLevelInBlockMap(
         await _importCSV(jewelLevelInBlockMapConfigFileName));
-    fixedObjMap = loadFixedObjMap(await _importCSV(fixedObjMapConfigFileName));
+    fixedStaticObjMap =
+        loadFixedObjMap(await _importCSV(fixedStaticObjMapConfigFileName));
     mergeAppearObjMap = loadMergeAppearObjMap(
         await _importCSV(mergeAppearObjMapConfigFileName));
     _isReady = true;
@@ -185,6 +187,9 @@ class Config {
 
   /// ボムの爆発正方形範囲の辺の長さ(必ず奇数で)
   late int bombExplodingAreaWidth;
+
+  /// ブロックを置く敵がブロックを置く間隔（ターン数）
+  late int builderBuildBlockTurn;
 
   /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
   late Map<PointRange, BlockFloorPattern> blockFloorMap;
@@ -263,22 +268,7 @@ class Config {
   }
 
   /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限
-  late final Map<PointRange, Map<StageObjTypeLevel, int>>
-      maxObjNumFromBlockMap; /* = {
-    PointDistanceRange(Point(0, 0), 20): {
-      StageObjTypeLevel(type: StageObjType.trap): 5,
-      StageObjTypeLevel(type: StageObjType.guardian): 5,
-      StageObjTypeLevel(type: StageObjType.bomb): 1,
-    },
-    PointDistanceRange(Point(0, 0), 30): {
-      StageObjTypeLevel(type: StageObjType.trap): 3,
-      StageObjTypeLevel(type: StageObjType.bomb): 1,
-      StageObjTypeLevel(type: StageObjType.warp): 2,
-    },
-    PointDistanceRange(Point(0, 0), 1000): {
-      StageObjTypeLevel(type: StageObjType.bomb): 1,
-    },
-  };*/
+  late final Map<PointRange, Map<StageObjTypeLevel, int>> maxObjNumFromBlockMap;
 
   Map<PointRange, Map<StageObjTypeLevel, int>>
       loadAndSumMaxObjectNumFromBlockMap(List<List<String>> data) {
@@ -306,20 +296,7 @@ class Config {
   }
 
   /// ステージ上範囲->ブロック破壊時の出現宝石のレベル（範囲が重複する場合は先に存在するキーを優先）
-  late Map<PointRange, int>
-      jewelLevelInBlockMap; /* = {
-    PointDistanceRange(Point(0, 0), 4): 1,
-    PointDistanceRange(Point(0, 0), 9): 2,
-    PointDistanceRange(Point(0, 0), 16): 3,
-    PointDistanceRange(Point(0, 0), 25): 4,
-    PointDistanceRange(Point(0, 0), 36): 5,
-    PointDistanceRange(Point(0, 0), 49): 6,
-    PointDistanceRange(Point(0, 0), 64): 7,
-    PointDistanceRange(Point(0, 0), 81): 8,
-    PointDistanceRange(Point(0, 0), 100): 9,
-    PointDistanceRange(Point(0, 0), 121): 10,
-    PointDistanceRange(Point(0, 0), 1000): 11,
-  };*/
+  late Map<PointRange, int> jewelLevelInBlockMap;
 
   Map<PointRange, int> loadJewelLevelInBlockMap(List<List<String>> data) {
     final Map<PointRange, int> ret = {};
@@ -344,19 +321,20 @@ class Config {
         return mergeObj.level >= 8;
       case 4:
         return mergeObj.level >= 13;
+      // ここからは敵が生み出すブロック
+      case 101:
+        return mergeObj.level >= 4;
+      case 102:
+        return mergeObj.level >= 8;
+      case 103:
+        return mergeObj.level >= 13;
       default:
         return false;
     }
   }
 
   /// 固定位置オブジェクトのマップ
-  late Map<Point, StageObjTypeLevel>
-      fixedObjMap; /* = {
-    Point(-5, -5): StageObjType.gorilla,
-    Point(5, 5): StageObjType.rabbit,
-    Point(-10, 10): StageObjType.kangaroo,
-    Point(10, -10): StageObjType.turtle,
-  };*/
+  late Map<Point, StageObjTypeLevel> fixedStaticObjMap;
 
   Map<Point, StageObjTypeLevel> loadFixedObjMap(List<List<String>> data) {
     final Map<Point, StageObjTypeLevel> ret = {};

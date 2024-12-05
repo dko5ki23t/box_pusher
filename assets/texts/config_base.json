@@ -33,5 +33,9 @@
     "bombExplodingAreaWidth": {
         "desc": "ボムの爆発正方形範囲の辺の長さ(必ず奇数で)",
         "value": 7
+    },
+    "builderBuildBlockTurn": {
+        "desc": "ブロックを置く敵がブロックを置く間隔（ターン数）",
+        "value": 7
     }
 }
