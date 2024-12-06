@@ -18,6 +18,7 @@ import 'package:box_pusher/game_core/stage_objs/jewel.dart';
 import 'package:box_pusher/game_core/stage_objs/kangaroo.dart';
 import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
+import 'package:box_pusher/game_core/stage_objs/pusher.dart';
 import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
@@ -51,6 +52,7 @@ enum StageObjType {
   wizard, // 魔法を使う敵
   ghost, // オブジェクトをすり抜けて移動できる敵
   builder, // 一定間隔でブロックを置く敵
+  pusher, // オブジェクトを押す敵
   gorilla,
   rabbit,
   kangaroo,
@@ -78,6 +80,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.wizard: 'wizard',
     StageObjType.ghost: 'ghost',
     StageObjType.builder: 'builder',
+    StageObjType.pusher: 'pusher',
     StageObjType.gorilla: 'gorilla',
     StageObjType.rabbit: 'rabbit',
     StageObjType.kangaroo: 'kangaroo',
@@ -126,6 +129,8 @@ extension StageObjTypeExtent on StageObjType {
         return Ghost;
       case StageObjType.builder:
         return Builder;
+      case StageObjType.pusher:
+        return Pusher;
       case StageObjType.gorilla:
         return Gorilla;
       case StageObjType.rabbit:
@@ -177,6 +182,8 @@ extension StageObjTypeExtent on StageObjType {
         return Ghost.imageFileName;
       case StageObjType.builder:
         return Builder.imageFileName;
+      case StageObjType.pusher:
+        return Pusher.imageFileName;
       case StageObjType.gorilla:
         return Gorilla.imageFileName;
       case StageObjType.rabbit:
@@ -260,6 +267,10 @@ abstract class StageObj {
 
   /// 押しているオブジェクト
   final List<StageObj> pushings = [];
+
+  /// 押している各オブジェクトを「行使」しているかどうか
+  /// ex.) ドリルによるブロックの破壊
+  List<bool> executings = [];
 
   StageObj({
     required typeLevel,
@@ -408,6 +419,87 @@ abstract class StageObj {
       if (!prohibitedPoints.containsKey(pos)) {
         prohibitedPoints[pos] = move.oppsite;
       }
+    }
+  }
+
+  void _enemyMoveAndPushRondom(
+    Map<String, dynamic> ret,
+    EnemyMovePattern pattern,
+    Move vector,
+    Player player,
+    Stage stage,
+    Map<Point, Move> prohibitedPoints,
+    bool containStop,
+    World gameWorld,
+    int pushableNum,
+  ) {
+    final Map<Move, Map<String, dynamic>> cand = {};
+    // 今プレイヤーの移動先にいるなら移動しない
+    if (pos == player.pos + player.moving.point) {
+      cand[Move.none] = {
+        "prohibitedPoints": prohibitedPoints,
+        "pushings": <StageObj>[],
+        "executings": <bool>[]
+      };
+    } else {
+      if (containStop) {
+        cand[Move.none] = {
+          "prohibitedPoints": prohibitedPoints,
+          "pushings": <StageObj>[],
+          "executings": <bool>[]
+        };
+      }
+      for (final move in MoveExtent.straights) {
+        Point eTo = pos + move.point;
+        final eToObj = stage.get(eTo);
+        if (Config().allowEnemyMoveToPushingObjectPoint &&
+            player.pushings.isNotEmpty &&
+            player.pushings.first.pos == eTo) {
+          // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+        } else if (!eToObj.enemyMovable &&
+            !eToObj.pushable &&
+            !(mergable && isSameTypeLevel(eToObj))) {
+          // 敵が移動可能でない、押すこともできない、かつマージできない
+          continue;
+        }
+        if (prohibitedPoints.containsKey(eTo) &&
+            (prohibitedPoints[eTo] == Move.none ||
+                prohibitedPoints[eTo] == move)) {
+          continue;
+        }
+        // 実際に押せるか
+        // TODO:できればコピーしたくない
+        Map<Point, Move> copied = {};
+        List<StageObj> pushingsList = [];
+        List<bool> executingsList = [];
+        copied.addAll(prohibitedPoints);
+        if (startPushing(move, pushableNum, stage, gameWorld, copied,
+            pushingsList, executingsList)) {
+          cand[move] = {
+            "prohibitedPoints": copied,
+            "pushings": pushingsList,
+            "executings": executingsList,
+          };
+        }
+      }
+    }
+    if (cand.isNotEmpty) {
+      final move = cand.keys.sample(1).first;
+      ret['move'] = move;
+      // 向きも変更
+      ret['vector'] = move;
+      // 自身の移動先は、他のオブジェクトの移動先にならないようにする
+      prohibitedPoints[pos + move.point] = Move.none;
+      // 他オブジェクトとすれ違えないようにする
+      if (!prohibitedPoints.containsKey(pos)) {
+        prohibitedPoints[pos] = move.oppsite;
+      }
+      // startPushing()の結果を反映する
+      prohibitedPoints.addAll(cand[move]!["prohibitedPoints"]!);
+      pushings.clear();
+      pushings.addAll(cand[move]!["pushings"]!);
+      executings.clear();
+      executings.addAll(cand[move]!["executings"]!);
     }
   }
 
@@ -592,6 +684,8 @@ abstract class StageObj {
     Stage stage,
     Map<Point, Move> prohibitedPoints, {
     bool isGhost = false,
+    World? gameWorld,
+    int? pushableNum,
   }) {
     Map<String, dynamic> ret = {};
 
@@ -669,9 +763,189 @@ abstract class StageObj {
         _enemyMoveFollowWithGhosting(ret, pattern, vector, player, player,
             stage, prohibitedPoints, isGhost);
         break;
+      case EnemyMovePattern.walkAndPushRandomOrStop:
+        _enemyMoveAndPushRondom(ret, pattern, vector, player, stage,
+            prohibitedPoints, true, gameWorld!, pushableNum!);
+        break;
     }
 
     return ret;
+  }
+
+  /// 移動方向を元に、押し始める・押すオブジェクトを決定する
+  /// 移動自体ができない場合はfalseを返す
+  bool startPushing(
+    Move moveInput,
+    int pushableNum,
+    Stage stage,
+    World gameWorld,
+    Map<Point, Move> prohibitedPoints,
+    List<StageObj> pushingsList,
+    List<bool> executingsList,
+  ) {
+    pushingsList.clear();
+    executingsList.clear();
+    // 移動先の座標、オブジェクト
+    Point to = pos + moveInput.point;
+    StageObj toObj = stage.get(to);
+    // 押すオブジェクトの移動先の座標、オブジェクト
+    Point toTo = to + moveInput.point;
+    StageObj toToObj = stage.get(toTo);
+    // 動かないならreturn
+    if (moveInput == Move.none) {
+      return false;
+    }
+    // マージするからここまでは押せるよ、なpushingsのリスト
+    List<StageObj> pushingsSave = [];
+    List<bool> executingsSave = [];
+    int end = pushableNum;
+    if (end < 0) {
+      final range = stage.stageRB - stage.stageLT;
+      end = max(range.x, range.y);
+    }
+    for (int i = 0; i < end; i++) {
+      bool stopBecauseDrill = false; // ドリルでブロックを壊すため、以降の判定をしなくて良いことを示すフラグ
+      bool needSave = false;
+      bool executing = false;
+      // オブジェクトが押せるか
+      if (toObj.pushable) {
+        bool breakPushing = false;
+        // ドリルの場合は少し違う処理
+        if (toObj.type == StageObjType.drill &&
+            toToObj.type == StageObjType.block) {
+          if (pushingsSave.isEmpty) {
+            // ここまでpushingsに加えた中でマージしていないのであれば、
+            // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
+            // 破壊するブロックのアニメーションを描画
+            gameWorld.add((toToObj as Block).createBreakingBlock());
+            stage.setStaticType(toTo, StageObjType.none, gameWorld);
+            executing = true;
+          }
+          stopBecauseDrill = true;
+        } else {
+          if (toToObj.stopping) {
+            // 押した先が停止物
+            breakPushing = true;
+          } else if (toToObj.isEnemy && toObj.enemyMovable) {
+            // 押した先が敵かつ押すオブジェクトに敵が移動可能(->敵にオブジェクトを重ねる（トラップ等）)
+          } else if (toToObj.puttable) {
+            // 押した先が、何かを置けるオブジェクト
+          } else if (toObj.isSameTypeLevel(toToObj) && toObj.mergable) {
+            // 押した先とマージ できる
+          } else if (i < end - 1 && toToObj.pushable) {
+            // 押した先も押せる
+          } else {
+            breakPushing = true;
+          }
+          if (breakPushing) {
+            // これまでにpushingsに追加したものも含めて一切押せない
+            // ただし、途中でマージできるものがあるならそこまでは押せる
+            pushingsList.clear();
+            executingsList.clear();
+            if (pushingsSave.isNotEmpty) {
+              pushingsList.addAll(pushingsSave);
+              executingsList.addAll(executingsSave);
+              break;
+            }
+            return false;
+          }
+        }
+        // マージできる場合は、pushingsをセーブする
+        if (toToObj.isSameTypeLevel(toObj) && toObj.mergable) {
+          needSave = true;
+        }
+      } else {
+        // 押せない場合
+        break;
+      }
+      // 押すオブジェクトリストに追加
+      pushingsList.add(stage.boxes.firstWhere((element) => element.pos == to));
+      executingsList.add(executing);
+      // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
+      prohibitedPoints[toTo] = Move.none;
+      if (stopBecauseDrill) {
+        // ドリルでブロックを壊す場合
+        break;
+      }
+      if (needSave) {
+        // マージできる場合は、pushingsをセーブする
+        pushingsSave = [...pushingsList];
+        executingsSave = [...executingsList];
+      }
+      // 1つ先へ
+      to = toTo.copy();
+      toTo = to + moveInput.point;
+      // 範囲外に出る場合は押せないとする
+      if (toTo.x < stage.stageLT.x ||
+          toTo.y < stage.stageLT.y ||
+          toTo.x > stage.stageRB.x ||
+          toTo.y > stage.stageRB.y) {
+        return false;
+      }
+      toObj = stage.get(to);
+      toToObj = stage.get(toTo);
+    }
+    // 押せる可能範囲全て押せるとしても、途中でマージするならそこまでしか押せない
+    if (pushingsSave.isNotEmpty) {
+      pushingsList.clear();
+      executingsList.clear();
+      pushingsList.addAll(pushingsSave);
+      executingsList.addAll(executingsSave);
+    }
+
+    // オブジェクトを押した場合、そのオブジェクトをすり抜けて押した者の移動先には移動できないようにする
+    if (pushingsList.isNotEmpty) {
+      if (!prohibitedPoints.containsKey(pos + moveInput.point)) {
+        prohibitedPoints[pos + moveInput.point] = moveInput.oppsite;
+      }
+    }
+    // 押した者とはすれ違えないようにする
+    if (!prohibitedPoints.containsKey(pos)) {
+      prohibitedPoints[pos] = moveInput.oppsite;
+    }
+    return true;
+  }
+
+  /// 押し終わったときの処理
+  /// ※押した者の位置(pos)は移動済みの座標にしてから呼ぶこと
+  void endPushing(Stage stage, World gameWorld) {
+    // 押したオブジェクトの中でマージするインデックスを探す
+    int mergeIndex = -1; // -1はマージなし
+    Point toTo = pos + moving.point * pushings.length;
+    // 押すオブジェクトのうち、なるべく遠くのオブジェクトをマージするために逆順でforループ
+    for (int i = pushings.length - 1; i >= 0; i--) {
+      final pushing = pushings[i];
+      // 押した先のオブジェクトを調べる
+      if (pushing.mergable && pushing.isSameTypeLevel(stage.get(toTo))) {
+        // マージするインデックスを保存
+        mergeIndex = i;
+        break; // 1回だけマージ
+      }
+      toTo -= moving.point;
+    }
+
+    // 押したオブジェクト位置更新
+    toTo = pos + moving.point;
+    for (int i = 0; i < pushings.length; i++) {
+      final pushing = pushings[i];
+      // 上で探したインデックスと一致するならマージ
+      if (i == mergeIndex) {
+        // マージ
+        stage.merge(toTo, pushing, gameWorld);
+      }
+      // 押したものの位置を設定
+      pushing.pos = toTo;
+      stage.setObjectPosition(pushing);
+      if (pushing.type == StageObjType.drill && executings[i]) {
+        // ドリル使用時
+        // ドリルのオブジェクトレベルダウン、0になったら消す
+        pushing.level--;
+        if (pushing.level <= 0) {
+          pushing.remove();
+        }
+      }
+      toTo += moving.point;
+    }
   }
 
   Map<String, dynamic> encode() {

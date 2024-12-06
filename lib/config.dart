@@ -44,6 +44,9 @@ enum EnemyMovePattern {
 
   /// プレイヤーの方へ動くor向く、通れない場合はゴースト化する/通れるならゴースト解除する
   followPlayerWithGhosting,
+
+  /// ランダムに動く(オブジェクトがあれば押す)orその場にとどまる
+  walkAndPushRandomOrStop,
 }
 
 class BlockFloorPattern {

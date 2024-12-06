@@ -13,6 +13,7 @@ import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/kangaroo.dart';
 import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
+import 'package:box_pusher/game_core/stage_objs/pusher.dart';
 import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -264,6 +265,12 @@ class StageObjFactory {
       case StageObjType.builder:
         return Builder(
           builderImg: baseImages[type]!,
+          errorImg: errorImg,
+          pos: pos,
+        )..vector = vector;
+      case StageObjType.pusher:
+        return Pusher(
+          pusherImg: baseImages[type]!,
           errorImg: errorImg,
           pos: pos,
         )..vector = vector;

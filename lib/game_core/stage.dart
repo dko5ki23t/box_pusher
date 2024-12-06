@@ -798,7 +798,8 @@ class Stage {
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
     // 敵更新
-    for (final enemy in enemies.iterable) {
+    final currentEnemies = [...enemies.iterable];
+    for (final enemy in currentEnemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
