@@ -826,6 +826,11 @@ abstract class StageObj {
           if (toToObj.stopping) {
             // 押した先が停止物
             breakPushing = true;
+          } else if (prohibitedPoints.containsKey(toTo) &&
+              (prohibitedPoints[toTo]! == Move.none ||
+                  prohibitedPoints[toTo]! == moveInput)) {
+            // 押した先には移動不可
+            breakPushing = true;
           } else if (toToObj.isEnemy && toObj.enemyMovable) {
             // 押した先が敵かつ押すオブジェクトに敵が移動可能(->敵にオブジェクトを重ねる（トラップ等）)
           } else if (toToObj.puttable) {

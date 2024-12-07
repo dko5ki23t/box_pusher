@@ -112,6 +112,8 @@ class Player extends StageObj {
       }
       moving = moveInput;
       movingAmount = 0.0;
+      // 移動先に他のオブジェクトが移動できないようにする
+      prohibitedPoints[pos + moving.point] = Move.none;
     }
 
     if (moving != Move.none) {
