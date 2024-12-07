@@ -9,12 +9,18 @@ import 'firebase_options.dart';
 
 void main({
   bool testMode = kDebugMode,
+  bool showAd = false,
+  bool firebase = true,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
-  MobileAds.instance.initialize();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  if (showAd) {
+    MobileAds.instance.initialize();
+  }
+  if (firebase) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
   Locale? locale;
   runApp(
     MaterialApp(

@@ -16,6 +16,8 @@ import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart' hide Route, OverlayRoute;
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
   late final RouterComponent _router;
@@ -93,17 +95,28 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
     );
 
     // セーブデータファイル準備
-    final directory = await getApplicationDocumentsDirectory();
-    final localPath = directory.path;
-    saveDataFile = File('$localPath/box_pusher.json');
-    try {
-      final saveData = await saveDataFile.readAsString();
-      final jsonMap = jsonDecode(saveData);
-      _highScore = jsonMap['highScore'];
-      _stageData = jsonMap['stageData'];
-    } catch (e) {
-      _stageData = {};
-      setAndSaveHighScore(0);
+    if (kIsWeb) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      try {
+        _highScore = prefs.getInt('highScore') ?? 0;
+        _stageData = jsonDecode(prefs.getString('stageData') ?? '');
+      } catch (e) {
+        _stageData = {};
+        setAndSaveHighScore(0);
+      }
+    } else {
+      final directory = await getApplicationDocumentsDirectory();
+      final localPath = directory.path;
+      saveDataFile = File('$localPath/box_pusher.json');
+      try {
+        final saveData = await saveDataFile.readAsString();
+        final jsonMap = jsonDecode(saveData);
+        _highScore = jsonMap['highScore'];
+        _stageData = jsonMap['stageData'];
+      } catch (e) {
+        _stageData = {};
+        setAndSaveHighScore(0);
+      }
     }
 
     // オーディオの準備
@@ -113,31 +126,49 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
   /// ハイスコアの更新・セーブデータに保存
   Future<void> setAndSaveHighScore(int score) async {
     _highScore = score;
-    String jsonText = jsonEncode({
-      'highScore': _highScore,
-      'stageData': _stageData,
-    });
-    await saveDataFile.writeAsString(jsonText);
+    if (kIsWeb) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('highScore', _highScore);
+      await prefs.setString('stageData', jsonEncode(_stageData));
+    } else {
+      String jsonText = jsonEncode({
+        'highScore': _highScore,
+        'stageData': _stageData,
+      });
+      await saveDataFile.writeAsString(jsonText);
+    }
   }
 
   /// プレイ中ステージの更新・セーブデータに保存
   Future<void> setAndSaveStageData() async {
     final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
     _stageData = gameSeq.stage.encodeStageData();
-    String jsonText = jsonEncode({
-      'highScore': _highScore,
-      'stageData': _stageData,
-    });
-    await saveDataFile.writeAsString(jsonText);
+    if (kIsWeb) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('highScore', _highScore);
+      await prefs.setString('stageData', jsonEncode(_stageData));
+    } else {
+      String jsonText = jsonEncode({
+        'highScore': _highScore,
+        'stageData': _stageData,
+      });
+      await saveDataFile.writeAsString(jsonText);
+    }
   }
 
   Future<void> clearAndSaveStageData() async {
     _stageData = {};
-    String jsonText = jsonEncode({
-      'highScore': _highScore,
-      'stageData': _stageData,
-    });
-    await saveDataFile.writeAsString(jsonText);
+    if (kIsWeb) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('highScore', _highScore);
+      await prefs.setString('stageData', jsonEncode(_stageData));
+    } else {
+      String jsonText = jsonEncode({
+        'highScore': _highScore,
+        'stageData': _stageData,
+      });
+      await saveDataFile.writeAsString(jsonText);
+    }
   }
 
   int getCurrentScore() {
