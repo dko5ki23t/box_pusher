@@ -4,6 +4,9 @@
 
 ステージ上のオブジェクトを押して同じオブジェクトと合体してマージさせよう。
 
+Play with
+* GitHub Pages：https://dko5ki23t.github.io/box_pusher/
+
 ## ゲームの目的
 
 ## 操作方法
