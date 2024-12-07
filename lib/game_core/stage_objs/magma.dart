@@ -48,7 +48,8 @@ class Magma extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {}
 
   @override
@@ -59,6 +60,9 @@ class Magma extends StageObj {
 
   @override
   bool get puttable => true;
+
+  @override
+  bool get enemyMovable => false;
 
   @override
   bool get mergable => false;
@@ -74,4 +78,7 @@ class Magma extends StageObj {
 
   @override
   bool get beltMove => false;
+
+  @override
+  bool get hasVector => false;
 }

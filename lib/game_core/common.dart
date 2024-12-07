@@ -42,6 +42,25 @@ class Point {
     return (x.abs() + y.abs());
   }
 
+  /// リストの中から最も近い点のリストを返す
+  List<Point> closests(List<Point> points) {
+    if (points.isEmpty) return [];
+    Point myP = copy();
+    final List<Point> ret = [];
+    int closestD = (myP - points.first).distance();
+    for (final point in points) {
+      int d = (myP - point).distance();
+      if (d == closestD) {
+        ret.add(point);
+      } else if (d < closestD) {
+        ret.clear();
+        ret.add(point);
+        closestD = d;
+      }
+    }
+    return ret;
+  }
+
   String encode() {
     return "$x,$y";
   }
@@ -56,6 +75,22 @@ class Point {
 abstract class PointRange {
   /// 引数の座標が範囲内にあるか
   bool contains(Point p);
+
+  /// 範囲内座標のリスト
+  List<Point> get list;
+
+  static PointRange createFromStrings(List<String> data) {
+    switch (data[0]) {
+      case 'rect':
+        return PointRectRange(Point(int.parse(data[1]), int.parse(data[2])),
+            Point(int.parse(data[3]), int.parse(data[4])));
+      case 'distance':
+        return PointDistanceRange(
+            Point(int.parse(data[1]), int.parse(data[2])), int.parse(data[5]));
+      default:
+        throw ('[PointRange]無効な文字列が範囲タイプとして入力された');
+    }
+  }
 }
 
 /// 整数座標による四角形表現
@@ -89,6 +124,15 @@ class PointRectRange extends PointRange {
   bool contains(Point p) {
     return (p.x >= lt.x && p.x <= rb.x && p.y >= lt.y && p.y <= rb.y);
   }
+
+  /// 四角形内座標のリスト
+  @override
+  List<Point> get list {
+    return [
+      for (int y = lt.y; y <= rb.y; y++)
+        for (int x = lt.x; x <= rb.x; x++) Point(x, y)
+    ];
+  }
 }
 
 /// 整数座標による等距離範囲（≒円）表現
@@ -114,6 +158,20 @@ class PointDistanceRange extends PointRange {
   @override
   bool contains(Point p) {
     return (p - center).distance() <= distance;
+  }
+
+  // TODO:テスト
+  /// 範囲内座標のリスト
+  @override
+  List<Point> get list {
+    List<Point> ret = [];
+    for (int dy = -distance; dy <= distance; dy++) {
+      int d2 = distance - dy.abs();
+      for (int dx = -d2; dx <= d2; dx++) {
+        ret.add(center + Point(dx, dy));
+      }
+    }
+    return ret;
   }
 }
 
@@ -176,6 +234,20 @@ extension MoveExtent on Move {
         return Move.upRight;
       case Move.downRight:
         return Move.upLeft;
+    }
+  }
+
+  /// 斜めの向きを直線向き（左右）に変換
+  Move toStraightLR() {
+    switch (this) {
+      case Move.downLeft:
+      case Move.upLeft:
+        return Move.left;
+      case Move.downRight:
+      case Move.upRight:
+        return Move.right;
+      default:
+        return this;
     }
   }
 

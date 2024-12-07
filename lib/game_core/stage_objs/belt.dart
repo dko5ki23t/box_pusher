@@ -87,9 +87,8 @@ class Belt extends StageObj {
             type: StageObjType.belt,
             level: level,
           ),
-        ) {
-    this.vector = vector;
-  }
+          vector: vector,
+        );
 
   /// 押しているオブジェクトを「行使」しているかどうか
   /// ex.) ドリルによるブロックの破壊
@@ -103,7 +102,8 @@ class Belt extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
     // プレイヤー移動開始時
     if (playerStartMoving) {
@@ -130,7 +130,11 @@ class Belt extends StageObj {
         // 押すオブジェクトリストに追加
         pushings.add(obj);
         // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
-        prohibitedPoints.add(to);
+        prohibitedPoints[to] = Move.none;
+        // 上にオブジェクトがなくなったコンベアには、押した方向と逆方向からの移動は禁ずる
+        if (!prohibitedPoints.containsKey(pos)) {
+          prohibitedPoints[pos] = vector.oppsite;
+        }
       }
     }
 
@@ -146,7 +150,7 @@ class Belt extends StageObj {
       Vector2 offset = vector.vector * movingAmount;
       for (final pushing in pushings) {
         // 押しているオブジェクトの位置変更
-        stage.objFactory.setPosition(pushing, offset: offset);
+        stage.setObjectPosition(pushing, offset: offset);
       }
       // ※※※画像の移動ここまで※※※
 
@@ -163,14 +167,13 @@ class Belt extends StageObj {
           }
           // 押したものの位置を設定
           pushing.pos = to;
-          stage.objFactory.setPosition(pushing);
+          stage.setObjectPosition(pushing);
           if (pushing.type == StageObjType.drill && executing) {
             // ドリル使用時
             // ドリルのオブジェクトレベルダウン、0になったら消す
             pushing.level--;
             if (pushing.level <= 0) {
-              gameWorld.remove(pushing.animationComponent);
-              stage.boxes.remove(pushing);
+              pushing.remove();
             }
           }
         }
@@ -185,7 +188,7 @@ class Belt extends StageObj {
               index = 0;
             }
             pos = stage.warpPoints[index];
-            stage.objFactory.setPosition(this);
+            stage.setObjectPosition(this);
           }
         }*/
 
@@ -207,6 +210,9 @@ class Belt extends StageObj {
   bool get puttable => true;
 
   @override
+  bool get enemyMovable => true;
+
+  @override
   bool get mergable => false;
 
   @override
@@ -220,4 +226,7 @@ class Belt extends StageObj {
 
   @override
   bool get beltMove => false;
+
+  @override
+  bool get hasVector => true;
 }

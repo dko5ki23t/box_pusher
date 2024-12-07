@@ -38,9 +38,7 @@ class Water extends StageObj {
             type: StageObjType.water,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -50,7 +48,8 @@ class Water extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {}
 
   @override
@@ -61,6 +60,9 @@ class Water extends StageObj {
 
   @override
   bool get puttable => false;
+
+  @override
+  bool get enemyMovable => false;
 
   @override
   bool get mergable => false;
@@ -76,4 +78,7 @@ class Water extends StageObj {
 
   @override
   bool get beltMove => false;
+
+  @override
+  bool get hasVector => false;
 }

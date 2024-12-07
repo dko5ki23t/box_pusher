@@ -1,9 +1,13 @@
 import 'dart:math';
 
+import 'package:box_pusher/audio.dart';
+import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -12,8 +16,6 @@ import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
-import 'package:flame/palette.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart' hide Image;
 
 class GameSeq extends Sequence
@@ -45,11 +47,20 @@ class GameSeq extends Sequence
   /// 足の能力ボタン領域
   static Vector2 get legAbilityButtonAreaSize => Vector2(40.0, 40.0);
 
-  /// コインのアイコン領域
-  static Vector2 get coinIconAreaSize => Vector2(40.0, 40.0);
+  /// アーマー能力ボタン領域
+  static Vector2 get armerAbilityButtonAreaSize => Vector2(40.0, 40.0);
 
-  /// コイン数領域
-  static Vector2 get coinNumAreaSize => Vector2(40.0, 40.0);
+  /// ポケット能力ボタン領域
+  static Vector2 get pocketAbilityButtonAreaSize => Vector2(40.0, 40.0);
+
+  /// 次マージ時出現アイテム領域
+  static Vector2 get nextItemAreaSize => Vector2(150.0, 35.0);
+
+  /// スコア領域
+  static Vector2 get scoreAreaSize => Vector2(70.0, 35.0);
+
+  /// コインのアイコン+コイン数領域
+  static Vector2 get coinsAreaSize => Vector2(50.0, 35.0);
 
   /// 能力ボタン間の余白
   static double get paddingAbilityButtons => 10.0;
@@ -74,14 +85,24 @@ class GameSeq extends Sequence
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
   late final Image legAbilityImg;
+  late final Image armerAbilityImg;
+  late final Image pocketAbilityImg;
   late final Image settingsImg;
   late TextComponent currentPosText;
+  late TextComponent remainMergeCountText;
+  late SpriteAnimationComponent nextMergeItem;
+  late SpriteAnimationComponent nextMergeItem2;
+  late SpriteAnimationComponent nextMergeItem3;
   late TextComponent scoreText;
   late TextComponent coinNumText;
   ClipComponent? playerControllButtonsArea;
   ClipComponent? clipByDiagonalMoveButton;
   List<ButtonComponent>? playerStraightMoveButtons;
-  List<ClipComponent>? playerDiagonalMoveButtons;
+  List<PositionComponent>? playerDiagonalMoveButtons;
+  late GameSpriteOnOffButton handAbilityOnOffButton;
+  late GameSpriteOnOffButton legAbilityOnOffButton;
+  late GameSpriteOnOffButton armerAbilityOnOffButton;
+  late GameSpriteAnimationButton pocketAbilityButton;
 
   @override
   Future<void> onLoad() async {
@@ -90,9 +111,14 @@ class GameSeq extends Sequence
         await Flame.images.load('player_controll_arrow.png');
     handAbilityImg = await Flame.images.load('hand_ability.png');
     legAbilityImg = await Flame.images.load('leg_ability.png');
+    armerAbilityImg = await Flame.images.load('armer_ability.png');
+    pocketAbilityImg = await Flame.images.load('pocket_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     // BGM再生
-    FlameAudio.bgm.play('maou_bgm_8bit29.mp3');
+    await Audio.playBGM(Bgm.game);
+    // 各種ゲーム用設定読み込み
+    await Config().initialize();
+    // 画面コンポーネント初期化
     await initialize();
   }
 
@@ -100,23 +126,23 @@ class GameSeq extends Sequence
   void onFocus(String? before) {
     if (before == 'menu') {
       // BGM再開
-      FlameAudio.bgm.resume();
+      Audio.resumeBGM();
     } else {
       // BGM再生
-      FlameAudio.bgm.play('maou_bgm_8bit29.mp3');
+      Audio.playBGM(Bgm.game);
     }
   }
 
   @override
   void onUnFocus() {
     // BGM中断
-    FlameAudio.bgm.pause();
+    Audio.pauseBGM();
   }
 
   @override
   void onRemove() {
     // BGM停止
-    FlameAudio.bgm.stop();
+    Audio.stopBGM();
   }
 
   // 初期化（というよりリセット）
@@ -124,7 +150,7 @@ class GameSeq extends Sequence
     removeAll(children);
     game.world.removeAll(game.world.children);
 
-    stage = Stage();
+    stage = Stage(testMode: game.testMode);
     await stage.onLoad();
     stage.initialize(game.world, game.camera, game.stageData);
 
@@ -132,8 +158,7 @@ class GameSeq extends Sequence
     final clipSize = Vector2(
         yButtonAreaSize.x, 640.0 - topPaddingSize.y - menuButtonAreaSize.y);
     final tv = Vector2(0.3, 0.3 * 9 / 16);
-    playerControllButtonsArea ??=
-        playerControllButtonsArea = ClipComponent.rectangle(
+    playerControllButtonsArea ??= ClipComponent.rectangle(
       position: Vector2(0, topPaddingSize.y),
       size: clipSize,
     );
@@ -186,84 +211,123 @@ class GameSeq extends Sequence
     // 斜めの移動ボタン
     playerDiagonalMoveButtons ??= [
       // 画面左上の操作ボタン
-      ClipComponent.polygon(
-        points: [
-          Vector2(0, 0),
-          Vector2(tv.x, 0),
-          Vector2(0, tv.y),
-          Vector2(0, 0),
-        ],
-        size: clipSize,
-        children: [
-          playerControllButton(
-            size: dButtonAreaSize,
-            position: Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
-            anchor: Anchor.center,
-            angle: -0.25 * pi,
-            move: Move.upLeft,
-          ),
-        ],
-      ),
+      Config().wideDiagonalMoveButton
+          ? ClipComponent.polygon(
+              points: [
+                Vector2(0, 0),
+                Vector2(tv.x, 0),
+                Vector2(0, tv.y),
+                Vector2(0, 0),
+              ],
+              size: clipSize,
+              children: [
+                playerControllButton(
+                  size: dButtonAreaSize,
+                  position:
+                      Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
+                  anchor: Anchor.center,
+                  angle: -0.25 * pi,
+                  move: Move.upLeft,
+                ),
+              ],
+            )
+          : playerControllButton(
+              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+              position: Vector2(0, 0),
+              arrowAngle: -0.25 * pi,
+              move: Move.upLeft,
+            ),
       // 画面右上の操作ボタン
-      ClipComponent.polygon(
-        points: [
-          Vector2(1, 0),
-          Vector2(1 - tv.x, 0),
-          Vector2(1, tv.y),
-          Vector2(1, 0),
-        ],
-        size: clipSize,
-        children: [
-          playerControllButton(
-            size: dButtonAreaSize,
-            position: Vector2(
-                clipSize.x - xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
-            anchor: Anchor.center,
-            angle: 0.25 * pi,
-            move: Move.upRight,
-          ),
-        ],
-      ),
+      Config().wideDiagonalMoveButton
+          ? ClipComponent.polygon(
+              points: [
+                Vector2(1, 0),
+                Vector2(1 - tv.x, 0),
+                Vector2(1, tv.y),
+                Vector2(1, 0),
+              ],
+              size: clipSize,
+              children: [
+                playerControllButton(
+                  size: dButtonAreaSize,
+                  position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                      yButtonAreaSize.y * 0.5),
+                  anchor: Anchor.center,
+                  angle: 0.25 * pi,
+                  move: Move.upRight,
+                ),
+              ],
+            )
+          : playerControllButton(
+              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+              position: Vector2(360.0 - xButtonAreaSize.x, 0),
+              arrowAngle: 0.25 * pi,
+              move: Move.upRight,
+            ),
       // 画面左下の操作ボタン
-      ClipComponent.polygon(
-        points: [
-          Vector2(0, 1 - tv.y),
-          Vector2(tv.x, 1),
-          Vector2(0, 1),
-          Vector2(0, 1 - tv.y),
-        ],
-        size: clipSize,
-        children: [
-          playerControllButton(
-            size: dButtonAreaSize,
-            position: Vector2(
-                xButtonAreaSize.x * 0.5, clipSize.y - yButtonAreaSize.y * 0.5),
-            anchor: Anchor.center,
-            angle: -0.75 * pi,
-            move: Move.downLeft,
-          ),
-        ],
-      ),
+      Config().wideDiagonalMoveButton
+          ? ClipComponent.polygon(
+              points: [
+                Vector2(0, 1 - tv.y),
+                Vector2(tv.x, 1),
+                Vector2(0, 1),
+                Vector2(0, 1 - tv.y),
+              ],
+              size: clipSize,
+              children: [
+                playerControllButton(
+                  size: dButtonAreaSize,
+                  position: Vector2(xButtonAreaSize.x * 0.5,
+                      clipSize.y - yButtonAreaSize.y * 0.5),
+                  anchor: Anchor.center,
+                  angle: -0.75 * pi,
+                  move: Move.downLeft,
+                ),
+              ],
+            )
+          : playerControllButton(
+              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+              position: Vector2(
+                  0,
+                  640.0 -
+                      topPaddingSize.y -
+                      menuButtonAreaSize.y -
+                      yButtonAreaSize.y),
+              arrowAngle: -0.75 * pi,
+              move: Move.downLeft,
+            ),
       // 画面右下の操作ボタン
-      ClipComponent.polygon(
-        points: [
-          Vector2(1, 1 - tv.y),
-          Vector2(1, 1),
-          Vector2(1 - tv.x, 1),
-          Vector2(1, 1 - tv.y),
-        ],
-        size: clipSize,
-        children: [
-          playerControllButton(
-            size: dButtonAreaSize,
-            position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
-                clipSize.y - yButtonAreaSize.y * 0.5),
-            anchor: Anchor.center,
-            angle: 0.75 * pi,
-            move: Move.downRight,
-          ),
-        ],
-      ),
+      Config().wideDiagonalMoveButton
+          ? ClipComponent.polygon(
+              points: [
+                Vector2(1, 1 - tv.y),
+                Vector2(1, 1),
+                Vector2(1 - tv.x, 1),
+                Vector2(1, 1 - tv.y),
+              ],
+              size: clipSize,
+              children: [
+                playerControllButton(
+                  size: dButtonAreaSize,
+                  position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                      clipSize.y - yButtonAreaSize.y * 0.5),
+                  anchor: Anchor.center,
+                  angle: 0.75 * pi,
+                  move: Move.downRight,
+                ),
+              ],
+            )
+          : playerControllButton(
+              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+              position: Vector2(
+                  360.0 - xButtonAreaSize.x,
+                  640.0 -
+                      topPaddingSize.y -
+                      menuButtonAreaSize.y -
+                      yButtonAreaSize.y),
+              arrowAngle: 0.75 * pi,
+              move: Move.downRight,
+            ),
     ];
     // 上下左右の操作ボタン領域(斜めボタンの領域は削る)
     clipByDiagonalMoveButton ??= ClipComponent.polygon(
@@ -284,34 +348,140 @@ class GameSeq extends Sequence
     // 斜め移動可能かどうかで操作ボタンの表示を変える
     playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
     if (stage.getLegAbility()) {
-      clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-      playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-      playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+      if (Config().wideDiagonalMoveButton) {
+        clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+        playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+      } else {
+        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+      }
     } else {
       playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
     }
 
     add(playerControllButtonsArea!);
     // 画面上部、ボタンではない領域
-    add(
-      ButtonComponent(
-        button: RectangleComponent(
-            size: topPaddingSize,
-            paint: Paint()
-              ..color = const Color(0x80000000)
-              ..style = PaintingStyle.fill),
+    // 次アイテム出現までのマージ回数
+    remainMergeCountText = TextComponent(
+      text: "NEXT: ${stage.remainMergeCount}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          color: Color(0xffffffff),
+        ),
       ),
     );
-    // メニュー領域
+    // 次マージ時出現アイテム
+    final a = stage.getNextMergeItemSpriteAnimations();
+    nextMergeItem = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
+        size: Vector2.all(32),
+        animation: a.isNotEmpty ? a.first : null);
+    nextMergeItem2 = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
+        size: Vector2.all(32),
+        animation: a.length > 1 ? a[1] : null);
+    nextMergeItem3 = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
+        size: Vector2.all(32),
+        animation: a.length > 2 ? a[2] : null);
+    // スコア
     scoreText = TextComponent(
       text: "${stage.scoreVisual}",
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: 'Aboreto',
-          color: Color(0xff000000),
+          color: Color(0xffffffff),
         ),
       ),
     );
+    // コイン数
+    coinNumText = TextComponent(
+      text: "${stage.coinNum}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: 'Aboreto',
+          color: Color(0xffffffff),
+        ),
+      ),
+    );
+    add(
+      ButtonComponent(
+        button: RectangleComponent(
+          size: topPaddingSize,
+          paint: Paint()
+            ..color = const Color(0x80000000)
+            ..style = PaintingStyle.fill,
+          children: [
+            // 次マージ時出現アイテム（左側に配置）
+            AlignComponent(
+              alignment: Anchor.bottomLeft,
+              child: PositionComponent(
+                size: nextItemAreaSize,
+                children: [
+                  AlignComponent(
+                    alignment: Anchor.centerLeft,
+                    child: remainMergeCountText,
+                  ),
+                  AlignComponent(
+                    alignment: Anchor.centerRight,
+                    child: PositionComponent(
+                      size:
+                          Vector2(Stage.cellSize.x * 3, Stage.cellSize.y) * 0.8,
+                      children: [
+                        AlignComponent(
+                          alignment: Anchor.centerLeft,
+                          child: nextMergeItem,
+                        ),
+                        AlignComponent(
+                          alignment: Anchor.center,
+                          child: nextMergeItem2,
+                        ),
+                        AlignComponent(
+                          alignment: Anchor.centerRight,
+                          child: nextMergeItem3,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // スコア（中央に配置）
+            AlignComponent(
+              alignment: Anchor.bottomCenter,
+              child: PositionComponent(
+                size: scoreAreaSize,
+                children: [
+                  AlignComponent(
+                    alignment: Anchor.center,
+                    child: scoreText,
+                  )
+                ],
+              ),
+            ),
+            // コイン（右側に配置）
+            AlignComponent(
+              alignment: Anchor.bottomRight,
+              child: PositionComponent(
+                size: coinsAreaSize,
+                children: [
+                  AlignComponent(
+                      alignment: Anchor.centerLeft,
+                      child: SpriteComponent.fromImage(coinImg)),
+                  AlignComponent(
+                    alignment: Anchor.centerRight,
+                    child: coinNumText,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    // メニュー領域
     add(RectangleComponent(
       size: menuButtonAreaSize,
       position: Vector2(0, 640.0 - menuButtonAreaSize.y),
@@ -326,85 +496,70 @@ class GameSeq extends Sequence
             ..color = Colors.white
             ..style = PaintingStyle.fill,
         ),
-        AlignComponent(
-          alignment: Anchor.center,
-          child: scoreText,
-        ),
       ],
     ));
+    Vector2 abilityButtonPos =
+        Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y);
     // 手の能力ボタン領域
-    add(GameSpriteOnOffButton(
+    handAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getHandAbility(),
       onChanged: (bool isOn) => stage.setHandAbility(isOn),
       size: handAbilityButtonAreaSize,
-      position: Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y),
+      position: abilityButtonPos,
       sprite: Sprite(handAbilityImg),
-    ));
+    );
+    add(handAbilityOnOffButton);
     // 足の能力ボタン領域
-    add(GameSpriteOnOffButton(
+    abilityButtonPos +=
+        Vector2(handAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    legAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getLegAbility(),
       onChanged: (bool isOn) {
         stage.setLegAbility(isOn);
         playerControllButtonsArea!
             .removeAll(playerControllButtonsArea!.children);
         if (stage.getLegAbility()) {
-          clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-          playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+          if (Config().wideDiagonalMoveButton) {
+            clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+            playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+          } else {
+            playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+          }
         } else {
           playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
         }
       },
       size: legAbilityButtonAreaSize,
-      position: Vector2(
-          xPaddingSize.x + handAbilityButtonAreaSize.x + paddingAbilityButtons,
-          640.0 - menuButtonAreaSize.y),
+      position: abilityButtonPos,
       sprite: Sprite(legAbilityImg),
-    ));
-    // コインのアイコン領域
-    add(RectangleComponent(
-      size: coinIconAreaSize,
-      position: Vector2(
-          360.0 -
-              xPaddingSize.x -
-              settingsButtonAreaSize.x -
-              paddingAbilityButtons * 2 -
-              coinNumAreaSize.x -
-              coinIconAreaSize.x,
-          640.0 - menuButtonAreaSize.y),
-      children: [
-        AlignComponent(
-          alignment: Anchor.center,
-          child: SpriteComponent.fromImage(coinImg),
-        ),
-      ],
-    ));
-    // コイン数領域
-    coinNumText = TextComponent(
-      text: "${stage.coinNum}",
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: 'Aboreto',
-          color: Color(0xff000000),
-        ),
-      ),
     );
-    add(RectangleComponent(
-      size: coinNumAreaSize,
-      position: Vector2(
-          360.0 -
-              xPaddingSize.x -
-              settingsButtonAreaSize.x -
-              paddingAbilityButtons -
-              coinNumAreaSize.x,
-          640.0 - menuButtonAreaSize.y),
-      children: [
-        AlignComponent(
-          alignment: Anchor.center,
-          child: coinNumText,
-        ),
-      ],
-    ));
+    add(legAbilityOnOffButton);
+    // アーマー能力ボタン領域
+    abilityButtonPos +=
+        Vector2(legAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    armerAbilityOnOffButton = GameSpriteOnOffButton(
+      isOn: stage.getArmerAbility(),
+      onChanged: (bool isOn) => stage.setArmerAbility(isOn),
+      size: armerAbilityButtonAreaSize,
+      position: abilityButtonPos,
+      sprite: Sprite(armerAbilityImg,
+          srcPosition: Vector2.zero(), srcSize: Vector2.all(32)),
+    );
+    add(armerAbilityOnOffButton);
+    // ポケット能力ボタン領域
+    abilityButtonPos +=
+        Vector2(armerAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    pocketAbilityButton = GameSpriteAnimationButton(
+      onReleased: () => stage.usePocketAbility(game.world),
+      size: pocketAbilityButtonAreaSize,
+      position: abilityButtonPos,
+      enabled: stage.getPocketAbility(),
+      animation:
+          SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0),
+    );
+    add(pocketAbilityButton);
     // メニューボタン領域
     add(GameSpriteButton(
       size: settingsButtonAreaSize,
@@ -438,13 +593,50 @@ class GameSeq extends Sequence
     if (stage.isClear()) return;
     // ゲームオーバー済みなら何もしない
     if (stage.isGameover) return;
+    bool beforeLegAbility = stage.getLegAbility();
     stage.update(dt, pushingMoveButton, game.world, game.camera);
+    // 手の能力取得状況更新
+    handAbilityOnOffButton.isOn = stage.getHandAbility();
+    // 足の能力取得状況更新
+    if (beforeLegAbility != stage.getLegAbility()) {
+      legAbilityOnOffButton.isOn = stage.getLegAbility();
+      playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
+      if (stage.getLegAbility()) {
+        if (Config().wideDiagonalMoveButton) {
+          clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+          playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+        } else {
+          playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+        }
+      } else {
+        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+      }
+    }
+    // アーマーの能力状況更新
+    armerAbilityOnOffButton.isOn = stage.getArmerAbility();
+    armerAbilityOnOffButton.sprite = Sprite(armerAbilityImg,
+        srcPosition: Vector2(stage.getArmerAbilityRecoveryTurns() * 32, 0),
+        srcSize: Vector2.all(32));
+    // ポケットの能力状況更新
+    final pocketItemAnimation = stage.getPocketAbilitySpriteAnimation() ??
+        SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0);
+    pocketAbilityButton.animation = pocketItemAnimation;
+    pocketAbilityButton.enabled = stage.getPocketAbility();
+    // 次アイテム出現までのマージ回数更新
+    remainMergeCountText.text = "NEXT: ${stage.remainMergeCount}";
+    // 次マージ時出現アイテム更新
+    final a = stage.getNextMergeItemSpriteAnimations();
+    nextMergeItem.animation = a.isNotEmpty ? a.first : null;
+    nextMergeItem2.animation = a.length > 1 ? a[1] : null;
+    nextMergeItem3.animation = a.length > 2 ? a[2] : null;
     // スコア表示更新
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示
     int addedScore = stage.addedScore;
-    if (addedScore > 0) {
-      final addingScoreText = CaTextComponent(
+    if (addedScore > 0 && Config().showAddedScoreOnScore) {
+      final addingScoreText = OpacityEffectTextComponent(
         text: "+$addedScore",
         textRenderer: TextPaint(
           style: const TextStyle(
@@ -485,7 +677,7 @@ class GameSeq extends Sequence
     }
     // コイン数表示更新
     coinNumText.text = "${stage.coinNum}";
-    // 【テストモード】
+    // 【テストモード】現在座標表示
     if (game.testMode) {
       currentPosText.text = "pos:(${stage.player.pos.x},${stage.player.pos.y})";
     }
@@ -571,42 +763,30 @@ class GameSeq extends Sequence
   // TapCallbacks実装時には必要(PositionComponentでは不要)
   @override
   bool containsLocalPoint(Vector2 point) => true;
-}
-
-// TextComponentにOpacityEffectを適用させるためのワークアラウンド
-// https://github.com/flame-engine/flame/issues/1013
-mixin HasOpacityProvider on Component implements OpacityProvider {
-  double _opacity = 1;
-  Paint _paint = BasicPalette.white.paint();
 
   @override
-  double get opacity => _opacity;
-
-  @override
-  set opacity(double value) {
-    if (value == _opacity) return;
-    _opacity = value;
-    _paint = Paint()..color = Colors.white.withOpacity(value);
+  void onTapUp(TapUpEvent event) {
+    super.onTapUp(event);
+    // テストモード時のみ、ブロックをタップで破壊
+    if (game.testMode) {
+      final cameraPos =
+          game.camera.globalToLocal(event.canvasPosition) / Stage.cellSize.x;
+      final Point stagePos = Point(cameraPos.x.floor(), cameraPos.y.floor());
+      final tapObject = stage.get(stagePos);
+      if (tapObject.type == StageObjType.block) {
+        stage.breakBlocks(stagePos, (block) => true,
+            PointDistanceRange(stagePos, 0), game.world);
+        /*stage.merge(
+          stagePos,
+          tapObject,
+          game.world,
+          breakLeftOffset: 0,
+          breakRightOffset: 0,
+          breakTopOffset: 0,
+          breakBottomOffset: 0,
+          onlyDelete: true,
+        );*/
+      }
+    }
   }
-
-  @override
-  void renderTree(Canvas canvas) {
-    canvas.saveLayer(null, Paint()..blendMode = BlendMode.srcOver);
-    super.renderTree(canvas);
-    canvas.drawPaint(_paint..blendMode = BlendMode.modulate);
-    canvas.restore();
-  }
-}
-
-class CaTextComponent extends TextComponent with HasOpacityProvider {
-  CaTextComponent(
-      {super.anchor,
-      super.angle,
-      super.children,
-      super.position,
-      super.priority,
-      super.scale,
-      super.size,
-      super.text,
-      super.textRenderer});
 }

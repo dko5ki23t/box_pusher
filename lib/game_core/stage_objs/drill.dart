@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -17,6 +19,7 @@ class Drill extends StageObj {
     required super.pos,
     int level = 1,
   }) : super(
+          vector: Move.up,
           animationComponent: SpriteAnimationComponent(
             priority: Stage.dynamicPriority,
             size: Stage.cellSize,
@@ -29,14 +32,16 @@ class Drill extends StageObj {
           ),
           levelToAnimations: {
             0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
             },
             1: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(drillImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-              ], stepTime: 1.0)
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([
+                  Sprite(drillImg,
+                      srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
+                ], stepTime: 1.0),
             },
           },
           typeLevel: StageObjTypeLevel(
@@ -44,7 +49,12 @@ class Drill extends StageObj {
             level: level,
           ),
         ) {
-    vector = Move.none;
+    vectorToAnimationAngles = {
+      Move.up: 0,
+      Move.down: pi,
+      Move.left: -0.5 * pi,
+      Move.right: 0.5 * pi,
+    };
   }
 
   @override
@@ -55,7 +65,8 @@ class Drill extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {}
 
   @override
@@ -66,6 +77,9 @@ class Drill extends StageObj {
 
   @override
   bool get puttable => false;
+
+  @override
+  bool get enemyMovable => false;
 
   @override
   bool get mergable => level < maxLevel;
@@ -81,4 +95,7 @@ class Drill extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => true;
 }

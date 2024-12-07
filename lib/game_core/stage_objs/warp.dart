@@ -38,9 +38,7 @@ class Warp extends StageObj {
             type: StageObjType.warp,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -50,7 +48,8 @@ class Warp extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {}
 
   @override
@@ -61,6 +60,9 @@ class Warp extends StageObj {
 
   @override
   bool get puttable => true;
+
+  @override
+  bool get enemyMovable => true;
 
   @override
   bool get mergable => false;
@@ -76,4 +78,7 @@ class Warp extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

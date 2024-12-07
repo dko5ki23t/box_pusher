@@ -1,4 +1,6 @@
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
@@ -49,9 +51,7 @@ class Bomb extends StageObj {
             type: StageObjType.bomb,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -61,13 +61,15 @@ class Bomb extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
-    // プレイヤー位置がボムの周囲5×5マスより遠い位置なら爆発
-    if ((stage.player.pos.x < pos.x - 2) ||
-        (stage.player.pos.x > pos.x + 2) ||
-        (stage.player.pos.y < pos.y - 2) ||
-        (stage.player.pos.y > pos.y + 2)) {
+    // プレイヤー位置がボムの周囲非起爆範囲より遠い位置なら爆発
+    int n = ((Config().bombNotStartAreaWidth - 1) / 2).floor();
+    if ((stage.player.pos.x < pos.x - n) ||
+        (stage.player.pos.x > pos.x + n) ||
+        (stage.player.pos.y < pos.y - n) ||
+        (stage.player.pos.y > pos.y + n)) {
       // 爆発アニメ表示
       final explodingAnimation = SpriteAnimationComponent(
         animation: explodingBombAnimation,
@@ -94,16 +96,19 @@ class Bomb extends StageObj {
       );
       gameWorld.add(explodingAnimation);
       // 爆発
+      int m = ((Config().bombExplodingAreaWidth - 1) / 2).floor();
       stage.merge(
         pos,
         this,
         gameWorld,
-        breakLeftOffset: -2,
-        breakTopOffset: -2,
-        breakRightOffset: 2,
-        breakBottomOffset: 2,
+        breakLeftOffset: -m,
+        breakTopOffset: -m,
+        breakRightOffset: m,
+        breakBottomOffset: m,
         onlyDelete: true,
       );
+      // 効果音を鳴らす
+      Audio.playSound(Sound.explode);
     }
   }
 
@@ -115,6 +120,9 @@ class Bomb extends StageObj {
 
   @override
   bool get puttable => false;
+
+  @override
+  bool get enemyMovable => false;
 
   @override
   bool get mergable => level < maxLevel;
@@ -130,4 +138,7 @@ class Bomb extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

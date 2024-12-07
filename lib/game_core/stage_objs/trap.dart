@@ -1,3 +1,4 @@
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -38,14 +39,26 @@ class Trap extends StageObj {
                     srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
               ], stepTime: 1.0)
             },
+            2: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(trapImg,
+                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
+              ], stepTime: 1.0)
+            },
+            3: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(trapImg,
+                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                Sprite(trapImg,
+                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize)
+              ], stepTime: Stage.objectStepTime)
+            },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.trap,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -55,14 +68,22 @@ class Trap extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
-    // このオブジェクトと同じ位置の敵を消す
-    final killings =
-        stage.enemies.where((element) => element.pos == pos).toList();
-    for (final killing in killings) {
-      gameWorld.remove(killing.animationComponent);
-      stage.enemies.remove(killing);
+    // このオブジェクトと同じ位置の、罠レベル以下の敵を消す
+    if (playerEndMoving) {
+      final killing = stage.get(pos);
+      if (killing.isEnemy && killing.killable && killing.level <= level) {
+        // 敵側の処理が残っているかもしれないので、フレームの最後に消す
+        killing.removeAfterFrame();
+        // 効果音を鳴らす
+        switch (level) {
+          default:
+            Audio.playSound(Sound.trap1);
+            break;
+        }
+      }
     }
   }
 
@@ -76,10 +97,13 @@ class Trap extends StageObj {
   bool get puttable => false;
 
   @override
+  bool get enemyMovable => true;
+
+  @override
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => false;
@@ -89,4 +113,7 @@ class Trap extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

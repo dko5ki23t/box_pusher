@@ -45,9 +45,7 @@ class Jewel extends StageObj {
             type: StageObjType.jewel,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -57,7 +55,8 @@ class Jewel extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {}
 
   @override
@@ -68,6 +67,9 @@ class Jewel extends StageObj {
 
   @override
   bool get puttable => false;
+
+  @override
+  bool get enemyMovable => false;
 
   @override
   bool get mergable => level < maxLevel;
@@ -83,4 +85,7 @@ class Jewel extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

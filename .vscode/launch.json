@@ -10,6 +10,12 @@
             "type": "dart"
         },
         {
+            "name": "box_pusher (debug mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug"
+        },
+        {
             "name": "box_pusher (profile mode)",
             "request": "launch",
             "type": "dart",

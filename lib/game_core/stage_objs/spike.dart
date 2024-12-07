@@ -1,15 +1,20 @@
 import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/game_core/setting_variables.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 
 class Spike extends StageObj {
-  final EnemyMovePattern movePattern = EnemyMovePattern.followPlayer;
+  /// 各レベルに対応する動きのパターン
+  final Map<int, EnemyMovePattern> movePatterns = {
+    1: EnemyMovePattern.mergeWalkRandomOrStop,
+    2: EnemyMovePattern.walkRandomOrStop,
+    3: EnemyMovePattern.followPlayer,
+  };
 
   /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'player.png';
+  static String get imageFileName => 'spike.png';
 
   bool _playerStartMovingFlag = false;
 
@@ -20,7 +25,7 @@ class Spike extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
-            priority: Stage.dynamicPriority,
+            priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,
             position:
@@ -33,22 +38,35 @@ class Spike extends StageObj {
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
             1: {
-              Move.none: SpriteAnimation.fromFrameData(
-                spikeImg,
-                SpriteAnimationData.sequenced(
-                    amount: 2,
-                    stepTime: Stage.objectStepTime,
-                    textureSize: Stage.cellSize),
-              ),
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(spikeImg,
+                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+                Sprite(spikeImg,
+                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
+              ], stepTime: Stage.objectStepTime),
+            },
+            2: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(spikeImg,
+                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                Sprite(spikeImg,
+                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize)
+              ], stepTime: Stage.objectStepTime),
+            },
+            3: {
+              Move.none: SpriteAnimation.spriteList([
+                Sprite(spikeImg,
+                    srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
+                Sprite(spikeImg,
+                    srcPosition: Vector2(160, 0), srcSize: Stage.cellSize)
+              ], stepTime: Stage.objectStepTime),
             },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.spike,
             level: level,
           ),
-        ) {
-    vector = Move.none;
-  }
+        );
 
   @override
   void update(
@@ -58,13 +76,14 @@ class Spike extends StageObj {
     CameraComponent camera,
     Stage stage,
     bool playerStartMoving,
-    List<Point> prohibitedPoints,
+    bool playerEndMoving,
+    Map<Point, Move> prohibitedPoints,
   ) {
     // 移動し始めのフレームの場合
     if (playerStartMoving) {
       // 移動を決定する
-      final ret = super.enemyMove(
-          movePattern, Move.none, stage.player, stage, prohibitedPoints);
+      final ret = super.enemyMove(movePatterns[level]!, Move.none, stage.player,
+          stage, prohibitedPoints);
       if (ret.containsKey('move')) {
         moving = ret['move'] as Move;
       }
@@ -84,21 +103,22 @@ class Spike extends StageObj {
       // 移動中の場合は画素も考慮
       if (moving != Move.none) {
         Vector2 offset = moving.vector * movingAmount;
-        stage.objFactory.setPosition(this, offset: offset);
+        stage.setObjectPosition(this, offset: offset);
       }
       // ※※※画像の移動ここまで※※※
 
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
+        pos += moving.point;
         // ゲームオーバー判定
         if (stage.player.pos == pos) {
+          // 同じマスにいる場合はアーマー関係なくゲームオーバー
           stage.isGameover = true;
         }
-
-        pos += moving.point;
         moving = Move.none;
         movingAmount = 0;
         pushings.clear();
+        _playerStartMovingFlag = false;
       }
     }
   }
@@ -107,16 +127,19 @@ class Spike extends StageObj {
   bool get pushable => false;
 
   @override
-  bool get stopping => true;
+  bool get stopping => false;
 
   @override
   bool get puttable => false;
 
   @override
+  bool get enemyMovable => false;
+
+  @override
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => true;
@@ -126,4 +149,7 @@ class Spike extends StageObj {
 
   @override
   bool get beltMove => true;
+
+  @override
+  bool get hasVector => false;
 }

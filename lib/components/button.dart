@@ -1,3 +1,4 @@
+import 'package:box_pusher/audio.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
@@ -19,7 +20,11 @@ class GameTextButton extends ButtonComponent {
     void Function()? onReleased,
     void Function()? onCancelled,
   }) : super(
-          onPressed: onPressed,
+          onPressed: () {
+            // 決定音を鳴らす
+            Audio.playSound(Sound.decide);
+            if (onPressed != null) onPressed();
+          },
           onReleased: onReleased,
           onCancelled: onCancelled,
           button: enabled
@@ -312,9 +317,166 @@ class GameSpriteButton extends ButtonComponent {
   }
 }
 
+// TODO: ちゃんとrender()の中でenabledによって描画処理を変えるようなcomponentをbuttonやbuttonDownに設定するべき
+class GameSpriteAnimationButton extends ButtonComponent {
+  bool _enabled = true;
+  SpriteAnimation _animation;
+  void Function()? _onPressed;
+  void Function()? _onReleased;
+  void Function()? _onCancelled;
+
+  GameSpriteAnimationButton({
+    required super.size,
+    super.position,
+    super.anchor,
+    required SpriteAnimation animation,
+    bool enabled = true,
+    void Function()? onPressed,
+    void Function()? onReleased,
+    void Function()? onCancelled,
+  })  : _animation = animation,
+        super(
+          onPressed: enabled ? onPressed : null,
+          onReleased: enabled ? onReleased : null,
+          onCancelled: enabled ? onCancelled : null,
+          button: enabled
+              ? RectangleComponent(
+                  size: size,
+                  paint: Paint()
+                    ..color = Colors.blue
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 3,
+                  children: [
+                    RectangleComponent(
+                      size: size,
+                      paint: Paint()
+                        ..color = Colors.white
+                        ..style = PaintingStyle.fill,
+                    ),
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: SpriteAnimationComponent(
+                        animation: animation,
+                      ),
+                    ),
+                  ],
+                )
+              : RectangleComponent(
+                  size: size,
+                  paint: Paint()
+                    ..color = Colors.grey
+                    ..style = PaintingStyle.fill,
+                  children: [
+                    RectangleComponent(
+                      size: size,
+                      paint: Paint()
+                        ..color = Colors.transparent
+                        ..style = PaintingStyle.fill,
+                    ),
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: SpriteAnimationComponent(
+                        animation: animation,
+                      ),
+                    ),
+                  ],
+                ),
+          buttonDown: enabled
+              ? RectangleComponent(
+                  size: size,
+                  paint: Paint()
+                    ..color = Colors.blueGrey
+                    ..style = PaintingStyle.fill
+                    ..strokeWidth = 2,
+                  children: [
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: SpriteAnimationComponent(
+                        animation: animation,
+                      ),
+                    ),
+                  ],
+                )
+              : RectangleComponent(
+                  size: size,
+                  paint: Paint()
+                    ..color = Colors.grey
+                    ..style = PaintingStyle.fill
+                    ..strokeWidth = 2,
+                  children: [
+                    RectangleComponent(
+                      size: size,
+                      paint: Paint()
+                        ..color = Colors.transparent
+                        ..style = PaintingStyle.fill,
+                    ),
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: SpriteAnimationComponent(
+                        animation: animation,
+                      ),
+                    ),
+                  ],
+                ),
+        ) {
+    _onPressed = onPressed;
+    _onReleased = onReleased;
+    _onCancelled = onCancelled;
+    _enabled = enabled;
+  }
+
+  bool get enabled => _enabled;
+
+  set enabled(bool e) {
+    if (e != _enabled) {
+      if (!e) {
+        _onPressed = super.onPressed;
+        _onReleased = super.onReleased;
+        _onCancelled = super.onCancelled;
+      }
+      super.onPressed = e ? _onPressed : null;
+      super.onReleased = e ? _onReleased : null;
+      super.onCancelled = e ? _onCancelled : null;
+      if (e) {
+        (super.button! as RectangleComponent).paint = Paint()
+          ..color = Colors.blue
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3;
+        ((super.button! as RectangleComponent).firstChild()
+                as RectangleComponent)
+            .paint = Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.fill;
+      } else {
+        (super.button! as RectangleComponent).paint = Paint()
+          ..color = Colors.grey
+          ..style = PaintingStyle.fill;
+        ((super.button! as RectangleComponent).firstChild()
+                as RectangleComponent)
+            .paint = Paint()
+          ..color = Colors.transparent
+          ..style = PaintingStyle.fill;
+      }
+    }
+    _enabled = e;
+  }
+
+  // TODO:このへんかなり強引
+  SpriteAnimation get animation => _animation;
+  set animation(SpriteAnimation a) {
+    _animation = a;
+    (super.button!.children.whereType<AlignComponent>().first.child
+            as SpriteAnimationComponent)
+        .animation = _animation;
+    (super.buttonDown!.children.whereType<AlignComponent>().first.child
+            as SpriteAnimationComponent)
+        .animation = _animation;
+  }
+}
+
 class GameSpriteOnOffButton extends ButtonComponent {
   bool _isOn = true;
-  Sprite sprite;
+  Sprite _sprite;
 
   void Function(bool isOn)? onChanged;
 
@@ -322,10 +484,11 @@ class GameSpriteOnOffButton extends ButtonComponent {
     required super.size,
     super.position,
     super.anchor,
-    required this.sprite,
+    required Sprite sprite,
     bool isOn = false,
     this.onChanged,
-  }) : super(
+  })  : _sprite = sprite,
+        super(
           button: !isOn
               ? RectangleComponent(
                   size: size,
@@ -441,5 +604,17 @@ class GameSpriteOnOffButton extends ButtonComponent {
       }
     }
     _isOn = b;
+  }
+
+  // TODO:このへんかなり強引
+  Sprite get sprite => _sprite;
+  set sprite(Sprite s) {
+    _sprite = s;
+    (super.button!.children.whereType<AlignComponent>().first.child
+            as SpriteComponent)
+        .sprite = _sprite;
+    (super.buttonDown!.children.whereType<AlignComponent>().first.child
+            as SpriteComponent)
+        .sprite = _sprite;
   }
 }
