@@ -6,6 +6,7 @@
 
 Play with
 * GitHub Pages：https://dko5ki23t.github.io/box_pusher/
+* 
 
 ## ゲームの目的
 
