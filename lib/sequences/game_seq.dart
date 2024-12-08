@@ -116,8 +116,6 @@ class GameSeq extends Sequence
     settingsImg = await Flame.images.load('settings.png');
     // BGM再生
     await Audio.playBGM(Bgm.game);
-    // 各種ゲーム用設定読み込み
-    await Config().initialize();
     // 画面コンポーネント初期化
     await initialize();
   }

@@ -1,5 +1,6 @@
 import 'package:box_pusher/ad_banner.dart';
 import 'package:box_pusher/box_pusher_game.dart';
+import 'package:box_pusher/config.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Route;
@@ -57,49 +58,61 @@ class MyAppStateForLocale extends State<MyApp> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Flexible(
-            child: GameWidget.controlled(
-              gameFactory: () => BoxPusherGame(testMode: widget.testMode),
-            ),
-          ),
-          showAd
-              ? FutureBuilder(
-                  future: AdSize.getAnchoredAdaptiveBannerAdSize(
-                      Orientation.portrait,
-                      MediaQuery.of(context).size.width.truncate()),
-                  builder: (
-                    BuildContext context,
-                    AsyncSnapshot<AnchoredAdaptiveBannerAdSize?> snapshot,
-                  ) {
-                    if (snapshot.hasData) {
-                      final data = snapshot.data;
-                      if (data != null) {
-                        return Container(
-                          height: 70,
-                          color: Colors.white70,
-                          child: AdBanner(size: data),
-                        );
-                      } else {
-                        return Container(
-                          height: 70,
-                          color: Colors.white70,
-                        );
-                      }
-                    } else {
-                      return Container(
-                        height: 70,
-                        color: Colors.white70,
-                      );
-                    }
-                  },
-                )
-              : Container(),
-        ],
-      ),
-    );
+    return FutureBuilder(
+        future: Config().initialize(), // 各種ゲーム用設定読み込み
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            // ゲーム用設定読み込み完了後にゲーム画面用意
+            return Scaffold(
+              body: Column(
+                children: [
+                  Flexible(
+                    child: GameWidget.controlled(
+                      gameFactory: () =>
+                          BoxPusherGame(testMode: widget.testMode),
+                    ),
+                  ),
+                  showAd
+                      ? FutureBuilder(
+                          future: AdSize.getAnchoredAdaptiveBannerAdSize(
+                              Orientation.portrait,
+                              MediaQuery.of(context).size.width.truncate()),
+                          builder: (
+                            BuildContext context,
+                            AsyncSnapshot<AnchoredAdaptiveBannerAdSize?>
+                                snapshot,
+                          ) {
+                            if (snapshot.hasData) {
+                              final data = snapshot.data;
+                              if (data != null) {
+                                return Container(
+                                  height: 70,
+                                  color: Colors.white70,
+                                  child: AdBanner(size: data),
+                                );
+                              } else {
+                                return Container(
+                                  height: 70,
+                                  color: Colors.white70,
+                                );
+                              }
+                            } else {
+                              return Container(
+                                height: 70,
+                                color: Colors.white70,
+                              );
+                            }
+                          },
+                        )
+                      : Container(),
+                ],
+              ),
+            );
+          } else {
+            // TODO: ロード画面など
+            return const Center();
+          }
+        });
   }
 
   void setLocale(Locale locale) {
