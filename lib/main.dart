@@ -48,19 +48,22 @@ class MyApp extends StatefulWidget {
 class MyAppStateForLocale extends State<MyApp> {
   //Locale? _locale;
   bool showAd = false;
+  late Future<void> configFuture;
 
   @override
   void initState() {
     super.initState();
+    // 各種ゲーム用設定読み込み
+    configFuture = Config().initialize();
     //_locale = widget.initialLocale;
   }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: Config().initialize(), // 各種ゲーム用設定読み込み
-        builder: (context, snapshot) {
+    return FutureBuilder<void>(
+        future: configFuture,
+        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             // ゲーム用設定読み込み完了後にゲーム画面用意
             return Scaffold(
