@@ -113,7 +113,11 @@ class MyAppStateForLocale extends State<MyApp> {
             );
           } else {
             // TODO: ロード画面など
-            return const Center();
+            return const Center(
+                child: Text(
+              'Loading...',
+              style: TextStyle(fontFamily: 'NotoSansJP'),
+            ));
           }
         });
   }

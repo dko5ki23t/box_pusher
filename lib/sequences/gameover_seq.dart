@@ -1,5 +1,6 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
@@ -17,7 +18,7 @@ class GameoverSeq extends Sequence with HasGameReference<BoxPusherGame> {
       anchor: Anchor.center,
       textRenderer: TextPaint(
         style: const TextStyle(
-          fontFamily: 'Aboreto',
+          fontFamily: Config.gameTextFamily,
           fontSize: 30,
         ),
       ),
@@ -40,7 +41,7 @@ class GameoverSeq extends Sequence with HasGameReference<BoxPusherGame> {
         anchor: Anchor.center,
         textRenderer: TextPaint(
           style: const TextStyle(
-            fontFamily: 'Aboreto',
+            fontFamily: Config.gameTextFamily,
             fontSize: 35,
           ),
         ),

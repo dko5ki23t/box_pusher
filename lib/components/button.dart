@@ -1,4 +1,5 @@
 import 'package:box_pusher/audio.dart';
+import 'package:box_pusher/config.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
@@ -47,7 +48,7 @@ class GameTextButton extends ButtonComponent {
                         text: text,
                         textRenderer: TextPaint(
                           style: const TextStyle(
-                            fontFamily: 'Aboreto',
+                            fontFamily: Config.gameTextFamily,
                             color: Color(0xff000000),
                           ),
                         ),
@@ -73,7 +74,7 @@ class GameTextButton extends ButtonComponent {
                         text: text,
                         textRenderer: TextPaint(
                           style: const TextStyle(
-                            fontFamily: 'Aboreto',
+                            fontFamily: Config.gameTextFamily,
                             color: Color(0xff000000),
                           ),
                         ),
@@ -95,7 +96,7 @@ class GameTextButton extends ButtonComponent {
                         text: text,
                         textRenderer: TextPaint(
                           style: const TextStyle(
-                            fontFamily: 'Aboreto',
+                            fontFamily: Config.gameTextFamily,
                             color: Color(0xff000000),
                           ),
                         ),
@@ -121,7 +122,7 @@ class GameTextButton extends ButtonComponent {
                         text: text,
                         textRenderer: TextPaint(
                           style: const TextStyle(
-                            fontFamily: 'Aboreto',
+                            fontFamily: Config.gameTextFamily,
                             color: Color(0xff000000),
                           ),
                         ),

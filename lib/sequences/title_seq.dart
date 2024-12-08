@@ -1,5 +1,6 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/layout.dart';
@@ -18,7 +19,7 @@ class TitleSeq extends Sequence
       text: "High Score : ${game.highScore}",
       textRenderer: TextPaint(
         style: const TextStyle(
-          fontFamily: 'Aboreto',
+          fontFamily: Config.gameTextFamily,
           color: Color(0xff000000),
         ),
       ),
@@ -47,7 +48,7 @@ class TitleSeq extends Sequence
         anchor: Anchor.center,
         textRenderer: TextPaint(
           style: const TextStyle(
-            fontFamily: 'Aboreto',
+            fontFamily: Config.gameTextFamily,
             color: Color(0xff000000),
             fontSize: 40,
           ),

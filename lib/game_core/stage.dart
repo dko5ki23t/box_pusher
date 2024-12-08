@@ -543,7 +543,7 @@ class Stage {
         text: "+$gettingScore",
         textRenderer: TextPaint(
           style: const TextStyle(
-            fontFamily: 'Aboreto',
+            fontFamily: Config.gameTextFamily,
             color: Color(0xff000000),
           ),
         ),

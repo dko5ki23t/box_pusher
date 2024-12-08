@@ -365,7 +365,7 @@ class GameSeq extends Sequence
       text: "NEXT: ${stage.remainMergeCount}",
       textRenderer: TextPaint(
         style: const TextStyle(
-          fontFamily: 'Aboreto',
+          fontFamily: Config.gameTextFamily,
           color: Color(0xffffffff),
         ),
       ),
@@ -389,7 +389,7 @@ class GameSeq extends Sequence
       text: "${stage.scoreVisual}",
       textRenderer: TextPaint(
         style: const TextStyle(
-          fontFamily: 'Aboreto',
+          fontFamily: Config.gameTextFamily,
           color: Color(0xffffffff),
         ),
       ),
@@ -399,7 +399,7 @@ class GameSeq extends Sequence
       text: "${stage.coinNum}",
       textRenderer: TextPaint(
         style: const TextStyle(
-          fontFamily: 'Aboreto',
+          fontFamily: Config.gameTextFamily,
           color: Color(0xffffffff),
         ),
       ),
@@ -574,7 +574,7 @@ class GameSeq extends Sequence
       text: "pos:(${stage.player.pos.x},${stage.player.pos.y})",
       textRenderer: TextPaint(
         style: const TextStyle(
-          fontFamily: 'Aboreto',
+          fontFamily: Config.gameTextFamily,
           color: Color(0xffffffff),
         ),
       ),
@@ -638,7 +638,7 @@ class GameSeq extends Sequence
         text: "+$addedScore",
         textRenderer: TextPaint(
           style: const TextStyle(
-            fontFamily: 'Aboreto',
+            fontFamily: Config.gameTextFamily,
             color: Color(0xff000000),
           ),
         ),

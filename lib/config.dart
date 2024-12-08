@@ -115,6 +115,8 @@ class ObjInBlock {
 class Config {
   static final Config _instance = Config._internal();
 
+  static const String gameTextFamily = 'NotoSansJP';
+
   factory Config() => _instance;
 
   Config._internal();
