@@ -306,7 +306,7 @@ abstract class StageObj {
   Move get vector => _vector;
   set vector(Move v) {
     if (hasVector) {
-      if (!MoveExtent.straights.contains(v)) {
+      if (!v.isStraight) {
         return;
       }
       _vector = v;

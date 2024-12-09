@@ -237,6 +237,20 @@ extension MoveExtent on Move {
     }
   }
 
+  /// 上下左右かどうか
+  bool get isStraight =>
+      this == Move.left ||
+      this == Move.right ||
+      this == Move.up ||
+      this == Move.down;
+
+  /// 斜めの向きかどうか
+  bool get isDiagonal =>
+      this == Move.upLeft ||
+      this == Move.downLeft ||
+      this == Move.upRight ||
+      this == Move.downRight;
+
   /// 斜めの向きを直線向き（左右）に変換
   Move toStraightLR() {
     switch (this) {
@@ -249,6 +263,86 @@ extension MoveExtent on Move {
       default:
         return this;
     }
+  }
+
+  /// 現在の向きに上下左右の向きを加えて新たな向き（斜めあり）を作り出す。該当する向きがなければ、元の向きを返す。
+  ///
+  /// ex)
+  ///
+  /// * Move.left.addStraight(Move.up) -> Move.upLeft
+  /// * Move.none.addStraight(Move.left) -> Move.left
+  /// * Move.left.addStraight(Move.right) -> Move.left
+  /// * Move.upLeft.addStraight(Move.down) -> Move.upLeft
+  /// * Move.none.addStraight(Move.upLeft) -> Move.none
+  Move addStraight(Move a) {
+    if (this == Move.none && a.isStraight) {
+      return a;
+    }
+    if ((this == Move.up && a == Move.left) ||
+        (this == Move.left && a == Move.up)) {
+      return Move.upLeft;
+    } else if ((this == Move.up && a == Move.right) ||
+        (this == Move.right && a == Move.up)) {
+      return Move.upRight;
+    } else if ((this == Move.down && a == Move.left) ||
+        (this == Move.left && a == Move.down)) {
+      return Move.downLeft;
+    } else if ((this == Move.down && a == Move.right) ||
+        (this == Move.right && a == Move.down)) {
+      return Move.downRight;
+    }
+    return this;
+  }
+
+  /// 現在の向きから上下左右の向きを引いて新たな向き（斜めあり）を作り出す。該当する向きがなければ、元の向きを返す。
+  ///
+  /// ex)
+  /// * Move.upLeft.subStraight(Move.up) -> Move.left
+  /// * Move.up.subStraight(Move.up) -> Move.none
+  /// * Move.left.subStraight(Move.right) -> Move.left
+  /// * Move.upLeft.subStraight(Move.down) -> Move.upLeft
+  /// * Move.none.subStraight(Move.left) -> Move.none
+  /// * Move.upLeft.subStraight(Move.upLeft) -> Move.upLeft (=引数に斜めを入力しても無視する)
+  Move subStraight(Move a) {
+    if (a.isStraight && this == a) {
+      return Move.none;
+    }
+    if ((this == Move.upLeft && a == Move.left) ||
+        (this == Move.upRight && a == Move.right)) {
+      return Move.up;
+    } else if ((this == Move.downLeft && a == Move.left) ||
+        (this == Move.downRight && a == Move.right)) {
+      return Move.down;
+    } else if ((this == Move.upLeft && a == Move.up) ||
+        (this == Move.downLeft && a == Move.down)) {
+      return Move.left;
+    } else if ((this == Move.upRight && a == Move.up) ||
+        (this == Move.downRight && a == Move.down)) {
+      return Move.right;
+    }
+    return this;
+  }
+
+  /// 現在の向きを上下左右の向きの組み合わせに分解し、そのリストを返す
+  ///
+  /// ex)
+  /// * Move.upLeft.toStraightList() -> [Move.up, Move.left]
+  /// * Move.left.toStraightList() -> [Move.left]
+  /// * Move.none.toStraightList() -> []
+  List<Move> toStraightList() {
+    if (this == Move.none) {
+      return [];
+    }
+    if (this == Move.upLeft) {
+      return [Move.up, Move.left];
+    } else if (this == Move.upRight) {
+      return [Move.up, Move.right];
+    } else if (this == Move.downLeft) {
+      return [Move.down, Move.left];
+    } else if (this == Move.downRight) {
+      return [Move.down, Move.right];
+    }
+    return [this];
   }
 
   /// 対応するベクトル

@@ -19,7 +19,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 
-class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
+class BoxPusherGame extends FlameGame
+    with
+        SingleGameInstance,
+        ScaleDetector, // ピンチイン・ピンチアウト検出用（マップの拡大縮小のため）
+        ScrollDetector, // マウスホイール検出用（マップの拡大縮小のため）
+        HasKeyboardHandlerComponents {
   late final RouterComponent _router;
   static final Vector2 offset = Vector2(15, 50);
   late final Map<String, OverlayRoute> _overlays;
@@ -31,6 +36,9 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
   int debugStageWidth = 7;
   int debugStageHeight = 7;
   int debugStageBoxNum = 3;
+
+  /// ゲームシーケンスでのズーム倍率
+  double gameZoom = 1.0;
 
   /// セーブデータファイル
   late final File saveDataFile;
@@ -212,7 +220,7 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
   void onScaleStart(ScaleStartInfo info) {
     // ゲームシーケンス中のみ有効
     if (_router.currentRoute.name != 'game') return;
-    startZoom = camera.viewfinder.zoom;
+    gameZoom = camera.viewfinder.zoom;
   }
 
   @override
@@ -221,13 +229,22 @@ class BoxPusherGame extends FlameGame with SingleGameInstance, ScaleDetector {
     if (_router.currentRoute.name != 'game') return;
     final currentScale = info.scale.global;
     if (!currentScale.isIdentity()) {
-      camera.viewfinder.zoom = startZoom * currentScale.y;
+      camera.viewfinder.zoom = gameZoom * currentScale.y;
       clampZoom();
     } else {
       final delta = info.delta.global * -1.0;
       camera.moveBy(delta);
       //camera.viewfinder.position.translate(-delta.x, -delta.y);
     }
+  }
+
+  @override
+  void onScroll(PointerScrollInfo info) {
+    // ゲームシーケンス中のみ有効
+    if (_router.currentRoute.name != 'game') return;
+    gameZoom += info.scrollDelta.global.y * -0.001;
+    gameZoom = gameZoom.clamp(0.5, 3.0);
+    camera.viewfinder.zoom = gameZoom;
   }
 
   void clampZoom() {

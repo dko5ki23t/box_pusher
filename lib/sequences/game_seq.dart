@@ -17,9 +17,10 @@ import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
+import 'package:flutter/services.dart';
 
 class GameSeq extends Sequence
-    with TapCallbacks, HasGameReference<BoxPusherGame> {
+    with TapCallbacks, KeyboardHandler, HasGameReference<BoxPusherGame> {
   /// 画面上部の余白
   static Vector2 get topPaddingSize => Vector2(360.0, 40.0);
 
@@ -774,17 +775,50 @@ class GameSeq extends Sequence
       if (tapObject.type == StageObjType.block) {
         stage.breakBlocks(stagePos, (block) => true,
             PointDistanceRange(stagePos, 0), game.world);
-        /*stage.merge(
-          stagePos,
-          tapObject,
-          game.world,
-          breakLeftOffset: 0,
-          breakRightOffset: 0,
-          breakTopOffset: 0,
-          breakBottomOffset: 0,
-          onlyDelete: true,
-        );*/
       }
     }
+  }
+
+  // PCのキーボード入力
+  @override
+  bool onKeyEvent(
+    RawKeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
+    final keyMoves = [];
+    if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
+        keysPressed.contains(LogicalKeyboardKey.keyA)) {
+      keyMoves.add(Move.left);
+    }
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowRight)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyD)) {
+      keyMoves.add(Move.right);
+    }
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowUp)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyW)) {
+      keyMoves.add(Move.up);
+    }
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowDown)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyS)) {
+      keyMoves.add(Move.down);
+    }
+
+    // 現在の移動方向を上下左右に分解し、対応するキーが押されていなければその向きを消す
+    // (右上向きに移動中右キーが押されなくなったら、pushingMoveButton = Move.upとなる)
+    final pushingMoveList = pushingMoveButton.toStraightList();
+    for (final move in pushingMoveList) {
+      if (!keyMoves.contains(move)) {
+        pushingMoveButton = pushingMoveButton.subStraight(move);
+      }
+    }
+    // 押されているキーに対応する向きをpushingMoveButtonに足す
+    for (final keyMove in keyMoves) {
+      // 足の能力がオフのときのみ斜め入力を許す
+      if (pushingMoveButton == Move.none ||
+          (pushingMoveButton.isStraight && stage.getLegAbility())) {
+        pushingMoveButton = pushingMoveButton.addStraight(keyMove);
+      }
+    }
+    return true;
   }
 }
