@@ -146,6 +146,8 @@ class Config {
     wideDiagonalMoveButton = jsonData['wideDiagonalMoveButton']['value'];
     showAddedScoreOnScore = jsonData['showAddedScoreOnScore']['value'];
     showAddedScoreOnMergePos = jsonData['showAddedScoreOnMergePos']['value'];
+    allowMoveStraightWithoutLegAbility =
+        jsonData['allowMoveStraightWithoutLegAbility']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
@@ -183,6 +185,9 @@ class Config {
 
   /// スコア加算表示(+100とか)をマージ位置に表示するかどうか
   late bool showAddedScoreOnMergePos;
+
+  /// 足の能力がオフなのに斜め移動をしたとき、上下左右いずれかの移動に切り替えるかどうか(falseなら移動できない)
+  late bool allowMoveStraightWithoutLegAbility;
 
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;

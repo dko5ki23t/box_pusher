@@ -786,6 +786,8 @@ class GameSeq extends Sequence
     Set<LogicalKeyboardKey> keysPressed,
   ) {
     final keyMoves = [];
+    // シフトキーを押している間は斜め入力のみ受け付け
+    final onlyDiagonal = keysPressed.contains(LogicalKeyboardKey.shiftLeft);
     if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
         keysPressed.contains(LogicalKeyboardKey.keyA)) {
       keyMoves.add(Move.left);
@@ -813,11 +815,24 @@ class GameSeq extends Sequence
     }
     // 押されているキーに対応する向きをpushingMoveButtonに足す
     for (final keyMove in keyMoves) {
-      // 足の能力がオフのときのみ斜め入力を許す
-      if (pushingMoveButton == Move.none ||
-          (pushingMoveButton.isStraight && stage.getLegAbility())) {
+      if (Config().allowMoveStraightWithoutLegAbility) {
+        // 足の能力がオフなら、入力が上下左右のいずれかになっている時点でbreak
+        if (!stage.getLegAbility() && pushingMoveButton.isStraight) {
+          break;
+        }
         pushingMoveButton = pushingMoveButton.addStraight(keyMove);
+      } else {
+        pushingMoveButton = pushingMoveButton.addStraight(keyMove);
+        // 足の能力がオフかつ斜め入力になっているのなら、移動できなくする
+        if (!stage.getLegAbility() && pushingMoveButton.isDiagonal) {
+          pushingMoveButton = Move.none;
+          break;
+        }
       }
+    }
+    // シフトキーを押している間は斜め入力のみ受け付け
+    if (onlyDiagonal && !pushingMoveButton.isDiagonal) {
+      pushingMoveButton = Move.none;
     }
     return true;
   }
