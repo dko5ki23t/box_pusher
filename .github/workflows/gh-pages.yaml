@@ -11,6 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.16.5"
       - uses: bluefireteam/flutter-gh-pages@v8
         with:
           baseHref: /box_pusher/
