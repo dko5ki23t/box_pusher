@@ -115,10 +115,10 @@ class GameSeq extends Sequence
     armerAbilityImg = await Flame.images.load('armer_ability.png');
     pocketAbilityImg = await Flame.images.load('pocket_ability.png');
     settingsImg = await Flame.images.load('settings.png');
-    // BGM再生
-    await Audio.playBGM(Bgm.game);
     // 画面コンポーネント初期化
     await initialize();
+    // BGM再生
+    await Audio.playBGM(Bgm.game);
   }
 
   @override
