@@ -15,4 +15,3 @@ jobs:
           echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' > TAG_NAME
           echo "TAG_NAME=$(cat TAG_NAME)" >> $GITHUB_ENV
           git tag
-          git tag | grep -w "$(cat TAG_NAME)" > TAG_GREP
