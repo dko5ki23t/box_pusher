@@ -9,8 +9,8 @@ jobs:
   create-git-tag:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: "Check app version"
-        uses: actions/checkout@v2
         run: |
           echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' > TAG_NAME
           echo "TAG_NAME=$(cat TAG_NAME)" >> $GITHUB_ENV
