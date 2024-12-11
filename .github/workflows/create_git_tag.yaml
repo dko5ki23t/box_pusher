@@ -14,4 +14,4 @@ jobs:
         run: |
           echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' > TAG_NAME
           echo "TAG_NAME=$(cat TAG_NAME)" >> $GITHUB_ENV
-          echo "v0.1.0" | grep "$(cat TAG_NAME)"
+          echo "" | grep "$(cat TAG_NAME)"
