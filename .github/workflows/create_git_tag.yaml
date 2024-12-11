@@ -14,7 +14,7 @@ jobs:
         run: |
           echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' > TAG_NAME
           echo "TAG_NAME=$(cat TAG_NAME)" >> $GITHUB_ENV
-          git ls-remote --tags | grep -w "$(cat TAG_NAME)" > TAG_GREP || echo "" > TAG_GREP
+          git ls-remote --tags | grep -o "$(cat TAG_NAME)$" > TAG_GREP || echo "" > TAG_GREP
           cat TAG_GREP
           echo "TAG_GREP=$(cat TAG_GREP)" >> $GITHUB_ENV
       - name: "Create Git tag if not exist"
