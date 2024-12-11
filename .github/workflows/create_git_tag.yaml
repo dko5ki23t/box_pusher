@@ -12,5 +12,4 @@ jobs:
       - uses: actions/checkout@v2
       - name: "Check app version"
         run: |
-          yq '.version' pubspec.yaml
-          
+          echo "v$(yq '.version' pubspec.yaml)"
