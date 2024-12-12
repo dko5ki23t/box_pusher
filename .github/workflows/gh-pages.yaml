@@ -31,9 +31,12 @@ jobs:
       - run: git commit -m "Automatic deployment by github-actions"
         shell: bash
         working-directory: .
-      - run: git push origin HEAD:gh-pages
+      - run: git push origin HEAD:gh-pages --force
         shell: bash
         working-directory: .
+      - run: |
+          git worktree add ./worktree-gh-pages gh-pages
+          ls ./worktree-gh-pages
       - name: "Check app version"
         run: |
           echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' > VERSION_DIR_NAME
