@@ -15,5 +15,5 @@ jobs:
           flutter-version: "3.16.5"
       - uses: bluefireteam/flutter-gh-pages@v8
         with:
-          baseHref: /box_pusher/
+          baseHref: /box_pusher/v0_2_0
           webRenderer: canvaskit
