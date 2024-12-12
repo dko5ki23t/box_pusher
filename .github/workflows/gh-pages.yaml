@@ -31,6 +31,12 @@ jobs:
       - run: git commit -m "Automatic deployment by github-actions"
         shell: bash
         working-directory: .
-      - run: git push origin HEAD:gh-pages --force
+      - run: git push origin HEAD:gh-pages
         shell: bash
         working-directory: .
+      - name: "Check app version"
+        run: |
+          echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' > VERSION_DIR_NAME
+          echo "VERSION_DIR_NAME=$(cat VERSION_DIR_NAME)" >> $GITHUB_ENV
+          git ls-remote --tags | grep "$(cat TAG_NAME)$" > TAG_GREP || echo "" > TAG_GREP
+          echo "TAG_GREP=$(cat TAG_GREP)" >> $GITHUB_ENV
