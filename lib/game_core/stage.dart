@@ -299,12 +299,18 @@ class Stage {
   /// 次のマージ時出現アイテムを更新
   void _updateNextMergeItem({required World gameWorld}) {
     List<StageObjTypeLevel> tls = Config().mergeAppearObjMap.values.last;
+    bool existAppearObj = false;
     for (final entry in Config().mergeAppearObjMap.entries) {
       remainMergeCount = max(entry.key - mergedCount, 0);
       if (remainMergeCount > 0) {
         tls = entry.value;
+        existAppearObj = true;
         break;
       }
+    }
+    // コンフィグで設定した最後のエントリーなら、5回マージごとに出現するようにする(無限)
+    if (!existAppearObj) {
+      remainMergeCount = 5;
     }
     nextMergeItems.clear();
     for (final tl in tls) {
@@ -344,7 +350,7 @@ class Stage {
       }
     }
     // basePointを元に、どういうオブジェクトが出現するか決定
-    late ObjInBlock pattern;
+    ObjInBlock pattern = Config().objInBlockMap.values.last;
     int jewelLevel = 1;
     for (final objInBlock in Config().objInBlockMap.entries) {
       if (objInBlock.key.contains(basePoint)) {
