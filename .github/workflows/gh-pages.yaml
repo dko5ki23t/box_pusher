@@ -19,16 +19,22 @@ jobs:
           echo "VERSION_DIR_NAME=$(cat VERSION_DIR_NAME)" >> $GITHUB_ENV
           git ls-remote --tags | grep "$(cat VERSION_DIR_NAME)$" > TAG_GREP || echo "" > TAG_GREP
           echo "TAG_GREP=$(cat TAG_GREP)" >> $GITHUB_ENV
-      - name: "Build web page and push to gh-pages branch"
+      - name: "Build web page"
         run: |
           flutter config --enable-web
           flutter build web --release --web-renderer=canvaskit --base-href /box_pusher/
+      - name: "Push web page to gh-pages branch"
+        run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git worktree add ./worktree-gh-pages gh-pages
           cd ./worktree-gh-pages
+          ls
           mkdir -p versions/${{ env.VERSION_DIR_NAME }}
           cp -r ../build/web versions/${{ env.VERSION_DIR_NAME }}
+          echo OK
           git add --all
+          echo OK2
           git commit -m "Automatic deployment by github-actions"
+          echo OK3
           git push origin HEAD:gh-pages
