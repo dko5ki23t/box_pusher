@@ -17,8 +17,6 @@ jobs:
         run: |
           echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' | sed "s/\./_/" > VERSION_DIR_NAME
           echo "VERSION_DIR_NAME=$(cat VERSION_DIR_NAME)" >> $GITHUB_ENV
-          git ls-remote --tags | grep "$(cat VERSION_DIR_NAME)$" > TAG_GREP || echo "" > TAG_GREP
-          echo "TAG_GREP=$(cat TAG_GREP)" >> $GITHUB_ENV
       - name: "Build web page"
         run: |
           flutter config --enable-web
@@ -30,14 +28,14 @@ jobs:
           git fetch origin gh-pages
           git worktree add worktree-gh-pages gh-pages
           cd ./worktree-gh-pages
-          cp -r ../build/web/. ./
+          cp ../build/web/. ./
           git add --all
           git commit -m "Automatic deployment by github-actions"
           git push origin HEAD:gh-pages
       - name: "Check app version's web site exists"
         run: |
           test -d ./versions/${{ env.VERSION_DIR_NAME }} && echo 'true' > TEST_VERSION_DIR || echo 'false' > TEST_VERSION_DIR
-          echo TEST_VERSION_DIR
+          cat TEST_VERSION_DIR
           echo "TEST_VERSION_DIR=$(cat TEST_VERSION_DIR)" >> $GITHUB_ENV
       - name: "Push app version's web page"
         if: env.TEST_VERSION_DIR == 'false'
