@@ -36,6 +36,7 @@ jobs:
         run: |
           test -d ./versions/${{ env.VERSION_DIR_NAME }} && echo 'true' > TEST_VERSION_DIR || echo 'false' > TEST_VERSION_DIR
           echo "TEST_VERSION_DIR=$(cat TEST_VERSION_DIR)" >> $GITHUB_ENV
+        working-directory: ./worktree-gh-pages
       - name: "Push app version's web page"
         if: env.TEST_VERSION_DIR == 'false'
         run: |
@@ -44,3 +45,4 @@ jobs:
           git add --all
           git commit -m "Automatic deployment by github-actions"
           git push origin HEAD:gh-pages
+        working-directory: ./worktree-gh-pages
