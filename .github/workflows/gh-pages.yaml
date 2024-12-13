@@ -14,7 +14,7 @@ jobs:
         with:
           flutter-version: "3.16.5"
       - name: "Build web page and push to gh-pages branch"
-      - run: |
+        run: |
           flutter config --enable-web
           flutter build web --release --web-renderer=canvaskit --base-href /box_pusher/
           git config user.name github-actions
