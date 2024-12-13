@@ -27,17 +27,11 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git branch
           git fetch origin gh-pages
-          git branch
           git worktree add worktree-gh-pages gh-pages
           cd ./worktree-gh-pages
-          ls
           mkdir -p versions/${{ env.VERSION_DIR_NAME }}
-          cp -r ../build/web versions/${{ env.VERSION_DIR_NAME }}
-          echo OK
+          cp -r ../build/web/ versions/${{ env.VERSION_DIR_NAME }}
           git add --all
-          echo OK2
           git commit -m "Automatic deployment by github-actions"
-          echo OK3
           git push origin HEAD:gh-pages
