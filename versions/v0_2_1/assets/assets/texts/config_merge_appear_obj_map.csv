@@ -1,0 +1,29 @@
+マージ回数->出現オブジェクトのマップ
+num, obj1, level1, obj2, level2, obj3, level3
+10, jewel, 1
+20, jewel, 1
+30, jewel, 1
+35, jewel, 2
+40, jewel, 2
+45, jewel, 2
+50, spike, 2
+55, jewel, 3
+60, jewel, 3
+65, jewel, 4
+70, jewel, 4
+75, jewel, 4
+80, swordsman, 2
+85, jewel, 5
+90, jewel, 5
+95, jewel, 5
+100, archer, 2
+105, jewel, 6
+110, jewel, 6
+115, jewel, 6
+120, jewel, 6
+125, builder, 1
+130, jewel, 7
+135, jewel, 7
+140, jewel, 7
+145, jewel, 7
+150, wizard, 1, builder, 1, ghost, 1
