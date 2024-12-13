@@ -40,7 +40,7 @@ jobs:
           echo TEST_VERSION_DIR
           echo "TEST_VERSION_DIR=$(cat TEST_VERSION_DIR)" >> $GITHUB_ENV
       - name: "Push app version's web page"
-        if: env.TEST_VERSION_DIR == "false"
+        if: env.TEST_VERSION_DIR == 'false'
         run: |
           mkdir -p versions/${{ env.VERSION_DIR_NAME }}
           cp -r ../build/web/ ./versions/${{ env.VERSION_DIR_NAME }}
