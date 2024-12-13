@@ -28,7 +28,8 @@ jobs:
           git fetch origin gh-pages
           git worktree add worktree-gh-pages gh-pages
           cd ./worktree-gh-pages
-          cp ../build/web/. ./
+          ls ../build/web
+          cp -r ../build/web/. ./
           git add --all
           git commit -m "Automatic deployment by github-actions"
           git push origin HEAD:gh-pages
