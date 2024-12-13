@@ -15,7 +15,7 @@ jobs:
           flutter-version: "3.16.5"
       - name: "Check app version"
         run: |
-          echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' | sed "s/\./_/" > VERSION_DIR_NAME
+          echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' | sed "s/\./_/g" > VERSION_DIR_NAME
           echo "VERSION_DIR_NAME=$(cat VERSION_DIR_NAME)" >> $GITHUB_ENV
       - name: "Build web page"
         run: |
