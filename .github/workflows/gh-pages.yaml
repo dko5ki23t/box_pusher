@@ -15,7 +15,7 @@ jobs:
           flutter-version: "3.16.5"
       - name: "Check app version"
         run: |
-          echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' | sed "s/./_/" > VERSION_DIR_NAME
+          echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' | sed "s/\./_/" > VERSION_DIR_NAME
           echo "VERSION_DIR_NAME=$(cat VERSION_DIR_NAME)" >> $GITHUB_ENV
           git ls-remote --tags | grep "$(cat VERSION_DIR_NAME)$" > TAG_GREP || echo "" > TAG_GREP
           echo "TAG_GREP=$(cat TAG_GREP)" >> $GITHUB_ENV
@@ -30,7 +30,7 @@ jobs:
           git fetch origin gh-pages
           git worktree add worktree-gh-pages gh-pages
           cd ./worktree-gh-pages
-          cp -r ../build/web/ ./
+          cp -r ../build/web/. ./
           git add --all
           git commit -m "Automatic deployment by github-actions"
           git push origin HEAD:gh-pages
