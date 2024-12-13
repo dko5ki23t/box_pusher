@@ -25,9 +25,11 @@ jobs:
           flutter build web --release --web-renderer=canvaskit --base-href /box_pusher/
       - name: "Push web page to gh-pages branch"
         run: |
+          git branch
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git worktree add ./worktree-gh-pages gh-pages
+          git branch
+          git worktree add worktree-gh-pages gh-pages
           cd ./worktree-gh-pages
           ls
           mkdir -p versions/${{ env.VERSION_DIR_NAME }}
