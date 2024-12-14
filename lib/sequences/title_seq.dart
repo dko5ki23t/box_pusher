@@ -71,16 +71,25 @@ class TitleSeq extends Sequence
         },
       ),
       continueButton,
-      if (game.testMode)
-        GameTextButton(
-          size: Vector2(120.0, 30.0),
-          position: Vector2(180.0, 430.0),
-          anchor: Anchor.center,
-          text: "デバッグ",
-          onReleased: () async {
-            game.pushSeqOverlay('debug_dialog');
-          },
-        ),
+      game.testMode
+          ? GameTextButton(
+              size: Vector2(120.0, 30.0),
+              position: Vector2(180.0, 430.0),
+              anchor: Anchor.center,
+              text: "デバッグ",
+              onReleased: () async {
+                game.pushSeqOverlay('debug_dialog');
+              },
+            )
+          : GameTextButton(
+              size: Vector2(120.0, 30.0),
+              position: Vector2(180.0, 430.0),
+              anchor: Anchor.center,
+              text: "デバッグ",
+              onReleased: () async {
+                game.pushSeqOverlay('debug_dialog');
+              },
+            ),
       RectangleComponent(
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 480.0),
