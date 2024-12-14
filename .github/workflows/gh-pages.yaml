@@ -40,9 +40,11 @@ jobs:
       - name: "Push app version's web page"
         if: env.TEST_VERSION_DIR == 'false'
         run: |
+          flutter config --enable-web
+          flutter build web --release --web-renderer=canvaskit --base-href /box_pusher/versions/${{ env.VERSION_DIR_NAME }}/
+          cd ./worktree-gh-pages
           mkdir -p versions/${{ env.VERSION_DIR_NAME }}
           cp -r ../build/web/. ./versions/${{ env.VERSION_DIR_NAME }}
           git add --all
           git commit -m "Automatic deployment by github-actions"
           git push origin HEAD:gh-pages
-        working-directory: ./worktree-gh-pages
