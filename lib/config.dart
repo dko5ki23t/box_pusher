@@ -148,6 +148,8 @@ class Config {
     showAddedScoreOnMergePos = jsonData['showAddedScoreOnMergePos']['value'];
     allowMoveStraightWithoutLegAbility =
         jsonData['allowMoveStraightWithoutLegAbility']['value'];
+    setObjInBlockWithDistributionAlgorithm =
+        jsonData['setObjInBlockWithDistributionAlgorithm']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
@@ -188,6 +190,9 @@ class Config {
 
   /// 足の能力がオフなのに斜め移動をしたとき、上下左右いずれかの移動に切り替えるかどうか(falseなら移動できない)
   late bool allowMoveStraightWithoutLegAbility;
+
+  /// ブロック破壊時出現オブジェクトを分布で計算するアルゴリズムで決めるか(falseの場合、破壊時に毎回確率で出現オブジェクトを決める)
+  late bool setObjInBlockWithDistributionAlgorithm;
 
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;

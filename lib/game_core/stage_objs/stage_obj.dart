@@ -272,6 +272,9 @@ abstract class StageObj {
   /// ex.) ドリルによるブロックの破壊
   List<bool> executings = [];
 
+  /// ブロックや敵など、破壊時に出現するオブジェクトのタイプとレベル
+  StageObjTypeLevel? havingObj;
+
   StageObj({
     required typeLevel,
     required this.animationComponent,
@@ -957,7 +960,9 @@ abstract class StageObj {
     return {
       'typeLevel': _typeLevel.encode(),
       'pos': pos.encode(),
-      'vector': vector.index
+      'vector': vector.index,
+      if (Config().setObjInBlockWithDistributionAlgorithm)
+        'havingObj': havingObj?.encode()
     };
   }
 }

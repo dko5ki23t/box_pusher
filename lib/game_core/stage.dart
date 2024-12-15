@@ -948,18 +948,11 @@ class Stage {
                   addToGameWorld: addToGameWorld);
             }
           }
-          assert(false, 'arienai!');
+          throw ('arienai!');
         }
       }
     }
-    assert(false, 'arienai!');
-    return createObject(
-        typeLevel: StageObjTypeLevel(
-          type: StageObjType.block,
-        ),
-        pos: point,
-        gameWorld: gameWorld,
-        addToGameWorld: addToGameWorld);
+    throw ('arienai!');
   }
 
   void setHandAbility(bool isOn) {
