@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flame/components.dart';
 
 /// 整数座標
@@ -379,3 +381,6 @@ extension MoveExtent on Move {
     return [Move.upLeft, Move.upRight, Move.downLeft, Move.downRight];
   }
 }
+
+/// ランダムに切り上げ/切り下げしたintを返す
+int randomRound(double a) => Random().nextBool() ? a.ceil() : a.floor();

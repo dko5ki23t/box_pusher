@@ -15,6 +15,7 @@ import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart' hide Route, OverlayRoute;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,6 +51,9 @@ class BoxPusherGame extends FlameGame
   /// プレイ中のステージ情報
   Map<String, dynamic> _stageData = {};
   Map<String, dynamic> get stageData => _stageData;
+
+  /// セーブデータのバージョン（アプリバージョン）
+  late String _saveDataVersion;
 
   /// 画面サイズのベース（実際の画面によってスケーリングされる）
   static Vector2 get baseSize => Vector2(360.0, 640.0);
@@ -102,15 +106,19 @@ class BoxPusherGame extends FlameGame
       ),
     );
 
+    // アプリバージョン等取得
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
     // セーブデータファイル準備
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       try {
         _highScore = prefs.getInt('highScore') ?? 0;
         _stageData = jsonDecode(prefs.getString('stageData') ?? '');
+        _saveDataVersion = prefs.getString('version')!;
       } catch (e) {
         _stageData = {};
         setAndSaveHighScore(0);
+        _saveDataVersion = packageInfo.version;
       }
     } else {
       final directory = await getApplicationDocumentsDirectory();
@@ -121,9 +129,11 @@ class BoxPusherGame extends FlameGame
         final jsonMap = jsonDecode(saveData);
         _highScore = jsonMap['highScore'];
         _stageData = jsonMap['stageData'];
+        _saveDataVersion = jsonMap['version'];
       } catch (e) {
         _stageData = {};
         setAndSaveHighScore(0);
+        _saveDataVersion = packageInfo.version;
       }
     }
 
@@ -138,10 +148,12 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('version', _saveDataVersion);
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'version': _saveDataVersion,
       });
       await saveDataFile.writeAsString(jsonText);
     }
@@ -155,10 +167,12 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('version', _saveDataVersion);
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'version': _saveDataVersion,
       });
       await saveDataFile.writeAsString(jsonText);
     }
@@ -170,10 +184,12 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('version', _saveDataVersion);
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'version': _saveDataVersion,
       });
       await saveDataFile.writeAsString(jsonText);
     }

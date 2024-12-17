@@ -233,6 +233,8 @@ class StageObjTypeLevel {
 
   @override
   int get hashCode => type.hashCode ^ level.hashCode;
+
+  StageObjTypeLevel copy() => StageObjTypeLevel(type: type, level: level);
 }
 
 /// ステージ上オブジェクト
