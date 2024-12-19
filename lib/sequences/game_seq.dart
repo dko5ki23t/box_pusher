@@ -163,6 +163,13 @@ class GameSeq extends Sequence
 
     stage = Stage(testMode: game.testMode);
     await stage.onLoad();
+    // デバッグモードのときはステージの最大幅・高さを指定する
+    if (game.testMode) {
+      stage.stageMaxLT = Point(-(game.debugStageWidth / 2).ceil(),
+          -(game.debugStageHeight / 2).ceil());
+      stage.stageMaxRB = Point((game.debugStageWidth / 2).ceil(),
+          (game.debugStageHeight / 2).ceil());
+    }
     stage.initialize(game.world, game.camera, game.stageData);
 
     // プレイヤーの操作ボタン群
@@ -526,23 +533,25 @@ class GameSeq extends Sequence
         Vector2(handAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     legAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getLegAbility(),
-      onChanged: (bool isOn) {
-        stage.setLegAbility(isOn);
-        playerControllButtonsArea!
-            .removeAll(playerControllButtonsArea!.children);
-        if (stage.getLegAbility()) {
-          if (Config().wideDiagonalMoveButton) {
-            clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-            playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-          } else {
-            playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-          }
-        } else {
-          playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-        }
-      },
+      onChanged: game.testMode
+          ? (bool isOn) {
+              stage.setLegAbility(isOn);
+              playerControllButtonsArea!
+                  .removeAll(playerControllButtonsArea!.children);
+              if (stage.getLegAbility()) {
+                if (Config().wideDiagonalMoveButton) {
+                  clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+                  playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+                  playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+                } else {
+                  playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+                  playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+                }
+              } else {
+                playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+              }
+            }
+          : null,
       size: legAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(legAbilityImg),
@@ -655,10 +664,7 @@ class GameSeq extends Sequence
       final addingScoreText = OpacityEffectTextComponent(
         text: "+$addedScore",
         textRenderer: TextPaint(
-          style: const TextStyle(
-            fontFamily: Config.gameTextFamily,
-            color: Color(0xff000000),
-          ),
+          style: Config.gameTextStyle,
         ),
       );
       add(RectangleComponent(

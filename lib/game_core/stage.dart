@@ -606,10 +606,7 @@ class Stage {
       final addingScoreText = OpacityEffectTextComponent(
         text: "+$gettingScore",
         textRenderer: TextPaint(
-          style: const TextStyle(
-            fontFamily: Config.gameTextFamily,
-            color: Color(0xff000000),
-          ),
+          style: Config.gameTextStyle,
         ),
       );
       gameWorld.add(RectangleComponent(

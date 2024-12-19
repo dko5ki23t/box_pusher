@@ -13,16 +13,15 @@ class TitleSeq extends Sequence
     with /*TapCallbacks,*/ HasGameReference<BoxPusherGame> {
   late final TextComponent highScreText;
   late final GameTextButton continueButton;
+  late final Image bugImage;
+  late final GameTextButton debugButton;
 
   @override
   Future<void> onLoad() async {
     highScreText = TextComponent(
       text: "High Score : ${game.highScore}",
       textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: Config.gameTextFamily,
-          color: Color(0xff000000),
-        ),
+        style: Config.gameTextStyle,
       ),
     );
     continueButton = GameTextButton(
@@ -32,6 +31,16 @@ class TitleSeq extends Sequence
       text: "つづきから",
       enabled: game.stageData.isNotEmpty,
       onReleased: () => game.pushAndInitGame(),
+    );
+    debugButton = GameTextButton(
+      size: Vector2(80.0, 30.0),
+      position: Vector2(160.0, 460.0),
+      anchor: Anchor.centerLeft,
+      enabled: game.testMode,
+      text: "デバッグ",
+      onReleased: () async {
+        game.pushSeqOverlay('debug_dialog');
+      },
     );
     // アプリバージョン等取得
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -80,16 +89,17 @@ class TitleSeq extends Sequence
           game.pushSeqOverlay('version_log_dialog');
         },
       ),
-      if (game.testMode)
-        GameTextButton(
-          size: Vector2(120.0, 30.0),
-          position: Vector2(180.0, 460.0),
-          anchor: Anchor.center,
-          text: "デバッグ",
-          onReleased: () async {
-            game.pushSeqOverlay('debug_dialog');
-          },
-        ),
+      GameSpriteOnOffButton(
+        size: Vector2.all(30),
+        position: Vector2(120.0, 460.0),
+        anchor: Anchor.centerLeft,
+        isOn: game.testMode,
+        onChanged: (isOn) => game.testMode = !game.testMode,
+        sprite: await Sprite.load('bug_report.png'),
+      ),
+      // TODO:コメント外す
+      //if (game.testMode)
+      debugButton,
       RectangleComponent(
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 510.0),
@@ -107,10 +117,7 @@ class TitleSeq extends Sequence
         position: Vector2(180.0, 550.0),
         anchor: Anchor.center,
         textRenderer: TextPaint(
-          style: const TextStyle(
-            fontFamily: Config.gameTextFamily,
-            color: Color(0xff000000),
-          ),
+          style: Config.gameTextStyle,
         ),
       ),
       // TODO: 例外発生 -> MissingPluginException (MissingPluginException(No implementation found for method share on channel dev.fluttercommunity.plus/share))
@@ -129,6 +136,7 @@ class TitleSeq extends Sequence
   void update(double dt) {
     highScreText.text = "High Score : ${game.highScore}";
     continueButton.enabled = game.stageData.isNotEmpty;
+    debugButton.enabled = game.testMode;
   }
 
   // TapCallbacks実装時には必要(PositionComponentでは不要)

@@ -5,6 +5,7 @@ import 'package:flame/components.dart' hide Block;
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 const String baseConfigFileName = 'assets/texts/config_base.json';
@@ -125,6 +126,9 @@ class Config {
   static final Config _instance = Config._internal();
 
   static const String gameTextFamily = 'NotoSansJP';
+
+  static const TextStyle gameTextStyle =
+      TextStyle(fontFamily: Config.gameTextFamily, color: Color(0xff000000));
 
   factory Config() => _instance;
 

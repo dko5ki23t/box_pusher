@@ -49,12 +49,13 @@ class BoxPusherGame extends FlameGame
   late final Map<String, OverlayRoute> _overlays;
 
   /// テストやデバッグ用のモード
-  final bool testMode;
+  bool testMode;
 
   /// デバッグモードで作成するステージの情報
-  int debugStageWidth = 7;
-  int debugStageHeight = 7;
-  int debugStageBoxNum = 3;
+  int debugStageWidth = 200;
+  int debugStageHeight = 200;
+  List<int> debugStageWidthClamps = [12, 200];
+  List<int> debugStageHeightClamps = [40, 200];
 
   /// ゲームシーケンスでのズーム倍率
   double gameZoom = 1.0;

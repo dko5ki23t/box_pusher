@@ -47,10 +47,7 @@ class GameTextButton extends ButtonComponent {
                       child: TextComponent(
                         text: text,
                         textRenderer: TextPaint(
-                          style: const TextStyle(
-                            fontFamily: Config.gameTextFamily,
-                            color: Color(0xff000000),
-                          ),
+                          style: Config.gameTextStyle,
                         ),
                       ),
                     ),
@@ -73,10 +70,7 @@ class GameTextButton extends ButtonComponent {
                       child: TextComponent(
                         text: text,
                         textRenderer: TextPaint(
-                          style: const TextStyle(
-                            fontFamily: Config.gameTextFamily,
-                            color: Color(0xff000000),
-                          ),
+                          style: Config.gameTextStyle,
                         ),
                       ),
                     ),
@@ -95,10 +89,7 @@ class GameTextButton extends ButtonComponent {
                       child: TextComponent(
                         text: text,
                         textRenderer: TextPaint(
-                          style: const TextStyle(
-                            fontFamily: Config.gameTextFamily,
-                            color: Color(0xff000000),
-                          ),
+                          style: Config.gameTextStyle,
                         ),
                       ),
                     ),
@@ -121,10 +112,7 @@ class GameTextButton extends ButtonComponent {
                       child: TextComponent(
                         text: text,
                         textRenderer: TextPaint(
-                          style: const TextStyle(
-                            fontFamily: Config.gameTextFamily,
-                            color: Color(0xff000000),
-                          ),
+                          style: Config.gameTextStyle,
                         ),
                       ),
                     ),
