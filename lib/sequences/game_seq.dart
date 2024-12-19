@@ -16,6 +16,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
 
@@ -76,6 +77,12 @@ class GameSeq extends Sequence
   static Vector2 get stageViewSize => Vector2(360.0 - xPaddingSize.x * 2,
       640.0 - menuButtonAreaSize.y - topPaddingSize.y - yPaddingSize.y * 2);
 
+  /// 準備できたかどうか
+  bool isReady = false;
+
+  // BGMのプレイヤー
+  AudioPlayer? bgmPlayer;
+
   /// ステージオブジェクト
   late Stage stage;
 
@@ -117,40 +124,52 @@ class GameSeq extends Sequence
     settingsImg = await Flame.images.load('settings.png');
     // 画面コンポーネント初期化
     await initialize();
-    // BGM再生
-    await Audio.playBGM(Bgm.game);
   }
 
   @override
   void onFocus(String? before) {
-    if (before == 'menu') {
-      // BGM再開
-      Audio.resumeBGM();
-    } else {
-      // BGM再生
-      Audio.playBGM(Bgm.game);
+    if (isReady) {
+      if (before == 'menu') {
+        // BGM再開
+        resumeBGM();
+      } else {
+        // BGM再生
+        Audio.playBGM(Bgm.game).then((value) => bgmPlayer = value);
+      }
     }
   }
 
   @override
   void onUnFocus() {
     // BGM中断
-    Audio.pauseBGM();
+    pauseBGM();
   }
+
+  void resumeBGM() => Audio.resumeBGM(bgmPlayer);
+  void pauseBGM() => Audio.pauseBGM(bgmPlayer);
 
   @override
   void onRemove() {
     // BGM停止
-    Audio.stopBGM();
+    Audio.stopBGM(bgmPlayer);
   }
 
   // 初期化（というよりリセット）
   Future<void> initialize() async {
+    // 準備中にする
+    isReady = false;
     removeAll(children);
     game.world.removeAll(game.world.children);
 
     stage = Stage(testMode: game.testMode);
     await stage.onLoad();
+    // デバッグモードのときはステージの最大幅・高さを指定する
+    if (game.testMode) {
+      stage.stageMaxLT = Point(-(game.debugStageWidth / 2).ceil(),
+          -(game.debugStageHeight / 2).ceil());
+      stage.stageMaxRB = Point((game.debugStageWidth / 2).ceil(),
+          (game.debugStageHeight / 2).ceil());
+    }
     stage.initialize(game.world, game.camera, game.stageData);
 
     // プレイヤーの操作ボタン群
@@ -502,7 +521,8 @@ class GameSeq extends Sequence
     // 手の能力ボタン領域
     handAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getHandAbility(),
-      onChanged: (bool isOn) => stage.setHandAbility(isOn),
+      onChanged:
+          game.testMode ? (bool isOn) => stage.setHandAbility(isOn) : null,
       size: handAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(handAbilityImg),
@@ -513,23 +533,25 @@ class GameSeq extends Sequence
         Vector2(handAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     legAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getLegAbility(),
-      onChanged: (bool isOn) {
-        stage.setLegAbility(isOn);
-        playerControllButtonsArea!
-            .removeAll(playerControllButtonsArea!.children);
-        if (stage.getLegAbility()) {
-          if (Config().wideDiagonalMoveButton) {
-            clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-            playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-          } else {
-            playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-          }
-        } else {
-          playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-        }
-      },
+      onChanged: game.testMode
+          ? (bool isOn) {
+              stage.setLegAbility(isOn);
+              playerControllButtonsArea!
+                  .removeAll(playerControllButtonsArea!.children);
+              if (stage.getLegAbility()) {
+                if (Config().wideDiagonalMoveButton) {
+                  clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+                  playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+                  playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+                } else {
+                  playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+                  playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+                }
+              } else {
+                playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+              }
+            }
+          : null,
       size: legAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(legAbilityImg),
@@ -540,7 +562,8 @@ class GameSeq extends Sequence
         Vector2(legAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     armerAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getArmerAbility(),
-      onChanged: (bool isOn) => stage.setArmerAbility(isOn),
+      onChanged:
+          game.testMode ? (bool isOn) => stage.setArmerAbility(isOn) : null,
       size: armerAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(armerAbilityImg,
@@ -583,6 +606,9 @@ class GameSeq extends Sequence
     if (game.testMode) {
       add(currentPosText);
     }
+
+    // 準備完了
+    isReady = true;
   }
 
   @override
@@ -638,10 +664,7 @@ class GameSeq extends Sequence
       final addingScoreText = OpacityEffectTextComponent(
         text: "+$addedScore",
         textRenderer: TextPaint(
-          style: const TextStyle(
-            fontFamily: Config.gameTextFamily,
-            color: Color(0xff000000),
-          ),
+          style: Config.gameTextStyle,
         ),
       );
       add(RectangleComponent(

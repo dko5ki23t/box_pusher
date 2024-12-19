@@ -23,6 +23,10 @@
         "desc": "足の能力がオフなのに斜め移動をしたとき、上下左右いずれかの移動に切り替えるかどうか(falseなら移動できない)",
         "value": true
     },
+    "setObjInBlockWithDistributionAlgorithm": {
+        "desc": "ブロック破壊時出現オブジェクトを分布で計算するアルゴリズムで決めるか(falseの場合、破壊時に毎回確率で出現オブジェクトを決める)",
+        "value": true
+    },
     "addedScoreEffectMove": {
         "desc": "スコア加算表示(+100とか)エフェクトの移動量",
         "value": {

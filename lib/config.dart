@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flame/components.dart' hide Block;
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 const String baseConfigFileName = 'assets/texts/config_base.json';
@@ -92,22 +94,30 @@ class ObjInBlock {
   /// 破壊した数の内、宝石が含まれる割合
   final int jewelPercent;
 
-  /// 宝石以外で出現するアイテム
-  final List<StageObjTypeLevel> items1;
+  /// 宝石以外で出現するアイテム全体の最大個数
+  final int itemsMaxNum;
 
-  /// 宝石以外で出現するアイテムの最大個数
-  final int itemsMaxNum1;
+  /// 宝石以外で出現するアイテムとその最大個数
+  final Map<StageObjTypeLevel, int> itemsNumMap;
 
-  ObjInBlock(this.jewelPercent, this.items1, this.itemsMaxNum1);
+  /// 宝石以外で出現するアイテムとその割合
+  final Map<StageObjTypeLevel, int> itemsPercentMap;
+
+  ObjInBlock(this.jewelPercent, this.itemsMaxNum, this.itemsNumMap,
+      this.itemsPercentMap);
 
   ObjInBlock.fromStrings(List<String> data)
       : jewelPercent = int.parse(data[0]),
-        items1 = [],
-        itemsMaxNum1 = int.parse(data[1]) {
-    for (int i = 2; i < data.length; i += 2) {
-      items1.add(StageObjTypeLevel(
+        itemsMaxNum = int.parse(data[1]),
+        itemsNumMap = {},
+        itemsPercentMap = {} {
+    for (int i = 2; i < data.length; i += 4) {
+      itemsNumMap[StageObjTypeLevel(
           type: StageObjTypeExtent.fromStr(data[i]),
-          level: int.parse(data[i + 1])));
+          level: int.parse(data[i + 1]))] = int.parse(data[i + 2]);
+      itemsPercentMap[StageObjTypeLevel(
+          type: StageObjTypeExtent.fromStr(data[i]),
+          level: int.parse(data[i + 1]))] = int.parse(data[i + 3]);
     }
   }
 }
@@ -116,6 +126,9 @@ class Config {
   static final Config _instance = Config._internal();
 
   static const String gameTextFamily = 'NotoSansJP';
+
+  static const TextStyle gameTextStyle =
+      TextStyle(fontFamily: Config.gameTextFamily, color: Color(0xff000000));
 
   factory Config() => _instance;
 
@@ -148,6 +161,8 @@ class Config {
     showAddedScoreOnMergePos = jsonData['showAddedScoreOnMergePos']['value'];
     allowMoveStraightWithoutLegAbility =
         jsonData['allowMoveStraightWithoutLegAbility']['value'];
+    setObjInBlockWithDistributionAlgorithm =
+        jsonData['setObjInBlockWithDistributionAlgorithm']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
@@ -189,6 +204,9 @@ class Config {
   /// 足の能力がオフなのに斜め移動をしたとき、上下左右いずれかの移動に切り替えるかどうか(falseなら移動できない)
   late bool allowMoveStraightWithoutLegAbility;
 
+  /// ブロック破壊時出現オブジェクトを分布で計算するアルゴリズムで決めるか(falseの場合、破壊時に毎回確率で出現オブジェクトを決める)
+  late bool setObjInBlockWithDistributionAlgorithm;
+
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;
 
@@ -216,54 +234,20 @@ class Config {
     return ret;
   }
 
+  /// 引数で指定した座標に該当する「出現床/ブロック」のMapを返す
+  /// 見つからない場合は最後のEntryを返す
+  BlockFloorPattern getBlockFloorPattern(Point pos) {
+    for (final pattern in blockFloorMap.entries) {
+      if (pattern.key.contains(pos)) {
+        return pattern.value;
+      }
+    }
+    log('(${pos.x}, ${pos.y})に対応するblockFloorPatternが見つからなかった。');
+    return blockFloorMap.values.last;
+  }
+
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
-  late Map<PointRange, ObjInBlock> objInBlockMap = {
-    PointDistanceRange(Point(0, 0), 5): ObjInBlock(50, [], 0),
-    PointDistanceRange(Point(0, 0), 10): ObjInBlock(
-        50,
-        [
-          StageObjTypeLevel(type: StageObjType.spike),
-          StageObjTypeLevel(type: StageObjType.trap)
-        ],
-        2),
-    PointRectRange(Point(5, 5), Point(20, 20)): ObjInBlock(
-        40,
-        [
-          StageObjTypeLevel(type: StageObjType.belt),
-          StageObjTypeLevel(type: StageObjType.guardian),
-          StageObjTypeLevel(type: StageObjType.swordsman)
-        ],
-        1),
-    PointRectRange(Point(-5, -5), Point(-20, -20)): ObjInBlock(
-        40,
-        [
-          StageObjTypeLevel(type: StageObjType.drill),
-          StageObjTypeLevel(type: StageObjType.guardian),
-          StageObjTypeLevel(type: StageObjType.swordsman)
-        ],
-        1),
-    PointDistanceRange(Point(0, 0), 20): ObjInBlock(
-        40,
-        [
-          StageObjTypeLevel(type: StageObjType.swordsman),
-          StageObjTypeLevel(type: StageObjType.guardian),
-          StageObjTypeLevel(type: StageObjType.bomb),
-        ],
-        1),
-    PointDistanceRange(Point(0, 0), 25): ObjInBlock(
-        40,
-        [
-          StageObjTypeLevel(type: StageObjType.swordsman, level: 2),
-          StageObjTypeLevel(type: StageObjType.archer),
-          StageObjTypeLevel(type: StageObjType.drill),
-          StageObjTypeLevel(type: StageObjType.trap),
-          StageObjTypeLevel(type: StageObjType.bomb),
-          StageObjTypeLevel(type: StageObjType.warp),
-        ],
-        2),
-    PointDistanceRange(Point(0, 0), 100):
-        ObjInBlock(50, [StageObjTypeLevel(type: StageObjType.guardian)], 0),
-  };
+  late Map<PointRange, ObjInBlock> objInBlockMap;
 
   Map<PointRange, ObjInBlock> loadObjInBlockMap(List<List<String>> data) {
     final Map<PointRange, ObjInBlock> ret = {};
@@ -275,6 +259,18 @@ class Config {
               [for (int j = 6; j < vals.length; j++) vals[j]]);
     }
     return ret;
+  }
+
+  /// 引数で指定した座標に該当する「ブロック破壊時の出現オブジェクト」のMapEntryを返す
+  /// 見つからない場合は最後のEntryを返す
+  MapEntry<PointRange, ObjInBlock> getObjInBlockMapEntry(Point pos) {
+    for (final objInBlock in objInBlockMap.entries) {
+      if (objInBlock.key.contains(pos)) {
+        return objInBlock;
+      }
+    }
+    log('(${pos.x}, ${pos.y})に対応するobjInBlockが見つからなかった。');
+    return objInBlockMap.entries.last;
   }
 
   /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限
@@ -305,6 +301,18 @@ class Config {
     return ret;
   }
 
+  /// 引数で指定した座標に該当する「ブロック破壊時に出現する特定オブジェクトの個数制限」のMapを返す
+  /// 見つからない場合は最後のEntryを返す
+  Map<StageObjTypeLevel, int> getMaxObjNumFromBlock(Point pos) {
+    for (final objMaxNum in maxObjNumFromBlockMap.entries) {
+      if (objMaxNum.key.contains(pos)) {
+        return objMaxNum.value;
+      }
+    }
+    log('(${pos.x}, ${pos.y})に対応するmaxObjNumFromBlockが見つからなかった。');
+    return maxObjNumFromBlockMap.values.last;
+  }
+
   /// ステージ上範囲->ブロック破壊時の出現宝石のレベル（範囲が重複する場合は先に存在するキーを優先）
   late Map<PointRange, int> jewelLevelInBlockMap;
 
@@ -317,6 +325,18 @@ class Config {
           int.parse(vals[6]);
     }
     return ret;
+  }
+
+  /// 引数で指定した座標に該当する「ブロック破壊時の出現宝石のレベル」を返す
+  /// 見つからない場合は最後のEntryのレベルを返す
+  int getJewelLevel(Point pos) {
+    for (final entry in jewelLevelInBlockMap.entries) {
+      if (entry.key.contains(pos)) {
+        return entry.value;
+      }
+    }
+    log('(${pos.x}, ${pos.y})に対応するjewelLevelが見つからなかった。');
+    return jewelLevelInBlockMap.values.last;
   }
 
   /// マージしたオブジェクトが、対象のブロックを破壊できるかどうか

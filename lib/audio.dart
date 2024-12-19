@@ -33,6 +33,17 @@ extension SoundExtent on Sound {
         return 'trap1.mp3';
     }
   }
+
+  double get volume {
+    switch (this) {
+      case Sound.decide:
+      case Sound.merge:
+      case Sound.getSkill:
+      case Sound.explode:
+      case Sound.trap1:
+        return 0.8;
+    }
+  }
 }
 
 /// BGUM
@@ -46,6 +57,13 @@ extension BgmExtent on Bgm {
     switch (this) {
       case Bgm.game:
         return 'maou_bgm_8bit29.mp3';
+    }
+  }
+
+  double get volume {
+    switch (this) {
+      case Bgm.game:
+        return 0.3;
     }
   }
 }
@@ -64,34 +82,32 @@ class Audio {
         .loadAll([for (final bgm in Bgm.values) bgm.fileName]);
     await FlameAudio.audioCache
         .loadAll([for (final sound in Sound.values) sound.fileName]);
-    // BGMの準備
-    FlameAudio.bgm.initialize();
     isLoaded = true;
   }
 
   static Future<AudioPlayer> playSound(Sound sound) {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    return FlameAudio.play(sound.fileName);
+    return FlameAudio.play(sound.fileName, volume: sound.volume);
   }
 
-  static Future<void> playBGM(Bgm bgm) {
+  static Future<AudioPlayer> playBGM(Bgm bgm) {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    return FlameAudio.bgm.play(bgm.fileName);
+    return FlameAudio.loopLongAudio(bgm.fileName, volume: bgm.volume);
   }
 
-  static Future<void> stopBGM() {
+  static void stopBGM(AudioPlayer? player) {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    return FlameAudio.bgm.stop();
+    if (player != null) player.stop();
   }
 
-  static Future<void> pauseBGM() {
+  static void pauseBGM(AudioPlayer? player) {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    return FlameAudio.bgm.pause();
+    if (player != null) player.pause();
   }
 
-  static Future<void> resumeBGM() {
+  static void resumeBGM(AudioPlayer? player) {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    return FlameAudio.bgm.resume();
+    if (player != null) player.resume();
   }
 
   static Future<void> onRemove() async {

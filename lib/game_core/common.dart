@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flame/components.dart';
 
 /// 整数座標
@@ -76,8 +79,8 @@ abstract class PointRange {
   /// 引数の座標が範囲内にあるか
   bool contains(Point p);
 
-  /// 範囲内座標のリスト
-  List<Point> get list;
+  /// 範囲内座標のセット
+  Set<Point> get set;
 
   static PointRange createFromStrings(List<String> data) {
     switch (data[0]) {
@@ -91,6 +94,21 @@ abstract class PointRange {
         throw ('[PointRange]無効な文字列が範囲タイプとして入力された');
     }
   }
+
+  List<String> toStrings();
+
+  @override
+  String toString() {
+    final strings = toStrings();
+    String ret = strings.first;
+    for (int i = 1; i < strings.length; i++) {
+      ret += ',${strings[i]}';
+    }
+    return ret;
+  }
+
+  static PointRange fromStr(String str) =>
+      PointRange.createFromStrings(str.split(','));
 }
 
 /// 整数座標による四角形表現
@@ -125,14 +143,23 @@ class PointRectRange extends PointRange {
     return (p.x >= lt.x && p.x <= rb.x && p.y >= lt.y && p.y <= rb.y);
   }
 
-  /// 四角形内座標のリスト
+  /// 四角形内座標のセット
   @override
-  List<Point> get list {
-    return [
+  Set<Point> get set {
+    return {
       for (int y = lt.y; y <= rb.y; y++)
         for (int x = lt.x; x <= rb.x; x++) Point(x, y)
-    ];
+    };
   }
+
+  @override
+  List<String> toStrings() => [
+        'rect',
+        lt.x.toString(),
+        lt.y.toString(),
+        rb.x.toString(),
+        rb.y.toString()
+      ];
 }
 
 /// 整数座標による等距離範囲（≒円）表現
@@ -161,10 +188,10 @@ class PointDistanceRange extends PointRange {
   }
 
   // TODO:テスト
-  /// 範囲内座標のリスト
+  /// 範囲内座標のセット
   @override
-  List<Point> get list {
-    List<Point> ret = [];
+  Set<Point> get set {
+    Set<Point> ret = {};
     for (int dy = -distance; dy <= distance; dy++) {
       int d2 = distance - dy.abs();
       for (int dx = -d2; dx <= d2; dx++) {
@@ -173,6 +200,16 @@ class PointDistanceRange extends PointRange {
     }
     return ret;
   }
+
+  @override
+  List<String> toStrings() => [
+        'distance',
+        center.x.toString(),
+        center.y.toString(),
+        '',
+        '',
+        distance.toString()
+      ];
 }
 
 /// 移動
@@ -379,3 +416,133 @@ extension MoveExtent on Move {
     return [Move.upLeft, Move.upRight, Move.downLeft, Move.downRight];
   }
 }
+
+enum RoundMode {
+  floor,
+  ceil,
+  round,
+  randomRound,
+}
+
+/// 分布を管理する
+class Distribution<T> {
+  /// 各オブジェクトごとの数
+  final Map<T, int> _total = {};
+
+  /// 各オブジェクトごとの数(残り)
+  final Map<T, int> _remain = {};
+
+  /// 総数
+  int totalTotal;
+
+  /// 残りの総数
+  int remainTotal;
+
+  /// 総数以上取り出したときに例外を発生させるかどうか
+  final bool overdoseException;
+
+  Distribution(Map<T, int> nums, this.totalTotal,
+      {this.overdoseException = true})
+      : remainTotal = totalTotal {
+    _total.addAll(nums);
+    _remain.addAll(nums);
+  }
+
+  Distribution.fromPercent(
+      Map<T, int> percents, this.totalTotal, RoundMode roundMode,
+      {this.overdoseException = true})
+      : remainTotal = totalTotal {
+    for (final e in percents.entries) {
+      double n = totalTotal * e.value * 0.01;
+      switch (roundMode) {
+        case RoundMode.floor:
+          _total[e.key] = n.floor();
+          break;
+        case RoundMode.ceil:
+          _total[e.key] = n.ceil();
+          break;
+        case RoundMode.round:
+          _total[e.key] = n.round();
+          break;
+        case RoundMode.randomRound:
+          _total[e.key] = randomRound(n);
+          break;
+      }
+    }
+    _remain.addAll(_total);
+  }
+
+  bool get isEmpty => remainTotal <= 0;
+
+  T? getOne() {
+    if (isEmpty) {
+      if (overdoseException) {
+        throw ('総数が0の分布に対してget操作が行われた。');
+      } else {
+        return null;
+      }
+    }
+    int r = Random().nextInt(remainTotal);
+    int t = 0;
+    for (final e in _remain.entries) {
+      t += e.value;
+      if (r < t) {
+        _remain[e.key] = _remain[e.key]! - 1;
+        remainTotal--;
+        return e.key;
+      }
+    }
+    remainTotal--;
+    return null;
+  }
+
+  List<T?> getList(int len) {
+    List<T?> ret = [];
+    for (int i = 0; i < len; i++) {
+      ret.add(getOne());
+    }
+    return ret;
+  }
+
+  int getRemainNum(T key) => _remain[key]!;
+
+  int getTotalNum(T key) => _total[key]!;
+
+  Distribution.decode(Map<String, dynamic> json, T Function(String) strToKey,
+      {this.overdoseException = true})
+      : totalTotal = json['totalTotal'],
+        remainTotal = json['remainTotal'] {
+    final Map<String, dynamic> jsonDecodedT = jsonDecode(json['total']);
+    for (final entry in jsonDecodedT.entries) {
+      _total[strToKey(entry.key)] = entry.value;
+    }
+    final Map<String, dynamic> jsonDecodedR = jsonDecode(json['remain']);
+    for (final entry in jsonDecodedR.entries) {
+      _remain[strToKey(entry.key)] = entry.value;
+    }
+  }
+
+  Map<String, dynamic> encode({String Function(T)? toStringFn}) {
+    final Map<String, dynamic> totalMap = {};
+    for (final entry in _total.entries) {
+      totalMap[toStringFn != null
+          ? toStringFn(entry.key)
+          : entry.key.toString()] = entry.value;
+    }
+    final Map<String, dynamic> remainMap = {};
+    for (final entry in _remain.entries) {
+      remainMap[toStringFn != null
+          ? toStringFn(entry.key)
+          : entry.key.toString()] = entry.value;
+    }
+    return {
+      'total': jsonEncode(totalMap),
+      'totalTotal': totalTotal,
+      'remain': jsonEncode(remainMap),
+      'remainTotal': remainTotal
+    };
+  }
+}
+
+/// ランダムに切り上げ/切り下げしたintを返す
+int randomRound(double a) => Random().nextBool() ? a.ceil() : a.floor();

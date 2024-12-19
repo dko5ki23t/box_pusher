@@ -1,5 +1,5 @@
 name: box_pusher
-description: "A new Flutter project."
+description: "箱押し＋マージゲーム\nステージ上のオブジェクトを押して同じオブジェクトと合体してマージさせよう。"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.2.2+1
+version: 0.3.0+1
 
 environment:
   sdk: ">=3.2.3 <4.0.0"
@@ -47,6 +47,9 @@ dependencies:
   go_router: ^14.2.3
   shared_preferences: ^2.2.3
   package_info_plus: ^5.0.1
+  flutter_markdown: ^0.6.20
+  markdown: ^7.2.2
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:

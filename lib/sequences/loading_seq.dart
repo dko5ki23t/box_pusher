@@ -1,39 +1,28 @@
 import 'package:box_pusher/box_pusher_game.dart';
+import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
+import 'package:flame/flame.dart';
 
-class LoadingSeq extends Component with HasGameReference<BoxPusherGame> {
-  // 経過時間をカウントしているか
-  bool isCounting = false;
-  // ロード時間計測用カウント
-  double timeCount = 0.0;
-
+class LoadingSeq extends Sequence with HasGameReference<BoxPusherGame> {
   @override
   Future<void> onLoad() async {
-    final loadingSprite = await Sprite.load('loading.png');
+    final loadingImage = await Flame.images.load('loading.png');
     addAll([
-      SpriteComponent(
-        sprite: loadingSprite,
-        position: BoxPusherGame.offset + Vector2(0.0, 0.0),
+      SpriteAnimationComponent.fromFrameData(
+        loadingImage,
+        SpriteAnimationData.sequenced(
+            amount: 8, stepTime: 0.1, textureSize: Vector2(63, 64)),
+        position: BoxPusherGame.baseSize / 2,
+        anchor: Anchor.center,
       ),
     ]);
-    initialize();
-  }
-
-  void initialize() {
-    isCounting = true;
-    timeCount = 0.0;
   }
 
   @override
   void update(double dt) {
-    if (isCounting) {
-      timeCount += dt;
-      // 1秒以上経過時
-      if (timeCount >= 1) {
-        // ゲームプレイへ
-        isCounting = false;
-        game.pushAndInitGame();
-      }
+    // ゲームの準備ができたらこのシーケンスを終わる
+    if (game.isGameReady()) {
+      game.popSeq();
     }
   }
 }
