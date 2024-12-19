@@ -73,6 +73,8 @@ class MyAppStateForLocale extends State<MyApp> {
                     child: GameWidget.controlled(
                       gameFactory: () =>
                           BoxPusherGame(testMode: widget.testMode),
+                      loadingBuilder: (context) =>
+                          const Center(child: CircularProgressIndicator()),
                     ),
                   ),
                   showAd
@@ -113,11 +115,7 @@ class MyAppStateForLocale extends State<MyApp> {
             );
           } else {
             // TODO: ロード画面など
-            return const Center(
-                child: Text(
-              'Loading...',
-              style: TextStyle(fontFamily: 'NotoSansJP'),
-            ));
+            return const Center(child: CircularProgressIndicator());
           }
         });
   }

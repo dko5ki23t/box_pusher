@@ -8,6 +8,7 @@ import 'package:box_pusher/components/version_log_dialog.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
+import 'package:box_pusher/sequences/loading_seq.dart';
 import 'package:box_pusher/sequences/menu_seq.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:box_pusher/sequences/title_seq.dart';
@@ -20,6 +21,22 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
+
+class Version {
+  int major;
+  int minor;
+  int patch;
+
+  Version(this.major, this.minor, this.patch);
+
+  static Version parse(String str) {
+    final nums = str.split('.');
+    return Version(int.parse(nums[0]), int.parse(nums[1]), int.parse(nums[2]));
+  }
+
+  @override
+  String toString() => '$major.$minor.$patch';
+}
 
 class BoxPusherGame extends FlameGame
     with
@@ -54,7 +71,7 @@ class BoxPusherGame extends FlameGame
   Map<String, dynamic> get stageData => _stageData;
 
   /// セーブデータのバージョン（アプリバージョン）
-  String _saveDataVersion = '0.0.0';
+  Version _saveDataVersion = Version(0, 0, 0);
 
   /// 画面サイズのベース（実際の画面によってスケーリングされる）
   static Vector2 get baseSize => Vector2(360.0, 640.0);
@@ -106,6 +123,7 @@ class BoxPusherGame extends FlameGame
         routes: {
           'title': Route(TitleSeq.new),
           'game': Route(GameSeq.new),
+          'loading': Route(LoadingSeq.new, transparent: true),
           'menu': Route(MenuSeq.new, transparent: true),
           'gameover': Route(GameoverSeq.new, transparent: true),
           'clear': Route(ClearSeq.new, transparent: true),
@@ -122,11 +140,11 @@ class BoxPusherGame extends FlameGame
       try {
         _highScore = prefs.getInt('highScore') ?? 0;
         _stageData = jsonDecode(prefs.getString('stageData') ?? '');
-        _saveDataVersion = prefs.getString('version')!;
+        _saveDataVersion = Version.parse(prefs.getString('version')!);
       } catch (e) {
         _stageData = {};
         setAndSaveHighScore(0);
-        _saveDataVersion = packageInfo.version;
+        _saveDataVersion = Version.parse(packageInfo.version);
       }
     } else {
       final directory = await getApplicationDocumentsDirectory();
@@ -141,7 +159,7 @@ class BoxPusherGame extends FlameGame
       } catch (e) {
         _stageData = {};
         setAndSaveHighScore(0);
-        _saveDataVersion = packageInfo.version;
+        _saveDataVersion = Version.parse(packageInfo.version);
       }
     }
 
@@ -156,7 +174,7 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
-      await prefs.setString('version', _saveDataVersion);
+      await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
@@ -175,7 +193,7 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
-      await prefs.setString('version', _saveDataVersion);
+      await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
@@ -192,7 +210,7 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
-      await prefs.setString('version', _saveDataVersion);
+      await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
@@ -209,6 +227,15 @@ class BoxPusherGame extends FlameGame
       return gameSeq.stage.score;
     } else {
       return 0;
+    }
+  }
+
+  bool isGameReady() {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      return gameSeq.isReady;
+    } else {
+      return false;
     }
   }
 
@@ -283,6 +310,7 @@ class BoxPusherGame extends FlameGame
       }
     }
     pushSeqNamed('game');
+    pushSeqNamed('loading');
   }
 
   void pushSeqNamed(String name, {bool replace = false}) {

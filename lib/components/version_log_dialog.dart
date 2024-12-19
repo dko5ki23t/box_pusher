@@ -2,6 +2,18 @@ import 'package:box_pusher/box_pusher_game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:markdown/markdown.dart' as md;
+
+/// HR
+class CustomHorizonBuilder extends MarkdownElementBuilder {
+  @override
+  Widget visitText(md.Text text, TextStyle? preferredStyle) {
+    return const Divider(
+      height: 10,
+      thickness: 0.5,
+    );
+  }
+}
 
 class VersionLogDialog extends StatefulWidget {
   final BoxPusherGame game;
@@ -37,6 +49,9 @@ class VersionLogDialogState extends State<VersionLogDialog> {
         child: Column(
           children: [
             MarkdownBody(
+              builders: {
+                'hhrr': CustomHorizonBuilder(),
+              },
               data: versionLog,
               listItemCrossAxisAlignment:
                   MarkdownListItemCrossAxisAlignment.start,

@@ -76,6 +76,9 @@ class GameSeq extends Sequence
   static Vector2 get stageViewSize => Vector2(360.0 - xPaddingSize.x * 2,
       640.0 - menuButtonAreaSize.y - topPaddingSize.y - yPaddingSize.y * 2);
 
+  /// 準備できたかどうか
+  bool isReady = false;
+
   /// ステージオブジェクト
   late Stage stage;
 
@@ -117,18 +120,18 @@ class GameSeq extends Sequence
     settingsImg = await Flame.images.load('settings.png');
     // 画面コンポーネント初期化
     await initialize();
-    // BGM再生
-    await Audio.playBGM(Bgm.game);
   }
 
   @override
   void onFocus(String? before) {
-    if (before == 'menu') {
-      // BGM再開
-      Audio.resumeBGM();
-    } else {
-      // BGM再生
-      Audio.playBGM(Bgm.game);
+    if (isReady) {
+      if (before == 'menu') {
+        // BGM再開
+        Audio.resumeBGM();
+      } else {
+        // BGM再生
+        Audio.playBGM(Bgm.game);
+      }
     }
   }
 
@@ -146,6 +149,8 @@ class GameSeq extends Sequence
 
   // 初期化（というよりリセット）
   Future<void> initialize() async {
+    // 準備中にする
+    isReady = false;
     removeAll(children);
     game.world.removeAll(game.world.children);
 
@@ -583,6 +588,9 @@ class GameSeq extends Sequence
     if (game.testMode) {
       add(currentPosText);
     }
+
+    // 準備完了
+    isReady = true;
   }
 
   @override
