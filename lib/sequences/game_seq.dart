@@ -16,6 +16,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
 
@@ -79,6 +80,9 @@ class GameSeq extends Sequence
   /// 準備できたかどうか
   bool isReady = false;
 
+  // BGMのプレイヤー
+  AudioPlayer? bgmPlayer;
+
   /// ステージオブジェクト
   late Stage stage;
 
@@ -127,10 +131,10 @@ class GameSeq extends Sequence
     if (isReady) {
       if (before == 'menu') {
         // BGM再開
-        Audio.resumeBGM();
+        resumeBGM();
       } else {
         // BGM再生
-        Audio.playBGM(Bgm.game);
+        Audio.playBGM(Bgm.game).then((value) => bgmPlayer = value);
       }
     }
   }
@@ -138,13 +142,16 @@ class GameSeq extends Sequence
   @override
   void onUnFocus() {
     // BGM中断
-    Audio.pauseBGM();
+    pauseBGM();
   }
+
+  void resumeBGM() => Audio.resumeBGM(bgmPlayer);
+  void pauseBGM() => Audio.pauseBGM(bgmPlayer);
 
   @override
   void onRemove() {
     // BGM停止
-    Audio.stopBGM();
+    Audio.stopBGM(bgmPlayer);
   }
 
   // 初期化（というよりリセット）

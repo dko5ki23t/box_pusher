@@ -94,6 +94,24 @@ class BoxPusherGame extends FlameGame
   Future<void> onLoad() async {
     super.onLoad();
 
+    // アプリ切り替え時に音楽中断/再開
+    AppLifecycleListener(
+      onShow: () {
+        if (_router.currentRoute.name == 'game' &&
+            _router.routes['game']!.firstChild() != null) {
+          final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+          return gameSeq.resumeBGM();
+        }
+      },
+      onHide: () {
+        if (_router.currentRoute.name == 'game' &&
+            _router.routes['game']!.firstChild() != null) {
+          final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+          return gameSeq.pauseBGM();
+        }
+      },
+    );
+
     // 各シーケンス（ルート）を追加
     _overlays = {
       'version_log_dialog': OverlayRoute(
@@ -155,7 +173,7 @@ class BoxPusherGame extends FlameGame
         final jsonMap = jsonDecode(saveData);
         _highScore = jsonMap['highScore'];
         _stageData = jsonMap['stageData'];
-        _saveDataVersion = jsonMap['version'];
+        _saveDataVersion = Version.parse(jsonMap['version']);
       } catch (e) {
         _stageData = {};
         setAndSaveHighScore(0);
@@ -179,7 +197,7 @@ class BoxPusherGame extends FlameGame
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
-        'version': _saveDataVersion,
+        'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
     }
@@ -198,7 +216,7 @@ class BoxPusherGame extends FlameGame
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
-        'version': _saveDataVersion,
+        'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
     }
@@ -215,7 +233,7 @@ class BoxPusherGame extends FlameGame
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
-        'version': _saveDataVersion,
+        'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
     }
