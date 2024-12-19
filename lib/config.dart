@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flame/components.dart' hide Block;
 import 'package:box_pusher/game_core/common.dart';
@@ -229,6 +230,18 @@ class Config {
     return ret;
   }
 
+  /// 引数で指定した座標に該当する「出現床/ブロック」のMapを返す
+  /// 見つからない場合は最後のEntryを返す
+  BlockFloorPattern getBlockFloorPattern(Point pos) {
+    for (final pattern in blockFloorMap.entries) {
+      if (pattern.key.contains(pos)) {
+        return pattern.value;
+      }
+    }
+    log('(${pos.x}, ${pos.y})に対応するblockFloorPatternが見つからなかった。');
+    return blockFloorMap.values.last;
+  }
+
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
   late Map<PointRange, ObjInBlock> objInBlockMap;
 
@@ -252,6 +265,7 @@ class Config {
         return objInBlock;
       }
     }
+    log('(${pos.x}, ${pos.y})に対応するobjInBlockが見つからなかった。');
     return objInBlockMap.entries.last;
   }
 
@@ -291,6 +305,7 @@ class Config {
         return objMaxNum.value;
       }
     }
+    log('(${pos.x}, ${pos.y})に対応するmaxObjNumFromBlockが見つからなかった。');
     return maxObjNumFromBlockMap.values.last;
   }
 
@@ -316,6 +331,7 @@ class Config {
         return entry.value;
       }
     }
+    log('(${pos.x}, ${pos.y})に対応するjewelLevelが見つからなかった。');
     return jewelLevelInBlockMap.values.last;
   }
 

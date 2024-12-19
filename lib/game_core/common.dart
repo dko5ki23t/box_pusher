@@ -78,8 +78,8 @@ abstract class PointRange {
   /// 引数の座標が範囲内にあるか
   bool contains(Point p);
 
-  /// 範囲内座標のリスト
-  List<Point> get list;
+  /// 範囲内座標のセット
+  Set<Point> get set;
 
   static PointRange createFromStrings(List<String> data) {
     switch (data[0]) {
@@ -127,13 +127,13 @@ class PointRectRange extends PointRange {
     return (p.x >= lt.x && p.x <= rb.x && p.y >= lt.y && p.y <= rb.y);
   }
 
-  /// 四角形内座標のリスト
+  /// 四角形内座標のセット
   @override
-  List<Point> get list {
-    return [
+  Set<Point> get set {
+    return {
       for (int y = lt.y; y <= rb.y; y++)
         for (int x = lt.x; x <= rb.x; x++) Point(x, y)
-    ];
+    };
   }
 }
 
@@ -163,10 +163,10 @@ class PointDistanceRange extends PointRange {
   }
 
   // TODO:テスト
-  /// 範囲内座標のリスト
+  /// 範囲内座標のセット
   @override
-  List<Point> get list {
-    List<Point> ret = [];
+  Set<Point> get set {
+    Set<Point> ret = {};
     for (int dy = -distance; dy <= distance; dy++) {
       int d2 = distance - dy.abs();
       for (int dx = -d2; dx <= d2; dx++) {
@@ -380,6 +380,98 @@ extension MoveExtent on Move {
   static List<Move> get diagonals {
     return [Move.upLeft, Move.upRight, Move.downLeft, Move.downRight];
   }
+}
+
+enum RoundMode {
+  floor,
+  ceil,
+  round,
+  randomRound,
+}
+
+/// 分布を管理する
+class Distribution<T> {
+  /// 各オブジェクトごとの数
+  final Map<T, int> _total = {};
+
+  /// 各オブジェクトごとの数(残り)
+  final Map<T, int> _remain = {};
+
+  /// 総数
+  int totalTotal;
+
+  /// 残りの総数
+  int remainTotal;
+
+  /// 総数以上取り出したときに例外を発生させるかどうか
+  final bool overdoseException;
+
+  Distribution(Map<T, int> nums, this.totalTotal,
+      {this.overdoseException = true})
+      : remainTotal = totalTotal {
+    _total.addAll(nums);
+    _remain.addAll(nums);
+  }
+
+  Distribution.fromPercent(
+      Map<T, int> percents, this.totalTotal, RoundMode roundMode,
+      {this.overdoseException = true})
+      : remainTotal = totalTotal {
+    for (final e in percents.entries) {
+      double n = totalTotal * e.value * 0.01;
+      switch (roundMode) {
+        case RoundMode.floor:
+          _total[e.key] = n.floor();
+          break;
+        case RoundMode.ceil:
+          _total[e.key] = n.ceil();
+          break;
+        case RoundMode.round:
+          _total[e.key] = n.round();
+          break;
+        case RoundMode.randomRound:
+          _total[e.key] = randomRound(n);
+          break;
+      }
+    }
+    _remain.addAll(_total);
+  }
+
+  bool get isEmpty => remainTotal <= 0;
+
+  T? getOne() {
+    if (isEmpty) {
+      if (overdoseException) {
+        throw ('総数が0の分布に対してget操作が行われた。');
+      } else {
+        return null;
+      }
+    }
+    int r = Random().nextInt(remainTotal);
+    int t = 0;
+    for (final e in _remain.entries) {
+      t += e.value;
+      if (r < t) {
+        _remain[e.key] = _remain[e.key]! - 1;
+        remainTotal--;
+        return e.key;
+      }
+    }
+    remainTotal--;
+    return null;
+  }
+
+  List<T?> getList(int len) {
+    List<T?> ret = [];
+    for (int i = 0; i < len; i++) {
+      ret.add(getOne());
+    }
+    return ret;
+  }
+
+  int getRemainNum(T key) => _remain[key]!;
+
+  int getTotalNum(T key) => _total[key]!;
 }
 
 /// ランダムに切り上げ/切り下げしたintを返す
