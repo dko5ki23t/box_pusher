@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
+import 'package:box_pusher/components/version_log_dialog.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
@@ -53,7 +54,7 @@ class BoxPusherGame extends FlameGame
   Map<String, dynamic> get stageData => _stageData;
 
   /// セーブデータのバージョン（アプリバージョン）
-  late String _saveDataVersion;
+  String _saveDataVersion = '0.0.0';
 
   /// 画面サイズのベース（実際の画面によってスケーリングされる）
   static Vector2 get baseSize => Vector2(360.0, 640.0);
@@ -78,6 +79,13 @@ class BoxPusherGame extends FlameGame
 
     // 各シーケンス（ルート）を追加
     _overlays = {
+      'version_log_dialog': OverlayRoute(
+        (context, game) {
+          return VersionLogDialog(
+            game: this,
+          );
+        },
+      ),
       'debug_dialog': OverlayRoute(
         (context, game) {
           return DebugDialog(

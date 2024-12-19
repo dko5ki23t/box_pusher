@@ -27,7 +27,7 @@ class TitleSeq extends Sequence
     );
     continueButton = GameTextButton(
       size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 380.0),
+      position: Vector2(180.0, 360.0),
       anchor: Anchor.center,
       text: "つづきから",
       enabled: game.stageData.isNotEmpty,
@@ -47,7 +47,7 @@ class TitleSeq extends Sequence
       TextComponent(
         text: "押しごと",
         size: Vector2(150.0, 45.0),
-        position: Vector2(180.0, 280.0),
+        position: Vector2(180.0, 260.0),
         anchor: Anchor.center,
         textRenderer: TextPaint(
           style: const TextStyle(
@@ -59,7 +59,7 @@ class TitleSeq extends Sequence
       ),
       GameTextButton(
         size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 330.0),
+        position: Vector2(180.0, 310.0),
         anchor: Anchor.center,
         text: "はじめから",
         onReleased: () {
@@ -71,10 +71,19 @@ class TitleSeq extends Sequence
         },
       ),
       continueButton,
+      GameTextButton(
+        size: Vector2(120.0, 30.0),
+        position: Vector2(180.0, 410.0),
+        anchor: Anchor.center,
+        text: "バージョンログ",
+        onReleased: () async {
+          game.pushSeqOverlay('version_log_dialog');
+        },
+      ),
       if (game.testMode)
         GameTextButton(
           size: Vector2(120.0, 30.0),
-          position: Vector2(180.0, 430.0),
+          position: Vector2(180.0, 460.0),
           anchor: Anchor.center,
           text: "デバッグ",
           onReleased: () async {
@@ -83,7 +92,7 @@ class TitleSeq extends Sequence
         ),
       RectangleComponent(
         size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 480.0),
+        position: Vector2(180.0, 510.0),
         anchor: Anchor.center,
         children: [
           AlignComponent(
@@ -95,7 +104,7 @@ class TitleSeq extends Sequence
       TextComponent(
         text: 'Ver.${packageInfo.version}',
         size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 530.0),
+        position: Vector2(180.0, 550.0),
         anchor: Anchor.center,
         textRenderer: TextPaint(
           style: const TextStyle(

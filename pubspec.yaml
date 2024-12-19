@@ -47,6 +47,7 @@ dependencies:
   go_router: ^14.2.3
   shared_preferences: ^2.2.3
   package_info_plus: ^5.0.1
+  flutter_markdown: ^0.6.20
 
 dev_dependencies:
   flutter_test:
