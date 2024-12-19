@@ -514,7 +514,8 @@ class GameSeq extends Sequence
     // 手の能力ボタン領域
     handAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getHandAbility(),
-      onChanged: (bool isOn) => stage.setHandAbility(isOn),
+      onChanged:
+          game.testMode ? (bool isOn) => stage.setHandAbility(isOn) : null,
       size: handAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(handAbilityImg),
@@ -552,7 +553,8 @@ class GameSeq extends Sequence
         Vector2(legAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     armerAbilityOnOffButton = GameSpriteOnOffButton(
       isOn: stage.getArmerAbility(),
-      onChanged: (bool isOn) => stage.setArmerAbility(isOn),
+      onChanged:
+          game.testMode ? (bool isOn) => stage.setArmerAbility(isOn) : null,
       size: armerAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(armerAbilityImg,

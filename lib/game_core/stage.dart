@@ -393,8 +393,8 @@ class Stage {
             }
             if (item.type == StageObjType.treasureBox) {
               setStaticType(p, StageObjType.treasureBox, gameWorld);
-            } else if (item.type == StageObjType.treasureBox) {
-              setStaticType(p, StageObjType.treasureBox, gameWorld);
+            } else if (item.type == StageObjType.warp) {
+              setStaticType(p, StageObjType.warp, gameWorld);
               warpPoints.add(p);
             } else if (item.type == StageObjType.belt) {
               setStaticType(p, StageObjType.belt, gameWorld);
