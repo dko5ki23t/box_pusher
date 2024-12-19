@@ -1,6 +1,9 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/config.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+final Uri _url = Uri.parse('https://forms.gle/F1BTY8KL6NZkBoyo7');
 
 class DebugDialog extends StatefulWidget {
   final BoxPusherGame game;
@@ -63,6 +66,20 @@ class DebugDialogState extends State<DebugDialog> {
                 labelText: 'ステージの最大高さ($minStageHeight~$maxStageHeight)',
                 border: const OutlineInputBorder(),
               ),
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Flexible(
+            child: TextButton(
+              child: const Text(
+                'バグ報告(Google Formを開きます)',
+                style: Config.gameTextStyle,
+              ),
+              onPressed: () async {
+                if (!await launchUrl(_url)) {}
+              },
             ),
           ),
         ],
