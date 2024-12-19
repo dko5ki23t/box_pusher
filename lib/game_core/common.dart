@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flame/components.dart';
@@ -93,6 +94,21 @@ abstract class PointRange {
         throw ('[PointRange]無効な文字列が範囲タイプとして入力された');
     }
   }
+
+  List<String> toStrings();
+
+  @override
+  String toString() {
+    final strings = toStrings();
+    String ret = strings.first;
+    for (int i = 1; i < strings.length; i++) {
+      ret += ',${strings[i]}';
+    }
+    return ret;
+  }
+
+  static PointRange fromStr(String str) =>
+      PointRange.createFromStrings(str.split(','));
 }
 
 /// 整数座標による四角形表現
@@ -135,6 +151,15 @@ class PointRectRange extends PointRange {
         for (int x = lt.x; x <= rb.x; x++) Point(x, y)
     };
   }
+
+  @override
+  List<String> toStrings() => [
+        'rect',
+        lt.x.toString(),
+        lt.y.toString(),
+        rb.x.toString(),
+        rb.y.toString()
+      ];
 }
 
 /// 整数座標による等距離範囲（≒円）表現
@@ -175,6 +200,16 @@ class PointDistanceRange extends PointRange {
     }
     return ret;
   }
+
+  @override
+  List<String> toStrings() => [
+        'distance',
+        center.x.toString(),
+        center.y.toString(),
+        '',
+        '',
+        distance.toString()
+      ];
 }
 
 /// 移動
@@ -472,6 +507,41 @@ class Distribution<T> {
   int getRemainNum(T key) => _remain[key]!;
 
   int getTotalNum(T key) => _total[key]!;
+
+  Distribution.decode(Map<String, dynamic> json, T Function(String) strToKey,
+      {this.overdoseException = true})
+      : totalTotal = json['totalTotal'],
+        remainTotal = json['remainTotal'] {
+    final Map<String, dynamic> jsonDecodedT = jsonDecode(json['total']);
+    for (final entry in jsonDecodedT.entries) {
+      _total[strToKey(entry.key)] = entry.value;
+    }
+    final Map<String, dynamic> jsonDecodedR = jsonDecode(json['remain']);
+    for (final entry in jsonDecodedR.entries) {
+      _remain[strToKey(entry.key)] = entry.value;
+    }
+  }
+
+  Map<String, dynamic> encode({String Function(T)? toStringFn}) {
+    final Map<String, dynamic> totalMap = {};
+    for (final entry in _total.entries) {
+      totalMap[toStringFn != null
+          ? toStringFn(entry.key)
+          : entry.key.toString()] = entry.value;
+    }
+    final Map<String, dynamic> remainMap = {};
+    for (final entry in _remain.entries) {
+      remainMap[toStringFn != null
+          ? toStringFn(entry.key)
+          : entry.key.toString()] = entry.value;
+    }
+    return {
+      'total': jsonEncode(totalMap),
+      'totalTotal': totalTotal,
+      'remain': jsonEncode(remainMap),
+      'remainTotal': remainTotal
+    };
+  }
 }
 
 /// ランダムに切り上げ/切り下げしたintを返す

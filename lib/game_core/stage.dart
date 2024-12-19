@@ -156,6 +156,12 @@ class Stage {
   /// ステージの右下座標(プレイヤーの動きにつれて拡張されていく)
   Point stageRB = Point(0, 0);
 
+  /// ステージの左上上限座標
+  Point stageMaxLT = Point(-100, -100);
+
+  /// ステージの右下上限座標
+  Point stageMaxRB = Point(100, 100);
+
   /// ステージの横幅
   int get stageWidth => stageRB.x - stageLT.x;
 
@@ -269,7 +275,6 @@ class Stage {
     gameWorld.add(effectBase.first.animationComponent);
     // 前回のステージ情報が保存されているなら
     if (stageData.containsKey('score')) {
-      // TODO: 分布のセーブ/ロード
       _setStageDataFromSaveData(gameWorld, camera, stageData);
     } else {
       _setStageDataFromInitialData(gameWorld, camera);
@@ -282,6 +287,16 @@ class Stage {
     ret['coin'] = coinNum;
     ret['stageLT'] = stageLT.encode();
     ret['stageRB'] = stageRB.encode();
+    final Map<String, dynamic> encodedCOIBM = {};
+    for (final entry in calcedObjInBlockMap.entries) {
+      encodedCOIBM[entry.key.toString()] = entry.value.encode();
+    }
+    ret['calcedObjInBlockMap'] = encodedCOIBM;
+    final Map<String, dynamic> encodedCBFM = {};
+    for (final entry in calcedBlockFloorMap.entries) {
+      encodedCBFM[entry.key.toString()] = entry.value.encode();
+    }
+    ret['calcedBlockFloorMap'] = encodedCBFM;
     final Map<String, dynamic> staticObjsMap = {};
     for (final entry in staticObjs.entries) {
       staticObjsMap[entry.key.encode()] = entry.value.encode();
@@ -706,6 +721,19 @@ class Stage {
     _scoreVisual = _score.toDouble();
     // コイン数設定
     coinNum = stageData['coin'];
+    // 分布(数)設定
+    calcedBlockFloorMap.clear();
+    for (final entry
+        in (stageData['calcedBlockFloorMap'] as Map<String, dynamic>).entries) {
+      calcedBlockFloorMap[PointRange.fromStr(entry.key)] =
+          Distribution.decode(entry.value, StageObjTypeLevel.fromStr);
+    }
+    calcedObjInBlockMap.clear();
+    for (final entry
+        in (stageData['calcedObjInBlockMap'] as Map<String, dynamic>).entries) {
+      calcedObjInBlockMap[PointRange.fromStr(entry.key)] =
+          Distribution.decode(entry.value, StageObjTypeLevel.fromStr);
+    }
 
     // 各種ステージオブジェクト設定
     staticObjs.clear();
@@ -905,33 +933,45 @@ class Stage {
       // 左端
       if (camera.canSee(
           staticObjs[Point(stageLT.x, player.pos.y)]!.animationComponent)) {
-        stageLT.x--;
-        for (int y = stageLT.y; y <= stageRB.y; y++) {
-          createAndSetStaticObjWithPattern(Point(stageLT.x, y), gameWorld);
+        // ステージ上限範囲を超えないように
+        if (stageLT.x > stageMaxLT.x) {
+          stageLT.x--;
+          for (int y = stageLT.y; y <= stageRB.y; y++) {
+            createAndSetStaticObjWithPattern(Point(stageLT.x, y), gameWorld);
+          }
         }
       }
       // 右端
       if (camera.canSee(
           staticObjs[Point(stageRB.x, player.pos.y)]!.animationComponent)) {
-        stageRB.x++;
-        for (int y = stageLT.y; y <= stageRB.y; y++) {
-          createAndSetStaticObjWithPattern(Point(stageRB.x, y), gameWorld);
+        // ステージ上限範囲を超えないように
+        if (stageRB.x < stageMaxRB.x) {
+          stageRB.x++;
+          for (int y = stageLT.y; y <= stageRB.y; y++) {
+            createAndSetStaticObjWithPattern(Point(stageRB.x, y), gameWorld);
+          }
         }
       }
       // 上端
       if (camera.canSee(
           staticObjs[Point(player.pos.x, stageLT.y)]!.animationComponent)) {
-        stageLT.y--;
-        for (int x = stageLT.x; x <= stageRB.x; x++) {
-          createAndSetStaticObjWithPattern(Point(x, stageLT.y), gameWorld);
+        // ステージ上限範囲を超えないように
+        if (stageLT.y > stageMaxLT.y) {
+          stageLT.y--;
+          for (int x = stageLT.x; x <= stageRB.x; x++) {
+            createAndSetStaticObjWithPattern(Point(x, stageLT.y), gameWorld);
+          }
         }
       }
       // 下端
       if (camera.canSee(
           staticObjs[Point(player.pos.x, stageRB.y)]!.animationComponent)) {
-        stageRB.y++;
-        for (int x = stageLT.x; x <= stageRB.x; x++) {
-          createAndSetStaticObjWithPattern(Point(x, stageRB.y), gameWorld);
+        // ステージ上限範囲を超えないように
+        if (stageRB.y < stageMaxRB.y) {
+          stageRB.y++;
+          for (int x = stageLT.x; x <= stageRB.x; x++) {
+            createAndSetStaticObjWithPattern(Point(x, stageRB.y), gameWorld);
+          }
         }
       }
       // カメラの可動範囲更新
@@ -944,6 +984,7 @@ class Stage {
   }
 
   void prepareDistributions() {
+    // TODO: コンフィグでものすごく広い範囲指定してると激重になるのどうするか
     // 先に床/ブロックの分布
     for (final entry in Config().blockFloorMap.entries) {
       if (!calcedBlockFloorMap.containsKey(entry.key)) {

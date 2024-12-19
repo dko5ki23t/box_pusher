@@ -234,6 +234,19 @@ class StageObjTypeLevel {
   @override
   int get hashCode => type.hashCode ^ level.hashCode;
 
+  static Map<String, dynamic> staticEncode(StageObjTypeLevel tl) {
+    return {'type': tl.type.str, 'level': tl.level};
+  }
+
+  @override
+  String toString() {
+    return '${type.str},$level';
+  }
+
+  StageObjTypeLevel.fromStr(String str)
+      : type = StageObjTypeExtent.fromStr(str.split(',')[0]),
+        level = int.parse(str.split(',')[1]);
+
   StageObjTypeLevel copy() => StageObjTypeLevel(type: type, level: level);
 }
 
@@ -273,9 +286,6 @@ abstract class StageObj {
   /// 押している各オブジェクトを「行使」しているかどうか
   /// ex.) ドリルによるブロックの破壊
   List<bool> executings = [];
-
-  /// ブロックや敵など、破壊時に出現するオブジェクトのタイプとレベル
-  StageObjTypeLevel? havingObj;
 
   StageObj({
     required typeLevel,
@@ -963,8 +973,6 @@ abstract class StageObj {
       'typeLevel': _typeLevel.encode(),
       'pos': pos.encode(),
       'vector': vector.index,
-      if (Config().setObjInBlockWithDistributionAlgorithm)
-        'havingObj': havingObj?.encode()
     };
   }
 }
