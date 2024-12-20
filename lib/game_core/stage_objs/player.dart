@@ -1,4 +1,3 @@
-import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -145,59 +144,8 @@ class Player extends StageObj {
         stage.setObjectPosition(this);
         // 押すオブジェクトに関する処理
         endPushing(stage, gameWorld);
-
-        if (stage.get(pos).type == StageObjType.treasureBox) {
-          // 移動先が宝箱だった場合
-          // TODO:
-          // コイン増加
-          stage.coinNum++;
-          // 宝箱消滅
-          stage.setStaticType(pos, StageObjType.none, gameWorld);
-        } else if (stage.get(pos).type == StageObjType.warp) {
-          // 移動先がワープだった場合
-          if (stage.warpPoints.length > 1) {
-            // リスト内で次のワープ位置に移動
-            int index =
-                stage.warpPoints.indexWhere((element) => element == pos);
-            if (++index == stage.warpPoints.length) {
-              index = 0;
-            }
-            pos = stage.warpPoints[index];
-            stage.setObjectPosition(this);
-          }
-        } else if (stage.get(pos).type == StageObjType.gorilla) {
-          // 移動先がゴリラだった場合
-          // 手の能力を習得
-          pushableNum = -1;
-          // ゴリラ、いなくなる
-          stage.setStaticType(pos, StageObjType.none, gameWorld);
-          // 効果音を鳴らす
-          Audio.playSound(Sound.getSkill);
-        } else if (stage.get(pos).type == StageObjType.rabbit) {
-          // 移動先がうさぎだった場合
-          // 足の能力を習得
-          isLegAbilityOn = true;
-          // うさぎ、いなくなる
-          stage.setStaticType(pos, StageObjType.none, gameWorld);
-          // 効果音を鳴らす
-          Audio.playSound(Sound.getSkill);
-        } else if (stage.get(pos).type == StageObjType.kangaroo) {
-          // 移動先がカンガルーだった場合
-          // ポケットの能力を習得
-          isPocketAbilityOn = true;
-          // カンガルー、いなくなる
-          stage.setStaticType(pos, StageObjType.none, gameWorld);
-          // 効果音を鳴らす
-          Audio.playSound(Sound.getSkill);
-        } else if (stage.get(pos).type == StageObjType.turtle) {
-          // 移動先が亀だった場合
-          // アーマーの能力を習得
-          isArmerAbilityOn = true;
-          // 亀、いなくなる
-          stage.setStaticType(pos, StageObjType.none, gameWorld);
-          // 効果音を鳴らす
-          Audio.playSound(Sound.getSkill);
-        }
+        // 移動後に関する処理（ワープで移動、動物の能力取得など）
+        endMoving(stage, gameWorld);
 
         // 各種移動中変数初期化
         moving = Move.none;

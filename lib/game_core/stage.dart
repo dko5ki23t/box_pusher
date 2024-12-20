@@ -695,6 +695,29 @@ class Stage {
     }
   }
 
+  /// ワープ後の位置を取得する
+  Point getWarpedPoint(Point srcPos, {bool reverse = false}) {
+    if (warpPoints.length <= 1) {
+      return srcPos.copy();
+    }
+    // 対象ワープポイントを探す
+    int index = warpPoints.indexWhere((element) => element == srcPos);
+    if (index < 0) {
+      return srcPos.copy();
+    }
+    // リスト内で次のワープ位置を返す
+    if (!reverse) {
+      if (++index == warpPoints.length) {
+        index = 0;
+      }
+    } else {
+      if (--index < 0) {
+        index = warpPoints.length - 1;
+      }
+    }
+    return warpPoints[index].copy();
+  }
+
   void setStaticType(Point p, StageObjType type, World gameWorld,
       {int level = 1}) {
     gameWorld.remove(staticObjs[p]!.animationComponent);

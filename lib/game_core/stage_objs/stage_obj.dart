@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:math' hide log;
 
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
@@ -805,6 +806,10 @@ abstract class StageObj {
     StageObj toObj = stage.get(to);
     // 押すオブジェクトの移動先の座標、オブジェクト
     Point toTo = to + moveInput.point;
+    // 押すオブジェクトの移動先がワープなら
+    if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+      toTo = stage.getWarpedPoint(toTo);
+    }
     StageObj toToObj = stage.get(toTo);
     // 動かないならreturn
     if (moveInput == Move.none) {
@@ -895,6 +900,10 @@ abstract class StageObj {
       // 1つ先へ
       to = toTo.copy();
       toTo = to + moveInput.point;
+      // 押すオブジェクトの移動先がワープなら
+      if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+        toTo = stage.getWarpedPoint(toTo);
+      }
       // 範囲外に出る場合は押せないとする
       if (toTo.x < stage.stageLT.x ||
           toTo.y < stage.stageLT.y ||
@@ -931,7 +940,13 @@ abstract class StageObj {
   void endPushing(Stage stage, World gameWorld) {
     // 押したオブジェクトの中でマージするインデックスを探す
     int mergeIndex = -1; // -1はマージなし
-    Point toTo = pos + moving.point * pushings.length;
+    Point toTo = pos;
+    for (int i = 0; i < pushings.length; i++) {
+      toTo += moving.point;
+      if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+        toTo = stage.getWarpedPoint(toTo);
+      }
+    }
     // 押すオブジェクトのうち、なるべく遠くのオブジェクトをマージするために逆順でforループ
     for (int i = pushings.length - 1; i >= 0; i--) {
       final pushing = pushings[i];
@@ -941,11 +956,17 @@ abstract class StageObj {
         mergeIndex = i;
         break; // 1回だけマージ
       }
+      if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+        toTo = stage.getWarpedPoint(toTo, reverse: true);
+      }
       toTo -= moving.point;
     }
 
     // 押したオブジェクト位置更新
     toTo = pos + moving.point;
+    if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+      toTo = stage.getWarpedPoint(toTo);
+    }
     for (int i = 0; i < pushings.length; i++) {
       final pushing = pushings[i];
       // 上で探したインデックスと一致するならマージ
@@ -965,6 +986,71 @@ abstract class StageObj {
         }
       }
       toTo += moving.point;
+      if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+        toTo = stage.getWarpedPoint(toTo);
+      }
+    }
+  }
+
+  /// 移動し終わったときの処理
+  /// ※移動した者の位置(pos)は移動済みの座標にしてから呼ぶこと
+  void endMoving(
+    Stage stage,
+    World gameWorld,
+  ) {
+    // ゴースト状態なら何もしない
+    if (type == StageObjType.ghost && (this as Ghost).ghosting) {
+      return;
+    }
+    if (type == StageObjType.player) {
+      // プレイヤー限定の処理
+      final player = this as Player;
+      if (stage.get(pos).type == StageObjType.treasureBox) {
+        // 移動先が宝箱だった場合
+        // TODO:
+        // コイン増加
+        stage.coinNum++;
+        // 宝箱消滅
+        stage.setStaticType(pos, StageObjType.none, gameWorld);
+      } else if (stage.get(pos).type == StageObjType.gorilla) {
+        // 移動先がゴリラだった場合
+        // 手の能力を習得
+        player.pushableNum = -1;
+        // ゴリラ、いなくなる
+        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        // 効果音を鳴らす
+        Audio.playSound(Sound.getSkill);
+      } else if (stage.get(pos).type == StageObjType.rabbit) {
+        // 移動先がうさぎだった場合
+        // 足の能力を習得
+        player.isLegAbilityOn = true;
+        // うさぎ、いなくなる
+        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        // 効果音を鳴らす
+        Audio.playSound(Sound.getSkill);
+      } else if (stage.get(pos).type == StageObjType.kangaroo) {
+        // 移動先がカンガルーだった場合
+        // ポケットの能力を習得
+        player.isPocketAbilityOn = true;
+        // カンガルー、いなくなる
+        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        // 効果音を鳴らす
+        Audio.playSound(Sound.getSkill);
+      } else if (stage.get(pos).type == StageObjType.turtle) {
+        // 移動先が亀だった場合
+        // アーマーの能力を習得
+        player.isArmerAbilityOn = true;
+        // 亀、いなくなる
+        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        // 効果音を鳴らす
+        Audio.playSound(Sound.getSkill);
+      }
+    }
+    // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している
+    if (stage.staticObjs[pos]!.type == StageObjType.warp) {
+      // 移動先がワープだった場合
+      pos = stage.getWarpedPoint(pos);
+      stage.setObjectPosition(this);
     }
   }
 
