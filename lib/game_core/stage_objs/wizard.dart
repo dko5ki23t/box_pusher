@@ -254,6 +254,8 @@ class Wizard extends StageObj {
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
         pos += moving.point;
+        // 移動後に関する処理
+        endMoving(stage, gameWorld);
         // ゲームオーバー判定
         if (stage.player.pos == pos) {
           // 同じマスにいる場合はアーマー関係なくゲームオーバー

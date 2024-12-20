@@ -29,6 +29,7 @@ void main({
       home: MyApp(
         initialLocale: locale,
         testMode: testMode,
+        showAd: showAd,
       ),
     ),
   );
@@ -37,7 +38,12 @@ void main({
 class MyApp extends StatefulWidget {
   final Locale? initialLocale;
   final bool testMode;
-  const MyApp({required this.initialLocale, this.testMode = false, super.key});
+  final bool showAd;
+  const MyApp(
+      {required this.initialLocale,
+      this.testMode = false,
+      this.showAd = false,
+      super.key});
 
   @override
   State<MyApp> createState() => MyAppStateForLocale();
@@ -55,6 +61,7 @@ class MyAppStateForLocale extends State<MyApp> {
     super.initState();
     // 各種ゲーム用設定読み込み
     configFuture = Config().initialize();
+    showAd = widget.showAd;
     //_locale = widget.initialLocale;
   }
 
