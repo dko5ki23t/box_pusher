@@ -108,7 +108,7 @@ class Stage {
   late Image mergeEffectImg;
 
   /// 静止物
-  Map<Point, StageObj> staticObjs = {};
+  Map<Point, StageObj> _staticObjs = {};
 
   // TODO: あまり美しくないのでできれば廃止する
   /// effectを追加する際、動きを合わせる基となるエフェクトを持つStageObj（不可視）
@@ -219,7 +219,10 @@ class Stage {
   /// テストモードかどうか
   final bool testMode;
 
-  Stage({required this.testMode}) {
+  /// ゲームワールド
+  final World gameWorld;
+
+  Stage({required this.testMode, required this.gameWorld}) {
     _objFactory = StageObjFactory();
   }
 
@@ -234,7 +237,6 @@ class Stage {
   StageObj createObject({
     required StageObjTypeLevel typeLevel,
     required Point pos,
-    required World gameWorld,
     Move vector = Move.down,
     bool addToGameWorld = true,
   }) {
@@ -251,7 +253,6 @@ class Stage {
   /// デフォルトではWorldにステージオブジェクトのSpriteAnimationComponentを追加する
   StageObj createObjectFromMap(
     Map<String, dynamic> src, {
-    required World gameWorld,
     bool addToGameWorld = true,
   }) {
     final ret = _objFactory.createFromMap(src);
@@ -263,8 +264,7 @@ class Stage {
   }
 
   /// ステージを生成する
-  void initialize(
-      World gameWorld, CameraComponent camera, Map<String, dynamic> stageData) {
+  void initialize(CameraComponent camera, Map<String, dynamic> stageData) {
     assert(isReady, 'Stage.onLoad() is not called!');
     effectBase = [
       _objFactory.create(
@@ -275,9 +275,9 @@ class Stage {
     gameWorld.add(effectBase.first.animationComponent);
     // 前回のステージ情報が保存されているなら
     if (stageData.containsKey('score')) {
-      _setStageDataFromSaveData(gameWorld, camera, stageData);
+      _setStageDataFromSaveData(camera, stageData);
     } else {
-      _setStageDataFromInitialData(gameWorld, camera);
+      _setStageDataFromInitialData(camera);
     }
   }
 
@@ -298,7 +298,7 @@ class Stage {
     }
     ret['calcedBlockFloorMap'] = encodedCBFM;
     final Map<String, dynamic> staticObjsMap = {};
-    for (final entry in staticObjs.entries) {
+    for (final entry in _staticObjs.entries) {
       staticObjsMap[entry.key.encode()] = entry.value.encode();
     }
     ret['staticObjs'] = staticObjsMap;
@@ -331,7 +331,7 @@ class Stage {
   }
 
   /// 次のマージ時出現アイテムを更新
-  void _updateNextMergeItem({required World gameWorld}) {
+  void _updateNextMergeItem() {
     List<StageObjTypeLevel> tls = Config().mergeAppearObjMap.values.last;
     bool existAppearObj = false;
     for (final entry in Config().mergeAppearObjMap.entries) {
@@ -351,15 +351,50 @@ class Stage {
       nextMergeItems.add(createObject(
         typeLevel: tl,
         pos: Point(0, 0),
-        gameWorld: gameWorld,
         addToGameWorld: false,
       ));
     }
   }
 
+  /// ステージの範囲を拡大する
+  void expandStageSize(Point newLT, Point newRB) {
+    // 左端拡大
+    for (int i = 0; i < stageLT.x - newLT.x; i++) {
+      if (stageLT.x <= stageMaxLT.x) break;
+      stageLT.x--;
+      for (int y = stageLT.y; y <= stageRB.y; y++) {
+        createAndSetStaticObjWithPattern(Point(stageLT.x, y));
+      }
+    }
+    // 右端拡大
+    for (int i = 0; i < newRB.x - stageRB.x; i++) {
+      if (stageRB.x >= stageMaxRB.x) break;
+      stageRB.x++;
+      for (int y = stageLT.y; y <= stageRB.y; y++) {
+        createAndSetStaticObjWithPattern(Point(stageRB.x, y));
+      }
+    }
+    // 上端拡大
+    for (int i = 0; i < stageLT.y - newLT.y; i++) {
+      if (stageLT.y <= stageMaxLT.y) break;
+      stageLT.y--;
+      for (int x = stageLT.x; x <= stageRB.x; x++) {
+        createAndSetStaticObjWithPattern(Point(x, stageLT.y));
+      }
+    }
+    // 下端拡大
+    for (int i = 0; i < newRB.y - stageRB.y; i++) {
+      if (stageRB.y >= stageMaxRB.y) break;
+      stageRB.y++;
+      for (int x = stageLT.x; x <= stageRB.x; x++) {
+        createAndSetStaticObjWithPattern(Point(x, stageRB.y));
+      }
+    }
+  }
+
   /// 指定した範囲のブロックを破壊する
   void breakBlocks(Point basePoint, bool Function(Block) canBreakBlockFunc,
-      PointRange range, World gameWorld) {
+      PointRange range) {
     // 指定された範囲のブロックを破壊する
     // 破壊後のブロックから出現するオブジェクトはbasePointの位置によって決定する
     /// 破壊されたブロックの位置のリスト
@@ -380,7 +415,7 @@ class Stage {
           // 敵が生み出したブロック以外のみアイテム出現位置に含める
           breaked.add(p);
         }
-        setStaticType(p, StageObjType.none, gameWorld);
+        setStaticType(p, StageObjType.none);
         if (Config().setObjInBlockWithDistributionAlgorithm) {
           // 分布に従ってブロック破壊時出現オブジェクトを決める場合、
           // 破壊した対象のブロックが持つオブジェクトを分布から決定する
@@ -392,19 +427,18 @@ class Stage {
               item.level = Config().getJewelLevel(p);
             }
             if (item.type == StageObjType.treasureBox) {
-              setStaticType(p, StageObjType.treasureBox, gameWorld);
+              setStaticType(p, StageObjType.treasureBox);
             } else if (item.type == StageObjType.warp) {
-              setStaticType(p, StageObjType.warp, gameWorld);
+              setStaticType(p, StageObjType.warp);
               warpPoints.add(p);
             } else if (item.type == StageObjType.belt) {
-              setStaticType(p, StageObjType.belt, gameWorld);
+              setStaticType(p, StageObjType.belt);
               assert(get(p).runtimeType == Belt,
                   'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
               get(p).vector = MoveExtent.straights.sample(1).first;
               beltPoints.add(p);
             } else {
-              final adding =
-                  createObject(typeLevel: item, pos: p, gameWorld: gameWorld);
+              final adding = createObject(typeLevel: item, pos: p);
               if (adding.isEnemy) {
                 enemies.add(adding);
               } else {
@@ -444,8 +478,7 @@ class Stage {
                 type: StageObjType.jewel,
                 level: jewelLevel,
               ),
-              pos: jewelAppear,
-              gameWorld: gameWorld),
+              pos: jewelAppear),
         );
       }
 
@@ -474,19 +507,18 @@ class Stage {
             final appear = breakedRemain.sample(1).first;
             if (canAppear) {
               if (item.type == StageObjType.treasureBox) {
-                setStaticType(appear, StageObjType.treasureBox, gameWorld);
+                setStaticType(appear, StageObjType.treasureBox);
               } else if (item.type == StageObjType.treasureBox) {
-                setStaticType(appear, StageObjType.treasureBox, gameWorld);
+                setStaticType(appear, StageObjType.treasureBox);
                 warpPoints.add(appear);
               } else if (item.type == StageObjType.belt) {
-                setStaticType(appear, StageObjType.belt, gameWorld);
+                setStaticType(appear, StageObjType.belt);
                 assert(get(appear).runtimeType == Belt,
                     'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
                 get(appear).vector = MoveExtent.straights.sample(1).first;
                 beltPoints.add(appear);
               } else {
-                final adding = createObject(
-                    typeLevel: item, pos: appear, gameWorld: gameWorld);
+                final adding = createObject(typeLevel: item, pos: appear);
                 if (adding.isEnemy) {
                   enemies.add(adding);
                 } else {
@@ -524,7 +556,6 @@ class Stage {
       (block) => Config.canBreakBlock(block, merging),
       PointRectRange(pos + Point(breakLeftOffset, breakTopOffset),
           pos + Point(breakRightOffset, breakBottomOffset)),
-      gameWorld,
     );
     mergedCount++;
     // ステージ上にアイテムをランダムに配置
@@ -583,8 +614,7 @@ class Stage {
               type: nextMergeItem.type,
               level: nextMergeItem.level,
             ),
-            pos: decidedPoints[i],
-            gameWorld: gameWorld);
+            pos: decidedPoints[i]);
         if (item.isEnemy) {
           enemies.add(item);
         } else {
@@ -592,7 +622,7 @@ class Stage {
         }
       }
       // 次のマージ時出現アイテムを作成
-      _updateNextMergeItem(gameWorld: gameWorld);
+      _updateNextMergeItem();
     } else {
       if (remainMergeCount > 0) remainMergeCount--;
     }
@@ -691,8 +721,22 @@ class Stage {
     } else if (box != null) {
       return box;
     } else {
-      return staticObjs[p]!;
+      return safeGetStaticObj(p);
     }
+  }
+
+  /// 静的オブジェクトを取得する。まだ用意されていない場合は用意する
+  StageObj safeGetStaticObj(Point pos) {
+    assert(PointRectRange(stageMaxLT, stageMaxRB).contains(pos),
+        '[getStaticObj()]ステージの範囲外の取得が試みられた');
+    if (!PointRectRange(stageLT, stageRB).contains(pos)) {
+      // 対象の座標が存在できるようにステージを拡大
+      expandStageSize(
+        Point(min(stageLT.x, pos.x), min(stageLT.y, pos.y)),
+        Point(max(stageRB.x, pos.x), max(stageRB.y, pos.y)),
+      );
+    }
+    return _staticObjs[pos]!;
   }
 
   /// ワープ後の位置を取得する
@@ -718,13 +762,10 @@ class Stage {
     return warpPoints[index].copy();
   }
 
-  void setStaticType(Point p, StageObjType type, World gameWorld,
-      {int level = 1}) {
-    gameWorld.remove(staticObjs[p]!.animationComponent);
-    staticObjs[p] = createObject(
-        typeLevel: StageObjTypeLevel(type: type, level: level),
-        pos: p,
-        gameWorld: gameWorld);
+  void setStaticType(Point p, StageObjType type, {int level = 1}) {
+    gameWorld.remove(_staticObjs[p]!.animationComponent);
+    _staticObjs[p] = createObject(
+        typeLevel: StageObjTypeLevel(type: type, level: level), pos: p);
   }
 
   /// オブジェクトの位置を設定
@@ -732,7 +773,7 @@ class Stage {
       _objFactory.setPosition(obj, offset: offset);
 
   void _setStageDataFromSaveData(
-      World gameWorld, CameraComponent camera, Map<String, dynamic> stageData) {
+      CameraComponent camera, Map<String, dynamic> stageData) {
     // ステージ範囲設定
     stageLT = Point.decode(stageData['stageLT']);
     stageRB = Point.decode(stageData['stageRB']);
@@ -756,17 +797,16 @@ class Stage {
     }
 
     // 各種ステージオブジェクト設定
-    staticObjs.clear();
+    _staticObjs.clear();
     for (final entry
         in (stageData['staticObjs'] as Map<String, dynamic>).entries) {
-      staticObjs[Point.decode(entry.key)] =
-          createObjectFromMap(entry.value, gameWorld: gameWorld);
+      _staticObjs[Point.decode(entry.key)] = createObjectFromMap(entry.value);
     }
     for (final e in stageData['boxes'] as List<dynamic>) {
-      boxes.add(createObjectFromMap(e, gameWorld: gameWorld));
+      boxes.add(createObjectFromMap(e));
     }
     for (final e in stageData['enemies'] as List<dynamic>) {
-      enemies.add(createObjectFromMap(e, gameWorld: gameWorld));
+      enemies.add(createObjectFromMap(e));
     }
     warpPoints = [
       for (final e in stageData['warpPoints'] as List<dynamic>) Point.decode(e)
@@ -790,7 +830,7 @@ class Stage {
     // マージした回数
     mergedCount = stageData['mergedCount'];
     // マージによる出現アイテム更新
-    _updateNextMergeItem(gameWorld: gameWorld);
+    _updateNextMergeItem();
     // プレイヤー作成
     player = _objFactory.createPlayerFromMap(stageData['player']);
     gameWorld.addAll([player.animationComponent]);
@@ -807,7 +847,7 @@ class Stage {
     );
   }
 
-  void _setStageDataFromInitialData(World gameWorld, CameraComponent camera) {
+  void _setStageDataFromInitialData(CameraComponent camera) {
     // ステージ範囲設定
     stageLT = Point(-6, -20);
     stageRB = Point(6, 20);
@@ -819,42 +859,39 @@ class Stage {
     // ブロック破壊時出現アイテム個数初期化
     appearedItemsMap.clear();
     // 次マージ時に出現するアイテム初期化
-    _updateNextMergeItem(gameWorld: gameWorld);
+    _updateNextMergeItem();
     // 各分布の初期化
     if (Config().setObjInBlockWithDistributionAlgorithm) {
       prepareDistributions();
     }
-    staticObjs.clear();
+    _staticObjs.clear();
     boxes.forceClear();
     enemies.forceClear();
     for (int y = stageLT.y; y <= stageRB.y; y++) {
       for (int x = stageLT.x; x <= stageRB.x; x++) {
         if (x == 0 && y == 0) {
           // プレイヤー初期位置、床
-          staticObjs[Point(x, y)] = createObject(
+          _staticObjs[Point(x, y)] = createObject(
               typeLevel: StageObjTypeLevel(
                 type: StageObjType.none,
               ),
-              pos: Point(x, y),
-              gameWorld: gameWorld);
+              pos: Point(x, y));
         } else if ((x == 0 && -2 <= y && y <= 2) ||
             (y == 0 && -2 <= x && x <= 2)) {
           // プレイヤー初期位置の上下左右2マス、宝石
-          staticObjs[Point(x, y)] = createObject(
+          _staticObjs[Point(x, y)] = createObject(
               typeLevel: StageObjTypeLevel(
                 type: StageObjType.none,
               ),
-              pos: Point(x, y),
-              gameWorld: gameWorld);
+              pos: Point(x, y));
           boxes.add(createObject(
               typeLevel: StageObjTypeLevel(
                 type: StageObjType.jewel,
               ),
-              pos: Point(x, y),
-              gameWorld: gameWorld));
+              pos: Point(x, y)));
         } else {
           // その他は定めたパターンに従う
-          createAndSetStaticObjWithPattern(Point(x, y), gameWorld);
+          createAndSetStaticObjWithPattern(Point(x, y));
         }
       }
     }
@@ -894,7 +931,7 @@ class Stage {
     bool playerEndMoving = (before != Move.none && player.moving == Move.none);
     // コンベア更新
     for (final belt in beltPoints) {
-      staticObjs[belt]!.update(dt, moveInput, gameWorld, camera, this,
+      _staticObjs[belt]!.update(dt, moveInput, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
     // 敵更新
@@ -950,49 +987,30 @@ class Stage {
     // 移動完了時
     if (playerEndMoving) {
       // 移動によって新たな座標が見えそうなら追加する
+      Point newLT = stageLT.copy();
+      Point newRB = stageRB.copy();
       // 左端
       if (camera.canSee(
-          staticObjs[Point(stageLT.x, player.pos.y)]!.animationComponent)) {
-        // ステージ上限範囲を超えないように
-        if (stageLT.x > stageMaxLT.x) {
-          stageLT.x--;
-          for (int y = stageLT.y; y <= stageRB.y; y++) {
-            createAndSetStaticObjWithPattern(Point(stageLT.x, y), gameWorld);
-          }
-        }
+          _staticObjs[Point(stageLT.x, player.pos.y)]!.animationComponent)) {
+        newLT.x--;
       }
       // 右端
       if (camera.canSee(
-          staticObjs[Point(stageRB.x, player.pos.y)]!.animationComponent)) {
-        // ステージ上限範囲を超えないように
-        if (stageRB.x < stageMaxRB.x) {
-          stageRB.x++;
-          for (int y = stageLT.y; y <= stageRB.y; y++) {
-            createAndSetStaticObjWithPattern(Point(stageRB.x, y), gameWorld);
-          }
-        }
+          _staticObjs[Point(stageRB.x, player.pos.y)]!.animationComponent)) {
+        newRB.x++;
       }
       // 上端
       if (camera.canSee(
-          staticObjs[Point(player.pos.x, stageLT.y)]!.animationComponent)) {
-        // ステージ上限範囲を超えないように
-        if (stageLT.y > stageMaxLT.y) {
-          stageLT.y--;
-          for (int x = stageLT.x; x <= stageRB.x; x++) {
-            createAndSetStaticObjWithPattern(Point(x, stageLT.y), gameWorld);
-          }
-        }
+          _staticObjs[Point(player.pos.x, stageLT.y)]!.animationComponent)) {
+        newLT.y--;
       }
       // 下端
       if (camera.canSee(
-          staticObjs[Point(player.pos.x, stageRB.y)]!.animationComponent)) {
-        // ステージ上限範囲を超えないように
-        if (stageRB.y < stageMaxRB.y) {
-          stageRB.y++;
-          for (int x = stageLT.x; x <= stageRB.x; x++) {
-            createAndSetStaticObjWithPattern(Point(x, stageRB.y), gameWorld);
-          }
-        }
+          _staticObjs[Point(player.pos.x, stageRB.y)]!.animationComponent)) {
+        newRB.y++;
+      }
+      if (newLT != stageLT || newRB != stageRB) {
+        expandStageSize(newLT, newRB);
       }
       // カメラの可動範囲更新
       camera.setBounds(
@@ -1054,14 +1072,13 @@ class Stage {
   }
 
   /// 引数で指定した位置に、パターンに従った静止物を生成する
-  void createAndSetStaticObjWithPattern(Point pos, World gameWorld,
+  void createAndSetStaticObjWithPattern(Point pos,
       {bool addToGameWorld = true}) {
     if (Config().fixedStaticObjMap.containsKey(pos)) {
       // 固定位置のオブジェクト
-      staticObjs[pos] = createObject(
+      _staticObjs[pos] = createObject(
           typeLevel: Config().fixedStaticObjMap[pos]!,
           pos: pos,
-          gameWorld: gameWorld,
           addToGameWorld: addToGameWorld);
       return;
     } else {
@@ -1069,20 +1086,18 @@ class Stage {
       if (Config().setObjInBlockWithDistributionAlgorithm) {
         for (final pattern in Config().blockFloorMap.entries) {
           if (pattern.key.contains(pos)) {
-            staticObjs[pos] = createObject(
+            _staticObjs[pos] = createObject(
                 typeLevel: calcedBlockFloorMap[pattern.key]!.getOne() ??
                     StageObjTypeLevel(type: StageObjType.none),
                 pos: pos,
-                gameWorld: gameWorld,
                 addToGameWorld: addToGameWorld);
             return;
           }
         }
         log('位置(${pos.x}, ${pos.y})に対応する床/ブロックの割合の設定がないため、硬いブロックを生成しました。');
-        staticObjs[pos] = createObject(
+        _staticObjs[pos] = createObject(
             typeLevel: StageObjTypeLevel(type: StageObjType.block, level: 4),
             pos: pos,
-            gameWorld: gameWorld,
             addToGameWorld: addToGameWorld);
         return;
       } else {
@@ -1093,10 +1108,9 @@ class Stage {
             for (final floorPercent in pattern.value.floorPercents.entries) {
               threshold += floorPercent.value;
               if (rand < threshold) {
-                staticObjs[pos] = createObject(
+                _staticObjs[pos] = createObject(
                     typeLevel: floorPercent.key,
                     pos: pos,
-                    gameWorld: gameWorld,
                     addToGameWorld: addToGameWorld);
                 return;
               }
@@ -1104,13 +1118,12 @@ class Stage {
             for (final p in pattern.value.blockPercents.entries) {
               threshold += p.value;
               if (rand < threshold) {
-                staticObjs[pos] = createObject(
+                _staticObjs[pos] = createObject(
                     typeLevel: StageObjTypeLevel(
                       type: StageObjType.block,
                       level: p.key,
                     ),
                     pos: pos,
-                    gameWorld: gameWorld,
                     addToGameWorld: addToGameWorld);
                 return;
               }
@@ -1122,19 +1135,17 @@ class Stage {
             for (final blockPercent in pattern.value.blockPercents.entries) {
               log('Block level ${blockPercent.key}: ${blockPercent.value}');
             }
-            staticObjs[pos] = createObject(
+            _staticObjs[pos] = createObject(
                 typeLevel: StageObjTypeLevel(type: StageObjType.none),
                 pos: pos,
-                gameWorld: gameWorld,
                 addToGameWorld: addToGameWorld);
             return;
           }
         }
         log('位置(${pos.x}, ${pos.y})に対応する床/ブロックの割合の設定がないため、硬いブロックを生成しました。');
-        staticObjs[pos] = createObject(
+        _staticObjs[pos] = createObject(
             typeLevel: StageObjTypeLevel(type: StageObjType.block, level: 4),
             pos: pos,
-            gameWorld: gameWorld,
             addToGameWorld: addToGameWorld);
         return;
       }

@@ -118,7 +118,7 @@ class Belt extends StageObj {
           // 押した先がブロックなら即座に破壊
           // 破壊するブロックのアニメーションを描画
           gameWorld.add((toObj as Block).createBreakingBlock());
-          stage.setStaticType(to, StageObjType.none, gameWorld);
+          stage.setStaticType(to, StageObjType.none);
           executing = true;
         } else if (toObj.stopping ||
             (!toObj.puttable &&
