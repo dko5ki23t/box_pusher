@@ -142,10 +142,10 @@ class Player extends StageObj {
         // ※merge()より前で更新することで、敵出現位置を、プレイヤーの目前にさせない
         pos = pos + moving.point;
         stage.setObjectPosition(this);
-        // 押すオブジェクトに関する処理
-        endPushing(stage, gameWorld);
         // 移動後に関する処理（ワープで移動、動物の能力取得など）
         endMoving(stage, gameWorld);
+        // 押すオブジェクトに関する処理
+        endPushing(stage, gameWorld);
 
         // 各種移動中変数初期化
         moving = Move.none;

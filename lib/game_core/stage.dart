@@ -11,6 +11,7 @@ import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj_factory.dart';
+import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/effects.dart';
@@ -431,6 +432,8 @@ class Stage {
             } else if (item.type == StageObjType.warp) {
               setStaticType(p, StageObjType.warp);
               warpPoints.add(p);
+              // ワープの番号を設定
+              (_staticObjs[p] as Warp).setWarpNo(warpPoints.length);
             } else if (item.type == StageObjType.belt) {
               setStaticType(p, StageObjType.belt);
               assert(get(p).runtimeType == Belt,
@@ -508,9 +511,11 @@ class Stage {
             if (canAppear) {
               if (item.type == StageObjType.treasureBox) {
                 setStaticType(appear, StageObjType.treasureBox);
-              } else if (item.type == StageObjType.treasureBox) {
-                setStaticType(appear, StageObjType.treasureBox);
+              } else if (item.type == StageObjType.warp) {
+                setStaticType(appear, StageObjType.warp);
                 warpPoints.add(appear);
+                // ワープの番号を設定
+                (_staticObjs[appear] as Warp).setWarpNo(warpPoints.length);
               } else if (item.type == StageObjType.belt) {
                 setStaticType(appear, StageObjType.belt);
                 assert(get(appear).runtimeType == Belt,
@@ -811,6 +816,10 @@ class Stage {
     warpPoints = [
       for (final e in stageData['warpPoints'] as List<dynamic>) Point.decode(e)
     ];
+    for (int i = 0; i < warpPoints.length; i++) {
+      // ワープの番号を設定
+      (_staticObjs[warpPoints[i]] as Warp).setWarpNo(i + 1);
+    }
     beltPoints = [
       for (final e in stageData['beltPoints'] as List<dynamic>) Point.decode(e)
     ];
