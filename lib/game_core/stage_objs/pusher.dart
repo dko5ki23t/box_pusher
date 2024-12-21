@@ -140,10 +140,10 @@ class Pusher extends StageObj {
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
         pos += moving.point;
-        // 押すオブジェクトに関する処理
-        endPushing(stage, gameWorld);
         // 移動後に関する処理
         endMoving(stage, gameWorld);
+        // 押すオブジェクトに関する処理
+        endPushing(stage, gameWorld);
         // ゲームオーバー判定
         if (stage.player.pos == pos) {
           // 同じマスにいる場合はアーマー関係なくゲームオーバー

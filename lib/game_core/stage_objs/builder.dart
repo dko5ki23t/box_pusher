@@ -148,8 +148,7 @@ class Builder extends StageObj {
           if (buildPosType == StageObjType.none &&
               stage.player.pos != pos + vector.point) {
             // ブロック設置
-            stage.setStaticType(
-                pos + vector.point, StageObjType.block, gameWorld,
+            stage.setStaticType(pos + vector.point, StageObjType.block,
                 level: 100 + level);
             // 次回ブロック設置までのターンをリセット
             remainTurnToBuild = Config().builderBuildBlockTurn;

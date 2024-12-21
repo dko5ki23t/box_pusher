@@ -1,12 +1,27 @@
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/layout.dart';
+import 'package:flutter/widgets.dart' hide Image;
 
 class Warp extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'warp.png';
+  final AlignComponent _warpNoComponent = AlignComponent(
+    alignment: Anchor.center,
+    child: TextComponent(
+      priority: Stage.frontPriority,
+      text: '',
+      textRenderer: TextPaint(
+          style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontFamily: Config.gameTextFamily,
+              color: Color(0x30000000))),
+    ),
+  );
 
   Warp({
     required Image warpImg,
@@ -38,7 +53,13 @@ class Warp extends StageObj {
             type: StageObjType.warp,
             level: level,
           ),
-        );
+        ) {
+    super.animationComponent.add(_warpNoComponent);
+  }
+
+  void setWarpNo(int no) {
+    (_warpNoComponent.child as TextComponent).text = '$no';
+  }
 
   @override
   void update(

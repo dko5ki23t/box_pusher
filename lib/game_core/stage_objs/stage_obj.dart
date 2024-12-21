@@ -803,11 +803,15 @@ abstract class StageObj {
     executingsList.clear();
     // 移動先の座標、オブジェクト
     Point to = pos + moveInput.point;
+    // 移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
+    if (stage.get(to).type == StageObjType.warp) {
+      to = stage.getWarpedPoint(to);
+    }
     StageObj toObj = stage.get(to);
     // 押すオブジェクトの移動先の座標、オブジェクト
     Point toTo = to + moveInput.point;
-    // 押すオブジェクトの移動先がワープなら
-    if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+    // 押すオブジェクトの移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
+    if (stage.get(toTo).type == StageObjType.warp) {
       toTo = stage.getWarpedPoint(toTo);
     }
     StageObj toToObj = stage.get(toTo);
@@ -838,7 +842,7 @@ abstract class StageObj {
             // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで
             // 破壊するブロックのアニメーションを描画
             gameWorld.add((toToObj as Block).createBreakingBlock());
-            stage.setStaticType(toTo, StageObjType.none, gameWorld);
+            stage.setStaticType(toTo, StageObjType.none);
             executing = true;
           }
           stopBecauseDrill = true;
@@ -900,8 +904,8 @@ abstract class StageObj {
       // 1つ先へ
       to = toTo.copy();
       toTo = to + moveInput.point;
-      // 押すオブジェクトの移動先がワープなら
-      if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+      // 押すオブジェクトの移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
+      if (stage.get(toTo).type == StageObjType.warp) {
         toTo = stage.getWarpedPoint(toTo);
       }
       // 範囲外に出る場合は押せないとする
@@ -943,7 +947,7 @@ abstract class StageObj {
     Point toTo = pos;
     for (int i = 0; i < pushings.length; i++) {
       toTo += moving.point;
-      if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+      if (stage.get(toTo).type == StageObjType.warp) {
         toTo = stage.getWarpedPoint(toTo);
       }
     }
@@ -956,7 +960,7 @@ abstract class StageObj {
         mergeIndex = i;
         break; // 1回だけマージ
       }
-      if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+      if (stage.get(toTo).type == StageObjType.warp) {
         toTo = stage.getWarpedPoint(toTo, reverse: true);
       }
       toTo -= moving.point;
@@ -964,7 +968,7 @@ abstract class StageObj {
 
     // 押したオブジェクト位置更新
     toTo = pos + moving.point;
-    if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+    if (stage.get(toTo).type == StageObjType.warp) {
       toTo = stage.getWarpedPoint(toTo);
     }
     for (int i = 0; i < pushings.length; i++) {
@@ -986,7 +990,7 @@ abstract class StageObj {
         }
       }
       toTo += moving.point;
-      if (stage.staticObjs[toTo]!.type == StageObjType.warp) {
+      if (stage.get(toTo).type == StageObjType.warp) {
         toTo = stage.getWarpedPoint(toTo);
       }
     }
@@ -1011,13 +1015,13 @@ abstract class StageObj {
         // コイン増加
         stage.coinNum++;
         // 宝箱消滅
-        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        stage.setStaticType(pos, StageObjType.none);
       } else if (stage.get(pos).type == StageObjType.gorilla) {
         // 移動先がゴリラだった場合
         // 手の能力を習得
         player.pushableNum = -1;
         // ゴリラ、いなくなる
-        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio.playSound(Sound.getSkill);
       } else if (stage.get(pos).type == StageObjType.rabbit) {
@@ -1025,7 +1029,7 @@ abstract class StageObj {
         // 足の能力を習得
         player.isLegAbilityOn = true;
         // うさぎ、いなくなる
-        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio.playSound(Sound.getSkill);
       } else if (stage.get(pos).type == StageObjType.kangaroo) {
@@ -1033,7 +1037,7 @@ abstract class StageObj {
         // ポケットの能力を習得
         player.isPocketAbilityOn = true;
         // カンガルー、いなくなる
-        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio.playSound(Sound.getSkill);
       } else if (stage.get(pos).type == StageObjType.turtle) {
@@ -1041,13 +1045,13 @@ abstract class StageObj {
         // アーマーの能力を習得
         player.isArmerAbilityOn = true;
         // 亀、いなくなる
-        stage.setStaticType(pos, StageObjType.none, gameWorld);
+        stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio.playSound(Sound.getSkill);
       }
     }
     // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している
-    if (stage.staticObjs[pos]!.type == StageObjType.warp) {
+    if (stage.safeGetStaticObj(pos).type == StageObjType.warp) {
       // 移動先がワープだった場合
       pos = stage.getWarpedPoint(pos);
       stage.setObjectPosition(this);

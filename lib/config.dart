@@ -90,6 +90,18 @@ class BlockFloorPattern {
   }
 }
 
+class NumsAndPercent {
+  final int min;
+  final int max;
+  final int percent;
+
+  NumsAndPercent(
+    this.min,
+    this.max,
+    this.percent,
+  );
+}
+
 class ObjInBlock {
   /// 破壊した数の内、宝石が含まれる割合
   final int jewelPercent;
@@ -97,27 +109,27 @@ class ObjInBlock {
   /// 宝石以外で出現するアイテム全体の最大個数
   final int itemsMaxNum;
 
-  /// 宝石以外で出現するアイテムとその最大個数
-  final Map<StageObjTypeLevel, int> itemsNumMap;
+  /// 宝石以外で出現するアイテムとその割合・最大最小個数
+  final Map<StageObjTypeLevel, NumsAndPercent> itemsPercentAndNumsMap;
 
-  /// 宝石以外で出現するアイテムとその割合
-  final Map<StageObjTypeLevel, int> itemsPercentMap;
-
-  ObjInBlock(this.jewelPercent, this.itemsMaxNum, this.itemsNumMap,
-      this.itemsPercentMap);
+  ObjInBlock(
+    this.jewelPercent,
+    this.itemsMaxNum,
+    this.itemsPercentAndNumsMap,
+  );
 
   ObjInBlock.fromStrings(List<String> data)
       : jewelPercent = int.parse(data[0]),
         itemsMaxNum = int.parse(data[1]),
-        itemsNumMap = {},
-        itemsPercentMap = {} {
-    for (int i = 2; i < data.length; i += 4) {
-      itemsNumMap[StageObjTypeLevel(
+        itemsPercentAndNumsMap = {} {
+    for (int i = 2; i < data.length; i += 5) {
+      itemsPercentAndNumsMap[StageObjTypeLevel(
           type: StageObjTypeExtent.fromStr(data[i]),
-          level: int.parse(data[i + 1]))] = int.parse(data[i + 2]);
-      itemsPercentMap[StageObjTypeLevel(
-          type: StageObjTypeExtent.fromStr(data[i]),
-          level: int.parse(data[i + 1]))] = int.parse(data[i + 3]);
+          level: int.parse(data[i + 1]))] = NumsAndPercent(
+        int.parse(data[i + 2]),
+        int.parse(data[i + 3]),
+        int.parse(data[i + 4]),
+      );
     }
   }
 }

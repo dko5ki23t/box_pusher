@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:box_pusher/config.dart';
 import 'package:flame/components.dart';
 
 /// 整数座標
@@ -467,6 +468,36 @@ class Distribution<T> {
         case RoundMode.randomRound:
           _total[e.key] = randomRound(n);
           break;
+      }
+    }
+    _remain.addAll(_total);
+  }
+
+  Distribution.fromPercentWithMinMax(
+      Map<T, NumsAndPercent> percents, this.totalTotal, RoundMode roundMode,
+      {this.overdoseException = true})
+      : remainTotal = totalTotal {
+    for (final e in percents.entries) {
+      double n = totalTotal * e.value.percent * 0.01;
+      switch (roundMode) {
+        case RoundMode.floor:
+          _total[e.key] = n.floor();
+          break;
+        case RoundMode.ceil:
+          _total[e.key] = n.ceil();
+          break;
+        case RoundMode.round:
+          _total[e.key] = n.round();
+          break;
+        case RoundMode.randomRound:
+          _total[e.key] = randomRound(n);
+          break;
+      }
+      if (e.value.min >= 0) {
+        _total[e.key] = max(_total[e.key]!, e.value.min);
+      }
+      if (e.value.max >= 0) {
+        _total[e.key] = min(_total[e.key]!, e.value.max);
       }
     }
     _remain.addAll(_total);

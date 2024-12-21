@@ -161,7 +161,7 @@ class GameSeq extends Sequence
     removeAll(children);
     game.world.removeAll(game.world.children);
 
-    stage = Stage(testMode: game.testMode);
+    stage = Stage(testMode: game.testMode, gameWorld: game.world);
     await stage.onLoad();
     // デバッグモードのときはステージの最大幅・高さを指定する
     if (game.testMode) {
@@ -170,7 +170,7 @@ class GameSeq extends Sequence
       stage.stageMaxRB = Point((game.debugStageWidth / 2).ceil(),
           (game.debugStageHeight / 2).ceil());
     }
-    stage.initialize(game.world, game.camera, game.stageData);
+    stage.initialize(game.camera, game.stageData);
 
     // プレイヤーの操作ボタン群
     final clipSize = Vector2(
@@ -796,8 +796,8 @@ class GameSeq extends Sequence
       final Point stagePos = Point(cameraPos.x.floor(), cameraPos.y.floor());
       final tapObject = stage.get(stagePos);
       if (tapObject.type == StageObjType.block) {
-        stage.breakBlocks(stagePos, (block) => true,
-            PointDistanceRange(stagePos, 0), game.world);
+        stage.breakBlocks(
+            stagePos, (block) => true, PointDistanceRange(stagePos, 0));
       }
     }
   }

@@ -232,7 +232,7 @@ class Guardian extends StageObj {
         for (final p in attackables) {
           final obj = stage.get(p);
           if (obj.isEnemy && obj.killable) {
-            obj.level -= level;
+            obj.level = (obj.level - level).clamp(0, obj.maxLevel);
             if (obj.level <= 0) {
               // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
               obj.removeAfterFrame();
@@ -263,7 +263,7 @@ class Guardian extends StageObj {
   /// 戻り値：倒されるかどうか
   bool hit(StageObj obj) {
     if (obj.isEnemy) {
-      level -= obj.level;
+      level = (level - obj.level).clamp(0, maxLevel);
     }
     return level <= 0;
   }
