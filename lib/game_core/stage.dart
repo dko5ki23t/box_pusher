@@ -556,14 +556,30 @@ class Stage {
     int breakRightOffset = 1,
     int breakBottomOffset = 1,
     bool onlyDelete = false,
+    int enemyDamage = 0, // 敵に与えるダメージ（レベルマイナス）
   }) {
+    // マージ位置を中心とした四角形範囲
+    final affectRange = PointRectRange(
+        pos + Point(breakLeftOffset, breakTopOffset),
+        pos + Point(breakRightOffset, breakBottomOffset));
     // マージ位置を中心に四角形範囲のブロックを破壊する
     breakBlocks(
       pos,
       (block) => Config.canBreakBlock(block, merging),
-      PointRectRange(pos + Point(breakLeftOffset, breakTopOffset),
-          pos + Point(breakRightOffset, breakBottomOffset)),
+      affectRange,
     );
+    if (enemyDamage > 0) {
+      for (final p in affectRange.set) {
+        final obj = get(p);
+        if (obj.isEnemy && obj.killable) {
+          obj.level = (obj.level - enemyDamage).clamp(0, obj.maxLevel);
+          if (obj.level <= 0) {
+            // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
+            obj.removeAfterFrame();
+          }
+        }
+      }
+    }
     mergedCount++;
     // ステージ上にアイテムをランダムに配置
     if (remainMergeCount - 1 == 0) {

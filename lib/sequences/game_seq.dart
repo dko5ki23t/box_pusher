@@ -165,10 +165,10 @@ class GameSeq extends Sequence
     await stage.onLoad();
     // デバッグモードのときはステージの最大幅・高さを指定する
     if (game.testMode) {
-      stage.stageMaxLT = Point(-(game.debugStageWidth / 2).ceil(),
-          -(game.debugStageHeight / 2).ceil());
-      stage.stageMaxRB = Point((game.debugStageWidth / 2).ceil(),
-          (game.debugStageHeight / 2).ceil());
+      stage.stageMaxLT = Point(-(Config().debugStageWidth / 2).ceil(),
+          -(Config().debugStageHeight / 2).ceil());
+      stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
+          (Config().debugStageHeight / 2).ceil());
     }
     stage.initialize(game.camera, game.stageData);
 

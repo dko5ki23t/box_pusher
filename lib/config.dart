@@ -148,6 +148,14 @@ class Config {
 
   bool _isReady = false;
 
+  /// デバッグモードで編集できるパラメータ
+  int debugStageWidth = 200;
+  int debugStageHeight = 200;
+  List<int> debugStageWidthClamps = [12, 200];
+  List<int> debugStageHeightClamps = [40, 200];
+  int debugEnemyDamageInMerge = 0;
+  int debugEnemyDamageInExplosion = 0;
+
   Future<List<List<String>>> _importCSV(String filename) async {
     List<List<String>> ret = [];
     final data = await rootBundle.loadString(filename);

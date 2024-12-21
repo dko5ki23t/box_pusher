@@ -976,7 +976,8 @@ abstract class StageObj {
       // 上で探したインデックスと一致するならマージ
       if (i == mergeIndex) {
         // マージ
-        stage.merge(toTo, pushing, gameWorld);
+        stage.merge(toTo, pushing, gameWorld,
+            enemyDamage: Config().debugEnemyDamageInMerge);
       }
       // 押したものの位置を設定
       pushing.pos = toTo;
