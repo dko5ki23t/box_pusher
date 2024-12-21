@@ -106,6 +106,7 @@ class Bomb extends StageObj {
         breakRightOffset: m,
         breakBottomOffset: m,
         onlyDelete: true,
+        enemyDamage: Config().debugEnemyDamageInExplosion,
       );
       // 効果音を鳴らす
       Audio.playSound(Sound.explode);

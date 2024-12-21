@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -163,7 +164,8 @@ class Belt extends StageObj {
           // 押した先のオブジェクトを調べる
           if (pushing.mergable && pushing.isSameTypeLevel(stage.get(to))) {
             // マージ
-            stage.merge(to, pushing, gameWorld);
+            stage.merge(to, pushing, gameWorld,
+                enemyDamage: Config().debugEnemyDamageInMerge);
           }
           // 押したものの位置を設定
           pushing.pos = to;

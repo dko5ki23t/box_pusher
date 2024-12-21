@@ -6,30 +6,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Uri getUri(String version, BrowserName browser) {
-  late String browserStr = '';
-  switch (browser) {
-    case BrowserName.chrome:
-      browserStr = "Google+Chrome";
-      break;
-    case BrowserName.edge:
-      browserStr = "Edge";
-      break;
-    case BrowserName.firefox:
-      browserStr = "Firefox";
-      break;
-    case BrowserName.safari:
-      browserStr = "Safari";
-      break;
-    case BrowserName.msie:
-    case BrowserName.opera:
-    case BrowserName.samsungInternet:
-    case BrowserName.unknown:
-      browserStr = '';
-      break;
-  }
+  String browserStr = browserNameToStr(browser);
   String uriStr =
       'https://docs.google.com/forms/d/e/1FAIpQLSc2fFJXiIbSTLMSyxgNzHZrheXBoQgXcfu2iyml30ZPmXbQVg/viewform?usp=pp_url&entry.14906963=$version';
-  if (browserStr.isNotEmpty) {
+  if (browserStr != "不明") {
     uriStr += '&entry.282092769=$browserStr';
   }
 
@@ -47,10 +27,13 @@ String browserNameToStr(BrowserName name) {
     case BrowserName.safari:
       return "Safari";
     case BrowserName.msie:
+      return "Internet+Explore";
     case BrowserName.opera:
+      return "Opera";
     case BrowserName.samsungInternet:
+      return "Samsung";
     case BrowserName.unknown:
-      return "";
+      return "不明";
   }
 }
 
@@ -73,16 +56,20 @@ class DebugDialogState extends State<DebugDialog> {
   late final int maxStageWidth;
   late final int minStageHeight;
   late final int maxStageHeight;
+  late int enemyDamageInMerge;
+  late int enemyDamageInExplosion;
 
   @override
   void initState() {
     super.initState();
-    widthTextController.text = widget.game.debugStageWidth.toString();
-    heightTextController.text = widget.game.debugStageHeight.toString();
-    minStageWidth = widget.game.debugStageWidthClamps[0];
-    maxStageWidth = widget.game.debugStageWidthClamps[1];
-    minStageHeight = widget.game.debugStageHeightClamps[0];
-    maxStageHeight = widget.game.debugStageHeightClamps[1];
+    widthTextController.text = Config().debugStageWidth.toString();
+    heightTextController.text = Config().debugStageHeight.toString();
+    minStageWidth = Config().debugStageWidthClamps[0];
+    maxStageWidth = Config().debugStageWidthClamps[1];
+    minStageHeight = Config().debugStageHeightClamps[0];
+    maxStageHeight = Config().debugStageHeightClamps[1];
+    enemyDamageInMerge = Config().debugEnemyDamageInMerge;
+    enemyDamageInExplosion = Config().debugEnemyDamageInExplosion;
   }
 
   @override
@@ -120,6 +107,68 @@ class DebugDialogState extends State<DebugDialog> {
           const SizedBox(
             height: 10,
           ),
+          DropdownButtonFormField(
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: "マージで敵に与えるダメージ",
+            ),
+            items: const [
+              DropdownMenuItem(
+                  value: 0,
+                  child: Text(
+                    '0 (ダメージなし)',
+                    style: Config.gameTextStyle,
+                  )),
+              DropdownMenuItem(
+                  value: 1,
+                  child: Text(
+                    '1 (レベルを1下げる)',
+                    style: Config.gameTextStyle,
+                  )),
+              DropdownMenuItem(
+                  value: 100,
+                  child: Text(
+                    '100 (一撃で倒す)',
+                    style: Config.gameTextStyle,
+                  )),
+            ],
+            value: enemyDamageInMerge,
+            onChanged: (value) => enemyDamageInMerge = value ?? 0,
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          DropdownButtonFormField(
+            decoration: const InputDecoration(
+              border: UnderlineInputBorder(),
+              labelText: "爆弾の爆発で敵に与えるダメージ",
+            ),
+            items: const [
+              DropdownMenuItem(
+                  value: 0,
+                  child: Text(
+                    '0 (ダメージなし)',
+                    style: Config.gameTextStyle,
+                  )),
+              DropdownMenuItem(
+                  value: 1,
+                  child: Text(
+                    '1 (レベルを1下げる)',
+                    style: Config.gameTextStyle,
+                  )),
+              DropdownMenuItem(
+                  value: 100,
+                  child: Text(
+                    '100 (一撃で倒す)',
+                    style: Config.gameTextStyle,
+                  )),
+            ],
+            value: enemyDamageInExplosion,
+            onChanged: (value) => enemyDamageInExplosion = value ?? 0,
+          ),
+          const SizedBox(
+            height: 10,
+          ),
           Flexible(
             child: TextButton(
               child: const Text(
@@ -138,22 +187,42 @@ class DebugDialogState extends State<DebugDialog> {
               },
             ),
           ),
+          const SizedBox(
+            height: 10,
+          ),
+          Flexible(
+            child: FutureBuilder<WebBrowserInfo>(
+              future: Future<WebBrowserInfo>(() async {
+                return (await DeviceInfoPlugin().webBrowserInfo);
+              }),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  return Text(
+                      '使用ブラウザ：${browserNameToStr(snapshot.data!.browserName)}');
+                } else {
+                  return const Text('使用ブラウザ：読み込み中...');
+                }
+              },
+            ),
+          ),
         ],
       ),
       actions: <Widget>[
         TextButton(
           child: const Text('OK'),
           onPressed: () {
-            widget.game.debugStageWidth =
+            Config().debugStageWidth =
                 (int.tryParse(widthTextController.text) ??
-                        widget.game.debugStageWidth)
+                        Config().debugStageWidth)
                     .clamp(minStageWidth, maxStageWidth);
-            widget.game.debugStageHeight =
+            Config().debugStageHeight =
                 (int.tryParse(heightTextController.text) ??
-                        widget.game.debugStageHeight)
+                        Config().debugStageHeight)
                     .clamp(minStageHeight, maxStageHeight);
+            Config().debugEnemyDamageInMerge = enemyDamageInMerge;
+            Config().debugEnemyDamageInExplosion = enemyDamageInExplosion;
             widget.game.popSeq();
-            widget.game.pushAndInitGame();
+            //widget.game.pushAndInitGame();
           },
         ),
         TextButton(

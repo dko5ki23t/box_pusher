@@ -51,12 +51,6 @@ class BoxPusherGame extends FlameGame
   /// テストやデバッグ用のモード
   bool testMode;
 
-  /// デバッグモードで作成するステージの情報
-  int debugStageWidth = 200;
-  int debugStageHeight = 200;
-  List<int> debugStageWidthClamps = [12, 200];
-  List<int> debugStageHeightClamps = [40, 200];
-
   /// ゲームシーケンスでのズーム倍率
   double gameZoom = 1.0;
 
