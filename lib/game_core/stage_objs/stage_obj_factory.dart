@@ -331,7 +331,8 @@ class StageObjFactory {
       ..isPocketAbilityOn = src['pocketAbility'] ?? false
       ..pocketItem =
           src['pocketItem'] != null ? createFromMap(src['pocketItem']) : null
-      ..isArmerAbilityOn = src['armerAbility'] ?? false;
+      ..isArmerAbilityOn = src['armerAbility'] ?? false
+      ..armerRecoveryTurns = src['armerRecoveryTurns'] ?? 0;
   }
 
   void setPosition(StageObj obj, {Vector2? offset}) {
