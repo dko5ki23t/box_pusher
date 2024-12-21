@@ -109,7 +109,7 @@ class Stage {
   late Image mergeEffectImg;
 
   /// 静止物
-  Map<Point, StageObj> _staticObjs = {};
+  final Map<Point, StageObj> _staticObjs = {};
 
   // TODO: あまり美しくないのでできれば廃止する
   /// effectを追加する際、動きを合わせる基となるエフェクトを持つStageObj（不可視）

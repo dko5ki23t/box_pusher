@@ -1,9 +1,58 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/config.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-final Uri _url = Uri.parse('https://forms.gle/F1BTY8KL6NZkBoyo7');
+Uri getUri(String version, BrowserName browser) {
+  late String browserStr = '';
+  switch (browser) {
+    case BrowserName.chrome:
+      browserStr = "Google+Chrome";
+      break;
+    case BrowserName.edge:
+      browserStr = "Edge";
+      break;
+    case BrowserName.firefox:
+      browserStr = "Firefox";
+      break;
+    case BrowserName.safari:
+      browserStr = "Safari";
+      break;
+    case BrowserName.msie:
+    case BrowserName.opera:
+    case BrowserName.samsungInternet:
+    case BrowserName.unknown:
+      browserStr = '';
+      break;
+  }
+  String uriStr =
+      'https://docs.google.com/forms/d/e/1FAIpQLSc2fFJXiIbSTLMSyxgNzHZrheXBoQgXcfu2iyml30ZPmXbQVg/viewform?usp=pp_url&entry.14906963=$version';
+  if (browserStr.isNotEmpty) {
+    uriStr += '&entry.282092769=$browserStr';
+  }
+
+  return Uri.parse(uriStr);
+}
+
+String browserNameToStr(BrowserName name) {
+  switch (name) {
+    case BrowserName.chrome:
+      return "Google+Chrome";
+    case BrowserName.edge:
+      return "Edge";
+    case BrowserName.firefox:
+      return "Firefox";
+    case BrowserName.safari:
+      return "Safari";
+    case BrowserName.msie:
+    case BrowserName.opera:
+    case BrowserName.samsungInternet:
+    case BrowserName.unknown:
+      return "";
+  }
+}
 
 class DebugDialog extends StatefulWidget {
   final BoxPusherGame game;
@@ -78,7 +127,14 @@ class DebugDialogState extends State<DebugDialog> {
                 style: Config.gameTextStyle,
               ),
               onPressed: () async {
-                if (!await launchUrl(_url)) {}
+                // バグ報告で使用しているブラウザを取得するために使う
+                DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                // アプリバージョン等取得
+                PackageInfo packageInfo = await PackageInfo.fromPlatform();
+                final browserName =
+                    (await deviceInfo.webBrowserInfo).browserName;
+                if (!await launchUrl(getUri(packageInfo.version, browserName),
+                    mode: LaunchMode.externalApplication)) {}
               },
             ),
           ),
