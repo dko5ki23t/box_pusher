@@ -326,11 +326,12 @@ class StageObjFactory {
       pos: Point.decode(src['pos']),
       vector: Move.values[src['vector']],
     )
-      ..pushableNum = src['handAbility']
-      ..isLegAbilityOn = src['legAbility']
-      ..isPocketAbilityOn = src['pocketAbility']
+      ..pushableNum = src['handAbility'] ?? 1
+      ..isLegAbilityOn = src['legAbility'] ?? false
+      ..isPocketAbilityOn = src['pocketAbility'] ?? false
       ..pocketItem =
-          src['pocketItem'] != null ? createFromMap(src['pocketItem']) : null;
+          src['pocketItem'] != null ? createFromMap(src['pocketItem']) : null
+      ..isArmerAbilityOn = src['armerAbility'] ?? false;
   }
 
   void setPosition(StageObj obj, {Vector2? offset}) {

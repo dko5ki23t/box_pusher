@@ -208,6 +208,7 @@ class Player extends StageObj {
     ret['legAbility'] = isLegAbilityOn;
     ret['pocketAbility'] = isPocketAbilityOn;
     ret['pocketItem'] = pocketItem?.encode();
+    ret['armerAbility'] = isArmerAbilityOn;
     return ret;
   }
 

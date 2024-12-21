@@ -403,10 +403,6 @@ class Stage {
     final List<Component> breakingAnimations = [];
 
     for (final p in range.set) {
-      // ステージの範囲外
-      if (!PointRectRange(stageLT, stageRB).contains(p)) {
-        continue;
-      }
       //if (p == basePoint) continue;
       if (get(p).type == StageObjType.block &&
           canBreakBlockFunc(get(p) as Block)) {
@@ -417,12 +413,18 @@ class Stage {
           breaked.add(p);
         }
         setStaticType(p, StageObjType.none);
-        if (Config().setObjInBlockWithDistributionAlgorithm) {
+        if (get(p).level < 100 &&
+            Config().setObjInBlockWithDistributionAlgorithm) {
           // 分布に従ってブロック破壊時出現オブジェクトを決める場合、
           // 破壊した対象のブロックが持つオブジェクトを分布から決定する
           final targetField = Config().getObjInBlockMapEntry(p).key;
           final item = calcedObjInBlockMap[targetField]!.getOne()?.copy();
-          if (item != null) {
+          // 該当範囲内での出現個数制限を調べる
+          final objMaxNumPattern = Config().getMaxObjNumFromBlock(p);
+          bool isOver = objMaxNumPattern.containsKey(item) &&
+              appearedItemsMap.containsKey(item) &&
+              objMaxNumPattern[item]! <= appearedItemsMap[item]!;
+          if (item != null && !isOver) {
             if (item.type == StageObjType.jewel) {
               // 宝石は位置によってレベルを変える
               item.level = Config().getJewelLevel(p);
@@ -489,9 +491,9 @@ class Stage {
       // 該当範囲内での出現個数制限を調べる
       List<StageObjTypeLevel> items = [];
       final objMaxNumPattern = Config().getMaxObjNumFromBlock(basePoint);
-      for (final itemAndNum in pattern.itemsNumMap.entries) {
+      for (final itemAndNum in pattern.itemsPercentAndNumsMap.entries) {
         // ブロック破壊で出現するオブジェクトそれぞれに対し、制限内の個数分だけitemsに加える
-        int addingNum = itemAndNum.value;
+        int addingNum = itemAndNum.value.max;
         final item = itemAndNum.key;
         if (objMaxNumPattern.containsKey(item) &&
             appearedItemsMap.containsKey(item)) {
@@ -1070,12 +1072,14 @@ class Stage {
                       StageObjTypeLevel(type: StageObjType.block, level: 4))) *
               ratio);
         }
+        // 宝石は上限下限なしで割合だけ入力
         final percents = {
-          StageObjTypeLevel(type: StageObjType.jewel): targetOIB.jewelPercent
+          StageObjTypeLevel(type: StageObjType.jewel):
+              NumsAndPercent(-1, -1, targetOIB.jewelPercent)
         };
-        percents.addAll(targetOIB.itemsPercentMap);
-        calcedObjInBlockMap[targetField] =
-            Distribution.fromPercent(percents, blockNum, RoundMode.randomRound);
+        percents.addAll(targetOIB.itemsPercentAndNumsMap);
+        calcedObjInBlockMap[targetField] = Distribution.fromPercentWithMinMax(
+            percents, blockNum, RoundMode.randomRound);
       }
     }
   }
