@@ -731,7 +731,7 @@ class Stage {
     );
 
     // 効果音を鳴らす
-    Audio.playSound(Sound.merge);
+    Audio().playSound(Sound.merge);
   }
 
   StageObj get(Point p) {
@@ -1074,6 +1074,7 @@ class Stage {
         final targetOIB = entry.value;
         // 対象範囲にブロックがどれだけ含まれるか数える
         int blockNum = 0;
+        // TODO: ここの処理激重
         for (final e in calcedBlockFloorMap.entries) {
           double ratio =
               targetField.set.intersection(e.key.set).length / e.key.set.length;

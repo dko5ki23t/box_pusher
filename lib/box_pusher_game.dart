@@ -94,16 +94,11 @@ class BoxPusherGame extends FlameGame
       onShow: () {
         if (_router.currentRoute.name == 'game' &&
             _router.routes['game']!.firstChild() != null) {
-          final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-          return gameSeq.resumeBGM();
+          return Audio().resumeBGM();
         }
       },
       onHide: () {
-        if (_router.currentRoute.name == 'game' &&
-            _router.routes['game']!.firstChild() != null) {
-          final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-          return gameSeq.pauseBGM();
-        }
+        Audio().pauseBGM();
       },
     );
 
@@ -177,7 +172,7 @@ class BoxPusherGame extends FlameGame
     }
 
     // オーディオの準備
-    await Audio.onLoad();
+    await Audio().onLoad();
   }
 
   /// ハイスコアの更新・セーブデータに保存
@@ -258,7 +253,7 @@ class BoxPusherGame extends FlameGame
     processLifecycleEvents();
     Flame.images.clearCache();
     Flame.assets.clearCache();
-    Audio.onRemove();
+    Audio().onRemove();
   }
 
   /*@override

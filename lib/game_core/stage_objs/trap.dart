@@ -80,7 +80,7 @@ class Trap extends StageObj {
         // 効果音を鳴らす
         switch (level) {
           default:
-            Audio.playSound(Sound.trap1);
+            Audio().playSound(Sound.trap1);
             break;
         }
       }

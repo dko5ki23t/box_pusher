@@ -109,7 +109,7 @@ class Bomb extends StageObj {
         enemyDamage: Config().debugEnemyDamageInExplosion,
       );
       // 効果音を鳴らす
-      Audio.playSound(Sound.explode);
+      Audio().playSound(Sound.explode);
     }
   }
 
