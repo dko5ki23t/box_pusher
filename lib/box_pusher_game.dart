@@ -12,6 +12,7 @@ import 'package:box_pusher/sequences/loading_seq.dart';
 import 'package:box_pusher/sequences/menu_seq.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:box_pusher/sequences/title_seq.dart';
+import 'package:box_pusher/visibility_listener.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
@@ -89,8 +90,8 @@ class BoxPusherGame extends FlameGame
   Future<void> onLoad() async {
     super.onLoad();
 
-    // アプリ切り替え時に音楽中断/再開
-    AppLifecycleListener(
+    // アプリ切り替え時/webページの表示・非表示時に音楽を中断/再開
+    VisibilityListener.setListeners(
       onShow: () {
         if (_router.currentRoute.name == 'game' &&
             _router.routes['game']!.firstChild() != null) {
