@@ -94,7 +94,7 @@ class BoxPusherGame extends FlameGame
       onShow: () {
         if (_router.currentRoute.name == 'game' &&
             _router.routes['game']!.firstChild() != null) {
-          return Audio().resumeBGM();
+          Audio().resumeBGM();
         }
       },
       onHide: () {
@@ -196,7 +196,7 @@ class BoxPusherGame extends FlameGame
   /// プレイ中ステージの更新・セーブデータに保存
   Future<void> setAndSaveStageData() async {
     final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-    _stageData = gameSeq.stage.encodeStageData();
+    _stageData = await gameSeq.stage.encodeStageData();
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);

@@ -58,6 +58,7 @@ class DebugDialogState extends State<DebugDialog> {
   late final int maxStageHeight;
   late int enemyDamageInMerge;
   late int enemyDamageInExplosion;
+  late bool prepareAllStageDataAtFirst;
 
   @override
   void initState() {
@@ -70,6 +71,7 @@ class DebugDialogState extends State<DebugDialog> {
     maxStageHeight = Config().debugStageHeightClamps[1];
     enemyDamageInMerge = Config().debugEnemyDamageInMerge;
     enemyDamageInExplosion = Config().debugEnemyDamageInExplosion;
+    prepareAllStageDataAtFirst = Config().debugPrepareAllStageDataAtFirst;
   }
 
   @override
@@ -169,6 +171,18 @@ class DebugDialogState extends State<DebugDialog> {
           const SizedBox(
             height: 10,
           ),
+          SwitchListTile(
+            value: prepareAllStageDataAtFirst,
+            onChanged: (value) =>
+                setState(() => prepareAllStageDataAtFirst = value),
+            title: const Text(
+              "ゲーム開始時に全ての準備を完了させる(ゲーム中にロードはしない)",
+              style: Config.gameTextStyle,
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
           Flexible(
             child: TextButton(
               child: const Text(
@@ -221,6 +235,8 @@ class DebugDialogState extends State<DebugDialog> {
                     .clamp(minStageHeight, maxStageHeight);
             Config().debugEnemyDamageInMerge = enemyDamageInMerge;
             Config().debugEnemyDamageInExplosion = enemyDamageInExplosion;
+            Config().debugPrepareAllStageDataAtFirst =
+                prepareAllStageDataAtFirst;
             widget.game.popSeq();
             //widget.game.pushAndInitGame();
           },

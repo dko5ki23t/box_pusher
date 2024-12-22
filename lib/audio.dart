@@ -143,6 +143,7 @@ class Audio {
   void playBGM(Bgm bgm) async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
     try {
+      _bgmPlayer.stop();
       _bgmPlayer.play(AssetSource(bgm.fileName), volume: bgm.volume);
     } catch (e) {
       log('[Audio]playBGM() error : $e');

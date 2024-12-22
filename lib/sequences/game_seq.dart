@@ -132,7 +132,7 @@ class GameSeq extends Sequence
         // BGM再開
         Audio().resumeBGM();
       } else {
-        // BGM再生
+        // BGMを最初から再生
         Audio().playBGM(Bgm.game);
       }
     }
@@ -166,7 +166,7 @@ class GameSeq extends Sequence
       stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
           (Config().debugStageHeight / 2).ceil());
     }
-    stage.initialize(game.camera, game.stageData);
+    await stage.initialize(game.camera, game.stageData);
 
     // プレイヤーの操作ボタン群
     final clipSize = Vector2(
