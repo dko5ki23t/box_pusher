@@ -23,7 +23,7 @@ class GameTextButton extends ButtonComponent {
   }) : super(
           onPressed: () {
             // 決定音を鳴らす
-            Audio.playSound(Sound.decide);
+            Audio().playSound(Sound.decide);
             if (onPressed != null) onPressed();
           },
           onReleased: onReleased,

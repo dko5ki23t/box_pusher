@@ -155,6 +155,7 @@ class Config {
   List<int> debugStageHeightClamps = [40, 200];
   int debugEnemyDamageInMerge = 0;
   int debugEnemyDamageInExplosion = 0;
+  bool debugPrepareAllStageDataAtFirst = true;
 
   Future<List<List<String>>> _importCSV(String filename) async {
     List<List<String>> ret = [];

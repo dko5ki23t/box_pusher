@@ -12,6 +12,7 @@ import 'package:box_pusher/sequences/loading_seq.dart';
 import 'package:box_pusher/sequences/menu_seq.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:box_pusher/sequences/title_seq.dart';
+import 'package:box_pusher/visibility_listener.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
@@ -89,21 +90,16 @@ class BoxPusherGame extends FlameGame
   Future<void> onLoad() async {
     super.onLoad();
 
-    // アプリ切り替え時に音楽中断/再開
-    AppLifecycleListener(
+    // アプリ切り替え時/webページの表示・非表示時に音楽を中断/再開
+    VisibilityListener.setListeners(
       onShow: () {
         if (_router.currentRoute.name == 'game' &&
             _router.routes['game']!.firstChild() != null) {
-          final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-          return gameSeq.resumeBGM();
+          Audio().resumeBGM();
         }
       },
       onHide: () {
-        if (_router.currentRoute.name == 'game' &&
-            _router.routes['game']!.firstChild() != null) {
-          final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-          return gameSeq.pauseBGM();
-        }
+        Audio().pauseBGM();
       },
     );
 
@@ -177,7 +173,7 @@ class BoxPusherGame extends FlameGame
     }
 
     // オーディオの準備
-    await Audio.onLoad();
+    await Audio().onLoad();
   }
 
   /// ハイスコアの更新・セーブデータに保存
@@ -201,7 +197,7 @@ class BoxPusherGame extends FlameGame
   /// プレイ中ステージの更新・セーブデータに保存
   Future<void> setAndSaveStageData() async {
     final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-    _stageData = gameSeq.stage.encodeStageData();
+    _stageData = await gameSeq.stage.encodeStageData();
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
@@ -258,7 +254,7 @@ class BoxPusherGame extends FlameGame
     processLifecycleEvents();
     Flame.images.clearCache();
     Flame.assets.clearCache();
-    Audio.onRemove();
+    Audio().onRemove();
   }
 
   /*@override

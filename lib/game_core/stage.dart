@@ -131,10 +131,12 @@ class Stage {
   Map<StageObjTypeLevel, int> appearedItemsMap = {};
 
   /// Config().blockFloorMapおよびobjInBlockMapを元に計算したブロック破壊時出現オブジェクトの個数
-  Map<PointRange, Distribution<StageObjTypeLevel>> calcedObjInBlockMap = {};
+  Map<PointRange, Future<Distribution<StageObjTypeLevel>>> calcedObjInBlockMap =
+      {};
 
   /// Config().blockFloorMapを元に計算したブロック/床の個数
-  Map<PointRange, Distribution<StageObjTypeLevel>> calcedBlockFloorMap = {};
+  Map<PointRange, Future<Distribution<StageObjTypeLevel>>> calcedBlockFloorMap =
+      {};
 
   /// マージした回数
   int mergedCount = 0;
@@ -265,7 +267,8 @@ class Stage {
   }
 
   /// ステージを生成する
-  void initialize(CameraComponent camera, Map<String, dynamic> stageData) {
+  Future<void> initialize(
+      CameraComponent camera, Map<String, dynamic> stageData) async {
     assert(isReady, 'Stage.onLoad() is not called!');
     effectBase = [
       _objFactory.create(
@@ -278,11 +281,11 @@ class Stage {
     if (stageData.containsKey('score')) {
       _setStageDataFromSaveData(camera, stageData);
     } else {
-      _setStageDataFromInitialData(camera);
+      await _setStageDataFromInitialData(camera);
     }
   }
 
-  Map<String, dynamic> encodeStageData() {
+  Future<Map<String, dynamic>> encodeStageData() async {
     final Map<String, dynamic> ret = {};
     ret['score'] = score;
     ret['coin'] = coinNum;
@@ -290,12 +293,12 @@ class Stage {
     ret['stageRB'] = stageRB.encode();
     final Map<String, dynamic> encodedCOIBM = {};
     for (final entry in calcedObjInBlockMap.entries) {
-      encodedCOIBM[entry.key.toString()] = entry.value.encode();
+      encodedCOIBM[entry.key.toString()] = (await entry.value).encode();
     }
     ret['calcedObjInBlockMap'] = encodedCOIBM;
     final Map<String, dynamic> encodedCBFM = {};
     for (final entry in calcedBlockFloorMap.entries) {
-      encodedCBFM[entry.key.toString()] = entry.value.encode();
+      encodedCBFM[entry.key.toString()] = (await entry.value).encode();
     }
     ret['calcedBlockFloorMap'] = encodedCBFM;
     final Map<String, dynamic> staticObjsMap = {};
@@ -395,7 +398,7 @@ class Stage {
 
   /// 指定した範囲のブロックを破壊する
   void breakBlocks(Point basePoint, bool Function(Block) canBreakBlockFunc,
-      PointRange range) {
+      PointRange range) async {
     // 指定された範囲のブロックを破壊する
     // 破壊後のブロックから出現するオブジェクトはbasePointの位置によって決定する
     /// 破壊されたブロックの位置のリスト
@@ -418,7 +421,8 @@ class Stage {
           // 分布に従ってブロック破壊時出現オブジェクトを決める場合、
           // 破壊した対象のブロックが持つオブジェクトを分布から決定する
           final targetField = Config().getObjInBlockMapEntry(p).key;
-          final item = calcedObjInBlockMap[targetField]!.getOne()?.copy();
+          final item =
+              (await calcedObjInBlockMap[targetField]!).getOne()?.copy();
           // 該当範囲内での出現個数制限を調べる
           final objMaxNumPattern = Config().getMaxObjNumFromBlock(p);
           bool isOver = objMaxNumPattern.containsKey(item) &&
@@ -731,7 +735,7 @@ class Stage {
     );
 
     // 効果音を鳴らす
-    Audio.playSound(Sound.merge);
+    Audio().playSound(Sound.merge);
   }
 
   StageObj get(Point p) {
@@ -796,7 +800,7 @@ class Stage {
       _objFactory.setPosition(obj, offset: offset);
 
   void _setStageDataFromSaveData(
-      CameraComponent camera, Map<String, dynamic> stageData) {
+      CameraComponent camera, Map<String, dynamic> stageData) async {
     // ステージ範囲設定
     stageLT = Point.decode(stageData['stageLT']);
     stageRB = Point.decode(stageData['stageRB']);
@@ -809,14 +813,14 @@ class Stage {
     calcedBlockFloorMap.clear();
     for (final entry
         in (stageData['calcedBlockFloorMap'] as Map<String, dynamic>).entries) {
-      calcedBlockFloorMap[PointRange.fromStr(entry.key)] =
-          Distribution.decode(entry.value, StageObjTypeLevel.fromStr);
+      calcedBlockFloorMap[PointRange.fromStr(entry.key)] = Future.value(
+          Distribution.decode(entry.value, StageObjTypeLevel.fromStr));
     }
     calcedObjInBlockMap.clear();
     for (final entry
         in (stageData['calcedObjInBlockMap'] as Map<String, dynamic>).entries) {
-      calcedObjInBlockMap[PointRange.fromStr(entry.key)] =
-          Distribution.decode(entry.value, StageObjTypeLevel.fromStr);
+      calcedObjInBlockMap[PointRange.fromStr(entry.key)] = Future.value(
+          Distribution.decode(entry.value, StageObjTypeLevel.fromStr));
     }
 
     // 各種ステージオブジェクト設定
@@ -874,7 +878,7 @@ class Stage {
     );
   }
 
-  void _setStageDataFromInitialData(CameraComponent camera) {
+  Future<void> _setStageDataFromInitialData(CameraComponent camera) async {
     // ステージ範囲設定
     stageLT = Point(-6, -20);
     stageRB = Point(6, 20);
@@ -889,7 +893,11 @@ class Stage {
     _updateNextMergeItem();
     // 各分布の初期化
     if (Config().setObjInBlockWithDistributionAlgorithm) {
-      prepareDistributions();
+      if (Config().debugPrepareAllStageDataAtFirst) {
+        await prepareDistributions();
+      } else {
+        prepareDistributions();
+      }
     }
     _staticObjs.clear();
     boxes.forceClear();
@@ -1048,23 +1056,31 @@ class Stage {
     }
   }
 
-  void prepareDistributions() {
+  Future<void> prepareDistributions() async {
     // TODO: コンフィグでものすごく広い範囲指定してると激重になるのどうするか
     // 先に床/ブロックの分布
     for (final entry in Config().blockFloorMap.entries) {
       if (!calcedBlockFloorMap.containsKey(entry.key)) {
-        final Map<StageObjTypeLevel, int> percents = {
-          for (final e in entry.value.floorPercents.entries) e.key: e.value,
-          for (final e in entry.value.blockPercents.entries)
-            StageObjTypeLevel(type: StageObjType.block, level: e.key): e.value
-        };
-        Set set = entry.key.set;
-        for (final t in calcedBlockFloorMap.keys) {
-          if (t == entry.key) break;
-          set = set.difference(t.set);
+        // 処理重いので非同期でもOK
+        Distribution<StageObjTypeLevel> makeDistribution() {
+          final Map<StageObjTypeLevel, int> percents = {
+            for (final e in entry.value.floorPercents.entries) e.key: e.value,
+            for (final e in entry.value.blockPercents.entries)
+              StageObjTypeLevel(type: StageObjType.block, level: e.key): e.value
+          };
+          Set set = entry.key.set;
+          for (final t in calcedBlockFloorMap.keys) {
+            if (t == entry.key) break;
+            set = set.difference(t.set);
+          }
+          return Distribution.fromPercent(
+              percents, set.length, RoundMode.randomRound);
         }
-        calcedBlockFloorMap[entry.key] = Distribution.fromPercent(
-            percents, set.length, RoundMode.randomRound);
+
+        calcedBlockFloorMap[entry.key] =
+            Config().debugPrepareAllStageDataAtFirst
+                ? Future.value(makeDistribution())
+                : Future(makeDistribution);
       }
     }
     // 続いてブロック破壊時出現オブジェクトの分布
@@ -1072,37 +1088,46 @@ class Stage {
       if (!calcedObjInBlockMap.containsKey(entry.key)) {
         final targetField = entry.key;
         final targetOIB = entry.value;
-        // 対象範囲にブロックがどれだけ含まれるか数える
-        int blockNum = 0;
-        for (final e in calcedBlockFloorMap.entries) {
-          double ratio =
-              targetField.set.intersection(e.key.set).length / e.key.set.length;
-          // TODO: ブロックの種類増えたら困る
-          blockNum += randomRound((e.value.getTotalNum(
-                      StageObjTypeLevel(type: StageObjType.block, level: 1)) +
-                  e.value.getTotalNum(
-                      StageObjTypeLevel(type: StageObjType.block, level: 2)) +
-                  e.value.getTotalNum(
-                      StageObjTypeLevel(type: StageObjType.block, level: 3)) +
-                  e.value.getTotalNum(
-                      StageObjTypeLevel(type: StageObjType.block, level: 4))) *
-              ratio);
+        // 処理重いので非同期でもOK
+        Future<Distribution<StageObjTypeLevel>> makeDistribution() async {
+          // 対象範囲にブロックがどれだけ含まれるか数える
+          int blockNum = 0;
+          // TODO: ここの処理激重
+          for (final e in calcedBlockFloorMap.entries) {
+            double ratio = targetField.set.intersection(e.key.set).length /
+                e.key.set.length;
+            // TODO: ブロックの種類増えたら困る
+            blockNum += randomRound(((await e.value).getTotalNum(
+                        StageObjTypeLevel(type: StageObjType.block, level: 1)) +
+                    (await e.value).getTotalNum(
+                        StageObjTypeLevel(type: StageObjType.block, level: 2)) +
+                    (await e.value).getTotalNum(
+                        StageObjTypeLevel(type: StageObjType.block, level: 3)) +
+                    (await e.value).getTotalNum(StageObjTypeLevel(
+                        type: StageObjType.block, level: 4))) *
+                ratio);
+          }
+          // 宝石は上限下限なしで割合だけ入力
+          final percents = {
+            StageObjTypeLevel(type: StageObjType.jewel):
+                NumsAndPercent(-1, -1, targetOIB.jewelPercent)
+          };
+          percents.addAll(targetOIB.itemsPercentAndNumsMap);
+          return Distribution.fromPercentWithMinMax(
+              percents, blockNum, RoundMode.randomRound);
         }
-        // 宝石は上限下限なしで割合だけ入力
-        final percents = {
-          StageObjTypeLevel(type: StageObjType.jewel):
-              NumsAndPercent(-1, -1, targetOIB.jewelPercent)
-        };
-        percents.addAll(targetOIB.itemsPercentAndNumsMap);
-        calcedObjInBlockMap[targetField] = Distribution.fromPercentWithMinMax(
-            percents, blockNum, RoundMode.randomRound);
+
+        calcedObjInBlockMap[targetField] =
+            Config().debugPrepareAllStageDataAtFirst
+                ? Future.value(await makeDistribution())
+                : makeDistribution();
       }
     }
   }
 
   /// 引数で指定した位置に、パターンに従った静止物を生成する
   void createAndSetStaticObjWithPattern(Point pos,
-      {bool addToGameWorld = true}) {
+      {bool addToGameWorld = true}) async {
     if (Config().fixedStaticObjMap.containsKey(pos)) {
       // 固定位置のオブジェクト
       _staticObjs[pos] = createObject(
@@ -1116,7 +1141,7 @@ class Stage {
         for (final pattern in Config().blockFloorMap.entries) {
           if (pattern.key.contains(pos)) {
             _staticObjs[pos] = createObject(
-                typeLevel: calcedBlockFloorMap[pattern.key]!.getOne() ??
+                typeLevel: (await calcedBlockFloorMap[pattern.key]!).getOne() ??
                     StageObjTypeLevel(type: StageObjType.none),
                 pos: pos,
                 addToGameWorld: addToGameWorld);

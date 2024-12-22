@@ -1024,7 +1024,7 @@ abstract class StageObj {
         // ゴリラ、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
-        Audio.playSound(Sound.getSkill);
+        Audio().playSound(Sound.getSkill);
       } else if (stage.get(pos).type == StageObjType.rabbit) {
         // 移動先がうさぎだった場合
         // 足の能力を習得
@@ -1032,7 +1032,7 @@ abstract class StageObj {
         // うさぎ、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
-        Audio.playSound(Sound.getSkill);
+        Audio().playSound(Sound.getSkill);
       } else if (stage.get(pos).type == StageObjType.kangaroo) {
         // 移動先がカンガルーだった場合
         // ポケットの能力を習得
@@ -1040,7 +1040,7 @@ abstract class StageObj {
         // カンガルー、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
-        Audio.playSound(Sound.getSkill);
+        Audio().playSound(Sound.getSkill);
       } else if (stage.get(pos).type == StageObjType.turtle) {
         // 移動先が亀だった場合
         // アーマーの能力を習得
@@ -1048,7 +1048,7 @@ abstract class StageObj {
         // 亀、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
-        Audio.playSound(Sound.getSkill);
+        Audio().playSound(Sound.getSkill);
       }
     }
     // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している

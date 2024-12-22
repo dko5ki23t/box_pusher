@@ -1,4 +1,6 @@
-import 'package:flame_audio/flame_audio.dart';
+import 'dart:developer';
+
+import 'package:audioplayers/audioplayers.dart';
 
 /// 効果音
 enum Sound {
@@ -22,15 +24,15 @@ extension SoundExtent on Sound {
   String get fileName {
     switch (this) {
       case Sound.decide:
-        return 'kettei.mp3';
+        return 'audio/kettei.mp3';
       case Sound.merge:
-        return 'merge.mp3';
+        return 'audio/merge.mp3';
       case Sound.getSkill:
-        return 'get_skill.mp3';
+        return 'audio/get_skill.mp3';
       case Sound.explode:
-        return 'explode.mp3';
+        return 'audio/explode.mp3';
       case Sound.trap1:
-        return 'trap1.mp3';
+        return 'audio/trap1.mp3';
     }
   }
 
@@ -56,7 +58,7 @@ extension BgmExtent on Bgm {
   String get fileName {
     switch (this) {
       case Bgm.game:
-        return 'maou_bgm_8bit29.mp3';
+        return 'audio/maou_bgm_8bit29.mp3';
     }
   }
 
@@ -73,47 +75,101 @@ bool isLoaded = false;
 /// 音楽を扱うクラス
 /// 最初に1度onLoad()を呼ぶこと
 class Audio {
-  static Future<void> onLoad() async {
+  static final Audio _instance = Audio._internal();
+
+  factory Audio() => _instance;
+
+  Audio._internal();
+
+  /// 同時に再生できる効果音の数
+  final int soundPlayerNum = 5;
+
+  late AudioPlayer _bgmPlayer;
+  late List<AudioPlayer> _soundPlayers;
+
+  final bgmPlayerIdStr = 'box_pusher_bgm_playerId';
+
+  Future<void> onLoad() async {
     assert(!isLoaded, '[Audioクラス]onLoad()が2回呼ばれた');
-    // キャッシュクリア
-    await FlameAudio.audioCache.clearAll();
     // 各種音楽ファイル読み込み
-    await FlameAudio.audioCache
-        .loadAll([for (final bgm in Bgm.values) bgm.fileName]);
-    await FlameAudio.audioCache
-        .loadAll([for (final sound in Sound.values) sound.fileName]);
+    AudioCache(prefix: 'assets/audio/');
+
+    // https://qiita.com/kaedeee/items/001635c30f9d8ccbf755
+    const AudioContext audioContext = AudioContext(
+      iOS: AudioContextIOS(
+        category: AVAudioSessionCategory.ambient,
+        options: [
+          AVAudioSessionOptions.defaultToSpeaker,
+          AVAudioSessionOptions.mixWithOthers,
+          AVAudioSessionOptions.allowAirPlay,
+          AVAudioSessionOptions.allowBluetooth,
+          AVAudioSessionOptions.allowBluetoothA2DP,
+        ],
+      ),
+      android: AudioContextAndroid(
+        isSpeakerphoneOn: true,
+        stayAwake: true,
+        contentType: AndroidContentType.sonification,
+        usageType: AndroidUsageType.assistanceSonification,
+        audioFocus: AndroidAudioFocus.none,
+      ),
+    );
+
+    AudioPlayer.global.setAudioContext(audioContext);
+
+    _bgmPlayer = AudioPlayer(playerId: bgmPlayerIdStr);
+    // BGMはループ再生するよう設定
+    await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+    _soundPlayers = [for (int i = 0; i < soundPlayerNum; i++) AudioPlayer()];
     isLoaded = true;
   }
 
-  static Future<AudioPlayer> playSound(Sound sound) {
+  void playSound(Sound sound) async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    return FlameAudio.play(sound.fileName, volume: sound.volume);
+    for (final player in _soundPlayers) {
+      if (player.state == PlayerState.stopped ||
+          player.state == PlayerState.completed) {
+        try {
+          player.play(AssetSource(sound.fileName), volume: sound.volume);
+        } catch (e) {
+          log('[Audio]playSound() error : $e');
+        }
+        return;
+      }
+    }
+    log('[Audio.playSound()] 全てのプレイヤーが使用中のため再生できなかった：${sound.name}');
   }
 
-  static Future<AudioPlayer> playBGM(Bgm bgm) {
+  void playBGM(Bgm bgm) async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    return FlameAudio.loopLongAudio(bgm.fileName, volume: bgm.volume);
+    try {
+      _bgmPlayer.stop();
+      _bgmPlayer.play(AssetSource(bgm.fileName), volume: bgm.volume);
+    } catch (e) {
+      log('[Audio]playBGM() error : $e');
+    }
   }
 
-  static void stopBGM(AudioPlayer? player) {
+  void stopBGM() {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    if (player != null) player.stop();
+    _bgmPlayer.stop();
   }
 
-  static void pauseBGM(AudioPlayer? player) {
+  void pauseBGM() {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    if (player != null) player.pause();
+    _bgmPlayer.pause();
   }
 
-  static void resumeBGM(AudioPlayer? player) {
+  void resumeBGM() {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    if (player != null) player.resume();
+    _bgmPlayer.resume();
   }
 
-  static Future<void> onRemove() async {
+  Future<void> onRemove() async {
     assert(!isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    // キャッシュクリア
-    await FlameAudio.audioCache.clearAll();
-    FlameAudio.bgm.dispose();
+    _bgmPlayer.dispose();
+    for (final player in _soundPlayers) {
+      player.dispose();
+    }
   }
 }
