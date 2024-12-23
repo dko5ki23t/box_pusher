@@ -157,6 +157,9 @@ class Config {
   int debugEnemyDamageInExplosion = 0;
   bool debugPrepareAllStageDataAtFirst = true;
 
+  /// 敵はプレイヤーとぶつかる（同じマスに移動する）ことができるか
+  bool debugEnemyCanCollidePlayer = true;
+
   Future<List<List<String>>> _importCSV(String filename) async {
     List<List<String>> ret = [];
     final data = await rootBundle.loadString(filename);

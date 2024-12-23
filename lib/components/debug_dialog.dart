@@ -59,6 +59,7 @@ class DebugDialogState extends State<DebugDialog> {
   late int enemyDamageInMerge;
   late int enemyDamageInExplosion;
   late bool prepareAllStageDataAtFirst;
+  late bool enemyCanCollidePlayer;
 
   @override
   void initState() {
@@ -72,6 +73,7 @@ class DebugDialogState extends State<DebugDialog> {
     enemyDamageInMerge = Config().debugEnemyDamageInMerge;
     enemyDamageInExplosion = Config().debugEnemyDamageInExplosion;
     prepareAllStageDataAtFirst = Config().debugPrepareAllStageDataAtFirst;
+    enemyCanCollidePlayer = Config().debugEnemyCanCollidePlayer;
   }
 
   @override
@@ -183,6 +185,17 @@ class DebugDialogState extends State<DebugDialog> {
           const SizedBox(
             height: 10,
           ),
+          SwitchListTile(
+            value: enemyCanCollidePlayer,
+            onChanged: (value) => setState(() => enemyCanCollidePlayer = value),
+            title: const Text(
+              "敵がプレイヤーの移動先と同じマスに移動できるようにする",
+              style: Config.gameTextStyle,
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
           Flexible(
             child: TextButton(
               child: const Text(
@@ -237,6 +250,7 @@ class DebugDialogState extends State<DebugDialog> {
             Config().debugEnemyDamageInExplosion = enemyDamageInExplosion;
             Config().debugPrepareAllStageDataAtFirst =
                 prepareAllStageDataAtFirst;
+            Config().debugEnemyCanCollidePlayer = enemyCanCollidePlayer;
             widget.game.popSeq();
             //widget.game.pushAndInitGame();
           },
