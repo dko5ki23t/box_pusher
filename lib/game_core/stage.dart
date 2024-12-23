@@ -574,6 +574,8 @@ class Stage {
       (block) => Config.canBreakBlock(block, typeLevel),
       affectRange,
     );
+
+    // マージによる敵へのダメージ処理
     if (enemyDamage > 0) {
       for (final p in affectRange.set) {
         final obj = get(p);
@@ -586,75 +588,10 @@ class Stage {
         }
       }
     }
+
+    // マージ回数およびオブジェクト出現までのマージ回数をインクリメント/デクリメント
     mergedCount++;
-    // ステージ上にアイテムをランダムに配置
-    if (remainMergeCount - 1 == 0) {
-      // ステージ中央から時計回りに渦巻き状に移動して床があればランダムでアイテム設置
-      Point p = Point(0, 0);
-      List<Point> decidedPoints = [];
-      final maxMoveCount = max(stageWidth, stageHeight);
-      // whileでいいが、念のため
-      for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
-        // 上に移動
-        for (int i = 0; i < moveCount; i++) {
-          p += Move.up.point;
-          if (get(p).type == StageObjType.none &&
-              Random().nextInt(maxMoveCount) < moveCount) {
-            decidedPoints.add(p.copy());
-            if (decidedPoints.length >= nextMergeItems.length) break;
-          }
-        }
-        if (decidedPoints.length >= nextMergeItems.length) break;
-        // 右に移動
-        for (int i = 0; i < moveCount; i++) {
-          p += Move.right.point;
-          if (get(p).type == StageObjType.none &&
-              Random().nextInt(maxMoveCount) < moveCount) {
-            decidedPoints.add(p.copy());
-            if (decidedPoints.length >= nextMergeItems.length) break;
-          }
-        }
-        if (decidedPoints.length >= nextMergeItems.length) break;
-        // 下に移動
-        for (int i = 0; i < moveCount + 1; i++) {
-          p += Move.down.point;
-          if (get(p).type == StageObjType.none &&
-              Random().nextInt(maxMoveCount) < moveCount) {
-            decidedPoints.add(p.copy());
-            if (decidedPoints.length >= nextMergeItems.length) break;
-          }
-        }
-        if (decidedPoints.length >= nextMergeItems.length) break;
-        // 左に移動
-        for (int i = 0; i < moveCount + 1; i++) {
-          p += Move.left.point;
-          if (get(p).type == StageObjType.none &&
-              Random().nextInt(maxMoveCount) < moveCount) {
-            decidedPoints.add(p.copy());
-            if (decidedPoints.length >= nextMergeItems.length) break;
-          }
-        }
-        if (decidedPoints.length >= nextMergeItems.length) break;
-      }
-      for (int i = 0; i < decidedPoints.length; i++) {
-        final nextMergeItem = nextMergeItems[i];
-        final item = createObject(
-            typeLevel: StageObjTypeLevel(
-              type: nextMergeItem.type,
-              level: nextMergeItem.level,
-            ),
-            pos: decidedPoints[i]);
-        if (item.isEnemy) {
-          enemies.add(item);
-        } else {
-          boxes.add(item);
-        }
-      }
-      // 次のマージ時出現アイテムを作成
-      _updateNextMergeItem();
-    } else {
-      if (remainMergeCount > 0) remainMergeCount--;
-    }
+    remainMergeCount--;
 
     // スコア加算
     int gettingScore = pow(2, (merging.level - 1)).toInt() * 100;
@@ -738,6 +675,72 @@ class Stage {
 
     // 効果音を鳴らす
     Audio().playSound(Sound.merge);
+  }
+
+  /// マージ一定回数達成によってオブジェクトを出現させる
+  void spawnMergeCountObject() {
+    // ステージ上にアイテムをランダムに配置
+    // ステージ中央から時計回りに渦巻き状に移動して床があればランダムでアイテム設置
+    Point p = Point(0, 0);
+    List<Point> decidedPoints = [];
+    final maxMoveCount = max(stageWidth, stageHeight);
+    // whileでいいが、念のため
+    for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
+      // 上に移動
+      for (int i = 0; i < moveCount; i++) {
+        p += Move.up.point;
+        if (get(p).type == StageObjType.none &&
+            Random().nextInt(maxMoveCount) < moveCount) {
+          decidedPoints.add(p.copy());
+          if (decidedPoints.length >= nextMergeItems.length) break;
+        }
+      }
+      if (decidedPoints.length >= nextMergeItems.length) break;
+      // 右に移動
+      for (int i = 0; i < moveCount; i++) {
+        p += Move.right.point;
+        if (get(p).type == StageObjType.none &&
+            Random().nextInt(maxMoveCount) < moveCount) {
+          decidedPoints.add(p.copy());
+          if (decidedPoints.length >= nextMergeItems.length) break;
+        }
+      }
+      if (decidedPoints.length >= nextMergeItems.length) break;
+      // 下に移動
+      for (int i = 0; i < moveCount + 1; i++) {
+        p += Move.down.point;
+        if (get(p).type == StageObjType.none &&
+            Random().nextInt(maxMoveCount) < moveCount) {
+          decidedPoints.add(p.copy());
+          if (decidedPoints.length >= nextMergeItems.length) break;
+        }
+      }
+      if (decidedPoints.length >= nextMergeItems.length) break;
+      // 左に移動
+      for (int i = 0; i < moveCount + 1; i++) {
+        p += Move.left.point;
+        if (get(p).type == StageObjType.none &&
+            Random().nextInt(maxMoveCount) < moveCount) {
+          decidedPoints.add(p.copy());
+          if (decidedPoints.length >= nextMergeItems.length) break;
+        }
+      }
+      if (decidedPoints.length >= nextMergeItems.length) break;
+    }
+    for (int i = 0; i < decidedPoints.length; i++) {
+      final nextMergeItem = nextMergeItems[i];
+      final item = createObject(
+          typeLevel: StageObjTypeLevel(
+            type: nextMergeItem.type,
+            level: nextMergeItem.level,
+          ),
+          pos: decidedPoints[i]);
+      if (item.isEnemy) {
+        enemies.add(item);
+      } else {
+        boxes.add(item);
+      }
+    }
   }
 
   StageObj get(Point p) {
@@ -1015,6 +1018,13 @@ class Stage {
         box.update(dt, player.moving, gameWorld, camera, this,
             playerStartMoving, playerEndMoving, prohibitedPoints);
       }
+    }
+
+    // 一定のマージ回数達成によるオブジェクト出現
+    if (remainMergeCount <= 0) {
+      spawnMergeCountObject();
+      // 次のマージ時出現アイテムを作成
+      _updateNextMergeItem();
     }
 
     // 無効になったオブジェクト/敵を削除
