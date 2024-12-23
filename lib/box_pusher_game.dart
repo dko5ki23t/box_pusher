@@ -313,7 +313,11 @@ class BoxPusherGame extends FlameGame
     if (_router.routes['game']!.firstChild() != null) {
       final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       if (gameSeq.isLoaded && initialize) {
+        gameSeq.isReady = false;
+        pushSeqNamed('game');
+        pushSeqNamed('loading');
         gameSeq.initialize();
+        return;
       }
     }
     pushSeqNamed('game');

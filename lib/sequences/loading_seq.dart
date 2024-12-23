@@ -2,12 +2,24 @@ import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
+import 'package:flame/input.dart';
+import 'package:flutter/material.dart';
 
 class LoadingSeq extends Sequence with HasGameReference<BoxPusherGame> {
   @override
   Future<void> onLoad() async {
     final loadingImage = await Flame.images.load('loading.png');
     addAll([
+      // 背景をボタンにする(しかし押しても何も起きない)にすることで、背後のゲーム画面での操作を不可能にする
+      ButtonComponent(
+        button: RectangleComponent(
+          size: BoxPusherGame.baseSize,
+          paint: Paint()
+            ..color = const Color(0x80000000)
+            ..style = PaintingStyle.fill
+            ..strokeWidth = 2,
+        ),
+      ),
       SpriteAnimationComponent.fromFrameData(
         loadingImage,
         SpriteAnimationData.sequenced(
