@@ -144,7 +144,7 @@ class Ghost extends StageObj {
   bool get pushable => false;
 
   @override
-  bool get stopping => !ghosting;
+  bool get stopping => false;
 
   @override
   bool get puttable => ghosting;
