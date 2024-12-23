@@ -91,6 +91,7 @@ class BoxPusherGame extends FlameGame
     super.onLoad();
 
     // アプリ切り替え時/webページの表示・非表示時に音楽を中断/再開
+    await Audio().onLoad();
     VisibilityListener.setListeners(
       onShow: () {
         if (_router.currentRoute.name == 'game' &&
@@ -171,9 +172,6 @@ class BoxPusherGame extends FlameGame
         _saveDataVersion = Version.parse(packageInfo.version);
       }
     }
-
-    // オーディオの準備
-    await Audio().onLoad();
   }
 
   /// ハイスコアの更新・セーブデータに保存

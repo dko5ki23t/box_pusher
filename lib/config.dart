@@ -361,24 +361,26 @@ class Config {
   }
 
   /// マージしたオブジェクトが、対象のブロックを破壊できるかどうか
-  static bool canBreakBlock(Block block, StageObj mergeObj) {
-    if (mergeObj.type == StageObjType.block) return true;
+  static bool canBreakBlock(Block block, StageObjTypeLevel mergeTypeLevel) {
+    if (mergeTypeLevel.type == StageObjType.block) {
+      return true;
+    }
     switch (block.level) {
       case 1:
         return true;
       case 2:
-        return mergeObj.level >= 4;
+        return mergeTypeLevel.level >= 4;
       case 3:
-        return mergeObj.level >= 8;
+        return mergeTypeLevel.level >= 8;
       case 4:
-        return mergeObj.level >= 13;
+        return mergeTypeLevel.level >= 13;
       // ここからは敵が生み出すブロック
       case 101:
-        return mergeObj.level >= 4;
+        return mergeTypeLevel.level >= 4;
       case 102:
-        return mergeObj.level >= 8;
+        return mergeTypeLevel.level >= 8;
       case 103:
-        return mergeObj.level >= 13;
+        return mergeTypeLevel.level >= 13;
       default:
         return false;
     }

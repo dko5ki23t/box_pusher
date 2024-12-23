@@ -567,9 +567,11 @@ class Stage {
         pos + Point(breakLeftOffset, breakTopOffset),
         pos + Point(breakRightOffset, breakBottomOffset));
     // マージ位置を中心に四角形範囲のブロックを破壊する
+    final typeLevel =
+        StageObjTypeLevel(type: merging.type, level: merging.level);
     breakBlocks(
       pos,
-      (block) => Config.canBreakBlock(block, merging),
+      (block) => Config.canBreakBlock(block, typeLevel),
       affectRange,
     );
     if (enemyDamage > 0) {
