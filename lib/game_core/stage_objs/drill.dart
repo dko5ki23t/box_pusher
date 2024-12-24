@@ -36,13 +36,15 @@ class Drill extends StageObj {
                 move: SpriteAnimation.spriteList([Sprite(errorImg)],
                     stepTime: 1.0),
             },
-            1: {
-              for (final move in MoveExtent.straights)
-                move: SpriteAnimation.spriteList([
-                  Sprite(drillImg,
-                      srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-                ], stepTime: 1.0),
-            },
+            for (int i = 1; i <= 3; i++)
+              i: {
+                for (final move in MoveExtent.straights)
+                  move: SpriteAnimation.spriteList([
+                    Sprite(drillImg,
+                        srcPosition: Vector2((i - 1) * 32, 0),
+                        srcSize: Stage.cellSize)
+                  ], stepTime: 1.0),
+              },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.drill,
@@ -85,7 +87,7 @@ class Drill extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => false;
