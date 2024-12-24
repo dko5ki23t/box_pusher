@@ -52,6 +52,9 @@ class BoxPusherGame extends FlameGame
   /// テストやデバッグ用のモード
   bool testMode;
 
+  /// ゲームでキーボードを使うためのフォーカス
+  final FocusNode gameFocus;
+
   /// ゲームシーケンスでのズーム倍率
   double gameZoom = 1.0;
 
@@ -77,7 +80,7 @@ class BoxPusherGame extends FlameGame
   /// ズーム操作し始めのズーム
   late double startZoom;
 
-  BoxPusherGame({this.testMode = false})
+  BoxPusherGame({this.testMode = false, required this.gameFocus})
       : super(
             camera: CameraComponent.withFixedResolution(
                 width: baseSize.x, height: baseSize.y));

@@ -289,6 +289,8 @@ class DebugDialogState extends State<DebugDialog> {
                 ? null
                 : int.tryParse(seedTextController.text);
             widget.game.popSeq();
+            // ゲームでキーボード入力できるように、フォーカスを戻す
+            widget.game.gameFocus.requestFocus();
             //widget.game.pushAndInitGame();
           },
         ),
