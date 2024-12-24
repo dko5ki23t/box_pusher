@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:math' hide log;
 
 import 'package:flame/components.dart' hide Block;
 import 'package:box_pusher/game_core/common.dart';
@@ -148,17 +149,40 @@ class Config {
 
   bool _isReady = false;
 
-  /// デバッグモードで編集できるパラメータ
+  // デバッグモードで編集できるパラメータ
+  /// ステージの最大横幅
   int debugStageWidth = 200;
+
+  /// ステージの最大高さ
   int debugStageHeight = 200;
+
+  /// ステージの最大横幅の設定可能範囲
   List<int> debugStageWidthClamps = [12, 200];
+
+  /// ステージの最大高さの設定可能範囲
   List<int> debugStageHeightClamps = [40, 200];
+
+  /// マージ時に敵に与えるダメージ
   int debugEnemyDamageInMerge = 0;
+
+  /// 爆弾爆発時に敵に与えるダメージ
   int debugEnemyDamageInExplosion = 0;
+
+  /// 最初に全てのステージデータを準備するかどうか(ブロック破壊時出現アイテムの分布計算に時間がかかるため生まれた)
   bool debugPrepareAllStageDataAtFirst = true;
 
   /// 敵はプレイヤーとぶつかる（同じマスに移動する）ことができるか
   bool debugEnemyCanCollidePlayer = true;
+
+  /// 乱数のシード
+  int? _debugRandomSeed;
+  int? get debugRandomSeed => _debugRandomSeed;
+  set debugRandomSeed(int? v) {
+    _debugRandomSeed = v;
+    random = Random(v);
+  }
+
+  late Random random;
 
   Future<List<List<String>>> _importCSV(String filename) async {
     List<List<String>> ret = [];
@@ -204,6 +228,7 @@ class Config {
         loadFixedObjMap(await _importCSV(fixedStaticObjMapConfigFileName));
     mergeAppearObjMap = loadMergeAppearObjMap(
         await _importCSV(mergeAppearObjMapConfigFileName));
+    random = Random(debugRandomSeed);
     _isReady = true;
   }
 

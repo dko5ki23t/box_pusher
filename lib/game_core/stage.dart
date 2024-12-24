@@ -512,7 +512,7 @@ class Stage {
           StageObjTypeLevel item = items.sample(1).first;
           // 宝石出現以外の位置に最大1個アイテムを出現させる
           if (breakedRemain.isNotEmpty) {
-            bool canAppear = Random().nextBool();
+            bool canAppear = Config().random.nextBool();
             final appear = breakedRemain.sample(1).first;
             if (canAppear) {
               if (item.type == StageObjType.treasureBox) {
@@ -690,7 +690,7 @@ class Stage {
       for (int i = 0; i < moveCount; i++) {
         p += Move.up.point;
         if (get(p).type == StageObjType.none &&
-            Random().nextInt(maxMoveCount) < moveCount) {
+            Config().random.nextInt(maxMoveCount) < moveCount) {
           decidedPoints.add(p.copy());
           if (decidedPoints.length >= nextMergeItems.length) break;
         }
@@ -700,7 +700,7 @@ class Stage {
       for (int i = 0; i < moveCount; i++) {
         p += Move.right.point;
         if (get(p).type == StageObjType.none &&
-            Random().nextInt(maxMoveCount) < moveCount) {
+            Config().random.nextInt(maxMoveCount) < moveCount) {
           decidedPoints.add(p.copy());
           if (decidedPoints.length >= nextMergeItems.length) break;
         }
@@ -710,7 +710,7 @@ class Stage {
       for (int i = 0; i < moveCount + 1; i++) {
         p += Move.down.point;
         if (get(p).type == StageObjType.none &&
-            Random().nextInt(maxMoveCount) < moveCount) {
+            Config().random.nextInt(maxMoveCount) < moveCount) {
           decidedPoints.add(p.copy());
           if (decidedPoints.length >= nextMergeItems.length) break;
         }
@@ -720,7 +720,7 @@ class Stage {
       for (int i = 0; i < moveCount + 1; i++) {
         p += Move.left.point;
         if (get(p).type == StageObjType.none &&
-            Random().nextInt(maxMoveCount) < moveCount) {
+            Config().random.nextInt(maxMoveCount) < moveCount) {
           decidedPoints.add(p.copy());
           if (decidedPoints.length >= nextMergeItems.length) break;
         }
@@ -1169,7 +1169,7 @@ class Stage {
       } else {
         for (final pattern in Config().blockFloorMap.entries) {
           if (pattern.key.contains(pos)) {
-            int rand = Random().nextInt(100);
+            int rand = Config().random.nextInt(100);
             int threshold = 0;
             for (final floorPercent in pattern.value.floorPercents.entries) {
               threshold += floorPercent.value;

@@ -513,7 +513,7 @@ class Distribution<T> {
         return null;
       }
     }
-    int r = Random().nextInt(remainTotal);
+    int r = Config().random.nextInt(remainTotal);
     int t = 0;
     for (final e in _remain.entries) {
       t += e.value;
@@ -576,4 +576,4 @@ class Distribution<T> {
 }
 
 /// ランダムに切り上げ/切り下げしたintを返す
-int randomRound(double a) => Random().nextBool() ? a.ceil() : a.floor();
+int randomRound(double a) => Config().random.nextBool() ? a.ceil() : a.floor();

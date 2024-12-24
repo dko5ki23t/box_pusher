@@ -541,7 +541,7 @@ abstract class StageObj {
     // 今ターゲットの移動先にいるなら移動しない
     if (pos == target.pos + target.moving.point) {
       ret['move'] = Move.none;
-    } else if (Random().nextInt(6) == 0) {
+    } else if (Config().random.nextInt(6) == 0) {
       ret['move'] = Move.none;
     } else {
       // ターゲットの方へ移動する/向きを変える
@@ -613,7 +613,7 @@ abstract class StageObj {
     if (pos == target.pos + target.moving.point) {
       ret['move'] = Move.none;
       ret['ghost'] = false;
-    } else if (Random().nextInt(6) == 0) {
+    } else if (Config().random.nextInt(6) == 0) {
       ret['move'] = Move.none;
       ret['ghost'] = isGhost;
     } else {
