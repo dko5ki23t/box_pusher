@@ -163,7 +163,7 @@ class Config {
   List<int> debugStageHeightClamps = [40, 200];
 
   /// マージ時に敵に与えるダメージ
-  int debugEnemyDamageInMerge = 0;
+  int debugEnemyDamageInMerge = 1;
 
   /// 爆弾爆発時に敵に与えるダメージ
   int debugEnemyDamageInExplosion = 0;

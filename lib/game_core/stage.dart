@@ -67,6 +67,21 @@ class BlockFloorNums {
   BlockFloorNums(this.floorNums, this.blockNums);
 }
 
+/// マージの範囲、ブロック破壊判定、敵へのダメージ
+class MergeAffect {
+  final Point basePoint; // 起点
+  final PointRange range;
+  final bool Function(Block) canBreakBlockFunc;
+  final int enemyDamage;
+
+  MergeAffect({
+    required this.basePoint,
+    required this.range,
+    required this.canBreakBlockFunc,
+    required this.enemyDamage,
+  });
+}
+
 class Stage {
   /// マスのサイズ
   static Vector2 get cellSize => Vector2(32.0, 32.0);
@@ -146,6 +161,9 @@ class Stage {
 
   /// 次マージ時に出現するオブジェクト
   final List<StageObj> nextMergeItems = [];
+
+  /// 各update()で更新する、マージによる効果(範囲と敵へのダメージ)
+  final List<MergeAffect> mergeAffects = [];
 
   /// プレイヤー
   late Player player;
@@ -407,16 +425,18 @@ class Stage {
 
     for (final p in range.set) {
       //if (p == basePoint) continue;
-      if (get(p).type == StageObjType.block &&
+      final gotTypeLevel =
+          StageObjTypeLevel(type: get(p).type, level: get(p).level);
+      if (gotTypeLevel.type == StageObjType.block &&
           canBreakBlockFunc(get(p) as Block)) {
         breakingAnimations.add((get(p) as Block).createBreakingBlock());
         // TODO: 敵が生み出したブロック（に限らず）破壊したブロックの種類によって出現するアイテムを分けれるように設定できるようにすべし
-        if (get(p).level < 100) {
+        if (gotTypeLevel.level < 100) {
           // 敵が生み出したブロック以外のみアイテム出現位置に含める
           breaked.add(p);
         }
         setStaticType(p, StageObjType.none);
-        if (get(p).level < 100 &&
+        if (gotTypeLevel.level < 100 &&
             Config().setObjInBlockWithDistributionAlgorithm) {
           // 分布に従ってブロック破壊時出現オブジェクトを決める場合、
           // 破壊した対象のブロックが持つオブジェクトを分布から決定する
@@ -566,28 +586,17 @@ class Stage {
     final affectRange = PointRectRange(
         pos + Point(breakLeftOffset, breakTopOffset),
         pos + Point(breakRightOffset, breakBottomOffset));
-    // マージ位置を中心に四角形範囲のブロックを破壊する
+    // マージしたオブジェクトのタイプとレベル
     final typeLevel =
         StageObjTypeLevel(type: merging.type, level: merging.level);
-    breakBlocks(
-      pos,
-      (block) => Config.canBreakBlock(block, typeLevel),
-      affectRange,
+    // update()の最後にブロック破壊＆敵へのダメージを処理する
+    mergeAffects.add(
+      MergeAffect(
+          basePoint: pos,
+          range: affectRange,
+          canBreakBlockFunc: (block) => Config.canBreakBlock(block, typeLevel),
+          enemyDamage: enemyDamage),
     );
-
-    // マージによる敵へのダメージ処理
-    if (enemyDamage > 0) {
-      for (final p in affectRange.set) {
-        final obj = get(p);
-        if (obj.isEnemy && obj.killable) {
-          obj.level = (obj.level - enemyDamage).clamp(0, obj.maxLevel);
-          if (obj.level <= 0) {
-            // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
-            obj.removeAfterFrame();
-          }
-        }
-      }
-    }
 
     // マージ回数およびオブジェクト出現までのマージ回数をインクリメント/デクリメント
     mergedCount++;
@@ -686,45 +695,29 @@ class Stage {
     final maxMoveCount = max(stageWidth, stageHeight);
     // whileでいいが、念のため
     for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
-      // 上に移動
-      for (int i = 0; i < moveCount; i++) {
-        p += Move.up.point;
-        if (get(p).type == StageObjType.none &&
-            Config().random.nextInt(maxMoveCount) < moveCount) {
-          decidedPoints.add(p.copy());
-          if (decidedPoints.length >= nextMergeItems.length) break;
+      // 特定方向に動いて、ランダムにアイテムを設置する処理
+      void moveAndSet(Move m, int c) {
+        for (int i = 0; i < c; i++) {
+          p += m.point;
+          if (get(p, detectPlayer: true).type == StageObjType.none &&
+              Config().random.nextInt(maxMoveCount) < c) {
+            decidedPoints.add(p.copy());
+            if (decidedPoints.length >= nextMergeItems.length) break;
+          }
         }
       }
+
+      // 上に移動
+      moveAndSet(Move.up, moveCount);
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 右に移動
-      for (int i = 0; i < moveCount; i++) {
-        p += Move.right.point;
-        if (get(p).type == StageObjType.none &&
-            Config().random.nextInt(maxMoveCount) < moveCount) {
-          decidedPoints.add(p.copy());
-          if (decidedPoints.length >= nextMergeItems.length) break;
-        }
-      }
+      moveAndSet(Move.right, moveCount);
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 下に移動
-      for (int i = 0; i < moveCount + 1; i++) {
-        p += Move.down.point;
-        if (get(p).type == StageObjType.none &&
-            Config().random.nextInt(maxMoveCount) < moveCount) {
-          decidedPoints.add(p.copy());
-          if (decidedPoints.length >= nextMergeItems.length) break;
-        }
-      }
+      moveAndSet(Move.down, moveCount + 1);
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 左に移動
-      for (int i = 0; i < moveCount + 1; i++) {
-        p += Move.left.point;
-        if (get(p).type == StageObjType.none &&
-            Config().random.nextInt(maxMoveCount) < moveCount) {
-          decidedPoints.add(p.copy());
-          if (decidedPoints.length >= nextMergeItems.length) break;
-        }
-      }
+      moveAndSet(Move.left, moveCount + 1);
       if (decidedPoints.length >= nextMergeItems.length) break;
     }
     for (int i = 0; i < decidedPoints.length; i++) {
@@ -743,7 +736,10 @@ class Stage {
     }
   }
 
-  StageObj get(Point p) {
+  StageObj get(Point p, {bool detectPlayer = false}) {
+    if (detectPlayer && player.pos == p) {
+      return player;
+    }
     final box = boxes.firstWhereOrNull((element) => element.pos == p);
     final enemy = enemies.firstWhereOrNull((element) => element.pos == p);
     // TODO:ゴーストのためだけにこの条件ここに書いてていい？
@@ -1019,6 +1015,35 @@ class Stage {
             playerStartMoving, playerEndMoving, prohibitedPoints);
       }
     }
+
+    // マージによる敵へのダメージ処理
+    for (final mergeAffect in mergeAffects) {
+      if (mergeAffect.enemyDamage > 0) {
+        for (final p in mergeAffect.range.set) {
+          final obj = get(p);
+          if (obj.isEnemy && obj.killable) {
+            obj.level =
+                (obj.level - mergeAffect.enemyDamage).clamp(0, obj.maxLevel);
+            if (obj.level <= 0) {
+              // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
+              obj.removeAfterFrame();
+            }
+          }
+        }
+      }
+    }
+
+    // マージによってブロックを破壊する
+    for (final mergeAffect in mergeAffects) {
+      breakBlocks(
+        mergeAffect.basePoint,
+        mergeAffect.canBreakBlockFunc,
+        mergeAffect.range,
+      );
+    }
+
+    // マージによる影響をクリア
+    mergeAffects.clear();
 
     // 一定のマージ回数達成によるオブジェクト出現
     if (remainMergeCount <= 0) {
