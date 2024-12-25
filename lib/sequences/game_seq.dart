@@ -79,9 +79,6 @@ class GameSeq extends Sequence
   /// 準備できたかどうか
   bool isReady = false;
 
-  // BGMのプレイヤー
-  //AudioPlayer? ;
-
   /// ステージオブジェクト
   late Stage stage;
 
@@ -110,6 +107,7 @@ class GameSeq extends Sequence
   late GameSpriteOnOffButton legAbilityOnOffButton;
   late GameSpriteOnOffButton armerAbilityOnOffButton;
   late GameSpriteAnimationButton pocketAbilityButton;
+  late GameSpriteButton menuButton;
 
   @override
   Future<void> onLoad() async {
@@ -579,13 +577,14 @@ class GameSeq extends Sequence
     );
     add(pocketAbilityButton);
     // メニューボタン領域
-    add(GameSpriteButton(
+    menuButton = GameSpriteButton(
       size: settingsButtonAreaSize,
       position: Vector2(360.0 - xPaddingSize.x - settingsButtonAreaSize.x,
           640.0 - menuButtonAreaSize.y),
       sprite: Sprite(settingsImg),
       onReleased: () => game.pushSeqNamed("menu"),
-    ));
+    );
+    add(menuButton);
 
     // 【テストモード時】現在座標表示領域
     currentPosText = TextComponent(
@@ -807,6 +806,10 @@ class GameSeq extends Sequence
     RawKeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
+    // ゲームシーケンスでない場合は何もせず、キー処理を他に渡す
+    if (game.getCurrentSeqName() != 'game') return true;
+    // 準備中なら何もしない
+    if (!isReady) return false;
     final keyMoves = [];
     // シフトキーを押している間は斜め入力のみ受け付け
     final onlyDiagonal = keysPressed.contains(LogicalKeyboardKey.shiftLeft);
@@ -856,6 +859,23 @@ class GameSeq extends Sequence
     if (onlyDiagonal && !pushingMoveButton.isDiagonal) {
       pushingMoveButton = Move.none;
     }
-    return true;
+
+    // スペースキー->メニューを開く
+    if (event is RawKeyDownEvent &&
+        keysPressed.contains(LogicalKeyboardKey.space)) {
+      if (menuButton.onReleased != null) {
+        menuButton.onReleased!();
+      }
+    }
+
+    // Pキー->ポケットの能力を使う
+    if (event is RawKeyDownEvent &&
+        keysPressed.contains(LogicalKeyboardKey.keyP)) {
+      if (pocketAbilityButton.onReleased != null) {
+        pocketAbilityButton.onReleased!();
+      }
+    }
+
+    return false;
   }
 }

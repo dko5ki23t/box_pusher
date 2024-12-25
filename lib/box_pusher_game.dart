@@ -359,4 +359,6 @@ class BoxPusherGame extends FlameGame
       (_router.currentRoute.firstChild()! as Sequence).onFocus(beforeName);
     }
   }
+
+  String? getCurrentSeqName() => _router.currentRoute.name;
 }
