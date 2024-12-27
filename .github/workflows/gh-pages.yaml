@@ -13,30 +13,38 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.16.5"
-      - run: flutter config --enable-web
-        shell: bash
-        working-directory: .
-      - run: flutter build web --release --web-renderer=canvaskit --base-href /box_pusher/
-        shell: bash
-        working-directory: .
-      - run: git config user.name github-actions
-        shell: bash
-        working-directory: .
-      - run: git config user.email github-actions@github.com
-        shell: bash
-        working-directory: .
-      - run: git --work-tree build/web add --all
-        shell: bash
-        working-directory: .
-      - run: git commit -m "Automatic deployment by github-actions"
-        shell: bash
-        working-directory: .
-      - run: git push origin HEAD:gh-pages
-        shell: bash
-        working-directory: .
       - name: "Check app version"
         run: |
-          echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' > VERSION_DIR_NAME
+          echo "v$(yq '.version' pubspec.yaml)" | awk -F'[+]' '{print $1}' | sed "s/\./_/g" > VERSION_DIR_NAME
           echo "VERSION_DIR_NAME=$(cat VERSION_DIR_NAME)" >> $GITHUB_ENV
-          git ls-remote --tags | grep "$(cat TAG_NAME)$" > TAG_GREP || echo "" > TAG_GREP
-          echo "TAG_GREP=$(cat TAG_GREP)" >> $GITHUB_ENV
+      - name: "Build web page"
+        run: |
+          flutter config --enable-web
+          flutter build web --release --web-renderer=canvaskit --base-href /box_pusher/
+      - name: "Push web page to gh-pages branch"
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git fetch origin gh-pages
+          git worktree add worktree-gh-pages gh-pages
+          cd ./worktree-gh-pages
+          cp -r ../build/web/. ./
+          git add --all
+          git commit -m "Automatic deployment by github-actions"
+          git push origin HEAD:gh-pages
+      - name: "Check app version's web site exists"
+        run: |
+          test -d ./versions/${{ env.VERSION_DIR_NAME }} && echo 'true' > TEST_VERSION_DIR || echo 'false' > TEST_VERSION_DIR
+          echo "TEST_VERSION_DIR=$(cat TEST_VERSION_DIR)" >> $GITHUB_ENV
+        working-directory: ./worktree-gh-pages
+      - name: "Push app version's web page"
+        if: env.TEST_VERSION_DIR == 'false'
+        run: |
+          flutter config --enable-web
+          flutter build web --release --web-renderer=canvaskit --base-href /box_pusher/versions/${{ env.VERSION_DIR_NAME }}/
+          cd ./worktree-gh-pages
+          mkdir -p versions/${{ env.VERSION_DIR_NAME }}
+          cp -r ../build/web/. ./versions/${{ env.VERSION_DIR_NAME }}
+          git add --all
+          git commit -m "Automatic deployment by github-actions"
+          git push origin HEAD:gh-pages
