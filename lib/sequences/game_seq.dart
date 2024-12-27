@@ -644,7 +644,9 @@ class GameSeq extends Sequence
               break;
           }
         });
-    add(viewModeButton);
+    if (game.testMode) {
+      add(viewModeButton);
+    }
 
     // 準備完了
     isReady = true;
@@ -743,7 +745,9 @@ class GameSeq extends Sequence
       currentPosText.text = "pos:(${stage.player.pos.x},${stage.player.pos.y})";
     }
     // 【テストモード】表示モード切り替えボタン更新
-    viewModeButton.text = viewMode.name;
+    if (game.testMode) {
+      viewModeButton.text = viewMode.name;
+    }
     // 今回のupdateでクリアしたらクリア画面に移行
     if (stage.isClear()) {
       game.pushSeqNamed('clear');
