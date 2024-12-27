@@ -52,6 +52,7 @@ class DebugDialog extends StatefulWidget {
 class DebugDialogState extends State<DebugDialog> {
   final TextEditingController widthTextController = TextEditingController();
   final TextEditingController heightTextController = TextEditingController();
+  final TextEditingController seedTextController = TextEditingController();
   late final int minStageWidth;
   late final int maxStageWidth;
   late final int minStageHeight;
@@ -59,12 +60,17 @@ class DebugDialogState extends State<DebugDialog> {
   late int enemyDamageInMerge;
   late int enemyDamageInExplosion;
   late bool prepareAllStageDataAtFirst;
+  late bool enemyCanCollidePlayer;
+  late int? randomSeed;
 
   @override
   void initState() {
     super.initState();
     widthTextController.text = Config().debugStageWidth.toString();
     heightTextController.text = Config().debugStageHeight.toString();
+    seedTextController.text = Config().debugRandomSeed == null
+        ? ''
+        : Config().debugRandomSeed.toString();
     minStageWidth = Config().debugStageWidthClamps[0];
     maxStageWidth = Config().debugStageWidthClamps[1];
     minStageHeight = Config().debugStageHeightClamps[0];
@@ -72,6 +78,8 @@ class DebugDialogState extends State<DebugDialog> {
     enemyDamageInMerge = Config().debugEnemyDamageInMerge;
     enemyDamageInExplosion = Config().debugEnemyDamageInExplosion;
     prepareAllStageDataAtFirst = Config().debugPrepareAllStageDataAtFirst;
+    enemyCanCollidePlayer = Config().debugEnemyCanCollidePlayer;
+    randomSeed = Config().debugRandomSeed;
   }
 
   @override
@@ -183,6 +191,45 @@ class DebugDialogState extends State<DebugDialog> {
           const SizedBox(
             height: 10,
           ),
+          SwitchListTile(
+            value: enemyCanCollidePlayer,
+            onChanged: (value) => setState(() => enemyCanCollidePlayer = value),
+            title: const Text(
+              "敵がプレイヤーの移動先と同じマスに移動できるようにする",
+              style: Config.gameTextStyle,
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          SwitchListTile(
+            value: randomSeed != null,
+            onChanged: (value) {
+              if (value) {
+                int? textParse = int.tryParse(seedTextController.text);
+                if (textParse == null) {
+                  textParse = 1234;
+                  seedTextController.text = '1234';
+                }
+                randomSeed = textParse;
+              } else {
+                randomSeed = null;
+              }
+              setState(() {});
+            },
+            title: TextField(
+              keyboardType: TextInputType.number,
+              enabled: randomSeed != null,
+              controller: seedTextController,
+              decoration: const InputDecoration(
+                labelText: '乱数シード値',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
           Flexible(
             child: TextButton(
               child: const Text(
@@ -237,7 +284,13 @@ class DebugDialogState extends State<DebugDialog> {
             Config().debugEnemyDamageInExplosion = enemyDamageInExplosion;
             Config().debugPrepareAllStageDataAtFirst =
                 prepareAllStageDataAtFirst;
+            Config().debugEnemyCanCollidePlayer = enemyCanCollidePlayer;
+            Config().debugRandomSeed = randomSeed == null
+                ? null
+                : int.tryParse(seedTextController.text);
             widget.game.popSeq();
+            // ゲームでキーボード入力できるように、フォーカスを戻す
+            widget.game.gameFocus.requestFocus();
             //widget.game.pushAndInitGame();
           },
         ),

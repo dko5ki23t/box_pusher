@@ -56,6 +56,9 @@ class MyAppStateForLocale extends State<MyApp> {
   bool showAd = false;
   late Future<void> configFuture;
 
+  /// デバッグ用のTextFieldに当てられたフォーカスを戻すために使用
+  final gameFocus = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -78,10 +81,11 @@ class MyAppStateForLocale extends State<MyApp> {
                 children: [
                   Flexible(
                     child: GameWidget.controlled(
-                      gameFactory: () =>
-                          BoxPusherGame(testMode: widget.testMode),
+                      gameFactory: () => BoxPusherGame(
+                          testMode: widget.testMode, gameFocus: gameFocus),
                       loadingBuilder: (context) =>
                           const Center(child: CircularProgressIndicator()),
+                      focusNode: gameFocus,
                     ),
                   ),
                   showAd

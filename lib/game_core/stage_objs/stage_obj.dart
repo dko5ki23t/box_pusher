@@ -387,6 +387,20 @@ abstract class StageObj {
   /// 今フレームの終わりにこのオブジェクトを削除
   void removeAfterFrame() => validAfterFrame = false;
 
+  /// 敵の対象の移動が、移動してよいかどうかを返す
+  bool _isEnemyMoveAllowed(
+    Point point,
+    Move move,
+    Player player,
+    Map<Point, Move> prohibitedPoints,
+  ) {
+    return (Config().debugEnemyCanCollidePlayer &&
+            point == player.pos + player.moving.point) || // プレイヤーの移動先なら移動しても良い
+        !prohibitedPoints.containsKey(point) ||
+        (prohibitedPoints[point] != Move.none &&
+            prohibitedPoints[point] != move);
+  }
+
   void _enemyMoveRondom(
     Map<String, dynamic> ret,
     EnemyMovePattern pattern,
@@ -416,9 +430,7 @@ abstract class StageObj {
           // 敵が移動可能でない、かつマージできない
           continue;
         }
-        if (prohibitedPoints.containsKey(eTo) &&
-            (prohibitedPoints[eTo] == Move.none ||
-                prohibitedPoints[eTo] == move)) {
+        if (!_isEnemyMoveAllowed(eTo, move, player, prohibitedPoints)) {
           continue;
         }
         cand.add(move);
@@ -478,9 +490,7 @@ abstract class StageObj {
           // 敵が移動可能でない、押すこともできない、かつマージできない
           continue;
         }
-        if (prohibitedPoints.containsKey(eTo) &&
-            (prohibitedPoints[eTo] == Move.none ||
-                prohibitedPoints[eTo] == move)) {
+        if (!_isEnemyMoveAllowed(eTo, move, player, prohibitedPoints)) {
           continue;
         }
         // 実際に押せるか
@@ -531,7 +541,7 @@ abstract class StageObj {
     // 今ターゲットの移動先にいるなら移動しない
     if (pos == target.pos + target.moving.point) {
       ret['move'] = Move.none;
-    } else if (Random().nextInt(6) == 0) {
+    } else if (Config().random.nextInt(6) == 0) {
       ret['move'] = Move.none;
     } else {
       // ターゲットの方へ移動する/向きを変える
@@ -560,9 +570,7 @@ abstract class StageObj {
           // 敵が移動可能でない、かつマージできない
           continue;
         }
-        if (prohibitedPoints.containsKey(eTo) &&
-            (prohibitedPoints[eTo] == Move.none ||
-                prohibitedPoints[eTo] == move)) {
+        if (!_isEnemyMoveAllowed(eTo, move, player, prohibitedPoints)) {
           continue;
         }
         cand.add(move);
@@ -605,7 +613,7 @@ abstract class StageObj {
     if (pos == target.pos + target.moving.point) {
       ret['move'] = Move.none;
       ret['ghost'] = false;
-    } else if (Random().nextInt(6) == 0) {
+    } else if (Config().random.nextInt(6) == 0) {
       ret['move'] = Move.none;
       ret['ghost'] = isGhost;
     } else {
@@ -621,8 +629,7 @@ abstract class StageObj {
           // 敵が移動可能でない、かつマージできない
           return false;
         }
-        if (prohibitedPoints.containsKey(p) &&
-            (prohibitedPoints[p] == Move.none || prohibitedPoints[p] == move)) {
+        if (!_isEnemyMoveAllowed(p, move, player, prohibitedPoints)) {
           return false;
         }
         return true;

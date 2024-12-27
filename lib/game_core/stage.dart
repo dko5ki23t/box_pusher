@@ -67,6 +67,28 @@ class BlockFloorNums {
   BlockFloorNums(this.floorNums, this.blockNums);
 }
 
+/// マージの範囲、ブロック破壊判定、敵へのダメージ
+class MergeAffect {
+  final Point basePoint; // 起点
+  final PointRange range;
+  final bool Function(Block) canBreakBlockFunc;
+  final int enemyDamage;
+
+  MergeAffect({
+    required this.basePoint,
+    required this.range,
+    required this.canBreakBlockFunc,
+    required this.enemyDamage,
+  });
+}
+
+class SetAndDistribution<T> {
+  final Set set;
+  final Future<Distribution<T>> distribution;
+
+  SetAndDistribution(this.set, this.distribution);
+}
+
 class Stage {
   /// マスのサイズ
   static Vector2 get cellSize => Vector2(32.0, 32.0);
@@ -134,8 +156,8 @@ class Stage {
   Map<PointRange, Future<Distribution<StageObjTypeLevel>>> calcedObjInBlockMap =
       {};
 
-  /// Config().blockFloorMapを元に計算したブロック/床の個数
-  Map<PointRange, Future<Distribution<StageObjTypeLevel>>> calcedBlockFloorMap =
+  /// Config().blockFloorMapを元に計算したブロック/床の個数と、座標の集合
+  Map<PointRange, SetAndDistribution<StageObjTypeLevel>> calcedBlockFloorMap =
       {};
 
   /// マージした回数
@@ -146,6 +168,9 @@ class Stage {
 
   /// 次マージ時に出現するオブジェクト
   final List<StageObj> nextMergeItems = [];
+
+  /// 各update()で更新する、マージによる効果(範囲と敵へのダメージ)
+  final List<MergeAffect> mergeAffects = [];
 
   /// プレイヤー
   late Player player;
@@ -221,6 +246,12 @@ class Stage {
 
   /// テストモードかどうか
   final bool testMode;
+
+  /// 【テストモード】出現床/ブロックの分布範囲表示
+  List<Component> blockFloorMapView = [];
+
+  /// 【テストモード】ブロック破壊時出現オブジェクトの分布範囲表示
+  List<Component> objInBlockMapView = [];
 
   /// ゲームワールド
   final World gameWorld;
@@ -298,7 +329,8 @@ class Stage {
     ret['calcedObjInBlockMap'] = encodedCOIBM;
     final Map<String, dynamic> encodedCBFM = {};
     for (final entry in calcedBlockFloorMap.entries) {
-      encodedCBFM[entry.key.toString()] = (await entry.value).encode();
+      encodedCBFM[entry.key.toString()] =
+          (await entry.value.distribution).encode();
     }
     ret['calcedBlockFloorMap'] = encodedCBFM;
     final Map<String, dynamic> staticObjsMap = {};
@@ -407,16 +439,18 @@ class Stage {
 
     for (final p in range.set) {
       //if (p == basePoint) continue;
-      if (get(p).type == StageObjType.block &&
+      final gotTypeLevel =
+          StageObjTypeLevel(type: get(p).type, level: get(p).level);
+      if (gotTypeLevel.type == StageObjType.block &&
           canBreakBlockFunc(get(p) as Block)) {
         breakingAnimations.add((get(p) as Block).createBreakingBlock());
         // TODO: 敵が生み出したブロック（に限らず）破壊したブロックの種類によって出現するアイテムを分けれるように設定できるようにすべし
-        if (get(p).level < 100) {
+        if (gotTypeLevel.level < 100) {
           // 敵が生み出したブロック以外のみアイテム出現位置に含める
           breaked.add(p);
         }
         setStaticType(p, StageObjType.none);
-        if (get(p).level < 100 &&
+        if (gotTypeLevel.level < 100 &&
             Config().setObjInBlockWithDistributionAlgorithm) {
           // 分布に従ってブロック破壊時出現オブジェクトを決める場合、
           // 破壊した対象のブロックが持つオブジェクトを分布から決定する
@@ -512,7 +546,7 @@ class Stage {
           StageObjTypeLevel item = items.sample(1).first;
           // 宝石出現以外の位置に最大1個アイテムを出現させる
           if (breakedRemain.isNotEmpty) {
-            bool canAppear = Random().nextBool();
+            bool canAppear = Config().random.nextBool();
             final appear = breakedRemain.sample(1).first;
             if (canAppear) {
               if (item.type == StageObjType.treasureBox) {
@@ -566,93 +600,21 @@ class Stage {
     final affectRange = PointRectRange(
         pos + Point(breakLeftOffset, breakTopOffset),
         pos + Point(breakRightOffset, breakBottomOffset));
-    // マージ位置を中心に四角形範囲のブロックを破壊する
-    breakBlocks(
-      pos,
-      (block) => Config.canBreakBlock(block, merging),
-      affectRange,
+    // マージしたオブジェクトのタイプとレベル
+    final typeLevel =
+        StageObjTypeLevel(type: merging.type, level: merging.level);
+    // update()の最後にブロック破壊＆敵へのダメージを処理する
+    mergeAffects.add(
+      MergeAffect(
+          basePoint: pos,
+          range: affectRange,
+          canBreakBlockFunc: (block) => Config.canBreakBlock(block, typeLevel),
+          enemyDamage: enemyDamage),
     );
-    if (enemyDamage > 0) {
-      for (final p in affectRange.set) {
-        final obj = get(p);
-        if (obj.isEnemy && obj.killable) {
-          obj.level = (obj.level - enemyDamage).clamp(0, obj.maxLevel);
-          if (obj.level <= 0) {
-            // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
-            obj.removeAfterFrame();
-          }
-        }
-      }
-    }
+
+    // マージ回数およびオブジェクト出現までのマージ回数をインクリメント/デクリメント
     mergedCount++;
-    // ステージ上にアイテムをランダムに配置
-    if (remainMergeCount - 1 == 0) {
-      // ステージ中央から時計回りに渦巻き状に移動して床があればランダムでアイテム設置
-      Point p = Point(0, 0);
-      List<Point> decidedPoints = [];
-      final maxMoveCount = max(stageWidth, stageHeight);
-      // whileでいいが、念のため
-      for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
-        // 上に移動
-        for (int i = 0; i < moveCount; i++) {
-          p += Move.up.point;
-          if (get(p).type == StageObjType.none &&
-              Random().nextInt(maxMoveCount) < moveCount) {
-            decidedPoints.add(p.copy());
-            if (decidedPoints.length >= nextMergeItems.length) break;
-          }
-        }
-        if (decidedPoints.length >= nextMergeItems.length) break;
-        // 右に移動
-        for (int i = 0; i < moveCount; i++) {
-          p += Move.right.point;
-          if (get(p).type == StageObjType.none &&
-              Random().nextInt(maxMoveCount) < moveCount) {
-            decidedPoints.add(p.copy());
-            if (decidedPoints.length >= nextMergeItems.length) break;
-          }
-        }
-        if (decidedPoints.length >= nextMergeItems.length) break;
-        // 下に移動
-        for (int i = 0; i < moveCount + 1; i++) {
-          p += Move.down.point;
-          if (get(p).type == StageObjType.none &&
-              Random().nextInt(maxMoveCount) < moveCount) {
-            decidedPoints.add(p.copy());
-            if (decidedPoints.length >= nextMergeItems.length) break;
-          }
-        }
-        if (decidedPoints.length >= nextMergeItems.length) break;
-        // 左に移動
-        for (int i = 0; i < moveCount + 1; i++) {
-          p += Move.left.point;
-          if (get(p).type == StageObjType.none &&
-              Random().nextInt(maxMoveCount) < moveCount) {
-            decidedPoints.add(p.copy());
-            if (decidedPoints.length >= nextMergeItems.length) break;
-          }
-        }
-        if (decidedPoints.length >= nextMergeItems.length) break;
-      }
-      for (int i = 0; i < decidedPoints.length; i++) {
-        final nextMergeItem = nextMergeItems[i];
-        final item = createObject(
-            typeLevel: StageObjTypeLevel(
-              type: nextMergeItem.type,
-              level: nextMergeItem.level,
-            ),
-            pos: decidedPoints[i]);
-        if (item.isEnemy) {
-          enemies.add(item);
-        } else {
-          boxes.add(item);
-        }
-      }
-      // 次のマージ時出現アイテムを作成
-      _updateNextMergeItem();
-    } else {
-      if (remainMergeCount > 0) remainMergeCount--;
-    }
+    remainMergeCount--;
 
     // スコア加算
     int gettingScore = pow(2, (merging.level - 1)).toInt() * 100;
@@ -738,7 +700,60 @@ class Stage {
     Audio().playSound(Sound.merge);
   }
 
-  StageObj get(Point p) {
+  /// マージ一定回数達成によってオブジェクトを出現させる
+  void spawnMergeCountObject() {
+    // ステージ上にアイテムをランダムに配置
+    // ステージ中央から時計回りに渦巻き状に移動して床があればランダムでアイテム設置
+    Point p = Point(0, 0);
+    List<Point> decidedPoints = [];
+    final maxMoveCount = max(stageWidth, stageHeight);
+    // whileでいいが、念のため
+    for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
+      // 特定方向に動いて、ランダムにアイテムを設置する処理
+      void moveAndSet(Move m, int c) {
+        for (int i = 0; i < c; i++) {
+          p += m.point;
+          if (get(p, detectPlayer: true).type == StageObjType.none &&
+              Config().random.nextInt(maxMoveCount) < c) {
+            decidedPoints.add(p.copy());
+            if (decidedPoints.length >= nextMergeItems.length) break;
+          }
+        }
+      }
+
+      // 上に移動
+      moveAndSet(Move.up, moveCount);
+      if (decidedPoints.length >= nextMergeItems.length) break;
+      // 右に移動
+      moveAndSet(Move.right, moveCount);
+      if (decidedPoints.length >= nextMergeItems.length) break;
+      // 下に移動
+      moveAndSet(Move.down, moveCount + 1);
+      if (decidedPoints.length >= nextMergeItems.length) break;
+      // 左に移動
+      moveAndSet(Move.left, moveCount + 1);
+      if (decidedPoints.length >= nextMergeItems.length) break;
+    }
+    for (int i = 0; i < decidedPoints.length; i++) {
+      final nextMergeItem = nextMergeItems[i];
+      final item = createObject(
+          typeLevel: StageObjTypeLevel(
+            type: nextMergeItem.type,
+            level: nextMergeItem.level,
+          ),
+          pos: decidedPoints[i]);
+      if (item.isEnemy) {
+        enemies.add(item);
+      } else {
+        boxes.add(item);
+      }
+    }
+  }
+
+  StageObj get(Point p, {bool detectPlayer = false}) {
+    if (detectPlayer && player.pos == p) {
+      return player;
+    }
     final box = boxes.firstWhereOrNull((element) => element.pos == p);
     final enemy = enemies.firstWhereOrNull((element) => element.pos == p);
     // TODO:ゴーストのためだけにこの条件ここに書いてていい？
@@ -813,8 +828,10 @@ class Stage {
     calcedBlockFloorMap.clear();
     for (final entry
         in (stageData['calcedBlockFloorMap'] as Map<String, dynamic>).entries) {
-      calcedBlockFloorMap[PointRange.fromStr(entry.key)] = Future.value(
-          Distribution.decode(entry.value, StageObjTypeLevel.fromStr));
+      calcedBlockFloorMap[PointRange.fromStr(entry.key)] = SetAndDistribution(
+          {},
+          Future.value(
+              Distribution.decode(entry.value, StageObjTypeLevel.fromStr)));
     }
     calcedObjInBlockMap.clear();
     for (final entry
@@ -1015,6 +1032,42 @@ class Stage {
       }
     }
 
+    // マージによる敵へのダメージ処理
+    for (final mergeAffect in mergeAffects) {
+      if (mergeAffect.enemyDamage > 0) {
+        for (final p in mergeAffect.range.set) {
+          final obj = get(p);
+          if (obj.isEnemy && obj.killable) {
+            obj.level =
+                (obj.level - mergeAffect.enemyDamage).clamp(0, obj.maxLevel);
+            if (obj.level <= 0) {
+              // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
+              obj.removeAfterFrame();
+            }
+          }
+        }
+      }
+    }
+
+    // マージによってブロックを破壊する
+    for (final mergeAffect in mergeAffects) {
+      breakBlocks(
+        mergeAffect.basePoint,
+        mergeAffect.canBreakBlockFunc,
+        mergeAffect.range,
+      );
+    }
+
+    // マージによる影響をクリア
+    mergeAffects.clear();
+
+    // 一定のマージ回数達成によるオブジェクト出現
+    if (remainMergeCount <= 0) {
+      spawnMergeCountObject();
+      // 次のマージ時出現アイテムを作成
+      _updateNextMergeItem();
+    }
+
     // 無効になったオブジェクト/敵を削除
     boxes.removeAllInvalidObjects(gameWorld);
     enemies.removeAllInvalidObjects(gameWorld);
@@ -1059,51 +1112,83 @@ class Stage {
   Future<void> prepareDistributions() async {
     // TODO: コンフィグでものすごく広い範囲指定してると激重になるのどうするか
     // 先に床/ブロックの分布
+    int colorIdx = 0;
     for (final entry in Config().blockFloorMap.entries) {
       if (!calcedBlockFloorMap.containsKey(entry.key)) {
         // 処理重いので非同期でもOK
+        // 【テストモード】表示の色分け
+        colorIdx++;
+        if (colorIdx >= Config.distributionMapColors.length) {
+          colorIdx = 0;
+        }
+        Color mapColor = Config.distributionMapColors[colorIdx];
+        Set set = entry.key.set;
+        for (final t in calcedBlockFloorMap.keys) {
+          if (t == entry.key) break;
+          set = set.difference(t.set);
+        }
+
         Distribution<StageObjTypeLevel> makeDistribution() {
           final Map<StageObjTypeLevel, int> percents = {
             for (final e in entry.value.floorPercents.entries) e.key: e.value,
             for (final e in entry.value.blockPercents.entries)
               StageObjTypeLevel(type: StageObjType.block, level: e.key): e.value
           };
-          Set set = entry.key.set;
-          for (final t in calcedBlockFloorMap.keys) {
-            if (t == entry.key) break;
-            set = set.difference(t.set);
+          // 【テストモード】範囲の表示を作成
+          if (testMode) {
+            blockFloorMapView.addAll([
+              for (final p in set)
+                RectangleComponent(
+                  priority: Stage.frontPriority,
+                  size: Stage.cellSize,
+                  anchor: Anchor.center,
+                  position:
+                      (Vector2(p.x * Stage.cellSize.x, p.y * Stage.cellSize.y) +
+                          Stage.cellSize / 2),
+                )..paint = (Paint()
+                  ..color = mapColor
+                  ..style = PaintingStyle.fill)
+            ]);
           }
-          return Distribution.fromPercent(
+          return Distribution<StageObjTypeLevel>.fromPercent(
               percents, set.length, RoundMode.randomRound);
         }
 
-        calcedBlockFloorMap[entry.key] =
+        calcedBlockFloorMap[entry.key] = SetAndDistribution(
+            set,
             Config().debugPrepareAllStageDataAtFirst
                 ? Future.value(makeDistribution())
-                : Future(makeDistribution);
+                : Future(makeDistribution));
       }
     }
     // 続いてブロック破壊時出現オブジェクトの分布
+    colorIdx = 0;
     for (final entry in Config().objInBlockMap.entries) {
       if (!calcedObjInBlockMap.containsKey(entry.key)) {
         final targetField = entry.key;
         final targetOIB = entry.value;
         // 処理重いので非同期でもOK
+        // 【テストモード】表示の色分け
+        colorIdx++;
+        if (colorIdx >= Config.distributionMapColors.length) {
+          colorIdx = 0;
+        }
+        Color mapColor = Config.distributionMapColors[colorIdx];
         Future<Distribution<StageObjTypeLevel>> makeDistribution() async {
           // 対象範囲にブロックがどれだけ含まれるか数える
           int blockNum = 0;
           // TODO: ここの処理激重
           for (final e in calcedBlockFloorMap.entries) {
-            double ratio = targetField.set.intersection(e.key.set).length /
-                e.key.set.length;
+            double ratio = targetField.set.intersection(e.value.set).length /
+                e.value.set.length;
             // TODO: ブロックの種類増えたら困る
-            blockNum += randomRound(((await e.value).getTotalNum(
+            blockNum += randomRound(((await e.value.distribution).getTotalNum(
                         StageObjTypeLevel(type: StageObjType.block, level: 1)) +
-                    (await e.value).getTotalNum(
+                    (await e.value.distribution).getTotalNum(
                         StageObjTypeLevel(type: StageObjType.block, level: 2)) +
-                    (await e.value).getTotalNum(
+                    (await e.value.distribution).getTotalNum(
                         StageObjTypeLevel(type: StageObjType.block, level: 3)) +
-                    (await e.value).getTotalNum(StageObjTypeLevel(
+                    (await e.value.distribution).getTotalNum(StageObjTypeLevel(
                         type: StageObjType.block, level: 4))) *
                 ratio);
           }
@@ -1113,6 +1198,27 @@ class Stage {
                 NumsAndPercent(-1, -1, targetOIB.jewelPercent)
           };
           percents.addAll(targetOIB.itemsPercentAndNumsMap);
+          // 【テストモード】範囲の表示を作成
+          if (testMode) {
+            Set set = targetField.set;
+            for (final t in calcedObjInBlockMap.keys) {
+              if (t == targetField) break;
+              set = set.difference(t.set);
+            }
+            objInBlockMapView.addAll([
+              for (final p in set)
+                RectangleComponent(
+                  priority: Stage.frontPriority,
+                  size: Stage.cellSize,
+                  anchor: Anchor.center,
+                  position:
+                      (Vector2(p.x * Stage.cellSize.x, p.y * Stage.cellSize.y) +
+                          Stage.cellSize / 2),
+                )..paint = (Paint()
+                  ..color = mapColor
+                  ..style = PaintingStyle.fill)
+            ]);
+          }
           return Distribution.fromPercentWithMinMax(
               percents, blockNum, RoundMode.randomRound);
         }
@@ -1141,8 +1247,10 @@ class Stage {
         for (final pattern in Config().blockFloorMap.entries) {
           if (pattern.key.contains(pos)) {
             _staticObjs[pos] = createObject(
-                typeLevel: (await calcedBlockFloorMap[pattern.key]!).getOne() ??
-                    StageObjTypeLevel(type: StageObjType.none),
+                typeLevel:
+                    (await calcedBlockFloorMap[pattern.key]!.distribution)
+                            .getOne() ??
+                        StageObjTypeLevel(type: StageObjType.none),
                 pos: pos,
                 addToGameWorld: addToGameWorld);
             return;
@@ -1157,7 +1265,7 @@ class Stage {
       } else {
         for (final pattern in Config().blockFloorMap.entries) {
           if (pattern.key.contains(pos)) {
-            int rand = Random().nextInt(100);
+            int rand = Config().random.nextInt(100);
             int threshold = 0;
             for (final floorPercent in pattern.value.floorPercents.entries) {
               threshold += floorPercent.value;

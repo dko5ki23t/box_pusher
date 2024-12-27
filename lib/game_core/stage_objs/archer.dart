@@ -298,7 +298,7 @@ class Archer extends StageObj {
   bool get pushable => false;
 
   @override
-  bool get stopping => true;
+  bool get stopping => false;
 
   @override
   bool get puttable => false;

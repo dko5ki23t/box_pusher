@@ -4,7 +4,10 @@ import 'dart:io';
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
+import 'package:box_pusher/components/debug_view_distributions_dialog.dart';
 import 'package:box_pusher/components/version_log_dialog.dart';
+import 'package:box_pusher/game_core/common.dart';
+import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
@@ -52,6 +55,14 @@ class BoxPusherGame extends FlameGame
   /// テストやデバッグ用のモード
   bool testMode;
 
+  /// 【テストモード】分布表示時にダイアログに渡すための変数
+  late Point debugTargetPos;
+  late Distribution<StageObjTypeLevel> debugBlockFloorDistribution;
+  late Distribution<StageObjTypeLevel> debugObjInBlockDistribution;
+
+  /// ゲームでキーボードを使うためのフォーカス
+  final FocusNode gameFocus;
+
   /// ゲームシーケンスでのズーム倍率
   double gameZoom = 1.0;
 
@@ -77,7 +88,7 @@ class BoxPusherGame extends FlameGame
   /// ズーム操作し始めのズーム
   late double startZoom;
 
-  BoxPusherGame({this.testMode = false})
+  BoxPusherGame({this.testMode = false, required this.gameFocus})
       : super(
             camera: CameraComponent.withFixedResolution(
                 width: baseSize.x, height: baseSize.y));
@@ -91,6 +102,7 @@ class BoxPusherGame extends FlameGame
     super.onLoad();
 
     // アプリ切り替え時/webページの表示・非表示時に音楽を中断/再開
+    await Audio().onLoad();
     VisibilityListener.setListeners(
       onShow: () {
         if (_router.currentRoute.name == 'game' &&
@@ -122,6 +134,13 @@ class BoxPusherGame extends FlameGame
       'confirm_delete_stage_data_dialog': OverlayRoute(
         (context, game) {
           return ConfirmDeleteStageDataDialog(
+            game: this,
+          );
+        },
+      ),
+      'debug_view_distributions_dialog': OverlayRoute(
+        (context, game) {
+          return DebugViewDistributionsDialog(
             game: this,
           );
         },
@@ -171,9 +190,6 @@ class BoxPusherGame extends FlameGame
         _saveDataVersion = Version.parse(packageInfo.version);
       }
     }
-
-    // オーディオの準備
-    await Audio().onLoad();
   }
 
   /// ハイスコアの更新・セーブデータに保存
@@ -315,7 +331,11 @@ class BoxPusherGame extends FlameGame
     if (_router.routes['game']!.firstChild() != null) {
       final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       if (gameSeq.isLoaded && initialize) {
+        gameSeq.isReady = false;
+        pushSeqNamed('game');
+        pushSeqNamed('loading');
         gameSeq.initialize();
+        return;
       }
     }
     pushSeqNamed('game');
@@ -354,4 +374,6 @@ class BoxPusherGame extends FlameGame
       (_router.currentRoute.firstChild()! as Sequence).onFocus(beforeName);
     }
   }
+
+  String? getCurrentSeqName() => _router.currentRoute.name;
 }

@@ -1,466 +1,308 @@
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/config.dart';
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 
-class GameTextButton extends ButtonComponent {
+/// 有効なボタンのPaint
+Paint enabledButtonPaint = Paint()
+  ..color = Colors.white
+  ..style = PaintingStyle.fill;
+
+/// 有効なボタンの枠線のPaint
+Paint enabledButtonFramePaint = Paint()
+  ..color = Colors.blue
+  ..style = PaintingStyle.stroke
+  ..strokeWidth = 3;
+
+/// フォーカス中のボタンの枠線のPaint
+Paint focusedButtonFramePaint = Paint()
+  ..color = Colors.red.shade200
+  ..style = PaintingStyle.stroke
+  ..strokeWidth = 3;
+
+/// 無効なボタンのPaint
+Paint disabledButtonFramePaint = Paint()
+  ..color = Colors.grey
+  ..style = PaintingStyle.fill;
+
+/// 押下されている有効なボタンのPaint
+Paint enabledPressedButtonPaint = Paint()
+  ..color = Colors.blueGrey
+  ..style = PaintingStyle.fill
+  ..strokeWidth = 2;
+
+/// 透明なPaint
+Paint transparentPaint = Paint()
+  ..color = Colors.transparent
+  ..style = PaintingStyle.fill;
+
+class GameButton extends PositionComponent with TapCallbacks {
+  void Function()? onPressed;
+  void Function()? onReleased;
+  void Function()? onCancelled;
+
   bool _enabled = true;
-  void Function()? _onPressed;
-  void Function()? _onReleased;
-  void Function()? _onCancelled;
+  bool _focused = false;
+
+  final String? keyName;
+
+  late final RectangleComponent button;
+  late final RectangleComponent buttonTop;
+
+  PositionComponent? child;
+
+  void _paintButtons() {
+    button.paint = enabled
+        ? (focused ? focusedButtonFramePaint : enabledButtonFramePaint)
+        : disabledButtonFramePaint;
+    buttonTop.paint = enabled ? enabledButtonPaint : transparentPaint;
+  }
+
+  GameButton({
+    this.keyName,
+    this.onPressed,
+    this.onReleased,
+    this.onCancelled,
+    bool enabled = true,
+    bool focused = false,
+    super.position,
+    required Vector2 size,
+    super.scale,
+    super.angle,
+    super.anchor,
+    required this.child,
+    super.priority,
+  }) : super(size: size) {
+    _enabled = enabled;
+    _focused = enabled ? focused : false;
+    buttonTop = RectangleComponent(
+      size: size,
+    );
+    button = RectangleComponent(
+      size: size,
+      children: [
+        buttonTop,
+        AlignComponent(
+          alignment: Anchor.center,
+          child: child,
+        ),
+      ],
+    );
+    _paintButtons();
+    add(button);
+  }
+
+  bool get enabled => _enabled;
+
+  set enabled(bool e) {
+    // 変更がないなら何もしない
+    if (e == _enabled) return;
+    _enabled = e;
+    if (!e) _focused = false;
+    _paintButtons();
+  }
+
+  bool get focused => _focused;
+
+  set focused(bool f) {
+    // 変更がないなら何もしない
+    if (f == _focused) return;
+    // 無効なら何もしない
+    if (!enabled) return;
+    _focused = f;
+    _paintButtons();
+  }
+
+  @override
+  @mustCallSuper
+  void onTapDown(TapDownEvent event) {
+    if (enabled) {
+      // 決定音を鳴らす
+      Audio().playSound(Sound.decide);
+      button.paint = enabledPressedButtonPaint;
+      buttonTop.paint = transparentPaint;
+      onPressed?.call();
+    }
+  }
+
+  @override
+  @mustCallSuper
+  void onTapUp(TapUpEvent event) {
+    if (enabled) {
+      button.paint = enabledButtonFramePaint;
+      buttonTop.paint = enabledButtonPaint;
+      onReleased?.call();
+    }
+  }
+
+  @override
+  @mustCallSuper
+  void onTapCancel(TapCancelEvent event) {
+    if (enabled) {
+      button.paint = enabledButtonFramePaint;
+      buttonTop.paint = enabledButtonPaint;
+      onCancelled?.call();
+    }
+  }
+
+  /// ボタンを押して離した時と同じ挙動をする(見た目は変わらない)
+  void fire() {
+    if (enabled) {
+      // 決定音を鳴らす
+      Audio().playSound(Sound.decide);
+      onPressed?.call();
+      onReleased?.call();
+    }
+  }
+}
+
+/// ボタングループ(フォーカスしているボタンを管理する)
+class GameButtonGroup {
+  final List<GameButton> buttons;
+  int? focusIdx;
+  bool loopFocus;
+
+  GameButtonGroup(
+      {required this.buttons, this.focusIdx, this.loopFocus = false}) {
+    assert(buttons.isNotEmpty);
+  }
+
+  void focusNext() {
+    if (focusIdx != null) {
+      // 一旦今のフォーカスを外す
+      buttons[focusIdx!].focused = false;
+    }
+    for (int i = 0; i < buttons.length; i++) {
+      int index = (focusIdx ?? -1) + i + 1;
+      if (loopFocus) {
+        index %= buttons.length;
+      } else if (index >= buttons.length) {
+        // 他にフォーカスできるボタンが無いので現在のボタンにフォーカスを戻す
+        if (focusIdx != null) {
+          buttons[focusIdx!].focused = true;
+        }
+        return;
+      }
+      if (buttons[index].enabled) {
+        focusIdx = index;
+        buttons[index].focused = true;
+        return;
+      }
+    }
+  }
+
+  void focusPrev() {
+    if (focusIdx != null) {
+      // 一旦今のフォーカスを外す
+      buttons[focusIdx!].focused = false;
+    }
+    for (int i = 0; i < buttons.length; i++) {
+      int index = (focusIdx ?? 1) - i - 1;
+      if (loopFocus) {
+        if (index < 0) {
+          index += buttons.length;
+        }
+      } else if (index < 0) {
+        // 他にフォーカスできるボタンが無いので現在のボタンにフォーカスを戻す
+        if (focusIdx != null) {
+          buttons[focusIdx!].focused = true;
+        }
+        return;
+      }
+      if (buttons[index].enabled) {
+        focusIdx = index;
+        buttons[index].focused = true;
+        return;
+      }
+    }
+  }
+
+  void unFocus() {
+    if (focusIdx != null) {
+      buttons[focusIdx!].focused = false;
+      focusIdx = null;
+    }
+  }
+
+  GameButton? getCurrentFocusButton() {
+    if (focusIdx == null) return null;
+    assert(focusIdx! >= 0 && focusIdx! < buttons.length);
+    return buttons[focusIdx!];
+  }
+}
+
+class GameTextButton extends GameButton {
+  String? _text;
 
   GameTextButton({
+    super.keyName,
     required super.size,
     super.position,
     super.anchor,
     String? text,
-    bool enabled = true,
-    void Function()? onPressed,
-    void Function()? onReleased,
-    void Function()? onCancelled,
-  }) : super(
-          onPressed: () {
-            // 決定音を鳴らす
-            Audio().playSound(Sound.decide);
-            if (onPressed != null) onPressed();
-          },
-          onReleased: onReleased,
-          onCancelled: onCancelled,
-          button: enabled
-              ? RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.blue
-                    ..style = PaintingStyle.stroke
-                    ..strokeWidth = 3,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.white
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: TextComponent(
-                        text: text,
-                        textRenderer: TextPaint(
-                          style: Config.gameTextStyle,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.grey
-                    ..style = PaintingStyle.fill,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.transparent
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: TextComponent(
-                        text: text,
-                        textRenderer: TextPaint(
-                          style: Config.gameTextStyle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-          buttonDown: enabled
-              ? RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.blueGrey
-                    ..style = PaintingStyle.fill
-                    ..strokeWidth = 2,
-                  children: [
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: TextComponent(
-                        text: text,
-                        textRenderer: TextPaint(
-                          style: Config.gameTextStyle,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.grey
-                    ..style = PaintingStyle.fill,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.transparent
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: TextComponent(
-                        text: text,
-                        textRenderer: TextPaint(
-                          style: Config.gameTextStyle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-        ) {
-    _onPressed = onPressed;
-    _onReleased = onReleased;
-    _onCancelled = onCancelled;
-    _enabled = enabled;
-  }
+    super.enabled,
+    super.onPressed,
+    super.onReleased,
+    super.onCancelled,
+  })  : _text = text,
+        super(
+          child: TextComponent(
+            text: text,
+            textRenderer: TextPaint(
+              style: Config.gameTextStyle,
+            ),
+          ),
+        );
 
-  bool get enabled => _enabled;
+  String? get text => _text;
 
-  set enabled(bool e) {
-    if (e != _enabled) {
-      if (!e) {
-        _onPressed = super.onPressed;
-        _onReleased = super.onReleased;
-        _onCancelled = super.onCancelled;
-      }
-      super.onPressed = e ? _onPressed : null;
-      super.onReleased = e ? _onReleased : null;
-      super.onCancelled = e ? _onCancelled : null;
-      if (e) {
-        (super.button! as RectangleComponent).paint = Paint()
-          ..color = Colors.blue
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3;
-        ((super.button! as RectangleComponent).firstChild()
-                as RectangleComponent)
-            .paint = Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.fill;
-      } else {
-        (super.button! as RectangleComponent).paint = Paint()
-          ..color = Colors.grey
-          ..style = PaintingStyle.fill;
-        ((super.button! as RectangleComponent).firstChild()
-                as RectangleComponent)
-            .paint = Paint()
-          ..color = Colors.transparent
-          ..style = PaintingStyle.fill;
-      }
+  set text(String? t) {
+    _text = t;
+    if (t != null) {
+      (super.child as TextComponent).text = t;
     }
-    _enabled = e;
   }
 }
 
-// TODO: ちゃんとrender()の中でenabledによって描画処理を変えるようなcomponentをbuttonやbuttonDownに設定するべき
-class GameSpriteButton extends ButtonComponent {
-  bool _enabled = true;
-  Sprite sprite;
-  void Function()? _onPressed;
-  void Function()? _onReleased;
-  void Function()? _onCancelled;
-
+class GameSpriteButton extends GameButton {
   GameSpriteButton({
+    super.keyName,
     required super.size,
     super.position,
     super.anchor,
-    required this.sprite,
-    bool enabled = true,
-    void Function()? onPressed,
-    void Function()? onReleased,
-    void Function()? onCancelled,
+    required Sprite sprite,
+    super.enabled,
+    super.onPressed,
+    super.onReleased,
+    super.onCancelled,
   }) : super(
-          onPressed: enabled ? onPressed : null,
-          onReleased: enabled ? onReleased : null,
-          onCancelled: enabled ? onCancelled : null,
-          button: enabled
-              ? RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.blue
-                    ..style = PaintingStyle.stroke
-                    ..strokeWidth = 3,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.white
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: SpriteComponent(
-                        sprite: sprite,
-                      ),
-                    ),
-                  ],
-                )
-              : RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.grey
-                    ..style = PaintingStyle.fill,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.transparent
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: SpriteComponent(
-                        sprite: sprite,
-                      ),
-                    ),
-                  ],
-                ),
-          buttonDown: enabled
-              ? RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.blueGrey
-                    ..style = PaintingStyle.fill
-                    ..strokeWidth = 2,
-                  children: [
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: SpriteComponent(
-                        sprite: sprite,
-                      ),
-                    ),
-                  ],
-                )
-              : RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.grey
-                    ..style = PaintingStyle.fill
-                    ..strokeWidth = 2,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.transparent
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: SpriteComponent(
-                        sprite: sprite,
-                      ),
-                    ),
-                  ],
-                ),
-        ) {
-    _onPressed = onPressed;
-    _onReleased = onReleased;
-    _onCancelled = onCancelled;
-    _enabled = enabled;
-  }
-
-  bool get enabled => _enabled;
-
-  set enabled(bool e) {
-    if (e != _enabled) {
-      if (!e) {
-        _onPressed = super.onPressed;
-        _onReleased = super.onReleased;
-        _onCancelled = super.onCancelled;
-      }
-      super.onPressed = e ? _onPressed : null;
-      super.onReleased = e ? _onReleased : null;
-      super.onCancelled = e ? _onCancelled : null;
-      if (e) {
-        (super.button! as RectangleComponent).paint = Paint()
-          ..color = Colors.blue
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3;
-        ((super.button! as RectangleComponent).firstChild()
-                as RectangleComponent)
-            .paint = Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.fill;
-      } else {
-        (super.button! as RectangleComponent).paint = Paint()
-          ..color = Colors.grey
-          ..style = PaintingStyle.fill;
-        ((super.button! as RectangleComponent).firstChild()
-                as RectangleComponent)
-            .paint = Paint()
-          ..color = Colors.transparent
-          ..style = PaintingStyle.fill;
-      }
-    }
-    _enabled = e;
-  }
+          child: SpriteComponent(
+            sprite: sprite,
+          ),
+        );
 }
 
-// TODO: ちゃんとrender()の中でenabledによって描画処理を変えるようなcomponentをbuttonやbuttonDownに設定するべき
-class GameSpriteAnimationButton extends ButtonComponent {
-  bool _enabled = true;
-  SpriteAnimation _animation;
-  void Function()? _onPressed;
-  void Function()? _onReleased;
-  void Function()? _onCancelled;
+class GameSpriteAnimationButton extends GameButton {
+  SpriteAnimation animation;
 
   GameSpriteAnimationButton({
+    super.keyName,
     required super.size,
     super.position,
     super.anchor,
-    required SpriteAnimation animation,
-    bool enabled = true,
-    void Function()? onPressed,
-    void Function()? onReleased,
-    void Function()? onCancelled,
-  })  : _animation = animation,
-        super(
-          onPressed: enabled ? onPressed : null,
-          onReleased: enabled ? onReleased : null,
-          onCancelled: enabled ? onCancelled : null,
-          button: enabled
-              ? RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.blue
-                    ..style = PaintingStyle.stroke
-                    ..strokeWidth = 3,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.white
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: SpriteAnimationComponent(
-                        animation: animation,
-                      ),
-                    ),
-                  ],
-                )
-              : RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.grey
-                    ..style = PaintingStyle.fill,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.transparent
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: SpriteAnimationComponent(
-                        animation: animation,
-                      ),
-                    ),
-                  ],
-                ),
-          buttonDown: enabled
-              ? RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.blueGrey
-                    ..style = PaintingStyle.fill
-                    ..strokeWidth = 2,
-                  children: [
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: SpriteAnimationComponent(
-                        animation: animation,
-                      ),
-                    ),
-                  ],
-                )
-              : RectangleComponent(
-                  size: size,
-                  paint: Paint()
-                    ..color = Colors.grey
-                    ..style = PaintingStyle.fill
-                    ..strokeWidth = 2,
-                  children: [
-                    RectangleComponent(
-                      size: size,
-                      paint: Paint()
-                        ..color = Colors.transparent
-                        ..style = PaintingStyle.fill,
-                    ),
-                    AlignComponent(
-                      alignment: Anchor.center,
-                      child: SpriteAnimationComponent(
-                        animation: animation,
-                      ),
-                    ),
-                  ],
-                ),
-        ) {
-    _onPressed = onPressed;
-    _onReleased = onReleased;
-    _onCancelled = onCancelled;
-    _enabled = enabled;
-  }
-
-  bool get enabled => _enabled;
-
-  set enabled(bool e) {
-    if (e != _enabled) {
-      if (!e) {
-        _onPressed = super.onPressed;
-        _onReleased = super.onReleased;
-        _onCancelled = super.onCancelled;
-      }
-      super.onPressed = e ? _onPressed : null;
-      super.onReleased = e ? _onReleased : null;
-      super.onCancelled = e ? _onCancelled : null;
-      if (e) {
-        (super.button! as RectangleComponent).paint = Paint()
-          ..color = Colors.blue
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3;
-        ((super.button! as RectangleComponent).firstChild()
-                as RectangleComponent)
-            .paint = Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.fill;
-      } else {
-        (super.button! as RectangleComponent).paint = Paint()
-          ..color = Colors.grey
-          ..style = PaintingStyle.fill;
-        ((super.button! as RectangleComponent).firstChild()
-                as RectangleComponent)
-            .paint = Paint()
-          ..color = Colors.transparent
-          ..style = PaintingStyle.fill;
-      }
-    }
-    _enabled = e;
-  }
-
-  // TODO:このへんかなり強引
-  SpriteAnimation get animation => _animation;
-  set animation(SpriteAnimation a) {
-    _animation = a;
-    (super.button!.children.whereType<AlignComponent>().first.child
-            as SpriteAnimationComponent)
-        .animation = _animation;
-    (super.buttonDown!.children.whereType<AlignComponent>().first.child
-            as SpriteAnimationComponent)
-        .animation = _animation;
-  }
+    required this.animation,
+    super.enabled,
+    super.onPressed,
+    super.onReleased,
+    super.onCancelled,
+  }) : super(
+          child: SpriteAnimationComponent(
+            animation: animation,
+          ),
+        );
 }
 
 class GameSpriteOnOffButton extends ButtonComponent {

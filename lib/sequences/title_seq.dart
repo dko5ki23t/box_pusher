@@ -6,15 +6,19 @@ import 'package:flame/components.dart';
 import 'package:flame/layout.dart';
 //import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 //import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class TitleSeq extends Sequence
-    with /*TapCallbacks,*/ HasGameReference<BoxPusherGame> {
+    with /*TapCallbacks,*/ HasGameReference<BoxPusherGame>, KeyboardHandler {
   late final TextComponent highScreText;
-  late final GameTextButton continueButton;
+  late final GameButtonGroup buttonGroup;
+  late final GameButton fromBeginningButton;
+  late final GameButton continueButton;
   late final Image bugImage;
-  late final GameTextButton debugButton;
+  //late final GameButton debugOnOffButton;
+  late final GameButton debugButton;
 
   @override
   Future<void> onLoad() async {
@@ -24,6 +28,19 @@ class TitleSeq extends Sequence
         style: Config.gameTextStyle,
       ),
     );
+    fromBeginningButton = GameTextButton(
+      size: Vector2(120.0, 30.0),
+      position: Vector2(180.0, 310.0),
+      anchor: Anchor.center,
+      text: "はじめから",
+      onReleased: () {
+        if (game.stageData.isNotEmpty) {
+          game.pushSeqOverlay('confirm_delete_stage_data_dialog');
+        } else {
+          game.pushAndInitGame();
+        }
+      },
+    );
     continueButton = GameTextButton(
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 360.0),
@@ -32,6 +49,10 @@ class TitleSeq extends Sequence
       enabled: game.stageData.isNotEmpty,
       onReleased: () => game.pushAndInitGame(),
     );
+    buttonGroup = GameButtonGroup(buttons: [
+      fromBeginningButton,
+      continueButton,
+    ]);
     debugButton = GameTextButton(
       size: Vector2(80.0, 30.0),
       position: Vector2(160.0, 460.0),
@@ -66,19 +87,7 @@ class TitleSeq extends Sequence
           ),
         ),
       ),
-      GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 310.0),
-        anchor: Anchor.center,
-        text: "はじめから",
-        onReleased: () {
-          if (game.stageData.isNotEmpty) {
-            game.pushSeqOverlay('confirm_delete_stage_data_dialog');
-          } else {
-            game.pushAndInitGame();
-          }
-        },
-      ),
+      fromBeginningButton,
       continueButton,
       GameTextButton(
         size: Vector2(120.0, 30.0),
@@ -139,14 +148,30 @@ class TitleSeq extends Sequence
     debugButton.enabled = game.testMode;
   }
 
-  // TapCallbacks実装時には必要(PositionComponentでは不要)
-//  @override
-//  bool containsLocalPoint(Vector2 point) => true;
-//
-//  // タップで指を離したとき
-//  @override
-//  void onTapUp(TapUpEvent event) {
-//    // ステージ選択へ
-//    game.router.pushNamed('select');
-//  }
+  // PCのキーボード入力
+  @override
+  bool onKeyEvent(
+    RawKeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
+    // タイトルシーケンスでない場合は何もせず、キー処理を他に渡す
+    if (game.getCurrentSeqName() != 'title') return true;
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowUp)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyW)) {
+      buttonGroup.focusPrev();
+    }
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowDown)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyS)) {
+      buttonGroup.focusNext();
+    }
+
+    // スペースキー->フォーカスしているボタンを押す
+    if (event is RawKeyDownEvent &&
+        keysPressed.contains(LogicalKeyboardKey.space)) {
+      buttonGroup.getCurrentFocusButton()?.fire();
+      buttonGroup.unFocus();
+    }
+
+    return false;
+  }
 }

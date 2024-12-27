@@ -5,9 +5,14 @@ import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class GameoverSeq extends Sequence with HasGameReference<BoxPusherGame> {
+class GameoverSeq extends Sequence
+    with HasGameReference<BoxPusherGame>, KeyboardHandler {
   late final TextComponent scoreText;
+  late final GameButtonGroup buttonGroup;
+  late final GameButton restartButton;
+  late final GameButton toTitleButton;
 
   @override
   Future<void> onLoad() async {
@@ -23,6 +28,24 @@ class GameoverSeq extends Sequence with HasGameReference<BoxPusherGame> {
         ),
       ),
     );
+    restartButton = GameTextButton(
+      size: Vector2(120.0, 30.0),
+      position: Vector2(180.0, 300.0),
+      anchor: Anchor.center,
+      text: "もう一度プレイ",
+      onReleased: () => game.pushAndInitGame(),
+    );
+    toTitleButton = GameTextButton(
+      size: Vector2(120.0, 30.0),
+      position: Vector2(180.0, 350.0),
+      anchor: Anchor.center,
+      text: "タイトルへ",
+      onReleased: () => game.pushSeqNamed('title'),
+    );
+    buttonGroup = GameButtonGroup(buttons: [
+      restartButton,
+      toTitleButton,
+    ]);
     addAll([
       // 背景をボタンにする(しかし押しても何も起きない)にすることで、背後のゲーム画面での操作を不可能にする
       ButtonComponent(
@@ -47,25 +70,40 @@ class GameoverSeq extends Sequence with HasGameReference<BoxPusherGame> {
         ),
       ),
       scoreText,
-      GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 300.0),
-        anchor: Anchor.center,
-        text: "もう一度プレイ",
-        onReleased: () => game.pushAndInitGame(),
-      ),
-      GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 350.0),
-        anchor: Anchor.center,
-        text: "タイトルへ",
-        onReleased: () => game.pushSeqNamed('title'),
-      ),
+      restartButton,
+      toTitleButton,
     ]);
   }
 
   @override
   void update(double dt) {
     scoreText.text = "スコア：${game.getCurrentScore()}";
+  }
+
+  // PCのキーボード入力
+  @override
+  bool onKeyEvent(
+    RawKeyEvent event,
+    Set<LogicalKeyboardKey> keysPressed,
+  ) {
+    // ゲームオーバーシーケンスでない場合は何もせず、キー処理を他に渡す
+    if (game.getCurrentSeqName() != 'gameover') return true;
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowUp)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyW)) {
+      buttonGroup.focusPrev();
+    }
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowDown)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyS)) {
+      buttonGroup.focusNext();
+    }
+
+    // スペースキー->フォーカスしているボタンを押す
+    if (event is RawKeyDownEvent &&
+        keysPressed.contains(LogicalKeyboardKey.space)) {
+      buttonGroup.getCurrentFocusButton()?.fire();
+      buttonGroup.unFocus();
+    }
+
+    return false;
   }
 }

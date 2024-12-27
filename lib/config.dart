@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:math' hide log;
 
 import 'package:flame/components.dart' hide Block;
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
-import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 const String baseConfigFileName = 'assets/texts/config_base.json';
@@ -148,14 +149,49 @@ class Config {
 
   bool _isReady = false;
 
-  /// デバッグモードで編集できるパラメータ
+  // デバッグモードで編集できるパラメータ
+  /// ステージの最大横幅
   int debugStageWidth = 200;
+
+  /// ステージの最大高さ
   int debugStageHeight = 200;
+
+  /// ステージの最大横幅の設定可能範囲
   List<int> debugStageWidthClamps = [12, 200];
+
+  /// ステージの最大高さの設定可能範囲
   List<int> debugStageHeightClamps = [40, 200];
-  int debugEnemyDamageInMerge = 0;
+
+  /// マージ時に敵に与えるダメージ
+  int debugEnemyDamageInMerge = 1;
+
+  /// 爆弾爆発時に敵に与えるダメージ
   int debugEnemyDamageInExplosion = 0;
+
+  /// 最初に全てのステージデータを準備するかどうか(ブロック破壊時出現アイテムの分布計算に時間がかかるため生まれた)
   bool debugPrepareAllStageDataAtFirst = true;
+
+  /// 敵はプレイヤーとぶつかる（同じマスに移動する）ことができるか
+  bool debugEnemyCanCollidePlayer = true;
+
+  /// 乱数のシード
+  int? _debugRandomSeed;
+  int? get debugRandomSeed => _debugRandomSeed;
+  set debugRandomSeed(int? v) {
+    _debugRandomSeed = v;
+    random = Random(v);
+  }
+
+  late Random random;
+
+  /// 分布表示に使用する色
+  static final distributionMapColors = [
+    Colors.pink.withAlpha(0x80),
+    Colors.lightGreen.withAlpha(0x80),
+    Colors.lightBlue.withAlpha(0x80),
+    Colors.purple.withAlpha(0x80),
+    Colors.black.withAlpha(0x80),
+  ];
 
   Future<List<List<String>>> _importCSV(String filename) async {
     List<List<String>> ret = [];
@@ -201,6 +237,7 @@ class Config {
         loadFixedObjMap(await _importCSV(fixedStaticObjMapConfigFileName));
     mergeAppearObjMap = loadMergeAppearObjMap(
         await _importCSV(mergeAppearObjMapConfigFileName));
+    random = Random(debugRandomSeed);
     _isReady = true;
   }
 
@@ -361,24 +398,26 @@ class Config {
   }
 
   /// マージしたオブジェクトが、対象のブロックを破壊できるかどうか
-  static bool canBreakBlock(Block block, StageObj mergeObj) {
-    if (mergeObj.type == StageObjType.block) return true;
+  static bool canBreakBlock(Block block, StageObjTypeLevel mergeTypeLevel) {
+    if (mergeTypeLevel.type == StageObjType.block) {
+      return true;
+    }
     switch (block.level) {
       case 1:
         return true;
       case 2:
-        return mergeObj.level >= 4;
+        return mergeTypeLevel.level >= 4;
       case 3:
-        return mergeObj.level >= 8;
+        return mergeTypeLevel.level >= 8;
       case 4:
-        return mergeObj.level >= 13;
+        return mergeTypeLevel.level >= 13;
       // ここからは敵が生み出すブロック
       case 101:
-        return mergeObj.level >= 4;
+        return mergeTypeLevel.level >= 4;
       case 102:
-        return mergeObj.level >= 8;
+        return mergeTypeLevel.level >= 8;
       case 103:
-        return mergeObj.level >= 13;
+        return mergeTypeLevel.level >= 13;
       default:
         return false;
     }
