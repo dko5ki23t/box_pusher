@@ -850,11 +850,11 @@ class GameSeq extends Sequence
         case DebugViewMode.objInBlockMap:
           game.debugTargetPos = stagePos;
           game.debugBlockFloorDistribution =
-              await stage.calcedBlockFloorMap.values.last;
+              await stage.calcedBlockFloorMap.values.last.distribution;
           for (final range in stage.calcedBlockFloorMap.keys) {
             if (range.contains(stagePos)) {
               game.debugBlockFloorDistribution =
-                  await stage.calcedBlockFloorMap[range]!;
+                  await stage.calcedBlockFloorMap[range]!.distribution;
               break;
             }
           }

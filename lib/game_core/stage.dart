@@ -82,6 +82,13 @@ class MergeAffect {
   });
 }
 
+class SetAndDistribution<T> {
+  final Set set;
+  final Future<Distribution<T>> distribution;
+
+  SetAndDistribution(this.set, this.distribution);
+}
+
 class Stage {
   /// マスのサイズ
   static Vector2 get cellSize => Vector2(32.0, 32.0);
@@ -149,8 +156,8 @@ class Stage {
   Map<PointRange, Future<Distribution<StageObjTypeLevel>>> calcedObjInBlockMap =
       {};
 
-  /// Config().blockFloorMapを元に計算したブロック/床の個数
-  Map<PointRange, Future<Distribution<StageObjTypeLevel>>> calcedBlockFloorMap =
+  /// Config().blockFloorMapを元に計算したブロック/床の個数と、座標の集合
+  Map<PointRange, SetAndDistribution<StageObjTypeLevel>> calcedBlockFloorMap =
       {};
 
   /// マージした回数
@@ -322,7 +329,8 @@ class Stage {
     ret['calcedObjInBlockMap'] = encodedCOIBM;
     final Map<String, dynamic> encodedCBFM = {};
     for (final entry in calcedBlockFloorMap.entries) {
-      encodedCBFM[entry.key.toString()] = (await entry.value).encode();
+      encodedCBFM[entry.key.toString()] =
+          (await entry.value.distribution).encode();
     }
     ret['calcedBlockFloorMap'] = encodedCBFM;
     final Map<String, dynamic> staticObjsMap = {};
@@ -820,8 +828,10 @@ class Stage {
     calcedBlockFloorMap.clear();
     for (final entry
         in (stageData['calcedBlockFloorMap'] as Map<String, dynamic>).entries) {
-      calcedBlockFloorMap[PointRange.fromStr(entry.key)] = Future.value(
-          Distribution.decode(entry.value, StageObjTypeLevel.fromStr));
+      calcedBlockFloorMap[PointRange.fromStr(entry.key)] = SetAndDistribution(
+          {},
+          Future.value(
+              Distribution.decode(entry.value, StageObjTypeLevel.fromStr)));
     }
     calcedObjInBlockMap.clear();
     for (final entry
@@ -1112,17 +1122,18 @@ class Stage {
           colorIdx = 0;
         }
         Color mapColor = Config.distributionMapColors[colorIdx];
+        Set set = entry.key.set;
+        for (final t in calcedBlockFloorMap.keys) {
+          if (t == entry.key) break;
+          set = set.difference(t.set);
+        }
+
         Distribution<StageObjTypeLevel> makeDistribution() {
           final Map<StageObjTypeLevel, int> percents = {
             for (final e in entry.value.floorPercents.entries) e.key: e.value,
             for (final e in entry.value.blockPercents.entries)
               StageObjTypeLevel(type: StageObjType.block, level: e.key): e.value
           };
-          Set set = entry.key.set;
-          for (final t in calcedBlockFloorMap.keys) {
-            if (t == entry.key) break;
-            set = set.difference(t.set);
-          }
           // 【テストモード】範囲の表示を作成
           if (testMode) {
             blockFloorMapView.addAll([
@@ -1139,14 +1150,15 @@ class Stage {
                   ..style = PaintingStyle.fill)
             ]);
           }
-          return Distribution.fromPercent(
+          return Distribution<StageObjTypeLevel>.fromPercent(
               percents, set.length, RoundMode.randomRound);
         }
 
-        calcedBlockFloorMap[entry.key] =
+        calcedBlockFloorMap[entry.key] = SetAndDistribution(
+            set,
             Config().debugPrepareAllStageDataAtFirst
                 ? Future.value(makeDistribution())
-                : Future(makeDistribution);
+                : Future(makeDistribution));
       }
     }
     // 続いてブロック破壊時出現オブジェクトの分布
@@ -1167,16 +1179,16 @@ class Stage {
           int blockNum = 0;
           // TODO: ここの処理激重
           for (final e in calcedBlockFloorMap.entries) {
-            double ratio = targetField.set.intersection(e.key.set).length /
-                e.key.set.length;
+            double ratio = targetField.set.intersection(e.value.set).length /
+                e.value.set.length;
             // TODO: ブロックの種類増えたら困る
-            blockNum += randomRound(((await e.value).getTotalNum(
+            blockNum += randomRound(((await e.value.distribution).getTotalNum(
                         StageObjTypeLevel(type: StageObjType.block, level: 1)) +
-                    (await e.value).getTotalNum(
+                    (await e.value.distribution).getTotalNum(
                         StageObjTypeLevel(type: StageObjType.block, level: 2)) +
-                    (await e.value).getTotalNum(
+                    (await e.value.distribution).getTotalNum(
                         StageObjTypeLevel(type: StageObjType.block, level: 3)) +
-                    (await e.value).getTotalNum(StageObjTypeLevel(
+                    (await e.value.distribution).getTotalNum(StageObjTypeLevel(
                         type: StageObjType.block, level: 4))) *
                 ratio);
           }
@@ -1235,8 +1247,10 @@ class Stage {
         for (final pattern in Config().blockFloorMap.entries) {
           if (pattern.key.contains(pos)) {
             _staticObjs[pos] = createObject(
-                typeLevel: (await calcedBlockFloorMap[pattern.key]!).getOne() ??
-                    StageObjTypeLevel(type: StageObjType.none),
+                typeLevel:
+                    (await calcedBlockFloorMap[pattern.key]!.distribution)
+                            .getOne() ??
+                        StageObjTypeLevel(type: StageObjType.none),
                 pos: pos,
                 addToGameWorld: addToGameWorld);
             return;
