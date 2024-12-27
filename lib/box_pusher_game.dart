@@ -4,7 +4,10 @@ import 'dart:io';
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
+import 'package:box_pusher/components/debug_view_distributions_dialog.dart';
 import 'package:box_pusher/components/version_log_dialog.dart';
+import 'package:box_pusher/game_core/common.dart';
+import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
@@ -51,6 +54,11 @@ class BoxPusherGame extends FlameGame
 
   /// テストやデバッグ用のモード
   bool testMode;
+
+  /// 【テストモード】分布表示時にダイアログに渡すための変数
+  late Point debugTargetPos;
+  late Distribution<StageObjTypeLevel> debugBlockFloorDistribution;
+  late Distribution<StageObjTypeLevel> debugObjInBlockDistribution;
 
   /// ゲームでキーボードを使うためのフォーカス
   final FocusNode gameFocus;
@@ -126,6 +134,13 @@ class BoxPusherGame extends FlameGame
       'confirm_delete_stage_data_dialog': OverlayRoute(
         (context, game) {
           return ConfirmDeleteStageDataDialog(
+            game: this,
+          );
+        },
+      ),
+      'debug_view_distributions_dialog': OverlayRoute(
+        (context, game) {
+          return DebugViewDistributionsDialog(
             game: this,
           );
         },

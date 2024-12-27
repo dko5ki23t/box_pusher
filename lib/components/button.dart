@@ -235,6 +235,8 @@ class GameButtonGroup {
 }
 
 class GameTextButton extends GameButton {
+  String? _text;
+
   GameTextButton({
     super.keyName,
     required super.size,
@@ -245,7 +247,8 @@ class GameTextButton extends GameButton {
     super.onPressed,
     super.onReleased,
     super.onCancelled,
-  }) : super(
+  })  : _text = text,
+        super(
           child: TextComponent(
             text: text,
             textRenderer: TextPaint(
@@ -253,6 +256,15 @@ class GameTextButton extends GameButton {
             ),
           ),
         );
+
+  String? get text => _text;
+
+  set text(String? t) {
+    _text = t;
+    if (t != null) {
+      (super.child as TextComponent).text = t;
+    }
+  }
 }
 
 class GameSpriteButton extends GameButton {

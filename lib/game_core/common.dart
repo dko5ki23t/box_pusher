@@ -505,6 +505,8 @@ class Distribution<T> {
 
   bool get isEmpty => remainTotal <= 0;
 
+  Iterable<T> get keys => _total.keys;
+
   T? getOne() {
     if (isEmpty) {
       if (overdoseException) {

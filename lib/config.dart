@@ -6,6 +6,7 @@ import 'package:flame/components.dart' hide Block;
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -183,6 +184,15 @@ class Config {
   }
 
   late Random random;
+
+  /// 分布表示に使用する色
+  static final distributionMapColors = [
+    Colors.pink.withAlpha(0x80),
+    Colors.lightGreen.withAlpha(0x80),
+    Colors.lightBlue.withAlpha(0x80),
+    Colors.purple.withAlpha(0x80),
+    Colors.black.withAlpha(0x80),
+  ];
 
   Future<List<List<String>>> _importCSV(String filename) async {
     List<List<String>> ret = [];

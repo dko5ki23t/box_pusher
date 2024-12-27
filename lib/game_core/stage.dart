@@ -240,6 +240,12 @@ class Stage {
   /// テストモードかどうか
   final bool testMode;
 
+  /// 【テストモード】出現床/ブロックの分布範囲表示
+  List<Component> blockFloorMapView = [];
+
+  /// 【テストモード】ブロック破壊時出現オブジェクトの分布範囲表示
+  List<Component> objInBlockMapView = [];
+
   /// ゲームワールド
   final World gameWorld;
 
@@ -1096,9 +1102,16 @@ class Stage {
   Future<void> prepareDistributions() async {
     // TODO: コンフィグでものすごく広い範囲指定してると激重になるのどうするか
     // 先に床/ブロックの分布
+    int colorIdx = 0;
     for (final entry in Config().blockFloorMap.entries) {
       if (!calcedBlockFloorMap.containsKey(entry.key)) {
         // 処理重いので非同期でもOK
+        // 【テストモード】表示の色分け
+        colorIdx++;
+        if (colorIdx >= Config.distributionMapColors.length) {
+          colorIdx = 0;
+        }
+        Color mapColor = Config.distributionMapColors[colorIdx];
         Distribution<StageObjTypeLevel> makeDistribution() {
           final Map<StageObjTypeLevel, int> percents = {
             for (final e in entry.value.floorPercents.entries) e.key: e.value,
@@ -1109,6 +1122,22 @@ class Stage {
           for (final t in calcedBlockFloorMap.keys) {
             if (t == entry.key) break;
             set = set.difference(t.set);
+          }
+          // 【テストモード】範囲の表示を作成
+          if (testMode) {
+            blockFloorMapView.addAll([
+              for (final p in set)
+                RectangleComponent(
+                  priority: Stage.frontPriority,
+                  size: Stage.cellSize,
+                  anchor: Anchor.center,
+                  position:
+                      (Vector2(p.x * Stage.cellSize.x, p.y * Stage.cellSize.y) +
+                          Stage.cellSize / 2),
+                )..paint = (Paint()
+                  ..color = mapColor
+                  ..style = PaintingStyle.fill)
+            ]);
           }
           return Distribution.fromPercent(
               percents, set.length, RoundMode.randomRound);
@@ -1121,11 +1150,18 @@ class Stage {
       }
     }
     // 続いてブロック破壊時出現オブジェクトの分布
+    colorIdx = 0;
     for (final entry in Config().objInBlockMap.entries) {
       if (!calcedObjInBlockMap.containsKey(entry.key)) {
         final targetField = entry.key;
         final targetOIB = entry.value;
         // 処理重いので非同期でもOK
+        // 【テストモード】表示の色分け
+        colorIdx++;
+        if (colorIdx >= Config.distributionMapColors.length) {
+          colorIdx = 0;
+        }
+        Color mapColor = Config.distributionMapColors[colorIdx];
         Future<Distribution<StageObjTypeLevel>> makeDistribution() async {
           // 対象範囲にブロックがどれだけ含まれるか数える
           int blockNum = 0;
@@ -1150,6 +1186,27 @@ class Stage {
                 NumsAndPercent(-1, -1, targetOIB.jewelPercent)
           };
           percents.addAll(targetOIB.itemsPercentAndNumsMap);
+          // 【テストモード】範囲の表示を作成
+          if (testMode) {
+            Set set = targetField.set;
+            for (final t in calcedObjInBlockMap.keys) {
+              if (t == targetField) break;
+              set = set.difference(t.set);
+            }
+            objInBlockMapView.addAll([
+              for (final p in set)
+                RectangleComponent(
+                  priority: Stage.frontPriority,
+                  size: Stage.cellSize,
+                  anchor: Anchor.center,
+                  position:
+                      (Vector2(p.x * Stage.cellSize.x, p.y * Stage.cellSize.y) +
+                          Stage.cellSize / 2),
+                )..paint = (Paint()
+                  ..color = mapColor
+                  ..style = PaintingStyle.fill)
+            ]);
+          }
           return Distribution.fromPercentWithMinMax(
               percents, blockNum, RoundMode.randomRound);
         }

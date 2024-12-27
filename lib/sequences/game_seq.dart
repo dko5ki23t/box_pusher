@@ -19,6 +19,18 @@ import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
 
+/// デバッグモードでのゲーム画面表示モード
+enum DebugViewMode {
+  /// 通常
+  gamePlay,
+
+  /// 出現床/ブロックの分布
+  blockFloorMap,
+
+  /// ブロック破壊時出現オブジェクトの分布
+  objInBlockMap,
+}
+
 class GameSeq extends Sequence
     with TapCallbacks, KeyboardHandler, HasGameReference<BoxPusherGame> {
   /// 画面上部の余白
@@ -72,6 +84,12 @@ class GameSeq extends Sequence
   /// 【テストモード】現在位置表示領域
   static Vector2 get currentPosAreaSize => Vector2(40.0, 40.0);
 
+  /// 【テストモード】現在の表示モード
+  DebugViewMode viewMode = DebugViewMode.gamePlay;
+
+  /// 【テストモード】現在の表示モード切り替えボタン領域
+  static Vector2 get viewModeButtonAreaSize => Vector2(60.0, 30.0);
+
   /// ステージ領域
   static Vector2 get stageViewSize => Vector2(360.0 - xPaddingSize.x * 2,
       640.0 - menuButtonAreaSize.y - topPaddingSize.y - yPaddingSize.y * 2);
@@ -108,6 +126,7 @@ class GameSeq extends Sequence
   late GameSpriteOnOffButton armerAbilityOnOffButton;
   late GameSpriteAnimationButton pocketAbilityButton;
   late GameSpriteButton menuButton;
+  late GameTextButton viewModeButton;
 
   @override
   Future<void> onLoad() async {
@@ -602,6 +621,31 @@ class GameSeq extends Sequence
       add(currentPosText);
     }
 
+    // 【テストモード】現在の表示モード切り替えボタン
+    viewModeButton = GameTextButton(
+        size: viewModeButtonAreaSize,
+        position: Vector2(360.0 - viewModeButtonAreaSize.x, yPaddingSize.y),
+        text: viewMode.name,
+        onReleased: () {
+          viewMode = DebugViewMode
+              .values[(viewMode.index + 1) % DebugViewMode.values.length];
+          switch (viewMode) {
+            case DebugViewMode.gamePlay:
+              //game.world.removeAll(stage.blockFloorMapView);
+              game.world.removeAll(stage.objInBlockMapView);
+              break;
+            case DebugViewMode.blockFloorMap:
+              //game.world.removeAll(stage.objInBlockMapView);
+              game.world.addAll(stage.blockFloorMapView);
+              break;
+            case DebugViewMode.objInBlockMap:
+              game.world.removeAll(stage.blockFloorMapView);
+              game.world.addAll(stage.objInBlockMapView);
+              break;
+          }
+        });
+    add(viewModeButton);
+
     // 準備完了
     isReady = true;
   }
@@ -698,6 +742,8 @@ class GameSeq extends Sequence
     if (game.testMode) {
       currentPosText.text = "pos:(${stage.player.pos.x},${stage.player.pos.y})";
     }
+    // 【テストモード】表示モード切り替えボタン更新
+    viewModeButton.text = viewMode.name;
     // 今回のupdateでクリアしたらクリア画面に移行
     if (stage.isClear()) {
       game.pushSeqNamed('clear');
@@ -785,17 +831,44 @@ class GameSeq extends Sequence
   bool containsLocalPoint(Vector2 point) => true;
 
   @override
-  void onTapUp(TapUpEvent event) {
+  void onTapUp(TapUpEvent event) async {
     super.onTapUp(event);
-    // テストモード時のみ、ブロックをタップで破壊
     if (game.testMode) {
       final cameraPos =
           game.camera.globalToLocal(event.canvasPosition) / Stage.cellSize.x;
       final Point stagePos = Point(cameraPos.x.floor(), cameraPos.y.floor());
-      final tapObject = stage.get(stagePos);
-      if (tapObject.type == StageObjType.block) {
-        stage.breakBlocks(
-            stagePos, (block) => true, PointDistanceRange(stagePos, 0));
+      switch (viewMode) {
+        case DebugViewMode.gamePlay:
+          // テストモード時のみ、ブロックをタップで破壊
+          final tapObject = stage.get(stagePos);
+          if (tapObject.type == StageObjType.block) {
+            stage.breakBlocks(
+                stagePos, (block) => true, PointDistanceRange(stagePos, 0));
+          }
+          break;
+        case DebugViewMode.blockFloorMap:
+        case DebugViewMode.objInBlockMap:
+          game.debugTargetPos = stagePos;
+          game.debugBlockFloorDistribution =
+              await stage.calcedBlockFloorMap.values.last;
+          for (final range in stage.calcedBlockFloorMap.keys) {
+            if (range.contains(stagePos)) {
+              game.debugBlockFloorDistribution =
+                  await stage.calcedBlockFloorMap[range]!;
+              break;
+            }
+          }
+          game.debugObjInBlockDistribution =
+              await stage.calcedObjInBlockMap.values.last;
+          for (final range in stage.calcedObjInBlockMap.keys) {
+            if (range.contains(stagePos)) {
+              game.debugObjInBlockDistribution =
+                  await stage.calcedObjInBlockMap[range]!;
+              break;
+            }
+          }
+          game.pushSeqOverlay('debug_view_distributions_dialog');
+          break;
       }
     }
   }
