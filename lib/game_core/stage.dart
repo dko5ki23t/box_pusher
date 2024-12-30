@@ -1173,14 +1173,19 @@ class Stage {
         if (colorIdx >= Config.distributionMapColors.length) {
           colorIdx = 0;
         }
+        Set set = targetField.set;
+        for (final t in calcedObjInBlockMap.keys) {
+          if (t == entry.key) break;
+          set = set.difference(t.set);
+        }
         Color mapColor = Config.distributionMapColors[colorIdx];
         Future<Distribution<StageObjTypeLevel>> makeDistribution() async {
           // 対象範囲にブロックがどれだけ含まれるか数える
           int blockNum = 0;
           // TODO: ここの処理激重
           for (final e in calcedBlockFloorMap.entries) {
-            double ratio = targetField.set.intersection(e.value.set).length /
-                e.value.set.length;
+            double ratio =
+                set.intersection(e.value.set).length / e.value.set.length;
             // TODO: ブロックの種類増えたら困る
             blockNum += randomRound(((await e.value.distribution).getTotalNum(
                         StageObjTypeLevel(type: StageObjType.block, level: 1)) +
@@ -1200,11 +1205,6 @@ class Stage {
           percents.addAll(targetOIB.itemsPercentAndNumsMap);
           // 【テストモード】範囲の表示を作成
           if (testMode) {
-            Set set = targetField.set;
-            for (final t in calcedObjInBlockMap.keys) {
-              if (t == targetField) break;
-              set = set.difference(t.set);
-            }
             objInBlockMapView.addAll([
               for (final p in set)
                 RectangleComponent(
