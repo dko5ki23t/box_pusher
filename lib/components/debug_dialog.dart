@@ -59,7 +59,6 @@ class DebugDialogState extends State<DebugDialog> {
   late final int maxStageHeight;
   late int enemyDamageInMerge;
   late int enemyDamageInExplosion;
-  late bool prepareAllStageDataAtFirst;
   late bool enemyCanCollidePlayer;
   late int? randomSeed;
 
@@ -77,7 +76,6 @@ class DebugDialogState extends State<DebugDialog> {
     maxStageHeight = Config().debugStageHeightClamps[1];
     enemyDamageInMerge = Config().debugEnemyDamageInMerge;
     enemyDamageInExplosion = Config().debugEnemyDamageInExplosion;
-    prepareAllStageDataAtFirst = Config().debugPrepareAllStageDataAtFirst;
     enemyCanCollidePlayer = Config().debugEnemyCanCollidePlayer;
     randomSeed = Config().debugRandomSeed;
   }
@@ -179,15 +177,6 @@ class DebugDialogState extends State<DebugDialog> {
           const SizedBox(
             height: 10,
           ),
-          SwitchListTile(
-            value: prepareAllStageDataAtFirst,
-            onChanged: (value) =>
-                setState(() => prepareAllStageDataAtFirst = value),
-            title: const Text(
-              "ゲーム開始時に全ての準備を完了させる(ゲーム中にロードはしない)",
-              style: Config.gameTextStyle,
-            ),
-          ),
           const SizedBox(
             height: 10,
           ),
@@ -282,8 +271,6 @@ class DebugDialogState extends State<DebugDialog> {
                     .clamp(minStageHeight, maxStageHeight);
             Config().debugEnemyDamageInMerge = enemyDamageInMerge;
             Config().debugEnemyDamageInExplosion = enemyDamageInExplosion;
-            Config().debugPrepareAllStageDataAtFirst =
-                prepareAllStageDataAtFirst;
             Config().debugEnemyCanCollidePlayer = enemyCanCollidePlayer;
             Config().debugRandomSeed = randomSeed == null
                 ? null

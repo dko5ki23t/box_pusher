@@ -14,6 +14,10 @@ const String blockFloorMapConfigFileName =
     'assets/texts/config_block_floor_map.csv';
 const String objInBlockMapConfigFileName =
     'assets/texts/config_obj_in_block_map.csv';
+const String blockFloorDistributionConfigFileName =
+    'assets/texts/config_block_floor_distribution.csv';
+const String objInBlockDistributionConfigFileName =
+    'assets/texts/config_obj_in_block_distribution.csv';
 const String maxObjNumFromBlockMapConfigFileName =
     'assets/texts/config_max_obj_num_from_block_map.csv';
 const String jewelLevelInBlockMapConfigFileName =
@@ -168,9 +172,6 @@ class Config {
   /// 爆弾爆発時に敵に与えるダメージ
   int debugEnemyDamageInExplosion = 0;
 
-  /// 最初に全てのステージデータを準備するかどうか(ブロック破壊時出現アイテムの分布計算に時間がかかるため生まれた)
-  bool debugPrepareAllStageDataAtFirst = true;
-
   /// 敵はプレイヤーとぶつかる（同じマスに移動する）ことができるか
   bool debugEnemyCanCollidePlayer = true;
 
@@ -229,6 +230,10 @@ class Config {
         loadBlockFloorMap(await _importCSV(blockFloorMapConfigFileName));
     objInBlockMap =
         loadObjInBlockMap(await _importCSV(objInBlockMapConfigFileName));
+    blockFloorDistribution = loadBlockFloorDistribution(
+        await _importCSV(blockFloorDistributionConfigFileName));
+    objInBlockDistribution = loadObjInBlockDistribution(
+        await _importCSV(objInBlockDistributionConfigFileName));
     maxObjNumFromBlockMap = loadAndSumMaxObjectNumFromBlockMap(
         await _importCSV(maxObjNumFromBlockMapConfigFileName));
     jewelLevelInBlockMap = loadJewelLevelInBlockMap(
@@ -292,16 +297,43 @@ class Config {
     return ret;
   }
 
-  /// 引数で指定した座標に該当する「出現床/ブロック」のMapを返す
+  /// ステージ上範囲->出現床/ブロックの分布マップ（範囲が重複する場合は先に存在するキーを優先）
+  late Map<PointRange, Distribution<StageObjTypeLevel>> blockFloorDistribution;
+
+  Map<PointRange, Distribution<StageObjTypeLevel>> loadBlockFloorDistribution(
+      List<List<String>> data) {
+    final Map<PointRange, Distribution<StageObjTypeLevel>> ret = {};
+    // 最初の1行は無視
+    for (int i = 1; i < data.length; i++) {
+      final vals = data[i];
+      ret[PointRange.createFromStrings([for (int j = 0; j < 6; j++) vals[j]])] =
+          Distribution({
+        StageObjTypeLevel(type: StageObjType.none): int.parse(vals[7]),
+        StageObjTypeLevel(type: StageObjType.water): int.parse(vals[8]),
+        StageObjTypeLevel(type: StageObjType.magma): int.parse(vals[9]),
+        StageObjTypeLevel(type: StageObjType.block, level: 1):
+            int.parse(vals[10]),
+        StageObjTypeLevel(type: StageObjType.block, level: 2):
+            int.parse(vals[11]),
+        StageObjTypeLevel(type: StageObjType.block, level: 3):
+            int.parse(vals[12]),
+        StageObjTypeLevel(type: StageObjType.block, level: 4):
+            int.parse(vals[13]),
+      }, int.parse(vals[6]));
+    }
+    return ret;
+  }
+
+  /// 引数で指定した座標に該当する「出現床/ブロック」の分布を返す
   /// 見つからない場合は最後のEntryを返す
-  BlockFloorPattern getBlockFloorPattern(Point pos) {
-    for (final pattern in blockFloorMap.entries) {
+  Distribution<StageObjTypeLevel> getBlockFloorDistribution(Point pos) {
+    for (final pattern in blockFloorDistribution.entries) {
       if (pattern.key.contains(pos)) {
         return pattern.value;
       }
     }
-    log('(${pos.x}, ${pos.y})に対応するblockFloorPatternが見つからなかった。');
-    return blockFloorMap.values.last;
+    log('(${pos.x}, ${pos.y})に対応するDistributionが見つからなかった。');
+    return blockFloorDistribution.values.last;
   }
 
   /// ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
@@ -315,6 +347,30 @@ class Config {
       ret[PointRange.createFromStrings([for (int j = 0; j < 6; j++) vals[j]])] =
           ObjInBlock.fromStrings(
               [for (int j = 6; j < vals.length; j++) vals[j]]);
+    }
+    return ret;
+  }
+
+  /// ステージ上範囲->ブロック破壊時の出現オブジェクトの分布マップ（範囲が重複する場合は先に存在するキーを優先）
+  late Map<PointRange, Distribution<StageObjTypeLevel>> objInBlockDistribution;
+
+  Map<PointRange, Distribution<StageObjTypeLevel>> loadObjInBlockDistribution(
+      List<List<String>> data) {
+    final Map<PointRange, Distribution<StageObjTypeLevel>> ret = {};
+    // 最初の1行は無視
+    for (int i = 1; i < data.length; i++) {
+      final vals = data[i];
+      final objsMap = {
+        StageObjTypeLevel(type: StageObjType.jewel): int.parse(vals[7])
+      };
+      for (int j = 8; j < vals.length; j += 3) {
+        objsMap[StageObjTypeLevel(
+            type: StageObjTypeExtent.fromStr(vals[j]),
+            level: int.parse(vals[j + 1]))] = int.parse(vals[j + 2]);
+      }
+      final distr = Distribution(objsMap, int.parse(vals[6]));
+      ret[PointRange.createFromStrings([for (int j = 0; j < 6; j++) vals[j]])] =
+          distr;
     }
     return ret;
   }
