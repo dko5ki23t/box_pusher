@@ -149,10 +149,10 @@ class GameButton extends PositionComponent with TapCallbacks {
   }
 
   /// ボタンを押して離した時と同じ挙動をする(見た目は変わらない)
-  void fire() {
+  Future<void> fire() async {
     if (enabled) {
       // 決定音を鳴らす
-      Audio().playSound(Sound.decide);
+      await Audio().playSound(Sound.decide);
       onPressed?.call();
       onReleased?.call();
     }

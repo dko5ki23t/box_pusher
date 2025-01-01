@@ -110,23 +110,25 @@ class GameSeq extends Sequence
   late final Image armerAbilityImg;
   late final Image pocketAbilityImg;
   late final Image settingsImg;
-  late TextComponent currentPosText;
-  late TextComponent remainMergeCountText;
-  late SpriteAnimationComponent nextMergeItem;
-  late SpriteAnimationComponent nextMergeItem2;
-  late SpriteAnimationComponent nextMergeItem3;
-  late TextComponent scoreText;
-  late TextComponent coinNumText;
+  late final TextComponent currentPosText;
+  late final TextComponent remainMergeCountText;
+  late final SpriteAnimationComponent nextMergeItem;
+  late final SpriteAnimationComponent nextMergeItem2;
+  late final SpriteAnimationComponent nextMergeItem3;
+  late final TextComponent scoreText;
+  late final TextComponent coinNumText;
+  late final ButtonComponent topGameInfoArea;
   ClipComponent? playerControllButtonsArea;
   ClipComponent? clipByDiagonalMoveButton;
   List<ButtonComponent>? playerStraightMoveButtons;
   List<PositionComponent>? playerDiagonalMoveButtons;
-  late GameSpriteOnOffButton handAbilityOnOffButton;
-  late GameSpriteOnOffButton legAbilityOnOffButton;
-  late GameSpriteOnOffButton armerAbilityOnOffButton;
-  late GameSpriteAnimationButton pocketAbilityButton;
-  late GameSpriteButton menuButton;
-  late GameTextButton viewModeButton;
+  late final RectangleComponent menuArea;
+  late final GameSpriteOnOffButton handAbilityOnOffButton;
+  late final GameSpriteOnOffButton legAbilityOnOffButton;
+  late final GameSpriteOnOffButton armerAbilityOnOffButton;
+  late final GameSpriteAnimationButton pocketAbilityButton;
+  late final GameSpriteButton menuButton;
+  late final GameTextButton viewModeButton;
 
   @override
   Future<void> onLoad() async {
@@ -138,8 +140,13 @@ class GameSeq extends Sequence
     armerAbilityImg = await Flame.images.load('armer_ability.png');
     pocketAbilityImg = await Flame.images.load('pocket_ability.png');
     settingsImg = await Flame.images.load('settings.png');
+    // ステージ作成
+    stage = Stage(testMode: game.testMode, gameWorld: game.world);
+    await stage.onLoad();
+    // 画面コンポーネント作成
+    _createComponents();
     // 画面コンポーネント初期化
-    await initialize();
+    initialize(true);
   }
 
   @override
@@ -167,24 +174,53 @@ class GameSeq extends Sequence
     Audio().stopBGM();
   }
 
-  // 初期化（というよりリセット）
-  Future<void> initialize() async {
-    // 準備中にする
-    isReady = false;
-    removeAll(children);
-    game.world.removeAll(game.world.children);
-
-    stage = Stage(testMode: game.testMode, gameWorld: game.world);
-    await stage.onLoad();
-    // デバッグモードのときはステージの最大幅・高さを指定する
-    if (game.testMode) {
-      stage.stageMaxLT = Point(-(Config().debugStageWidth / 2).ceil(),
-          -(Config().debugStageHeight / 2).ceil());
-      stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
-          (Config().debugStageHeight / 2).ceil());
-    }
-    await stage.initialize(game.camera, game.stageData);
-
+  /// 画面コンポーネント作成
+  void _createComponents() {
+    // 画面上部、ボタンではない領域
+    // 次アイテム出現までのマージ回数
+    remainMergeCountText = TextComponent(
+      text: "NEXT: ${stage.remainMergeCount}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: Config.gameTextFamily,
+          color: Color(0xffffffff),
+        ),
+      ),
+    );
+    // 次マージ時出現アイテム
+    final a = stage.getNextMergeItemSpriteAnimations();
+    nextMergeItem = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
+        size: Vector2.all(32),
+        animation: a.isNotEmpty ? a.first : null);
+    nextMergeItem2 = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
+        size: Vector2.all(32),
+        animation: a.length > 1 ? a[1] : null);
+    nextMergeItem3 = SpriteAnimationComponent(
+        scale: Vector2.all(0.8),
+        size: Vector2.all(32),
+        animation: a.length > 2 ? a[2] : null);
+    // スコア
+    scoreText = TextComponent(
+      text: "${stage.scoreVisual}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: Config.gameTextFamily,
+          color: Color(0xffffffff),
+        ),
+      ),
+    );
+    // コイン数
+    coinNumText = TextComponent(
+      text: "${stage.coinNum}",
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: Config.gameTextFamily,
+          color: Color(0xffffffff),
+        ),
+      ),
+    );
     // プレイヤーの操作ボタン群
     final clipSize = Vector2(
         yButtonAreaSize.x, 640.0 - topPaddingSize.y - menuButtonAreaSize.y);
@@ -376,144 +412,81 @@ class GameSeq extends Sequence
       size: clipSize,
     );
 
-    // 斜め移動可能かどうかで操作ボタンの表示を変える
     playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
-    if (stage.getLegAbility()) {
-      if (Config().wideDiagonalMoveButton) {
-        clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-        playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-      } else {
-        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-      }
-    } else {
-      playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-    }
-
-    add(playerControllButtonsArea!);
-    // 画面上部、ボタンではない領域
-    // 次アイテム出現までのマージ回数
-    remainMergeCountText = TextComponent(
-      text: "NEXT: ${stage.remainMergeCount}",
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: Config.gameTextFamily,
-          color: Color(0xffffffff),
-        ),
-      ),
-    );
-    // 次マージ時出現アイテム
-    final a = stage.getNextMergeItemSpriteAnimations();
-    nextMergeItem = SpriteAnimationComponent(
-        scale: Vector2.all(0.8),
-        size: Vector2.all(32),
-        animation: a.isNotEmpty ? a.first : null);
-    nextMergeItem2 = SpriteAnimationComponent(
-        scale: Vector2.all(0.8),
-        size: Vector2.all(32),
-        animation: a.length > 1 ? a[1] : null);
-    nextMergeItem3 = SpriteAnimationComponent(
-        scale: Vector2.all(0.8),
-        size: Vector2.all(32),
-        animation: a.length > 2 ? a[2] : null);
-    // スコア
-    scoreText = TextComponent(
-      text: "${stage.scoreVisual}",
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: Config.gameTextFamily,
-          color: Color(0xffffffff),
-        ),
-      ),
-    );
-    // コイン数
-    coinNumText = TextComponent(
-      text: "${stage.coinNum}",
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: Config.gameTextFamily,
-          color: Color(0xffffffff),
-        ),
-      ),
-    );
-    add(
-      ButtonComponent(
-        button: RectangleComponent(
-          size: topPaddingSize,
-          paint: Paint()
-            ..color = const Color(0x80000000)
-            ..style = PaintingStyle.fill,
-          children: [
-            // 次マージ時出現アイテム（左側に配置）
-            AlignComponent(
-              alignment: Anchor.bottomLeft,
-              child: PositionComponent(
-                size: nextItemAreaSize,
-                children: [
-                  AlignComponent(
+    playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+    topGameInfoArea = ButtonComponent(
+      button: RectangleComponent(
+        size: topPaddingSize,
+        paint: Paint()
+          ..color = const Color(0x80000000)
+          ..style = PaintingStyle.fill,
+        children: [
+          // 次マージ時出現アイテム（左側に配置）
+          AlignComponent(
+            alignment: Anchor.bottomLeft,
+            child: PositionComponent(
+              size: nextItemAreaSize,
+              children: [
+                AlignComponent(
+                  alignment: Anchor.centerLeft,
+                  child: remainMergeCountText,
+                ),
+                AlignComponent(
+                  alignment: Anchor.centerRight,
+                  child: PositionComponent(
+                    size: Vector2(Stage.cellSize.x * 3, Stage.cellSize.y) * 0.8,
+                    children: [
+                      AlignComponent(
+                        alignment: Anchor.centerLeft,
+                        child: nextMergeItem,
+                      ),
+                      AlignComponent(
+                        alignment: Anchor.center,
+                        child: nextMergeItem2,
+                      ),
+                      AlignComponent(
+                        alignment: Anchor.centerRight,
+                        child: nextMergeItem3,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // スコア（中央に配置）
+          AlignComponent(
+            alignment: Anchor.bottomCenter,
+            child: PositionComponent(
+              size: scoreAreaSize,
+              children: [
+                AlignComponent(
+                  alignment: Anchor.center,
+                  child: scoreText,
+                )
+              ],
+            ),
+          ),
+          // コイン（右側に配置）
+          AlignComponent(
+            alignment: Anchor.bottomRight,
+            child: PositionComponent(
+              size: coinsAreaSize,
+              children: [
+                AlignComponent(
                     alignment: Anchor.centerLeft,
-                    child: remainMergeCountText,
-                  ),
-                  AlignComponent(
-                    alignment: Anchor.centerRight,
-                    child: PositionComponent(
-                      size:
-                          Vector2(Stage.cellSize.x * 3, Stage.cellSize.y) * 0.8,
-                      children: [
-                        AlignComponent(
-                          alignment: Anchor.centerLeft,
-                          child: nextMergeItem,
-                        ),
-                        AlignComponent(
-                          alignment: Anchor.center,
-                          child: nextMergeItem2,
-                        ),
-                        AlignComponent(
-                          alignment: Anchor.centerRight,
-                          child: nextMergeItem3,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                    child: SpriteComponent.fromImage(coinImg)),
+                AlignComponent(
+                  alignment: Anchor.centerRight,
+                  child: coinNumText,
+                ),
+              ],
             ),
-            // スコア（中央に配置）
-            AlignComponent(
-              alignment: Anchor.bottomCenter,
-              child: PositionComponent(
-                size: scoreAreaSize,
-                children: [
-                  AlignComponent(
-                    alignment: Anchor.center,
-                    child: scoreText,
-                  )
-                ],
-              ),
-            ),
-            // コイン（右側に配置）
-            AlignComponent(
-              alignment: Anchor.bottomRight,
-              child: PositionComponent(
-                size: coinsAreaSize,
-                children: [
-                  AlignComponent(
-                      alignment: Anchor.centerLeft,
-                      child: SpriteComponent.fromImage(coinImg)),
-                  AlignComponent(
-                    alignment: Anchor.centerRight,
-                    child: coinNumText,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
-    // メニュー領域
-    add(RectangleComponent(
+    menuArea = RectangleComponent(
       size: menuButtonAreaSize,
       position: Vector2(0, 640.0 - menuButtonAreaSize.y),
       paint: Paint()
@@ -528,24 +501,21 @@ class GameSeq extends Sequence
             ..style = PaintingStyle.fill,
         ),
       ],
-    ));
+    );
     Vector2 abilityButtonPos =
         Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y);
     // 手の能力ボタン領域
     handAbilityOnOffButton = GameSpriteOnOffButton(
-      isOn: stage.getHandAbility(),
       onChanged:
           game.testMode ? (bool isOn) => stage.setHandAbility(isOn) : null,
       size: handAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(handAbilityImg),
     );
-    add(handAbilityOnOffButton);
     // 足の能力ボタン領域
     abilityButtonPos +=
         Vector2(handAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     legAbilityOnOffButton = GameSpriteOnOffButton(
-      isOn: stage.getLegAbility(),
       onChanged: game.testMode
           ? (bool isOn) {
               stage.setLegAbility(isOn);
@@ -569,12 +539,10 @@ class GameSeq extends Sequence
       position: abilityButtonPos,
       sprite: Sprite(legAbilityImg),
     );
-    add(legAbilityOnOffButton);
     // アーマー能力ボタン領域
     abilityButtonPos +=
         Vector2(legAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     armerAbilityOnOffButton = GameSpriteOnOffButton(
-      isOn: stage.getArmerAbility(),
       onChanged:
           game.testMode ? (bool isOn) => stage.setArmerAbility(isOn) : null,
       size: armerAbilityButtonAreaSize,
@@ -582,7 +550,6 @@ class GameSeq extends Sequence
       sprite: Sprite(armerAbilityImg,
           srcPosition: Vector2.zero(), srcSize: Vector2.all(32)),
     );
-    add(armerAbilityOnOffButton);
     // ポケット能力ボタン領域
     abilityButtonPos +=
         Vector2(armerAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
@@ -590,11 +557,9 @@ class GameSeq extends Sequence
       onReleased: () => stage.usePocketAbility(game.world),
       size: pocketAbilityButtonAreaSize,
       position: abilityButtonPos,
-      enabled: stage.getPocketAbility(),
       animation:
           SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0),
     );
-    add(pocketAbilityButton);
     // メニューボタン領域
     menuButton = GameSpriteButton(
       size: settingsButtonAreaSize,
@@ -603,26 +568,20 @@ class GameSeq extends Sequence
       sprite: Sprite(settingsImg),
       onReleased: () => game.pushSeqNamed("menu"),
     );
-    add(menuButton);
-
-    // 【テストモード時】現在座標表示領域
-    currentPosText = TextComponent(
-      size: currentPosAreaSize,
-      position: Vector2(0, yPaddingSize.y),
-      text: "pos:(${stage.player.pos.x},${stage.player.pos.y})",
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: Config.gameTextFamily,
-          color: Color(0xffffffff),
-        ),
-      ),
-    );
     if (game.testMode) {
-      add(currentPosText);
-    }
-
-    // 【テストモード】現在の表示モード切り替えボタン
-    viewModeButton = GameTextButton(
+      // 【テストモード時】現在座標表示領域
+      currentPosText = TextComponent(
+        size: currentPosAreaSize,
+        position: Vector2(0, yPaddingSize.y),
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            fontFamily: Config.gameTextFamily,
+            color: Color(0xffffffff),
+          ),
+        ),
+      );
+      // 【テストモード】現在の表示モード切り替えボタン
+      viewModeButton = GameTextButton(
         size: viewModeButtonAreaSize,
         position: Vector2(360.0 - viewModeButtonAreaSize.x, yPaddingSize.y),
         text: viewMode.name,
@@ -643,8 +602,46 @@ class GameSeq extends Sequence
               game.world.addAll(stage.objInBlockMapView);
               break;
           }
-        });
+        },
+      );
+    }
+  }
+
+  // 初期化（というよりリセット）
+  void initialize(bool t) {
+    // 準備中にする
+    isReady = false;
+    removeAll(children);
+    game.world.removeAll(game.world.children);
+    // デバッグモードのときはステージの最大幅・高さを指定する
     if (game.testMode) {
+      stage.stageMaxLT = Point(-(Config().debugStageWidth / 2).ceil(),
+          -(Config().debugStageHeight / 2).ceil());
+      stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
+          (Config().debugStageHeight / 2).ceil());
+    }
+    stage.initialize(game.camera, game.stageData, t);
+
+    // プレイヤー操作ボタン領域
+    add(playerControllButtonsArea!);
+    // 画面上部ゲーム情報領域
+    add(topGameInfoArea);
+    // メニュー領域
+    add(menuArea);
+    // 手の能力ボタン領域
+    add(handAbilityOnOffButton);
+    // 足の能力ボタン領域
+    add(legAbilityOnOffButton);
+    // アーマー能力ボタン領域
+    add(armerAbilityOnOffButton);
+    // ポケット能力ボタン領域
+    add(pocketAbilityButton);
+    // メニューボタン領域
+    add(menuButton);
+    if (game.testMode) {
+      // 【テストモード時】現在座標表示領域
+      add(currentPosText);
+      // 【テストモード】現在の表示モード切り替えボタン
       add(viewModeButton);
     }
 

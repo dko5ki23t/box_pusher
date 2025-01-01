@@ -296,8 +296,8 @@ class Stage {
   }
 
   /// ステージを生成する
-  Future<void> initialize(
-      CameraComponent camera, Map<String, dynamic> stageData) async {
+  void initialize(
+      CameraComponent camera, Map<String, dynamic> stageData, bool t) {
     assert(isReady, 'Stage.onLoad() is not called!');
     effectBase = [
       _objFactory.create(
@@ -310,7 +310,7 @@ class Stage {
     if (stageData.containsKey('score')) {
       _setStageDataFromSaveData(camera, stageData);
     } else {
-      await _setStageDataFromInitialData(camera);
+      _setStageDataFromInitialData(camera, t);
     }
   }
 
@@ -889,7 +889,7 @@ class Stage {
     );
   }
 
-  Future<void> _setStageDataFromInitialData(CameraComponent camera) async {
+  _setStageDataFromInitialData(CameraComponent camera, bool t) {
     // ステージ範囲設定
     stageLT = Point(-6, -20);
     stageRB = Point(6, 20);
@@ -904,7 +904,7 @@ class Stage {
     _updateNextMergeItem();
     // 各分布の初期化
     if (Config().setObjInBlockWithDistributionAlgorithm) {
-      prepareDistributions();
+      prepareDistributions(t);
     }
     _staticObjs.clear();
     boxes.forceClear();
@@ -1099,7 +1099,7 @@ class Stage {
     }
   }
 
-  void prepareDistributions() {
+  void prepareDistributions(bool t) {
     // 先に床/ブロックの分布
     int colorIdx = -1;
     blockFloorDistribution.clear();
