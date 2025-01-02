@@ -707,9 +707,9 @@ class GameSeq extends Sequence
     // 手の能力取得状況更新
     handAbilityOnOffButton.isOn = stage.getHandAbility();
     // 足の能力取得状況更新
+    legAbilityOnOffButton.isOn = stage.getLegAbility();
     if (beforeLegAbility != stage.getLegAbility() ||
         prevIsDiagonalButtonMode != isDiagonalButtonMode) {
-      legAbilityOnOffButton.isOn = stage.getLegAbility();
       updatePlayerControllButtons();
     }
     prevIsDiagonalButtonMode = isDiagonalButtonMode;

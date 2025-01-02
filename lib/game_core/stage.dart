@@ -320,6 +320,10 @@ class Stage {
     } else {
       _setStageDataFromInitialData(camera);
     }
+    if (testMode) {
+      // 【テストモード】各範囲の分布表示
+      _createDistributionView();
+    }
   }
 
   Future<Map<String, dynamic>> encodeStageData() async {
@@ -1112,69 +1116,65 @@ class Stage {
 
   void prepareDistributions() {
     // 先に床/ブロックの分布
-    int colorIdx = -1;
     blockFloorDistribution.clear();
     blockFloorDistribution.addAll(Config().blockFloorDistribution);
     for (final v in blockFloorDistribution.values) {
       v.reset();
     }
-    // 【テストモード】範囲の表示を作成
-    if (testMode) {
-      for (final entry in blockFloorDistribution.entries) {
-        // 表示の色分け
-        colorIdx = (++colorIdx) % Config.distributionMapColors.length;
-        Color mapColor = Config.distributionMapColors[colorIdx];
-        Set set = entry.key.set;
-        for (final t in blockFloorDistribution.keys) {
-          if (t == entry.key) break;
-          set = set.difference(t.set);
-        }
-        blockFloorMapView.addAll([
-          for (final p in set)
-            RectangleComponent(
-              priority: Stage.frontPriority,
-              size: Stage.cellSize,
-              anchor: Anchor.center,
-              position:
-                  (Vector2(p.x * Stage.cellSize.x, p.y * Stage.cellSize.y) +
-                      Stage.cellSize / 2),
-            )..paint = (Paint()
-              ..color = mapColor
-              ..style = PaintingStyle.fill)
-        ]);
-      }
-    }
     // 続いてブロック破壊時出現オブジェクトの分布
-    colorIdx = -1;
     objInBlockDistribution.clear();
     objInBlockDistribution.addAll(Config().objInBlockDistribution);
     for (final v in objInBlockDistribution.values) {
       v.reset();
     }
-    // 【テストモード】範囲の表示を作成
-    if (testMode) {
-      for (final entry in objInBlockDistribution.entries) {
-        colorIdx = (++colorIdx) % Config.distributionMapColors.length;
-        Set set = entry.key.set;
-        for (final t in objInBlockDistribution.keys) {
-          if (t == entry.key) break;
-          set = set.difference(t.set);
-        }
-        Color mapColor = Config.distributionMapColors[colorIdx];
-        objInBlockMapView.addAll([
-          for (final p in set)
-            RectangleComponent(
-              priority: Stage.frontPriority,
-              size: Stage.cellSize,
-              anchor: Anchor.center,
-              position:
-                  (Vector2(p.x * Stage.cellSize.x, p.y * Stage.cellSize.y) +
-                      Stage.cellSize / 2),
-            )..paint = (Paint()
-              ..color = mapColor
-              ..style = PaintingStyle.fill)
-        ]);
+  }
+
+  // 【テストモード】範囲の表示を作成
+  void _createDistributionView() {
+    int colorIdx = -1;
+    for (final entry in blockFloorDistribution.entries) {
+      // 表示の色分け
+      colorIdx = (++colorIdx) % Config.distributionMapColors.length;
+      Color mapColor = Config.distributionMapColors[colorIdx];
+      Set set = entry.key.set;
+      for (final t in blockFloorDistribution.keys) {
+        if (t == entry.key) break;
+        set = set.difference(t.set);
       }
+      blockFloorMapView.addAll([
+        for (final p in set)
+          RectangleComponent(
+            priority: Stage.frontPriority,
+            size: Stage.cellSize,
+            anchor: Anchor.center,
+            position: (Vector2(p.x * Stage.cellSize.x, p.y * Stage.cellSize.y) +
+                Stage.cellSize / 2),
+          )..paint = (Paint()
+            ..color = mapColor
+            ..style = PaintingStyle.fill)
+      ]);
+    }
+    colorIdx = -1;
+    for (final entry in objInBlockDistribution.entries) {
+      colorIdx = (++colorIdx) % Config.distributionMapColors.length;
+      Set set = entry.key.set;
+      for (final t in objInBlockDistribution.keys) {
+        if (t == entry.key) break;
+        set = set.difference(t.set);
+      }
+      Color mapColor = Config.distributionMapColors[colorIdx];
+      objInBlockMapView.addAll([
+        for (final p in set)
+          RectangleComponent(
+            priority: Stage.frontPriority,
+            size: Stage.cellSize,
+            anchor: Anchor.center,
+            position: (Vector2(p.x * Stage.cellSize.x, p.y * Stage.cellSize.y) +
+                Stage.cellSize / 2),
+          )..paint = (Paint()
+            ..color = mapColor
+            ..style = PaintingStyle.fill)
+      ]);
     }
   }
 
