@@ -503,6 +503,12 @@ class Distribution<T> {
     _remain.addAll(_total);
   }
 
+  void reset() {
+    _remain.clear();
+    _remain.addAll(_total);
+    remainTotal = totalTotal;
+  }
+
   bool get isEmpty => remainTotal <= 0;
 
   Iterable<T> get keys => _total.keys;

@@ -124,13 +124,16 @@ class Audio {
     isLoaded = true;
   }
 
-  void playSound(Sound sound) async {
+  Future<void> playSound(Sound sound) async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
     for (final player in _soundPlayers) {
       if (player.state == PlayerState.stopped ||
           player.state == PlayerState.completed) {
         try {
-          player.play(AssetSource(sound.fileName), volume: sound.volume);
+          await player.play(
+            AssetSource(sound.fileName),
+            volume: sound.volume,
+          );
         } catch (e) {
           log('[Audio]playSound() error : $e');
         }
@@ -140,36 +143,36 @@ class Audio {
     log('[Audio.playSound()] 全てのプレイヤーが使用中のため再生できなかった：${sound.name}');
   }
 
-  void playBGM(Bgm bgm) async {
+  Future<void> playBGM(Bgm bgm) async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
     try {
-      _bgmPlayer.stop();
-      _bgmPlayer.play(AssetSource(bgm.fileName), volume: bgm.volume);
+      await _bgmPlayer.stop();
+      await _bgmPlayer.play(AssetSource(bgm.fileName), volume: bgm.volume);
     } catch (e) {
       log('[Audio]playBGM() error : $e');
     }
   }
 
-  void stopBGM() {
+  Future<void> stopBGM() async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    _bgmPlayer.stop();
+    await _bgmPlayer.stop();
   }
 
-  void pauseBGM() {
+  Future<void> pauseBGM() async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    _bgmPlayer.pause();
+    await _bgmPlayer.pause();
   }
 
-  void resumeBGM() {
+  Future<void> resumeBGM() async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    _bgmPlayer.resume();
+    await _bgmPlayer.resume();
   }
 
   Future<void> onRemove() async {
     assert(!isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    _bgmPlayer.dispose();
+    await _bgmPlayer.dispose();
     for (final player in _soundPlayers) {
-      player.dispose();
+      await player.dispose();
     }
   }
 }

@@ -48,6 +48,12 @@ class GameSeq extends Sequence
   /// 画面上下の操作ボタン領域(xPadding領域と重複。この領域下にはステージ描画もされる。y方向サイズはあとで計算する)
   static Vector2 get xButtonAreaSize => Vector2(50.0, 560.0);
 
+  static Vector2 get xButtonAreaReal => Vector2(xButtonAreaSize.x,
+      640.0 - topPaddingSize.y - yButtonAreaSize.y * 2 - menuButtonAreaSize.y);
+
+  /// プレイヤー操作ボタン領域2
+  static Vector2 get xButtonAreaSize2 => Vector2(50.0, 50.0);
+
   /// 画面斜めの操作ボタン領域(xPadding領域と重複。この領域下にはステージ描画もされる。)
   static Vector2 get dButtonAreaSize => Vector2(300.0, 120.0);
 
@@ -100,6 +106,10 @@ class GameSeq extends Sequence
   /// ステージオブジェクト
   late Stage stage;
 
+  /// 斜めの操作ボタンを表示中か
+  bool isDiagonalButtonMode = false;
+  bool prevIsDiagonalButtonMode = false;
+
   /// 現在押されている移動ボタンの移動方向
   Move pushingMoveButton = Move.none;
 
@@ -110,23 +120,35 @@ class GameSeq extends Sequence
   late final Image armerAbilityImg;
   late final Image pocketAbilityImg;
   late final Image settingsImg;
-  late TextComponent currentPosText;
-  late TextComponent remainMergeCountText;
-  late SpriteAnimationComponent nextMergeItem;
-  late SpriteAnimationComponent nextMergeItem2;
-  late SpriteAnimationComponent nextMergeItem3;
-  late TextComponent scoreText;
-  late TextComponent coinNumText;
+  late final Image diagonalMoveImg;
+  late final TextComponent currentPosText;
+  late final TextComponent remainMergeCountText;
+  late final SpriteAnimationComponent nextMergeItem;
+  late final SpriteAnimationComponent nextMergeItem2;
+  late final SpriteAnimationComponent nextMergeItem3;
+  late final TextComponent scoreText;
+  late final TextComponent coinNumText;
+  late final ButtonComponent topGameInfoArea;
   ClipComponent? playerControllButtonsArea;
   ClipComponent? clipByDiagonalMoveButton;
   List<ButtonComponent>? playerStraightMoveButtons;
+  late final ButtonComponent playerUpMoveButton;
+  late final ButtonComponent playerDownMoveButton;
+  late final ButtonComponent playerLeftMoveButton;
+  late final ButtonComponent playerRightMoveButton;
+  late final PositionComponent playerUpLeftMoveButton;
+  late final PositionComponent playerUpRightMoveButton;
+  late final PositionComponent playerDownLeftMoveButton;
+  late final PositionComponent playerDownRightMoveButton;
+  late final ButtonComponent playerControllDiagonalModeButton;
   List<PositionComponent>? playerDiagonalMoveButtons;
-  late GameSpriteOnOffButton handAbilityOnOffButton;
-  late GameSpriteOnOffButton legAbilityOnOffButton;
-  late GameSpriteOnOffButton armerAbilityOnOffButton;
-  late GameSpriteAnimationButton pocketAbilityButton;
-  late GameSpriteButton menuButton;
-  late GameTextButton viewModeButton;
+  late final RectangleComponent menuArea;
+  late final GameSpriteOnOffButton handAbilityOnOffButton;
+  late final GameSpriteOnOffButton legAbilityOnOffButton;
+  late final GameSpriteOnOffButton armerAbilityOnOffButton;
+  late final GameSpriteAnimationButton pocketAbilityButton;
+  late final GameSpriteButton menuButton;
+  late final GameTextButton viewModeButton;
 
   @override
   Future<void> onLoad() async {
@@ -138,8 +160,14 @@ class GameSeq extends Sequence
     armerAbilityImg = await Flame.images.load('armer_ability.png');
     pocketAbilityImg = await Flame.images.load('pocket_ability.png');
     settingsImg = await Flame.images.load('settings.png');
+    diagonalMoveImg = await Flame.images.load('arrows_output.png');
+    // ステージ作成
+    stage = Stage(testMode: game.testMode, gameWorld: game.world);
+    await stage.onLoad();
+    // 画面コンポーネント作成
+    _createComponents();
     // 画面コンポーネント初期化
-    await initialize();
+    initialize(true);
   }
 
   @override
@@ -152,6 +180,7 @@ class GameSeq extends Sequence
         // BGMを最初から再生
         Audio().playBGM(Bgm.game);
       }
+      updatePlayerControllButtons();
     }
   }
 
@@ -167,231 +196,8 @@ class GameSeq extends Sequence
     Audio().stopBGM();
   }
 
-  // 初期化（というよりリセット）
-  Future<void> initialize() async {
-    // 準備中にする
-    isReady = false;
-    removeAll(children);
-    game.world.removeAll(game.world.children);
-
-    stage = Stage(testMode: game.testMode, gameWorld: game.world);
-    await stage.onLoad();
-    // デバッグモードのときはステージの最大幅・高さを指定する
-    if (game.testMode) {
-      stage.stageMaxLT = Point(-(Config().debugStageWidth / 2).ceil(),
-          -(Config().debugStageHeight / 2).ceil());
-      stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
-          (Config().debugStageHeight / 2).ceil());
-    }
-    await stage.initialize(game.camera, game.stageData);
-
-    // プレイヤーの操作ボタン群
-    final clipSize = Vector2(
-        yButtonAreaSize.x, 640.0 - topPaddingSize.y - menuButtonAreaSize.y);
-    final tv = Vector2(0.3, 0.3 * 9 / 16);
-    playerControllButtonsArea ??= ClipComponent.rectangle(
-      position: Vector2(0, topPaddingSize.y),
-      size: clipSize,
-    );
-    // 上下左右の移動ボタン
-    playerStraightMoveButtons ??= [
-      // 画面上の操作ボタン
-      playerControllButton(
-        size: yButtonAreaSize,
-        position: Vector2(0, 0),
-        arrowAngle: 0.0,
-        move: Move.up,
-      ),
-      // 画面下の操作ボタン
-      playerControllButton(
-        size: yButtonAreaSize,
-        position: Vector2(
-            0,
-            640.0 -
-                topPaddingSize.y -
-                menuButtonAreaSize.y -
-                yButtonAreaSize.y),
-        arrowAngle: pi,
-        move: Move.down,
-      ),
-      // 画面左の操作ボタン
-      playerControllButton(
-        size: Vector2(
-            xButtonAreaSize.x,
-            640.0 -
-                topPaddingSize.y -
-                yButtonAreaSize.y * 2 -
-                menuButtonAreaSize.y),
-        position: Vector2(0, yButtonAreaSize.y),
-        arrowAngle: -0.5 * pi,
-        move: Move.left,
-      ),
-      // 画面右の操作ボタン
-      playerControllButton(
-        size: Vector2(
-            xButtonAreaSize.x,
-            640.0 -
-                topPaddingSize.y -
-                yButtonAreaSize.y * 2 -
-                menuButtonAreaSize.y),
-        position: Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y),
-        arrowAngle: 0.5 * pi,
-        move: Move.right,
-      ),
-    ];
-    // 斜めの移動ボタン
-    playerDiagonalMoveButtons ??= [
-      // 画面左上の操作ボタン
-      Config().wideDiagonalMoveButton
-          ? ClipComponent.polygon(
-              points: [
-                Vector2(0, 0),
-                Vector2(tv.x, 0),
-                Vector2(0, tv.y),
-                Vector2(0, 0),
-              ],
-              size: clipSize,
-              children: [
-                playerControllButton(
-                  size: dButtonAreaSize,
-                  position:
-                      Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
-                  anchor: Anchor.center,
-                  angle: -0.25 * pi,
-                  move: Move.upLeft,
-                ),
-              ],
-            )
-          : playerControllButton(
-              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
-              position: Vector2(0, 0),
-              arrowAngle: -0.25 * pi,
-              move: Move.upLeft,
-            ),
-      // 画面右上の操作ボタン
-      Config().wideDiagonalMoveButton
-          ? ClipComponent.polygon(
-              points: [
-                Vector2(1, 0),
-                Vector2(1 - tv.x, 0),
-                Vector2(1, tv.y),
-                Vector2(1, 0),
-              ],
-              size: clipSize,
-              children: [
-                playerControllButton(
-                  size: dButtonAreaSize,
-                  position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
-                      yButtonAreaSize.y * 0.5),
-                  anchor: Anchor.center,
-                  angle: 0.25 * pi,
-                  move: Move.upRight,
-                ),
-              ],
-            )
-          : playerControllButton(
-              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
-              position: Vector2(360.0 - xButtonAreaSize.x, 0),
-              arrowAngle: 0.25 * pi,
-              move: Move.upRight,
-            ),
-      // 画面左下の操作ボタン
-      Config().wideDiagonalMoveButton
-          ? ClipComponent.polygon(
-              points: [
-                Vector2(0, 1 - tv.y),
-                Vector2(tv.x, 1),
-                Vector2(0, 1),
-                Vector2(0, 1 - tv.y),
-              ],
-              size: clipSize,
-              children: [
-                playerControllButton(
-                  size: dButtonAreaSize,
-                  position: Vector2(xButtonAreaSize.x * 0.5,
-                      clipSize.y - yButtonAreaSize.y * 0.5),
-                  anchor: Anchor.center,
-                  angle: -0.75 * pi,
-                  move: Move.downLeft,
-                ),
-              ],
-            )
-          : playerControllButton(
-              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
-              position: Vector2(
-                  0,
-                  640.0 -
-                      topPaddingSize.y -
-                      menuButtonAreaSize.y -
-                      yButtonAreaSize.y),
-              arrowAngle: -0.75 * pi,
-              move: Move.downLeft,
-            ),
-      // 画面右下の操作ボタン
-      Config().wideDiagonalMoveButton
-          ? ClipComponent.polygon(
-              points: [
-                Vector2(1, 1 - tv.y),
-                Vector2(1, 1),
-                Vector2(1 - tv.x, 1),
-                Vector2(1, 1 - tv.y),
-              ],
-              size: clipSize,
-              children: [
-                playerControllButton(
-                  size: dButtonAreaSize,
-                  position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
-                      clipSize.y - yButtonAreaSize.y * 0.5),
-                  anchor: Anchor.center,
-                  angle: 0.75 * pi,
-                  move: Move.downRight,
-                ),
-              ],
-            )
-          : playerControllButton(
-              size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
-              position: Vector2(
-                  360.0 - xButtonAreaSize.x,
-                  640.0 -
-                      topPaddingSize.y -
-                      menuButtonAreaSize.y -
-                      yButtonAreaSize.y),
-              arrowAngle: 0.75 * pi,
-              move: Move.downRight,
-            ),
-    ];
-    // 上下左右の操作ボタン領域(斜めボタンの領域は削る)
-    clipByDiagonalMoveButton ??= ClipComponent.polygon(
-      points: [
-        Vector2(tv.x, 0),
-        Vector2(1 - tv.x, 0),
-        Vector2(1, tv.y),
-        Vector2(1, 1 - tv.y),
-        Vector2(1 - tv.x, 1),
-        Vector2(tv.x, 1),
-        Vector2(0, 1 - tv.y),
-        Vector2(0, tv.y),
-        Vector2(tv.x, 0),
-      ],
-      size: clipSize,
-    );
-
-    // 斜め移動可能かどうかで操作ボタンの表示を変える
-    playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
-    if (stage.getLegAbility()) {
-      if (Config().wideDiagonalMoveButton) {
-        clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-        playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-      } else {
-        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-      }
-    } else {
-      playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-    }
-
-    add(playerControllButtonsArea!);
+  /// 画面コンポーネント作成
+  void _createComponents() {
     // 画面上部、ボタンではない領域
     // 次アイテム出現までのマージ回数
     remainMergeCountText = TextComponent(
@@ -437,83 +243,307 @@ class GameSeq extends Sequence
         ),
       ),
     );
-    add(
-      ButtonComponent(
-        button: RectangleComponent(
-          size: topPaddingSize,
-          paint: Paint()
-            ..color = const Color(0x80000000)
-            ..style = PaintingStyle.fill,
-          children: [
-            // 次マージ時出現アイテム（左側に配置）
-            AlignComponent(
-              alignment: Anchor.bottomLeft,
-              child: PositionComponent(
-                size: nextItemAreaSize,
-                children: [
-                  AlignComponent(
-                    alignment: Anchor.centerLeft,
-                    child: remainMergeCountText,
-                  ),
-                  AlignComponent(
-                    alignment: Anchor.centerRight,
-                    child: PositionComponent(
-                      size:
-                          Vector2(Stage.cellSize.x * 3, Stage.cellSize.y) * 0.8,
-                      children: [
-                        AlignComponent(
-                          alignment: Anchor.centerLeft,
-                          child: nextMergeItem,
-                        ),
-                        AlignComponent(
-                          alignment: Anchor.center,
-                          child: nextMergeItem2,
-                        ),
-                        AlignComponent(
-                          alignment: Anchor.centerRight,
-                          child: nextMergeItem3,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+    // プレイヤーの操作ボタン群
+    final clipSize = Vector2(
+        yButtonAreaSize.x, 640.0 - topPaddingSize.y - menuButtonAreaSize.y);
+    final tv = Vector2(0.3, 0.3 * 9 / 16);
+    playerControllButtonsArea ??= ClipComponent.rectangle(
+      position: Vector2(0, topPaddingSize.y),
+      size: clipSize,
+    );
+    // 上下左右の移動ボタン
+    // 画面上の操作ボタン
+    playerUpMoveButton = playerControllButton(
+      size: yButtonAreaSize,
+      position: Vector2(0, 0),
+      arrowAngle: 0.0,
+      move: Move.up,
+    );
+    // 画面下の操作ボタン
+    playerDownMoveButton = playerControllButton(
+      size: yButtonAreaSize,
+      position: Vector2(0,
+          640.0 - topPaddingSize.y - menuButtonAreaSize.y - yButtonAreaSize.y),
+      arrowAngle: pi,
+      move: Move.down,
+    );
+    // 画面左の操作ボタン
+    playerLeftMoveButton = playerControllButton(
+      size: xButtonAreaReal,
+      position: Vector2(0, yButtonAreaSize.y),
+      arrowAngle: -0.5 * pi,
+      move: Move.left,
+    );
+    // 画面右の操作ボタン
+    playerRightMoveButton = playerControllButton(
+      size: xButtonAreaReal,
+      position: Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y),
+      arrowAngle: 0.5 * pi,
+      move: Move.right,
+    );
+    // 斜め移動操作切り替えボタン
+    playerControllDiagonalModeButton = ButtonComponent(
+      onReleased: () {
+        isDiagonalButtonMode = !isDiagonalButtonMode;
+      },
+      size: xButtonAreaSize2,
+      anchor: Anchor.center,
+      position: Vector2(
+          (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x * 2,
+          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y),
+      button: CircleComponent(
+        radius: xButtonAreaSize2.x / 2,
+        paint: Paint()
+          ..color = const Color(0x80000000)
+          ..style = PaintingStyle.fill,
+        children: [
+          AlignComponent(
+            alignment: Anchor.center,
+            child: SpriteComponent(
+              sprite: Sprite(diagonalMoveImg),
+              size: Vector2(24.0, 24.0),
+              anchor: Anchor.center,
             ),
-            // スコア（中央に配置）
-            AlignComponent(
-              alignment: Anchor.bottomCenter,
-              child: PositionComponent(
-                size: scoreAreaSize,
-                children: [
-                  AlignComponent(
-                    alignment: Anchor.center,
-                    child: scoreText,
-                  )
-                ],
-              ),
+          ),
+        ],
+      ),
+      buttonDown: CircleComponent(
+        radius: xButtonAreaSize2.x / 2,
+        paint: Paint()
+          ..color = const Color(0xC0000000)
+          ..style = PaintingStyle.fill,
+        children: [
+          AlignComponent(
+            alignment: Anchor.center,
+            child: SpriteComponent(
+              sprite: Sprite(diagonalMoveImg),
+              size: Vector2(16.0, 16.0),
+              anchor: Anchor.center,
             ),
-            // コイン（右側に配置）
-            AlignComponent(
-              alignment: Anchor.bottomRight,
-              child: PositionComponent(
-                size: coinsAreaSize,
-                children: [
-                  AlignComponent(
-                      alignment: Anchor.centerLeft,
-                      child: SpriteComponent.fromImage(coinImg)),
-                  AlignComponent(
-                    alignment: Anchor.centerRight,
-                    child: coinNumText,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
-    // メニュー領域
-    add(RectangleComponent(
+    playerStraightMoveButtons ??= [
+      playerUpMoveButton,
+      playerDownMoveButton,
+      playerLeftMoveButton,
+      playerRightMoveButton,
+    ];
+    // 画面左上の操作ボタン
+    playerUpLeftMoveButton = Config().wideDiagonalMoveButton
+        ? ClipComponent.polygon(
+            points: [
+              Vector2(0, 0),
+              Vector2(tv.x, 0),
+              Vector2(0, tv.y),
+              Vector2(0, 0),
+            ],
+            size: clipSize,
+            children: [
+              playerControllButton(
+                size: dButtonAreaSize,
+                position:
+                    Vector2(xButtonAreaSize.x * 0.5, yButtonAreaSize.y * 0.5),
+                anchor: Anchor.center,
+                angle: -0.25 * pi,
+                move: Move.upLeft,
+              ),
+            ],
+          )
+        : playerControllButton(
+            size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+            position: Vector2(0, 0),
+            arrowAngle: -0.25 * pi,
+            move: Move.upLeft,
+          );
+    // 画面右上の操作ボタン
+    playerUpRightMoveButton = Config().wideDiagonalMoveButton
+        ? ClipComponent.polygon(
+            points: [
+              Vector2(1, 0),
+              Vector2(1 - tv.x, 0),
+              Vector2(1, tv.y),
+              Vector2(1, 0),
+            ],
+            size: clipSize,
+            children: [
+              playerControllButton(
+                size: dButtonAreaSize,
+                position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                    yButtonAreaSize.y * 0.5),
+                anchor: Anchor.center,
+                angle: 0.25 * pi,
+                move: Move.upRight,
+              ),
+            ],
+          )
+        : playerControllButton(
+            size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+            position: Vector2(360.0 - xButtonAreaSize.x, 0),
+            arrowAngle: 0.25 * pi,
+            move: Move.upRight,
+          );
+    // 画面左下の操作ボタン
+    playerDownLeftMoveButton = Config().wideDiagonalMoveButton
+        ? ClipComponent.polygon(
+            points: [
+              Vector2(0, 1 - tv.y),
+              Vector2(tv.x, 1),
+              Vector2(0, 1),
+              Vector2(0, 1 - tv.y),
+            ],
+            size: clipSize,
+            children: [
+              playerControllButton(
+                size: dButtonAreaSize,
+                position: Vector2(xButtonAreaSize.x * 0.5,
+                    clipSize.y - yButtonAreaSize.y * 0.5),
+                anchor: Anchor.center,
+                angle: -0.75 * pi,
+                move: Move.downLeft,
+              ),
+            ],
+          )
+        : playerControllButton(
+            size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+            position: Vector2(
+                0,
+                640.0 -
+                    topPaddingSize.y -
+                    menuButtonAreaSize.y -
+                    yButtonAreaSize.y),
+            arrowAngle: -0.75 * pi,
+            move: Move.downLeft,
+          );
+    // 画面右下の操作ボタン
+    playerDownRightMoveButton = Config().wideDiagonalMoveButton
+        ? ClipComponent.polygon(
+            points: [
+              Vector2(1, 1 - tv.y),
+              Vector2(1, 1),
+              Vector2(1 - tv.x, 1),
+              Vector2(1, 1 - tv.y),
+            ],
+            size: clipSize,
+            children: [
+              playerControllButton(
+                size: dButtonAreaSize,
+                position: Vector2(clipSize.x - xButtonAreaSize.x * 0.5,
+                    clipSize.y - yButtonAreaSize.y * 0.5),
+                anchor: Anchor.center,
+                angle: 0.75 * pi,
+                move: Move.downRight,
+              ),
+            ],
+          )
+        : playerControllButton(
+            size: Vector2(xButtonAreaSize.x, yButtonAreaSize.y),
+            position: Vector2(
+                360.0 - xButtonAreaSize.x,
+                640.0 -
+                    topPaddingSize.y -
+                    menuButtonAreaSize.y -
+                    yButtonAreaSize.y),
+            arrowAngle: 0.75 * pi,
+            move: Move.downRight,
+          );
+    // 斜めの移動ボタン
+    playerDiagonalMoveButtons ??= [
+      playerUpLeftMoveButton,
+      playerUpRightMoveButton,
+      playerDownLeftMoveButton,
+      playerDownRightMoveButton,
+    ];
+    // 上下左右の操作ボタン領域(斜めボタンの領域は削る)
+    clipByDiagonalMoveButton ??= ClipComponent.polygon(
+      points: [
+        Vector2(tv.x, 0),
+        Vector2(1 - tv.x, 0),
+        Vector2(1, tv.y),
+        Vector2(1, 1 - tv.y),
+        Vector2(1 - tv.x, 1),
+        Vector2(tv.x, 1),
+        Vector2(0, 1 - tv.y),
+        Vector2(0, tv.y),
+        Vector2(tv.x, 0),
+      ],
+      size: clipSize,
+    );
+
+    topGameInfoArea = ButtonComponent(
+      button: RectangleComponent(
+        size: topPaddingSize,
+        paint: Paint()
+          ..color = const Color(0x80000000)
+          ..style = PaintingStyle.fill,
+        children: [
+          // 次マージ時出現アイテム（左側に配置）
+          AlignComponent(
+            alignment: Anchor.bottomLeft,
+            child: PositionComponent(
+              size: nextItemAreaSize,
+              children: [
+                AlignComponent(
+                  alignment: Anchor.centerLeft,
+                  child: remainMergeCountText,
+                ),
+                AlignComponent(
+                  alignment: Anchor.centerRight,
+                  child: PositionComponent(
+                    size: Vector2(Stage.cellSize.x * 3, Stage.cellSize.y) * 0.8,
+                    children: [
+                      AlignComponent(
+                        alignment: Anchor.centerLeft,
+                        child: nextMergeItem,
+                      ),
+                      AlignComponent(
+                        alignment: Anchor.center,
+                        child: nextMergeItem2,
+                      ),
+                      AlignComponent(
+                        alignment: Anchor.centerRight,
+                        child: nextMergeItem3,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // スコア（中央に配置）
+          AlignComponent(
+            alignment: Anchor.bottomCenter,
+            child: PositionComponent(
+              size: scoreAreaSize,
+              children: [
+                AlignComponent(
+                  alignment: Anchor.center,
+                  child: scoreText,
+                )
+              ],
+            ),
+          ),
+          // コイン（右側に配置）
+          AlignComponent(
+            alignment: Anchor.bottomRight,
+            child: PositionComponent(
+              size: coinsAreaSize,
+              children: [
+                AlignComponent(
+                    alignment: Anchor.centerLeft,
+                    child: SpriteComponent.fromImage(coinImg)),
+                AlignComponent(
+                  alignment: Anchor.centerRight,
+                  child: coinNumText,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    menuArea = RectangleComponent(
       size: menuButtonAreaSize,
       position: Vector2(0, 640.0 - menuButtonAreaSize.y),
       paint: Paint()
@@ -528,53 +558,35 @@ class GameSeq extends Sequence
             ..style = PaintingStyle.fill,
         ),
       ],
-    ));
+    );
     Vector2 abilityButtonPos =
         Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y);
     // 手の能力ボタン領域
     handAbilityOnOffButton = GameSpriteOnOffButton(
-      isOn: stage.getHandAbility(),
       onChanged:
           game.testMode ? (bool isOn) => stage.setHandAbility(isOn) : null,
       size: handAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(handAbilityImg),
     );
-    add(handAbilityOnOffButton);
     // 足の能力ボタン領域
     abilityButtonPos +=
         Vector2(handAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     legAbilityOnOffButton = GameSpriteOnOffButton(
-      isOn: stage.getLegAbility(),
       onChanged: game.testMode
           ? (bool isOn) {
               stage.setLegAbility(isOn);
-              playerControllButtonsArea!
-                  .removeAll(playerControllButtonsArea!.children);
-              if (stage.getLegAbility()) {
-                if (Config().wideDiagonalMoveButton) {
-                  clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-                  playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-                  playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-                } else {
-                  playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-                  playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-                }
-              } else {
-                playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-              }
+              updatePlayerControllButtons();
             }
           : null,
       size: legAbilityButtonAreaSize,
       position: abilityButtonPos,
       sprite: Sprite(legAbilityImg),
     );
-    add(legAbilityOnOffButton);
     // アーマー能力ボタン領域
     abilityButtonPos +=
         Vector2(legAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     armerAbilityOnOffButton = GameSpriteOnOffButton(
-      isOn: stage.getArmerAbility(),
       onChanged:
           game.testMode ? (bool isOn) => stage.setArmerAbility(isOn) : null,
       size: armerAbilityButtonAreaSize,
@@ -582,7 +594,6 @@ class GameSeq extends Sequence
       sprite: Sprite(armerAbilityImg,
           srcPosition: Vector2.zero(), srcSize: Vector2.all(32)),
     );
-    add(armerAbilityOnOffButton);
     // ポケット能力ボタン領域
     abilityButtonPos +=
         Vector2(armerAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
@@ -590,11 +601,9 @@ class GameSeq extends Sequence
       onReleased: () => stage.usePocketAbility(game.world),
       size: pocketAbilityButtonAreaSize,
       position: abilityButtonPos,
-      enabled: stage.getPocketAbility(),
       animation:
           SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0),
     );
-    add(pocketAbilityButton);
     // メニューボタン領域
     menuButton = GameSpriteButton(
       size: settingsButtonAreaSize,
@@ -603,26 +612,20 @@ class GameSeq extends Sequence
       sprite: Sprite(settingsImg),
       onReleased: () => game.pushSeqNamed("menu"),
     );
-    add(menuButton);
-
-    // 【テストモード時】現在座標表示領域
-    currentPosText = TextComponent(
-      size: currentPosAreaSize,
-      position: Vector2(0, yPaddingSize.y),
-      text: "pos:(${stage.player.pos.x},${stage.player.pos.y})",
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: Config.gameTextFamily,
-          color: Color(0xffffffff),
-        ),
-      ),
-    );
     if (game.testMode) {
-      add(currentPosText);
-    }
-
-    // 【テストモード】現在の表示モード切り替えボタン
-    viewModeButton = GameTextButton(
+      // 【テストモード時】現在座標表示領域
+      currentPosText = TextComponent(
+        size: currentPosAreaSize,
+        position: Vector2(0, yPaddingSize.y),
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            fontFamily: Config.gameTextFamily,
+            color: Color(0xffffffff),
+          ),
+        ),
+      );
+      // 【テストモード】現在の表示モード切り替えボタン
+      viewModeButton = GameTextButton(
         size: viewModeButtonAreaSize,
         position: Vector2(360.0 - viewModeButtonAreaSize.x, yPaddingSize.y),
         text: viewMode.name,
@@ -643,8 +646,46 @@ class GameSeq extends Sequence
               game.world.addAll(stage.objInBlockMapView);
               break;
           }
-        });
+        },
+      );
+    }
+  }
+
+  // 初期化（というよりリセット）
+  void initialize(bool t) {
+    // 準備中にする
+    isReady = false;
+    removeAll(children);
+    game.world.removeAll(game.world.children);
+    // デバッグモードのときはステージの最大幅・高さを指定する
     if (game.testMode) {
+      stage.stageMaxLT = Point(-(Config().debugStageWidth / 2).ceil(),
+          -(Config().debugStageHeight / 2).ceil());
+      stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
+          (Config().debugStageHeight / 2).ceil());
+    }
+    stage.initialize(game.camera, game.stageData, t);
+
+    // プレイヤー操作ボタン領域
+    add(playerControllButtonsArea!);
+    // 画面上部ゲーム情報領域
+    add(topGameInfoArea);
+    // メニュー領域
+    add(menuArea);
+    // 手の能力ボタン領域
+    add(handAbilityOnOffButton);
+    // 足の能力ボタン領域
+    add(legAbilityOnOffButton);
+    // アーマー能力ボタン領域
+    add(armerAbilityOnOffButton);
+    // ポケット能力ボタン領域
+    add(pocketAbilityButton);
+    // メニューボタン領域
+    add(menuButton);
+    if (game.testMode) {
+      // 【テストモード時】現在座標表示領域
+      add(currentPosText);
+      // 【テストモード】現在の表示モード切り替えボタン
       add(viewModeButton);
     }
 
@@ -655,6 +696,8 @@ class GameSeq extends Sequence
   @override
   void update(double dt) {
     super.update(dt);
+    // ゲームシーケンスでない場合は何もしない
+    if (game.getCurrentSeqName() != 'game') return;
     // クリア済みなら何もしない
     if (stage.isClear()) return;
     // ゲームオーバー済みなら何もしない
@@ -664,22 +707,12 @@ class GameSeq extends Sequence
     // 手の能力取得状況更新
     handAbilityOnOffButton.isOn = stage.getHandAbility();
     // 足の能力取得状況更新
-    if (beforeLegAbility != stage.getLegAbility()) {
+    if (beforeLegAbility != stage.getLegAbility() ||
+        prevIsDiagonalButtonMode != isDiagonalButtonMode) {
       legAbilityOnOffButton.isOn = stage.getLegAbility();
-      playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
-      if (stage.getLegAbility()) {
-        if (Config().wideDiagonalMoveButton) {
-          clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-          playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-        } else {
-          playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-        }
-      } else {
-        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-      }
+      updatePlayerControllButtons();
     }
+    prevIsDiagonalButtonMode = isDiagonalButtonMode;
     // アーマーの能力状況更新
     armerAbilityOnOffButton.isOn = stage.getArmerAbility();
     armerAbilityOnOffButton.sprite = Sprite(armerAbilityImg,
@@ -830,6 +863,185 @@ class GameSeq extends Sequence
     );
   }
 
+  void updatePlayerControllButtons() {
+    playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
+    if (Config().playerControllButtonType == 0) {
+      playerUpMoveButton.size = yButtonAreaSize;
+      playerUpMoveButton.button?.size = yButtonAreaSize;
+      playerUpMoveButton.buttonDown?.size = yButtonAreaSize;
+      playerUpMoveButton.position = Vector2.all(0);
+      playerDownMoveButton.size = yButtonAreaSize;
+      playerDownMoveButton.button?.size = yButtonAreaSize;
+      playerDownMoveButton.buttonDown?.size = yButtonAreaSize;
+      playerDownMoveButton.position = Vector2(0,
+          640.0 - topPaddingSize.y - menuButtonAreaSize.y - yButtonAreaSize.y);
+      playerLeftMoveButton.size = xButtonAreaReal;
+      playerLeftMoveButton.button?.size = xButtonAreaReal;
+      playerLeftMoveButton.buttonDown?.size = xButtonAreaReal;
+      playerLeftMoveButton.position = Vector2(0, yButtonAreaSize.y);
+      playerRightMoveButton.size = xButtonAreaReal;
+      playerRightMoveButton.button?.size = xButtonAreaReal;
+      playerRightMoveButton.buttonDown?.size = xButtonAreaReal;
+      playerRightMoveButton.position =
+          Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y);
+      if (Config().wideDiagonalMoveButton) {
+        /*
+        playerUpLeftMoveButton.size = yButtonAreaSize;
+        playerUpLeftMoveButton.button?.size = yButtonAreaSize;
+        playerUpLeftMoveButton.buttonDown?.size = yButtonAreaSize;
+        playerUpLeftMoveButton.position = Vector2.all(0);
+        playerDownMoveButton.size = yButtonAreaSize;
+        playerDownMoveButton.button?.size = yButtonAreaSize;
+        playerDownMoveButton.buttonDown?.size = yButtonAreaSize;
+        playerDownMoveButton.position = Vector2(
+            0,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                yButtonAreaSize.y);
+        playerLeftMoveButton.size = xButtonAreaReal;
+        playerLeftMoveButton.button?.size = xButtonAreaReal;
+        playerLeftMoveButton.buttonDown?.size = xButtonAreaReal;
+        playerLeftMoveButton.position = Vector2(0, yButtonAreaSize.y);
+        playerRightMoveButton.size = xButtonAreaReal;
+        playerRightMoveButton.button?.size = xButtonAreaReal;
+        playerRightMoveButton.buttonDown?.size = xButtonAreaReal;
+        playerRightMoveButton.position =
+            Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y);
+        */
+      } else {
+        playerUpLeftMoveButton.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        (playerUpLeftMoveButton as ButtonComponent).button?.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        (playerUpLeftMoveButton as ButtonComponent).buttonDown?.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        playerUpLeftMoveButton.position = Vector2.all(0);
+        playerUpRightMoveButton.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        (playerUpRightMoveButton as ButtonComponent).button?.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        (playerUpRightMoveButton as ButtonComponent).buttonDown?.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        playerUpRightMoveButton.position =
+            Vector2(360.0 - xButtonAreaSize.x, 0);
+        playerDownLeftMoveButton.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        (playerDownLeftMoveButton as ButtonComponent).button?.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        (playerDownLeftMoveButton as ButtonComponent).buttonDown?.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        playerDownLeftMoveButton.position = Vector2(
+            0,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                yButtonAreaSize.y);
+        playerDownRightMoveButton.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        (playerDownRightMoveButton as ButtonComponent).button?.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        (playerDownRightMoveButton as ButtonComponent).buttonDown?.size =
+            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        playerDownRightMoveButton.position = Vector2(
+            360.0 - xButtonAreaSize.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                yButtonAreaSize.y);
+      }
+      if (stage.getLegAbility()) {
+        if (Config().wideDiagonalMoveButton) {
+          clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+          playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+        } else {
+          playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+        }
+      } else {
+        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+      }
+    } else if (Config().playerControllButtonType == 1) {
+      playerUpMoveButton.size = xButtonAreaSize2;
+      playerUpMoveButton.button?.size = xButtonAreaSize2;
+      playerUpMoveButton.buttonDown?.size = xButtonAreaSize2;
+      playerUpMoveButton.position = Vector2(
+          (360.0 - xButtonAreaSize2.x) / 2,
+          640.0 -
+              topPaddingSize.y -
+              menuButtonAreaSize.y -
+              xButtonAreaSize2.y * 2);
+      playerDownMoveButton.size = xButtonAreaSize2;
+      playerDownMoveButton.button?.size = xButtonAreaSize2;
+      playerDownMoveButton.buttonDown?.size = xButtonAreaSize2;
+      playerDownMoveButton.position = Vector2((360.0 - xButtonAreaSize2.x) / 2,
+          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y);
+      playerLeftMoveButton.size = xButtonAreaSize2;
+      playerLeftMoveButton.button?.size = xButtonAreaSize2;
+      playerLeftMoveButton.buttonDown?.size = xButtonAreaSize2;
+      playerLeftMoveButton.position = Vector2(
+          (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
+          640.0 -
+              topPaddingSize.y -
+              menuButtonAreaSize.y -
+              xButtonAreaSize2.y * 1.5);
+      playerRightMoveButton.size = xButtonAreaSize2;
+      playerRightMoveButton.button?.size = xButtonAreaSize2;
+      playerRightMoveButton.buttonDown?.size = xButtonAreaSize2;
+      playerRightMoveButton.position = Vector2(
+          (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
+          640.0 -
+              topPaddingSize.y -
+              menuButtonAreaSize.y -
+              xButtonAreaSize2.y * 1.5);
+      playerUpLeftMoveButton.size = xButtonAreaSize2;
+      (playerUpLeftMoveButton as ButtonComponent).button?.size =
+          xButtonAreaSize2;
+      (playerUpLeftMoveButton as ButtonComponent).buttonDown?.size =
+          xButtonAreaSize2;
+      playerUpLeftMoveButton.position = Vector2(
+          180 - xButtonAreaSize2.x,
+          640.0 -
+              topPaddingSize.y -
+              menuButtonAreaSize.y -
+              xButtonAreaSize2.y * 2);
+      playerUpRightMoveButton.size = xButtonAreaSize2;
+      (playerUpRightMoveButton as ButtonComponent).button?.size =
+          xButtonAreaSize2;
+      (playerUpRightMoveButton as ButtonComponent).buttonDown?.size =
+          xButtonAreaSize2;
+      playerUpRightMoveButton.position = Vector2(
+          180,
+          640.0 -
+              topPaddingSize.y -
+              menuButtonAreaSize.y -
+              xButtonAreaSize2.y * 2);
+      playerDownLeftMoveButton.size = xButtonAreaSize2;
+      (playerDownLeftMoveButton as ButtonComponent).button?.size =
+          xButtonAreaSize2;
+      (playerDownLeftMoveButton as ButtonComponent).buttonDown?.size =
+          xButtonAreaSize2;
+      playerDownLeftMoveButton.position = Vector2(180 - xButtonAreaSize2.x,
+          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y);
+      playerDownRightMoveButton.size = xButtonAreaSize2;
+      (playerDownRightMoveButton as ButtonComponent).button?.size =
+          xButtonAreaSize2;
+      (playerDownRightMoveButton as ButtonComponent).buttonDown?.size =
+          xButtonAreaSize2;
+      playerDownRightMoveButton.position = Vector2(180,
+          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y);
+      if (stage.getLegAbility()) {
+        playerControllButtonsArea!.add(playerControllDiagonalModeButton);
+      }
+      if (stage.getLegAbility() && isDiagonalButtonMode) {
+        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+      } else {
+        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+      }
+    }
+  }
+
   // TapCallbacks実装時には必要(PositionComponentでは不要)
   @override
   bool containsLocalPoint(Vector2 point) => true;
@@ -854,20 +1066,20 @@ class GameSeq extends Sequence
         case DebugViewMode.objInBlockMap:
           game.debugTargetPos = stagePos;
           game.debugBlockFloorDistribution =
-              await stage.calcedBlockFloorMap.values.last.distribution;
-          for (final range in stage.calcedBlockFloorMap.keys) {
+              stage.blockFloorDistribution.values.last;
+          for (final range in stage.blockFloorDistribution.keys) {
             if (range.contains(stagePos)) {
               game.debugBlockFloorDistribution =
-                  await stage.calcedBlockFloorMap[range]!.distribution;
+                  stage.blockFloorDistribution[range]!;
               break;
             }
           }
           game.debugObjInBlockDistribution =
-              await stage.calcedObjInBlockMap.values.last;
-          for (final range in stage.calcedObjInBlockMap.keys) {
+              stage.objInBlockDistribution.values.last;
+          for (final range in stage.objInBlockDistribution.keys) {
             if (range.contains(stagePos)) {
               game.debugObjInBlockDistribution =
-                  await stage.calcedObjInBlockMap[range]!;
+                  stage.objInBlockDistribution[range]!;
               break;
             }
           }
