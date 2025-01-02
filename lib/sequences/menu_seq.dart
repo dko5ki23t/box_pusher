@@ -13,6 +13,7 @@ class MenuSeq extends Sequence
   late final GameButton resumeButton;
   late final GameButton saveButton;
   late final GameButton giveUpButton;
+  late final GameTextButton controllSettingButton;
 
   @override
   Future<void> onLoad() async {
@@ -46,10 +47,19 @@ class MenuSeq extends Sequence
         game.pushSeqNamed('title');
       },
     );
+    controllSettingButton = GameTextButton(
+      keyName: 'controllSetting',
+      size: Vector2(120.0, 30.0),
+      position: Vector2(180.0, 450.0),
+      anchor: Anchor.center,
+      text: "操作ボタン${Config().playerControllButtonType + 1}",
+      onReleased: () => Config().changePlayerControllButtonType(),
+    );
     buttonGroup = GameButtonGroup(buttons: [
       resumeButton,
       saveButton,
       giveUpButton,
+      controllSettingButton,
     ]);
     addAll([
       // 背景をボタンにする(しかし押しても何も起きない)にすることで、背後のゲーム画面での操作を不可能にする
@@ -75,8 +85,14 @@ class MenuSeq extends Sequence
         ),
       ),
       resumeButton, saveButton,
-      giveUpButton,
+      giveUpButton, controllSettingButton,
     ]);
+  }
+
+  @override
+  void update(double dt) {
+    controllSettingButton.text =
+        "操作ボタン${Config().playerControllButtonType + 1}";
   }
 
   // PCのキーボード入力
@@ -106,7 +122,9 @@ class MenuSeq extends Sequence
     if (event is RawKeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       buttonGroup.getCurrentFocusButton()?.fire();
-      buttonGroup.unFocus();
+      if (buttonGroup.getCurrentFocusButton()?.keyName != "controllSetting") {
+        buttonGroup.unFocus();
+      }
     }
 
     return false;

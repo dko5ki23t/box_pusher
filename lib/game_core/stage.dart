@@ -46,6 +46,14 @@ class StageObjList {
   /// 基本的には使用禁止。代わりに対象StageObjのremove()を呼び出す。
   void forceClear() => _objs.clear();
 
+  /// すべての要素をWorldから削除してリストもクリアする
+  void clean(World gameWorld) {
+    for (final obj in _objs) {
+      gameWorld.remove(obj.animationComponent);
+    }
+    _objs.clear();
+  }
+
   /// 無効になったオブジェクトを一括削除
   void removeAllInvalidObjects(World gameWorld) {
     for (final obj in _objs
@@ -310,7 +318,7 @@ class Stage {
     if (stageData.containsKey('score')) {
       _setStageDataFromSaveData(camera, stageData);
     } else {
-      _setStageDataFromInitialData(camera, t);
+      _setStageDataFromInitialData(camera);
     }
   }
 
@@ -840,9 +848,12 @@ class Stage {
         in (stageData['staticObjs'] as Map<String, dynamic>).entries) {
       _staticObjs[Point.decode(entry.key)] = createObjectFromMap(entry.value);
     }
+    // gameWorldのchildrenをすべてremoveしてること前提
+    boxes.forceClear();
     for (final e in stageData['boxes'] as List<dynamic>) {
       boxes.add(createObjectFromMap(e));
     }
+    enemies.forceClear();
     for (final e in stageData['enemies'] as List<dynamic>) {
       enemies.add(createObjectFromMap(e));
     }
@@ -889,7 +900,7 @@ class Stage {
     );
   }
 
-  _setStageDataFromInitialData(CameraComponent camera, bool t) {
+  _setStageDataFromInitialData(CameraComponent camera) {
     // ステージ範囲設定
     stageLT = Point(-6, -20);
     stageRB = Point(6, 20);
@@ -904,7 +915,7 @@ class Stage {
     _updateNextMergeItem();
     // 各分布の初期化
     if (Config().setObjInBlockWithDistributionAlgorithm) {
-      prepareDistributions(t);
+      prepareDistributions();
     }
     _staticObjs.clear();
     boxes.forceClear();
@@ -1099,11 +1110,14 @@ class Stage {
     }
   }
 
-  void prepareDistributions(bool t) {
+  void prepareDistributions() {
     // 先に床/ブロックの分布
     int colorIdx = -1;
     blockFloorDistribution.clear();
     blockFloorDistribution.addAll(Config().blockFloorDistribution);
+    for (final v in blockFloorDistribution.values) {
+      v.reset();
+    }
     // 【テストモード】範囲の表示を作成
     if (testMode) {
       for (final entry in blockFloorDistribution.entries) {
@@ -1134,6 +1148,9 @@ class Stage {
     colorIdx = -1;
     objInBlockDistribution.clear();
     objInBlockDistribution.addAll(Config().objInBlockDistribution);
+    for (final v in objInBlockDistribution.values) {
+      v.reset();
+    }
     // 【テストモード】範囲の表示を作成
     if (testMode) {
       for (final entry in objInBlockDistribution.entries) {

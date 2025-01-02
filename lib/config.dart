@@ -167,7 +167,7 @@ class Config {
   List<int> debugStageHeightClamps = [40, 200];
 
   /// マージ時に敵に与えるダメージ
-  int debugEnemyDamageInMerge = 1;
+  int debugEnemyDamageInMerge = 0;
 
   /// 爆弾爆発時に敵に与えるダメージ
   int debugEnemyDamageInExplosion = 0;
@@ -181,6 +181,13 @@ class Config {
   set debugRandomSeed(int? v) {
     _debugRandomSeed = v;
     random = Random(v);
+  }
+
+  /// プレイヤー操作ボタンのタイプ
+  int _playerControllButtonType = 0;
+  int get playerControllButtonType => _playerControllButtonType;
+  void changePlayerControllButtonType() {
+    _playerControllButtonType = (_playerControllButtonType + 1) % 2;
   }
 
   late Random random;
