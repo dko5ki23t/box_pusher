@@ -71,6 +71,26 @@ class Trap extends StageObj {
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
   ) {
+    // このオブジェクトが押されていて、敵とすれ違うなら、罠レベル以下の敵を消す
+    if (playerStartMoving) {
+      if (stage.player.pushings.contains(this)) {
+        final targets = stage.enemies.where((e) =>
+            e.pos == pos + stage.player.moving.point &&
+            e.moving == stage.player.moving.oppsite);
+        for (final target in targets) {
+          if (target.isEnemy && target.killable && target.level <= level) {
+            // 敵側の処理が残っているかもしれないので、フレームの最後に消す
+            target.removeAfterFrame();
+            // 効果音を鳴らす
+            switch (level) {
+              default:
+                Audio().playSound(Sound.trap1);
+                break;
+            }
+          }
+        }
+      }
+    }
     // このオブジェクトと同じ位置の、罠レベル以下の敵を消す
     if (playerEndMoving) {
       final killing = stage.get(pos);
