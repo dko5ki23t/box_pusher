@@ -285,9 +285,7 @@ class GameSpriteButton extends GameButton {
         );
 
   set sprite(Sprite s) {
-    super.child = SpriteComponent(
-      sprite: s,
-    );
+    (super.child as SpriteComponent).sprite = s;
   }
 }
 
@@ -309,9 +307,7 @@ class GameSpriteAnimationButton extends GameButton {
         );
 
   set animation(SpriteAnimation a) {
-    super.child = SpriteAnimationComponent(
-      animation: a,
-    );
+    (super.child as SpriteAnimationComponent).animation = a;
   }
 }
 
