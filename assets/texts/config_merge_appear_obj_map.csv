@@ -27,3 +27,5 @@ num, obj1, level1, obj2, level2, obj3, level3
 140, jewel, 7
 145, jewel, 7
 150, wizard, 1, builder, 1, ghost, 1
+150, jewel, 7, jewel, 7, pusher, 1
+150, wizard, 2, guardian, 2, ghost, 2
