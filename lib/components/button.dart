@@ -283,17 +283,21 @@ class GameSpriteButton extends GameButton {
             sprite: sprite,
           ),
         );
+
+  set sprite(Sprite s) {
+    super.child = SpriteComponent(
+      sprite: s,
+    );
+  }
 }
 
 class GameSpriteAnimationButton extends GameButton {
-  SpriteAnimation animation;
-
   GameSpriteAnimationButton({
     super.keyName,
     required super.size,
     super.position,
     super.anchor,
-    required this.animation,
+    required SpriteAnimation animation,
     super.enabled,
     super.onPressed,
     super.onReleased,
@@ -303,6 +307,12 @@ class GameSpriteAnimationButton extends GameButton {
             animation: animation,
           ),
         );
+
+  set animation(SpriteAnimation a) {
+    super.child = SpriteAnimationComponent(
+      animation: a,
+    );
+  }
 }
 
 class GameSpriteOnOffButton extends ButtonComponent {
