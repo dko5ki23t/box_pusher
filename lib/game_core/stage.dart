@@ -307,6 +307,7 @@ class Stage {
   void initialize(
       CameraComponent camera, Map<String, dynamic> stageData, bool t) {
     assert(isReady, 'Stage.onLoad() is not called!');
+    isGameover = false;
     effectBase = [
       _objFactory.create(
           typeLevel: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
