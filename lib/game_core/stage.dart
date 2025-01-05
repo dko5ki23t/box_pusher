@@ -378,12 +378,15 @@ class Stage {
 
   /// 次のマージ時出現アイテムを更新
   void _updateNextMergeItem() {
-    List<StageObjTypeLevel> tls = Config().mergeAppearObjMap.values.last;
+    // 同じカウントで出現するアイテム群が複数設定されていたら、ランダムに選ぶ
+    List<StageObjTypeLevel> tls =
+        Config().mergeAppearObjMap.values.last.sample(1).first;
     bool existAppearObj = false;
     for (final entry in Config().mergeAppearObjMap.entries) {
       remainMergeCount = max(entry.key - mergedCount, 0);
       if (remainMergeCount > 0) {
-        tls = entry.value;
+        // 同じカウントで出現するアイテム群が複数設定されていたら、ランダムに選ぶ
+        tls = entry.value.sample(1).first;
         existAppearObj = true;
         break;
       }

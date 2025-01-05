@@ -502,11 +502,11 @@ class Config {
   }
 
   /// マージ回数->出現オブジェクトのマップ
-  late Map<int, List<StageObjTypeLevel>> mergeAppearObjMap;
+  late Map<int, List<List<StageObjTypeLevel>>> mergeAppearObjMap;
 
-  Map<int, List<StageObjTypeLevel>> loadMergeAppearObjMap(
+  Map<int, List<List<StageObjTypeLevel>>> loadMergeAppearObjMap(
       List<List<String>> data) {
-    final Map<int, List<StageObjTypeLevel>> ret = {};
+    final Map<int, List<List<StageObjTypeLevel>>> ret = {};
     // 最初の2行は無視
     for (int i = 2; i < data.length; i++) {
       final vals = data[i];
@@ -516,7 +516,11 @@ class Config {
             type: StageObjTypeExtent.fromStr(vals[j]),
             level: int.tryParse(vals[j + 1]) ?? 1));
       }
-      ret[int.parse(vals[0])] = objs;
+      if (ret.containsKey(int.parse(vals[0]))) {
+        ret[int.parse(vals[0])]!.add(objs);
+      } else {
+        ret[int.parse(vals[0])] = [objs];
+      }
     }
     return ret;
   }
