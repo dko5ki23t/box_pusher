@@ -269,13 +269,18 @@ abstract class StageObj {
   SpriteAnimationComponent animationComponent;
 
   /// オブジェクトのレベル->向き->アニメーションのマップ
-  Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
+  final Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
+
+  /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
+  final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
 
   /// 移動中の向き
   Move moving = Move.none;
 
   /// 向いている方向
   Move _vector = Move.down;
+
+  /// 移動量
   double movingAmount = 0;
 
   /// 向いている方向による、animationComponentの回転
@@ -288,10 +293,14 @@ abstract class StageObj {
   /// ex.) ドリルによるブロックの破壊
   List<bool> executings = [];
 
+  /// 攻撃中か
+  bool attacking = false;
+
   StageObj({
     required typeLevel,
     required this.animationComponent,
     required this.levelToAnimations,
+    this.levelToAttackAnimations = const {},
     this.valid = true,
     this.validAfterFrame = true,
     required this.pos,
@@ -308,11 +317,22 @@ abstract class StageObj {
   /// レベル
   int get level => _typeLevel.level;
   set level(int l) {
-    if (!levelToAnimations.containsKey(l)) {
-      log('no animation for level $l in ${_typeLevel.type}');
-      animationComponent.animation = levelToAnimations[0]![vector];
+    // 攻撃中かどうか、レベル、向きでアニメーションを変更する
+    if (attacking) {
+      if (!levelToAttackAnimations.containsKey(l)) {
+        log('no attacking animation for level $l in ${_typeLevel.type}');
+        // 通常時でのエラー画像を使う
+        animationComponent.animation = levelToAnimations[0]![vector];
+      } else {
+        animationComponent.animation = levelToAttackAnimations[l]![vector];
+      }
     } else {
-      animationComponent.animation = levelToAnimations[l]![vector];
+      if (!levelToAnimations.containsKey(l)) {
+        log('no animation for level $l in ${_typeLevel.type}');
+        animationComponent.animation = levelToAnimations[0]![vector];
+      } else {
+        animationComponent.animation = levelToAnimations[l]![vector];
+      }
     }
     animationComponent.angle = vectorToAnimationAngles[vector] ?? 0;
     _typeLevel.level = l;
@@ -329,8 +349,15 @@ abstract class StageObj {
     } else {
       _vector = Move.none;
     }
-    int key = levelToAnimations.containsKey(level) ? level : 0;
-    animationComponent.animation = levelToAnimations[key]![vector];
+    if (attacking) {
+      final animation = levelToAttackAnimations.containsKey(level)
+          ? levelToAttackAnimations[level]![vector]
+          : levelToAnimations[0]![vector]; // 通常時でのエラー画像を使う
+      animationComponent.animation = animation;
+    } else {
+      int key = levelToAnimations.containsKey(level) ? level : 0;
+      animationComponent.animation = levelToAnimations[key]![vector];
+    }
     animationComponent.angle = vectorToAnimationAngles[vector] ?? 0;
   }
 
@@ -766,6 +793,15 @@ abstract class StageObj {
         if (PointRectRange(
                 Point(pos.x - 1, pos.y - 1), Point(pos.x + 1, pos.y + 1))
             .contains(player.pos)) {
+          ret['attack'] = true;
+        } else {
+          _enemyMoveFollow(
+              ret, pattern, vector, player, player, stage, prohibitedPoints);
+        }
+        break;
+      case EnemyMovePattern.followPlayerAttackStraight3:
+        // 前方直線状3マスにプレイヤーがいるなら攻撃
+        if (PointRectRange(pos, pos + vector.point * 3).contains(player.pos)) {
           ret['attack'] = true;
         } else {
           _enemyMoveFollow(

@@ -65,14 +65,9 @@ class Belt extends StageObj {
           ),
           levelToAnimations: {
             0: {
-              Move.left:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.right:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.down:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-              Move.up:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
             },
             1: {
               Move.up: SpriteAnimation.fromFrameData(
