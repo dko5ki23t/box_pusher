@@ -793,6 +793,29 @@ class Stage {
     return _staticObjs[pos]!;
   }
 
+  /// プレイヤーが移動中にこの関数を呼び出したとき、
+  /// プレイヤーや敵によって押された後の、引数に指定した座標のオブジェクトを取得する
+  StageObj getAfterPush(Point p, {bool detectPlayer = false}) {
+    final playerMoving = player.moving;
+    if (player.moving != Move.none) {
+      // プレイヤーの押し
+      for (final pushing in player.pushings) {
+        if (pushing.pos + playerMoving.point == p) {
+          return pushing;
+        }
+      }
+      // 敵の押し
+      for (final enemy in enemies.where((e) => e.pushings.isNotEmpty)) {
+        for (final pushing in enemy.pushings) {
+          if (pushing.pos + enemy.moving.point == p) {
+            return pushing;
+          }
+        }
+      }
+    }
+    return get(p, detectPlayer: detectPlayer);
+  }
+
   /// ワープ後の位置を取得する
   Point getWarpedPoint(Point srcPos, {bool reverse = false}) {
     if (warpPoints.length <= 1) {

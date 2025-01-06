@@ -772,6 +772,15 @@ abstract class StageObj {
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
+      case EnemyMovePattern.followPlayerAttackStraight3:
+        // 前方直線状3マスにプレイヤーがいるなら攻撃
+        if (PointRectRange(pos, pos + vector.point * 3).contains(player.pos)) {
+          ret['attack'] = true;
+        } else {
+          _enemyMoveFollow(
+              ret, pattern, vector, player, player, stage, prohibitedPoints);
+        }
+        break;
       case EnemyMovePattern.followPlayerAttackStraight5:
         // 前方直線状5マスにプレイヤーがいるなら攻撃
         if (PointRectRange(pos, pos + vector.point * 5).contains(player.pos)) {

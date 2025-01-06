@@ -27,6 +27,10 @@
         "desc": "ブロック破壊時出現オブジェクトを分布で計算するアルゴリズムで決めるか(falseの場合、破壊時に毎回確率で出現オブジェクトを決める)",
         "value": true
     },
+    "isArrowPathThrough": {
+        "desc": "弓が各オブジェクト（トラップ・敵除く）を貫通するかどうか",
+        "value": false
+    },
     "addedScoreEffectMove": {
         "desc": "スコア加算表示(+100とか)エフェクトの移動量",
         "value": {

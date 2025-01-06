@@ -11,7 +11,7 @@ import 'package:flame/extensions.dart';
 class Archer extends StageObj {
   /// 各レベルに対応する動きのパターン
   final Map<int, EnemyMovePattern> movePatterns = {
-    1: EnemyMovePattern.followPlayerAttackStraight5,
+    1: EnemyMovePattern.followPlayerAttackStraight3,
     2: EnemyMovePattern.followPlayerAttackStraight5,
     3: EnemyMovePattern.followPlayerAttackStraight5,
   };
@@ -173,6 +173,15 @@ class Archer extends StageObj {
   /// 攻撃中か
   bool attacking = false;
 
+  /// 矢の飛距離
+  int get arrowRange {
+    int ret = 5;
+    if (movePatterns[level]! == EnemyMovePattern.followPlayerAttackStraight3) {
+      ret = 3;
+    }
+    return ret;
+  }
+
   @override
   void update(
     double dt,
@@ -243,13 +252,26 @@ class Archer extends StageObj {
           default:
             break;
         }
+        // 矢がオブジェクトに当たる場合、矢の飛距離はそこまでとなる
+        int dist = arrowRange;
+        if (!Config().isArrowPathThrough) {
+          for (dist = 0; dist < arrowRange; dist++) {
+            final obj = stage.getAfterPush(pos + vector.point * dist);
+            if (!obj.isEnemy && !obj.enemyMovable) {
+              break;
+            }
+          }
+          if (0 < dist && dist < arrowRange) {
+            --dist;
+          }
+        }
         gameWorld.add(SpriteAnimationComponent(
           animation: arrowAnimations[level - 1],
           priority: Stage.movingPriority,
           children: [
             MoveEffect.by(
-              Vector2(Stage.cellSize.x * vector.vector.x * 5,
-                  Stage.cellSize.y * vector.vector.y * 5),
+              Vector2(Stage.cellSize.x * vector.vector.x * dist,
+                  Stage.cellSize.y * vector.vector.y * dist),
               EffectController(duration: arrowMoveTime),
             ),
             RemoveEffect(delay: arrowMoveTime),
@@ -273,8 +295,21 @@ class Archer extends StageObj {
           // 同じマスにいる場合はアーマー関係なくゲームオーバー
           stage.isGameover = true;
         } else if (attacking) {
-          // 前方直線5マスに攻撃
-          if (PointRectRange(pos, pos + vector.point * 5)
+          // 矢による直線攻撃
+          // 矢がオブジェクトに当たる場合、矢の飛距離はそこまでとなる
+          int dist = arrowRange;
+          if (!Config().isArrowPathThrough) {
+            for (dist = 0; dist < arrowRange; dist++) {
+              final obj = stage.get(pos + vector.point * dist);
+              if (!obj.isEnemy && !obj.enemyMovable) {
+                break;
+              }
+            }
+            if (0 < dist && dist < arrowRange) {
+              --dist;
+            }
+          }
+          if (PointRectRange(pos, pos + vector.point * dist)
               .contains(stage.player.pos)) {
             stage.isGameover = stage.player.hit();
           }
