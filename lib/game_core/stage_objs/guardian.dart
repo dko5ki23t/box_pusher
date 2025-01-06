@@ -21,9 +21,6 @@ class Guardian extends StageObj {
           }
       ];
 
-  /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
-
   /// 攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
   final Map<Move, Vector2> attackAnimationOffset = {
     Move.up: Vector2(0, -16.0),
@@ -43,45 +40,7 @@ class Guardian extends StageObj {
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     int level = 1,
-  })  : levelToAttackAnimations = {
-          0: {
-            for (final move in MoveExtent.straights)
-              move:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
-          },
-          for (int i = 1; i <= 3; i++)
-            i: {
-              Move.down: SpriteAnimation.fromFrameData(
-                attackImgs[i - 1][Move.down]!,
-                SpriteAnimationData.sequenced(
-                    amount: 5,
-                    stepTime: attackStepTime,
-                    textureSize: Vector2(96.0, 64.0)),
-              ),
-              Move.up: SpriteAnimation.fromFrameData(
-                attackImgs[i - 1][Move.up]!,
-                SpriteAnimationData.sequenced(
-                    amount: 5,
-                    stepTime: attackStepTime,
-                    textureSize: Vector2(96.0, 64.0)),
-              ),
-              Move.left: SpriteAnimation.fromFrameData(
-                attackImgs[i - 1][Move.left]!,
-                SpriteAnimationData.sequenced(
-                    amount: 5,
-                    stepTime: attackStepTime,
-                    textureSize: Vector2(64.0, 96.0)),
-              ),
-              Move.right: SpriteAnimation.fromFrameData(
-                attackImgs[i - 1][Move.right]!,
-                SpriteAnimationData.sequenced(
-                    amount: 5,
-                    stepTime: attackStepTime,
-                    textureSize: Vector2(64.0, 96.0)),
-              ),
-            },
-        },
-        super(
+  }) : super(
           animationComponent: SpriteAnimationComponent(
             priority: Stage.movingPriority,
             size: Stage.cellSize,
@@ -122,14 +81,49 @@ class Guardian extends StageObj {
                 ], stepTime: Stage.objectStepTime),
               },
           },
+          levelToAttackAnimations: {
+            0: {
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0)
+            },
+            for (int i = 1; i <= 3; i++)
+              i: {
+                Move.down: SpriteAnimation.fromFrameData(
+                  attackImgs[i - 1][Move.down]!,
+                  SpriteAnimationData.sequenced(
+                      amount: 5,
+                      stepTime: attackStepTime,
+                      textureSize: Vector2(96.0, 64.0)),
+                ),
+                Move.up: SpriteAnimation.fromFrameData(
+                  attackImgs[i - 1][Move.up]!,
+                  SpriteAnimationData.sequenced(
+                      amount: 5,
+                      stepTime: attackStepTime,
+                      textureSize: Vector2(96.0, 64.0)),
+                ),
+                Move.left: SpriteAnimation.fromFrameData(
+                  attackImgs[i - 1][Move.left]!,
+                  SpriteAnimationData.sequenced(
+                      amount: 5,
+                      stepTime: attackStepTime,
+                      textureSize: Vector2(64.0, 96.0)),
+                ),
+                Move.right: SpriteAnimation.fromFrameData(
+                  attackImgs[i - 1][Move.right]!,
+                  SpriteAnimationData.sequenced(
+                      amount: 5,
+                      stepTime: attackStepTime,
+                      textureSize: Vector2(64.0, 96.0)),
+                ),
+              },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.guardian,
             level: level,
           ),
         );
-
-  /// 攻撃中か
-  bool attacking = false;
 
   @override
   void update(
@@ -249,11 +243,11 @@ class Guardian extends StageObj {
       movingAmount = 0;
       pushings.clear();
       if (attacking) {
+        attacking = false;
         // アニメーションを元に戻す
         vector = vector;
         animationComponent.size = Stage.cellSize;
         stage.setObjectPosition(this);
-        attacking = false;
       }
     }
   }

@@ -24,9 +24,6 @@ class Wizard extends StageObj {
   /// 各レベルごとの魔法の画像のファイル名
   static String get magicImageFileName => 'magic.png';
 
-  /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
-
   /// 攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
   final Map<Move, Vector2> attackAnimationOffset = {
     Move.up: Vector2.zero(),
@@ -65,56 +62,6 @@ class Wizard extends StageObj {
                   srcSize: Stage.cellSize),
             ], stepTime: magicStepTime)
         ],
-        levelToAttackAnimations = {
-          0: {
-            for (final move in MoveExtent.straights)
-              move:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-          },
-          for (int i = 1; i <= 3; i++)
-            i: {
-              Move.down: SpriteAnimation.spriteList([
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
-              ], stepTime: attackStepTime),
-              Move.up: SpriteAnimation.spriteList([
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
-              ], stepTime: attackStepTime),
-              Move.left: SpriteAnimation.spriteList([
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
-              ], stepTime: attackStepTime),
-              Move.right: SpriteAnimation.spriteList([
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
-                Sprite(attackImgs[i - 1],
-                    srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
-              ], stepTime: attackStepTime),
-            },
-        },
         super(
           animationComponent: SpriteAnimationComponent(
             priority: Stage.movingPriority,
@@ -166,6 +113,56 @@ class Wizard extends StageObj {
                 ], stepTime: Stage.objectStepTime),
               },
           },
+          levelToAttackAnimations: {
+            0: {
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
+            },
+            for (int i = 1; i <= 3; i++)
+              i: {
+                Move.down: SpriteAnimation.spriteList([
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
+                ], stepTime: attackStepTime),
+                Move.up: SpriteAnimation.spriteList([
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
+                ], stepTime: attackStepTime),
+                Move.left: SpriteAnimation.spriteList([
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
+                ], stepTime: attackStepTime),
+                Move.right: SpriteAnimation.spriteList([
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
+                  Sprite(attackImgs[i - 1],
+                      srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
+                ], stepTime: attackStepTime),
+              },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.wizard,
             level: level,
@@ -173,9 +170,6 @@ class Wizard extends StageObj {
         );
 
   bool playerStartMovingFlag = false;
-
-  /// 攻撃中か
-  bool attacking = false;
 
   @override
   void update(
@@ -272,11 +266,11 @@ class Wizard extends StageObj {
         pushings.clear();
         playerStartMovingFlag = false;
         if (attacking) {
+          attacking = false;
           // アニメーションを元に戻す
           vector = vector;
           animationComponent.size = Stage.cellSize;
           stage.setObjectPosition(this);
-          attacking = false;
         }
       }
     }

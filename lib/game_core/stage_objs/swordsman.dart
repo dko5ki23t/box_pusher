@@ -32,9 +32,6 @@ class Swordsman extends StageObj {
   static List<String> get roundAttackImgFileNames =>
       [for (int i = 1; i <= 3; i++) 'swordsman_attack_round$i.png'];
 
-  /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
-
   /// オブジェクトのレベル->向き->回転斬り時アニメーションのマップ
   final Map<int, Map<Move, SpriteAnimation>> levelToRoundAttackAnimations;
 
@@ -62,45 +59,7 @@ class Swordsman extends StageObj {
     required Image errorImg,
     required super.pos,
     int level = 1,
-  })  : levelToAttackAnimations = {
-          0: {
-            for (final move in MoveExtent.straights)
-              move:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
-          },
-          for (int i = 1; i <= 3; i++)
-            i: {
-              Move.down: SpriteAnimation.fromFrameData(
-                attackImgs[i - 1][Move.down]!,
-                SpriteAnimationData.sequenced(
-                    amount: 5,
-                    stepTime: attackStepTime,
-                    textureSize: Vector2(96.0, 64.0)),
-              ),
-              Move.up: SpriteAnimation.fromFrameData(
-                attackImgs[i - 1][Move.up]!,
-                SpriteAnimationData.sequenced(
-                    amount: 5,
-                    stepTime: attackStepTime,
-                    textureSize: Vector2(96.0, 64.0)),
-              ),
-              Move.left: SpriteAnimation.fromFrameData(
-                attackImgs[i - 1][Move.left]!,
-                SpriteAnimationData.sequenced(
-                    amount: 5,
-                    stepTime: attackStepTime,
-                    textureSize: Vector2(64.0, 96.0)),
-              ),
-              Move.right: SpriteAnimation.fromFrameData(
-                attackImgs[i - 1][Move.right]!,
-                SpriteAnimationData.sequenced(
-                    amount: 5,
-                    stepTime: attackStepTime,
-                    textureSize: Vector2(64.0, 96.0)),
-              ),
-            },
-        },
-        levelToRoundAttackAnimations = {
+  })  : levelToRoundAttackAnimations = {
           0: {
             for (final move in MoveExtent.straights)
               move:
@@ -195,6 +154,44 @@ class Swordsman extends StageObj {
                 ], stepTime: Stage.objectStepTime),
               },
           },
+          levelToAttackAnimations: {
+            0: {
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0)
+            },
+            for (int i = 1; i <= 3; i++)
+              i: {
+                Move.down: SpriteAnimation.fromFrameData(
+                  attackImgs[i - 1][Move.down]!,
+                  SpriteAnimationData.sequenced(
+                      amount: 5,
+                      stepTime: attackStepTime,
+                      textureSize: Vector2(96.0, 64.0)),
+                ),
+                Move.up: SpriteAnimation.fromFrameData(
+                  attackImgs[i - 1][Move.up]!,
+                  SpriteAnimationData.sequenced(
+                      amount: 5,
+                      stepTime: attackStepTime,
+                      textureSize: Vector2(96.0, 64.0)),
+                ),
+                Move.left: SpriteAnimation.fromFrameData(
+                  attackImgs[i - 1][Move.left]!,
+                  SpriteAnimationData.sequenced(
+                      amount: 5,
+                      stepTime: attackStepTime,
+                      textureSize: Vector2(64.0, 96.0)),
+                ),
+                Move.right: SpriteAnimation.fromFrameData(
+                  attackImgs[i - 1][Move.right]!,
+                  SpriteAnimationData.sequenced(
+                      amount: 5,
+                      stepTime: attackStepTime,
+                      textureSize: Vector2(64.0, 96.0)),
+                ),
+              },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.swordsman,
             level: level,
@@ -202,9 +199,6 @@ class Swordsman extends StageObj {
         );
 
   bool playerStartMovingFlag = false;
-
-  /// 攻撃中か
-  bool attacking = false;
 
   @override
   void update(
@@ -328,11 +322,11 @@ class Swordsman extends StageObj {
         pushings.clear();
         playerStartMovingFlag = false;
         if (attacking) {
+          attacking = false;
           // アニメーションを元に戻す
           vector = vector;
           animationComponent.size = Stage.cellSize;
           stage.setObjectPosition(this);
-          attacking = false;
         }
       }
     }
