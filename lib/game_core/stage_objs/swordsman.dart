@@ -52,6 +52,16 @@ class Swordsman extends StageObj {
   /// 回転斬りの1コマの時間
   static const double roundAttackStepTime = 32.0 / Stage.playerSpeed / 20;
 
+  /// 攻撃をし続けるターン数
+  final Map<int, int> attackTurns = {
+    1: 1,
+    2: 1,
+    3: 2,
+  };
+
+  /// 経過している攻撃ターン
+  int attackingTurns = 0;
+
   Swordsman({
     required Image swordsmanImg,
     required List<Map<Move, Image>> attackImgs,
@@ -94,7 +104,7 @@ class Swordsman extends StageObj {
               ),
               Move.right: SpriteAnimation.spriteList(
                 [
-                  for (int j = 5; j < 15; j++)
+                  for (int j = 5; j < 25; j++)
                     Sprite(roundAttackImgs[i - 1],
                         srcPosition: Vector2((j % 20) * 96, 0),
                         srcSize: Vector2.all(96.0))
@@ -214,32 +224,38 @@ class Swordsman extends StageObj {
     // 移動し始めのフレームの場合
     if (playerStartMoving) {
       playerStartMovingFlag = true;
-      // 移動/攻撃を決定
-      final ret = super.enemyMove(
-          movePatterns[level]!, vector, stage.player, stage, prohibitedPoints);
-      if (ret.containsKey('attack') && ret['attack']!) {
-        attacking = true;
-        // 攻撃中のアニメーションに変更
-        if (level <= 1) {
-          int key = levelToAttackAnimations.containsKey(level) ? level : 0;
-          animationComponent.animation = levelToAttackAnimations[key]![vector]!;
-          animationComponent.size =
-              animationComponent.animation!.frames.first.sprite.srcSize;
-          stage.setObjectPosition(this, offset: attackAnimationOffset[vector]!);
-        } else {
-          int key = levelToRoundAttackAnimations.containsKey(level) ? level : 0;
-          animationComponent.animation =
-              levelToRoundAttackAnimations[key]![vector]!;
-          animationComponent.size =
-              animationComponent.animation!.frames.first.sprite.srcSize;
-          stage.setObjectPosition(this, offset: roundAttackAnimationOffset);
+      if (attackingTurns == 0) {
+        // 攻撃中でないなら
+        // 移動/攻撃を決定
+        final ret = super.enemyMove(movePatterns[level]!, vector, stage.player,
+            stage, prohibitedPoints);
+        if (ret.containsKey('attack') && ret['attack']!) {
+          attacking = true;
+          // 攻撃中のアニメーションに変更
+          if (level <= 1) {
+            int key = levelToAttackAnimations.containsKey(level) ? level : 0;
+            animationComponent.animation =
+                levelToAttackAnimations[key]![vector]!;
+            animationComponent.size =
+                animationComponent.animation!.frames.first.sprite.srcSize;
+            stage.setObjectPosition(this,
+                offset: attackAnimationOffset[vector]!);
+          } else {
+            int key =
+                levelToRoundAttackAnimations.containsKey(level) ? level : 0;
+            animationComponent.animation =
+                levelToRoundAttackAnimations[key]![vector]!;
+            animationComponent.size =
+                animationComponent.animation!.frames.first.sprite.srcSize;
+            stage.setObjectPosition(this, offset: roundAttackAnimationOffset);
+          }
         }
-      }
-      if (ret.containsKey('move')) {
-        moving = ret['move'] as Move;
-      }
-      if (ret.containsKey('vector')) {
-        vector = ret['vector'] as Move;
+        if (ret.containsKey('move')) {
+          moving = ret['move'] as Move;
+        }
+        if (ret.containsKey('vector')) {
+          vector = ret['vector'] as Move;
+        }
       }
       movingAmount = 0;
     }
@@ -270,6 +286,7 @@ class Swordsman extends StageObj {
           // 同じマスにいる場合はアーマー関係なくゲームオーバー
           stage.isGameover = true;
         } else if (attacking) {
+          attackingTurns++;
           if (level <= 1) {
             // 前方3マスに攻撃
             final tmp = MoveExtent.straights;
@@ -301,7 +318,6 @@ class Swordsman extends StageObj {
                 PointRectRange((pos - Point(1, 1)), pos + Point(1, 1));
             // プレイヤーに攻撃が当たった
             if (range.contains(stage.player.pos)) {
-              // 回転斬りの場合は周囲8マスに攻撃
               stage.isGameover = stage.player.hit();
             }
             // ガーディアンに攻撃が当たった
@@ -322,11 +338,15 @@ class Swordsman extends StageObj {
         pushings.clear();
         playerStartMovingFlag = false;
         if (attacking) {
-          attacking = false;
-          // アニメーションを元に戻す
-          vector = vector;
-          animationComponent.size = Stage.cellSize;
-          stage.setObjectPosition(this);
+          if (attackingTurns >= attackTurns[level]!) {
+            // レベルで決まる攻撃持続ターンを超えていたら攻撃終了
+            attacking = false;
+            attackingTurns = 0;
+            // アニメーションを元に戻す
+            vector = vector;
+            animationComponent.size = Stage.cellSize;
+            stage.setObjectPosition(this);
+          }
         }
       }
     }
