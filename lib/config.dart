@@ -52,6 +52,9 @@ enum EnemyMovePattern {
   /// プレイヤーの方へ動くor向く、直線5マスを攻撃する
   followPlayerAttackStraight5,
 
+  /// プレイヤーの方へ動くor向く、前方3方向の直線5マスを攻撃する
+  followPlayerAttack3Straight5,
+
   /// プレイヤーの方へ動くor向く、通れない場合はゴースト化する/通れるならゴースト解除する
   followPlayerWithGhosting,
 
@@ -232,6 +235,7 @@ class Config {
     setObjInBlockWithDistributionAlgorithm =
         jsonData['setObjInBlockWithDistributionAlgorithm']['value'];
     isArrowPathThrough = jsonData['isArrowPathThrough']['value'];
+    sumUpEnemyAttackDamage = jsonData['sumUpEnemyAttackDamage']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
@@ -283,6 +287,9 @@ class Config {
 
   /// 弓が各オブジェクト（トラップ・敵除く）を貫通するかどうか
   late bool isArrowPathThrough;
+
+  /// 同じマスに複数の敵の攻撃が重なった時、威力を合算するか（falseなら最大値を採用する）
+  late bool sumUpEnemyAttackDamage;
 
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;

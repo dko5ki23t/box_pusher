@@ -31,6 +31,10 @@
         "desc": "弓が各オブジェクト（トラップ・敵除く）を貫通するかどうか",
         "value": false
     },
+    "sumUpEnemyAttackDamage": {
+        "desc": "同じマスに複数の敵の攻撃が重なった時、威力を合算するか（falseなら最大値を採用する）",
+        "value": true
+    },
     "addedScoreEffectMove": {
         "desc": "スコア加算表示(+100とか)エフェクトの移動量",
         "value": {

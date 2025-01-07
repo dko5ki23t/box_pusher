@@ -255,10 +255,8 @@ class Guardian extends StageObj {
   /// 敵の攻撃がプレイヤーに当たる
   /// obj: 攻撃したオブジェクト
   /// 戻り値：倒されるかどうか
-  bool hit(StageObj obj) {
-    if (obj.isEnemy) {
-      level = (level - obj.level).clamp(0, maxLevel);
-    }
+  bool hit(int damageLevel) {
+    level = (level - damageLevel).clamp(0, maxLevel);
     return level <= 0;
   }
 

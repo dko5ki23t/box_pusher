@@ -1,7 +1,6 @@
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
-import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
@@ -293,44 +292,18 @@ class Swordsman extends StageObj {
             tmp.remove(vector);
             tmp.remove(vector.oppsite);
             final attackable = pos + vector.point;
-            final attackables = [attackable];
+            final attackables = {attackable};
             for (final v in tmp) {
               attackables.add(attackable + v.point);
             }
-            // プレイヤーに攻撃が当たった
-            if (attackables.contains(stage.player.pos)) {
-              stage.isGameover = stage.player.hit();
-            }
-            // ガーディアンに攻撃が当たった
-            for (final guardian in stage.boxes.where(
-              (element) =>
-                  element.type == StageObjType.guardian &&
-                  attackables.contains(element.pos),
-            )) {
-              if ((guardian as Guardian).hit(this)) {
-                // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
-                guardian.removeAfterFrame();
-              }
-            }
+            // 攻撃情報を追加
+            stage.addEnemyAttackDamage(level, attackables);
           } else {
             // 回転斬りの場合は周囲8マスに攻撃
             final range =
                 PointRectRange((pos - Point(1, 1)), pos + Point(1, 1));
-            // プレイヤーに攻撃が当たった
-            if (range.contains(stage.player.pos)) {
-              stage.isGameover = stage.player.hit();
-            }
-            // ガーディアンに攻撃が当たった
-            for (final guardian in stage.boxes.where(
-              (element) =>
-                  element.type == StageObjType.guardian &&
-                  range.contains(element.pos),
-            )) {
-              if ((guardian as Guardian).hit(this)) {
-                // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
-                guardian.removeAfterFrame();
-              }
-            }
+            // 攻撃情報を追加
+            stage.addEnemyAttackDamage(level, range.set);
           }
         }
         moving = Move.none;
