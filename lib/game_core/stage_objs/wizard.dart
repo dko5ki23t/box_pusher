@@ -9,9 +9,9 @@ import 'package:flame/extensions.dart';
 class Wizard extends StageObj {
   /// 各レベルに対応する動きのパターン
   final Map<int, EnemyMovePattern> movePatterns = {
-    1: EnemyMovePattern.followPlayerAttackStraight5,
+    1: EnemyMovePattern.followPlayerAttackStraight3,
     2: EnemyMovePattern.followPlayerAttackStraight5,
-    3: EnemyMovePattern.followPlayerAttackStraight5,
+    3: EnemyMovePattern.followWarpPlayerAttackStraight5,
   };
 
   /// 各レベルごとの画像のファイル名
@@ -43,6 +43,9 @@ class Wizard extends StageObj {
 
   /// 魔法が飛ぶ時間
   static final magicMoveTime = Stage.cellSize.x / 2 / Stage.playerSpeed;
+
+  /// ワープ中に変形する時間
+  static final warpTime = Stage.cellSize.x / 2 / Stage.playerSpeed;
 
   Wizard({
     required Image wizardImg,
@@ -171,6 +174,18 @@ class Wizard extends StageObj {
 
   bool playerStartMovingFlag = false;
 
+  /// 魔法の飛距離
+  int get magicReach {
+    int ret = 5;
+    if (movePatterns[level]! == EnemyMovePattern.followPlayerAttackStraight3) {
+      ret = 3;
+    }
+    return ret;
+  }
+
+  /// ワープ先座標
+  Point? warpTo;
+
   @override
   void update(
     double dt,
@@ -195,6 +210,13 @@ class Wizard extends StageObj {
         animationComponent.size =
             animationComponent.animation!.frames.first.sprite.srcSize;
         stage.setObjectPosition(this, offset: attackAnimationOffset[vector]!);
+      }
+      if (ret.containsKey('warp')) {
+        warpTo = ret['warp'] as Point;
+        // ワープエフェクト追加
+        animationComponent.add(SizeEffect.to(
+            Vector2(Stage.cellSize.x / 3, Stage.cellSize.y),
+            EffectController(duration: warpTime)));
       }
       if (ret.containsKey('move')) {
         moving = ret['move'] as Move;
@@ -222,32 +244,47 @@ class Wizard extends StageObj {
         // ※※※画像の移動ここまで※※※
       }
 
-      // 移動完了の半分時点を過ぎたら、矢のアニメーション追加
-      if (attacking &&
-          prevMovingAmount < Stage.cellSize.x / 2 &&
+      // 移動完了の半分時点を過ぎたら
+      if (prevMovingAmount < Stage.cellSize.x / 2 &&
           movingAmount >= Stage.cellSize.x / 2) {
-        gameWorld.add(SpriteAnimationComponent(
-          animation: magicAnimations[level - 1],
-          priority: Stage.movingPriority,
-          children: [
-            MoveEffect.by(
-              Vector2(Stage.cellSize.x * vector.vector.x * 5,
-                  Stage.cellSize.y * vector.vector.y * 5),
-              EffectController(duration: magicMoveTime),
-            ),
-            RemoveEffect(delay: magicMoveTime),
-          ],
-          size: Stage.cellSize,
-          anchor: Anchor.center,
-          position:
-              Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-                  Stage.cellSize / 2,
-        ));
+        if (attacking) {
+          // 魔法のアニメーション追加
+          gameWorld.add(SpriteAnimationComponent(
+            animation: magicAnimations[level - 1],
+            priority: Stage.movingPriority,
+            children: [
+              MoveEffect.by(
+                Vector2(Stage.cellSize.x * vector.vector.x * magicReach,
+                    Stage.cellSize.y * vector.vector.y * magicReach),
+                EffectController(duration: magicMoveTime),
+              ),
+              RemoveEffect(delay: magicMoveTime),
+            ],
+            size: Stage.cellSize,
+            anchor: Anchor.center,
+            position:
+                Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                    Stage.cellSize / 2,
+          ));
+        } else if (warpTo != null) {
+          // 見かけ上の位置を変更
+          stage.setObjectPosition(this,
+              offset: (warpTo! - pos).toVector() * Stage.cellSize.x);
+          // ワープ完了までのエフェクト追加
+          animationComponent.add(SizeEffect.to(
+              Stage.cellSize, EffectController(duration: warpTime)));
+        }
       }
 
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
         pos += moving.point;
+        // ワープによる移動
+        if (warpTo != null) {
+          pos = warpTo!.copy();
+          stage.setObjectPosition(this);
+          warpTo = null;
+        }
         // 移動後に関する処理
         endMoving(stage, gameWorld);
         // ゲームオーバー判定
@@ -255,9 +292,9 @@ class Wizard extends StageObj {
           // 同じマスにいる場合はアーマー関係なくゲームオーバー
           stage.isGameover = true;
         } else if (attacking) {
-          // 前方直線5マスに攻撃
-          stage.addEnemyAttackDamage(
-              level, PointLineRange(pos + vector.point, vector, 5).set);
+          // 前方直線に攻撃
+          stage.addEnemyAttackDamage(level,
+              PointLineRange(pos + vector.point, vector, magicReach).set);
         }
         moving = Move.none;
         movingAmount = 0;
