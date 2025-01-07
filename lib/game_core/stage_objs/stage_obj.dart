@@ -817,6 +817,20 @@ abstract class StageObj {
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
+      case EnemyMovePattern.followPlayerAttack3Straight5:
+        // 前方3方向の直線5マスにプレイヤーがいるなら攻撃
+        final vec1 = vector.neighbors[0];
+        final vec2 = vector.neighbors[1];
+        if ((PointLineRange(pos + vector.point, vector, 5)
+                .contains(player.pos)) ||
+            (PointLineRange(pos + vec1.point, vec1, 5).contains(player.pos)) ||
+            (PointLineRange(pos + vec2.point, vec2, 5).contains(player.pos))) {
+          ret['attack'] = true;
+        } else {
+          _enemyMoveFollow(
+              ret, pattern, vector, player, player, stage, prohibitedPoints);
+        }
+        break;
       case EnemyMovePattern.followPlayerWithGhosting:
         // プレイヤーの方へ動くor向く、通れない場合はゴースト化する/通れるならゴースト解除する
         _enemyMoveFollowWithGhosting(ret, pattern, vector, player, player,

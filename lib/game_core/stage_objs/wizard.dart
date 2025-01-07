@@ -256,10 +256,8 @@ class Wizard extends StageObj {
           stage.isGameover = true;
         } else if (attacking) {
           // 前方直線5マスに攻撃
-          if (PointRectRange(pos, pos + vector.point * 5)
-              .contains(stage.player.pos)) {
-            stage.isGameover = stage.player.hit();
-          }
+          stage.addEnemyAttackDamage(
+              level, PointLineRange(pos + vector.point, vector, 5).set);
         }
         moving = Move.none;
         movingAmount = 0;

@@ -7,6 +7,7 @@ import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
+import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
@@ -261,6 +262,9 @@ class Stage {
 
   /// ゲームワールド
   final World gameWorld;
+
+  /// 敵による攻撃の座標->攻撃のレベル
+  final Map<Point, int> enemyAttackPoints = {};
 
   Stage({required this.testMode, required this.gameWorld}) {
     _objFactory = StageObjFactory();
@@ -845,6 +849,24 @@ class Stage {
         typeLevel: StageObjTypeLevel(type: type, level: level), pos: p);
   }
 
+  /// 敵による攻撃の座標を追加する（ターン終了後に一度に判定する）
+  void addEnemyAttackDamage(int power, Set<Point> points) {
+    for (final point in points) {
+      if (enemyAttackPoints.containsKey(point)) {
+        // 既に同じ座標に攻撃がされているなら
+        if (Config().sumUpEnemyAttackDamage) {
+          // 威力を合算する
+          enemyAttackPoints[point] = enemyAttackPoints[point]! + power;
+        } else {
+          // 最大の威力に書き換える
+          enemyAttackPoints[point] = max(enemyAttackPoints[point]!, power);
+        }
+      } else {
+        enemyAttackPoints[point] = power;
+      }
+    }
+  }
+
   /// オブジェクトの位置を設定
   void setObjectPosition(StageObj obj, {Vector2? offset}) =>
       _objFactory.setPosition(obj, offset: offset);
@@ -1063,6 +1085,24 @@ class Stage {
             playerStartMoving, playerEndMoving, prohibitedPoints);
       }
     }
+
+    // 敵の攻撃について処理
+    for (final attack in enemyAttackPoints.entries) {
+      // プレイヤーに攻撃が当たった
+      if (attack.key == player.pos) {
+        isGameover = player.hit();
+      }
+      // ガーディアンに攻撃が当たった
+      for (final guardian in boxes.where((element) =>
+          element.type == StageObjType.guardian && attack.key == element.pos)) {
+        if ((guardian as Guardian).hit(attack.value)) {
+          // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
+          guardian.removeAfterFrame();
+        }
+      }
+    }
+    // 敵の攻撃情報をクリア
+    enemyAttackPoints.clear();
 
     // マージによる敵へのダメージ処理
     for (final mergeAffect in mergeAffects) {

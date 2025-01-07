@@ -163,6 +163,73 @@ class PointRectRange extends PointRange {
       ];
 }
 
+/// 整数座標による直線表現(ただし、縦横斜め8方向のみ)
+class PointLineRange extends PointRange {
+  Point start = Point(0, 0);
+  Move direct = Move.down;
+  int length = 0;
+
+  PointLineRange(this.start, this.direct, this.length);
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PointLineRange &&
+            runtimeType == other.runtimeType &&
+            start == other.start &&
+            direct == other.direct &&
+            length == other.length);
+  }
+
+  @override
+  int get hashCode => start.hashCode ^ direct.hashCode ^ length.hashCode;
+
+  Point get end => start + direct.point * length;
+
+  /// 引数の座標が直線上にあるか
+  @override
+  bool contains(Point p) {
+    switch (direct) {
+      case Move.none:
+        return start == p;
+      case Move.left:
+      case Move.right:
+      case Move.up:
+      case Move.down:
+        return (p.x >= min(start.x, end.x) &&
+            p.x <= max(start.x, end.x) &&
+            p.y >= min(start.y, end.y) &&
+            p.y <= max(start.y, end.y));
+      case Move.upRight:
+      case Move.downLeft:
+        // 傾き1の直線
+        return ((p.x >= min(start.x, end.x) && p.x <= max(start.x, end.x)) &&
+            (p.y == (p.x + start.y)));
+      case Move.upLeft:
+      case Move.downRight:
+        // 傾き-1の直線
+        return ((p.x >= min(start.x, end.x) && p.x <= max(start.x, end.x)) &&
+            (p.y == (-p.x + start.y)));
+    }
+  }
+
+  /// 直線内座標のセット
+  @override
+  Set<Point> get set {
+    return {for (int i = 0; i < length; i++) start + direct.point * i};
+  }
+
+  @override
+  List<String> toStrings() => [
+        'line',
+        start.x.toString(),
+        start.y.toString(),
+        direct.name,
+        '',
+        length.toString(),
+      ];
+}
+
 /// 整数座標による等距離範囲（≒円）表現
 class PointDistanceRange extends PointRange {
   Point center = Point(0, 0);
@@ -273,6 +340,58 @@ extension MoveExtent on Move {
       case Move.downRight:
         return Move.upLeft;
     }
+  }
+
+  /// 隣接する2つの向き
+  List<Move> get neighbors {
+    switch (this) {
+      case Move.none:
+        return [];
+      case Move.left:
+        return [Move.upLeft, Move.downLeft];
+      case Move.right:
+        return [Move.upRight, Move.downRight];
+      case Move.up:
+        return [Move.upLeft, Move.upRight];
+      case Move.down:
+        return [Move.downLeft, Move.downRight];
+      case Move.upLeft:
+        return [Move.up, Move.left];
+      case Move.upRight:
+        return [Move.up, Move.right];
+      case Move.downLeft:
+        return [Move.down, Move.left];
+      case Move.downRight:
+        return [Move.down, Move.right];
+    }
+  }
+
+  /// 角度
+  double angle({required Move base}) {
+    double downBase(Move move) {
+      switch (move) {
+        case Move.none:
+          return 0;
+        case Move.left:
+          return 0.5;
+        case Move.right:
+          return -0.5;
+        case Move.up:
+          return 1;
+        case Move.down:
+          return 0;
+        case Move.upLeft:
+          return 0.75;
+        case Move.upRight:
+          return -0.75;
+        case Move.downLeft:
+          return 0.25 * pi;
+        case Move.downRight:
+          return -0.25;
+      }
+    }
+
+    return (downBase(base) + downBase(this)) * pi;
   }
 
   /// 上下左右かどうか
