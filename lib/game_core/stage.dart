@@ -1077,14 +1077,14 @@ class Stage {
       }
     }
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
-    // これらはプレイヤーの移動開始/完了時のみ動かす
-    if (playerStartMoving || playerEndMoving) {
-      final currentBoxes = [...boxes.iterable];
-      for (final box in currentBoxes) {
-        box.update(dt, player.moving, gameWorld, camera, this,
-            playerStartMoving, playerEndMoving, prohibitedPoints);
-      }
+    //// これらはプレイヤーの移動開始/完了時のみ動かす
+    //if (playerStartMoving || playerEndMoving) {
+    final currentBoxes = [...boxes.iterable];
+    for (final box in currentBoxes) {
+      box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
+          playerEndMoving, prohibitedPoints);
     }
+    //}
 
     // 敵の攻撃について処理
     for (final attack in enemyAttackPoints.entries) {

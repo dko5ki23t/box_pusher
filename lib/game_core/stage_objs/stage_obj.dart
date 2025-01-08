@@ -269,10 +269,10 @@ abstract class StageObj {
   SpriteAnimationComponent animationComponent;
 
   /// オブジェクトのレベル->向き->アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
+  Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
 
   /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
+  Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
 
   /// 移動中の向き
   Move moving = Move.none;
