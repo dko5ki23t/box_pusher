@@ -227,7 +227,7 @@ class GameSeq extends Sequence
         animation: a.length > 2 ? a[2] : null);
     // スコア
     scoreText = TextComponent(
-      text: "${stage.scoreVisual}",
+      text: "${stage.score.visual}",
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: Config.gameTextFamily,
@@ -237,7 +237,7 @@ class GameSeq extends Sequence
     );
     // コイン数
     coinNumText = TextComponent(
-      text: "${stage.coinNum}",
+      text: "${stage.coins.visual}",
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: Config.gameTextFamily,
@@ -629,7 +629,8 @@ class GameSeq extends Sequence
       // 【テストモード】現在の表示モード切り替えボタン
       viewModeButton = GameTextButton(
         size: viewModeButtonAreaSize,
-        position: Vector2(360.0 - viewModeButtonAreaSize.x, yPaddingSize.y),
+        position:
+            Vector2(360.0 - viewModeButtonAreaSize.x, yPaddingSize.y + 20.0),
         text: viewMode.name,
         onReleased: () {
           viewMode = DebugViewMode
@@ -741,25 +742,28 @@ class GameSeq extends Sequence
       nextMergeItem3.animation = null;
     }
     // スコア表示更新
-    scoreText.text = "${stage.scoreVisual}";
+    scoreText.text = "${stage.score.visual}";
     // スコア加算表示
-    int addedScore = stage.addedScore;
+    int addedScore = stage.score.addedValue;
     if (addedScore > 0 && Config().showAddedScoreOnScore) {
       final addingScoreText = OpacityEffectTextComponent(
         text: "+$addedScore",
         textRenderer: TextPaint(
-          style: Config.gameTextStyle,
+          style: const TextStyle(
+            fontFamily: Config.gameTextFamily,
+            color: Color(0xffffffff),
+          ),
         ),
       );
       add(RectangleComponent(
-        size: menuButtonAreaSize,
-        position: Vector2(0, 640.0 - menuButtonAreaSize.y),
+        size: topGameInfoArea.size,
+        //position: Vector2(0, 640.0 - menuButtonAreaSize.y),
         paint: Paint()
           ..color = Colors.transparent
           ..style = PaintingStyle.fill,
         children: [
           RectangleComponent(
-            size: menuButtonAreaSize,
+            size: topGameInfoArea.size,
             paint: Paint()
               ..color = Colors.transparent
               ..style = PaintingStyle.fill,
@@ -782,7 +786,48 @@ class GameSeq extends Sequence
       ));
     }
     // コイン数表示更新
-    coinNumText.text = "${stage.coinNum}";
+    coinNumText.text = "${stage.coins.visual}";
+    // コイン加算表示
+    int addedCoin = stage.coins.addedValue;
+    if (addedCoin > 0 && Config().showAddedCoinOnCoin) {
+      final addingCoinText = OpacityEffectTextComponent(
+        text: "+$addedCoin",
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            fontFamily: Config.gameTextFamily,
+            color: Color(0xffffffff),
+          ),
+        ),
+      );
+      add(RectangleComponent(
+        size: topGameInfoArea.size,
+        paint: Paint()
+          ..color = Colors.transparent
+          ..style = PaintingStyle.fill,
+        children: [
+          RectangleComponent(
+            size: topGameInfoArea.size,
+            paint: Paint()
+              ..color = Colors.transparent
+              ..style = PaintingStyle.fill,
+          ),
+          AlignComponent(
+            alignment: Anchor.centerRight,
+            child: addingCoinText,
+          ),
+          SequenceEffect([
+            MoveEffect.by(
+                Vector2(0, -10.0),
+                EffectController(
+                  duration: 0.3,
+                )),
+            OpacityEffect.fadeOut(EffectController(duration: 0.5),
+                target: addingCoinText),
+            RemoveEffect(),
+          ]),
+        ],
+      ));
+    }
     // 【テストモード】現在座標表示
     if (game.testMode) {
       currentPosText.text = "pos:(${stage.player.pos.x},${stage.player.pos.y})";
@@ -798,8 +843,8 @@ class GameSeq extends Sequence
     // 今回のupdateでゲームオーバーになったらゲームオーバー画面に移行
     if (stage.isGameover) {
       // ハイスコア更新
-      if (stage.score > game.highScore) {
-        game.setAndSaveHighScore(stage.score);
+      if (stage.score.actual > game.highScore) {
+        game.setAndSaveHighScore(stage.score.actual);
       }
       // BGMストップ
       Audio().stopBGM();

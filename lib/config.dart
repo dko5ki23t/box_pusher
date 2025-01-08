@@ -233,6 +233,8 @@ class Config {
     wideDiagonalMoveButton = jsonData['wideDiagonalMoveButton']['value'];
     showAddedScoreOnScore = jsonData['showAddedScoreOnScore']['value'];
     showAddedScoreOnMergePos = jsonData['showAddedScoreOnMergePos']['value'];
+    showGotCoinsOnEnemyPos = jsonData['showGotCoinsOnEnemyPos']['value'];
+    showAddedCoinOnCoin = jsonData['showAddedCoinOnCoin']['value'];
     allowMoveStraightWithoutLegAbility =
         jsonData['allowMoveStraightWithoutLegAbility']['value'];
     setObjInBlockWithDistributionAlgorithm =
@@ -281,6 +283,12 @@ class Config {
 
   /// スコア加算表示(+100とか)をマージ位置に表示するかどうか
   late bool showAddedScoreOnMergePos;
+
+  /// コイン加算表示(+1とか)を現在のコインの上に表示するかどうか
+  late bool showAddedCoinOnCoin;
+
+  /// コイン加算表示(+1とか)を敵位置に表示するかどうか
+  late bool showGotCoinsOnEnemyPos;
 
   /// 足の能力がオフなのに斜め移動をしたとき、上下左右いずれかの移動に切り替えるかどうか(falseなら移動できない)
   late bool allowMoveStraightWithoutLegAbility;

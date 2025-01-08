@@ -747,3 +747,59 @@ class Blink {
   /// 表示する時間かどうか
   bool get isShowTime => _isShowTime;
 }
+
+/// 表示上の加算にかかる時間を指定できるカウントシステム
+class ValueWithAddingTime {
+  /// 加算にかかる時間
+  final double completeAddingTime;
+
+  /// 実際の値
+  int _value = 0;
+
+  /// 前回呼び出し時から増えた値
+  int _addedValue = 0;
+
+  /// 加算途中の、表示上の値
+  double _visualValue = 0;
+
+  /// 加算スピード(値/s)
+  double _addingSpeed = 0;
+
+  /// 最大値
+  final int? maxValue;
+
+  ValueWithAddingTime({
+    required this.completeAddingTime,
+    int initialValue = 0,
+    this.maxValue,
+  }) {
+    _value = initialValue;
+    _visualValue = initialValue.toDouble();
+  }
+
+  /// 実際の値
+  int get actual => _value;
+  set actual(int v) {
+    _value = maxValue == null ? v : v.clamp(0, maxValue!);
+    _addedValue += (_value - _visualValue).round();
+    _addingSpeed = (_value - _visualValue) / completeAddingTime;
+  }
+
+  /// 表示上の値(加算途中)
+  int get visual => _visualValue.round();
+
+  /// 前回get呼び出し時から増えた値
+  int get addedValue {
+    int ret = _addedValue;
+    _addedValue = 0;
+    return ret;
+  }
+
+  /// 表示上の値更新
+  void update(double dt) {
+    _visualValue += _addingSpeed * dt;
+    if (_visualValue > _value) {
+      _visualValue = _value.toDouble();
+    }
+  }
+}

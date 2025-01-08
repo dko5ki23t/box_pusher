@@ -191,4 +191,7 @@ class Builder extends StageObj {
 
   @override
   bool get hasVector => true;
+
+  @override
+  int get coins => (level * 1.5).floor();
 }

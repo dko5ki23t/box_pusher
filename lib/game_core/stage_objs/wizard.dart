@@ -340,4 +340,7 @@ class Wizard extends StageObj {
 
   @override
   bool get hasVector => true;
+
+  @override
+  int get coins => (level * 2.5).floor();
 }

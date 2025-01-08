@@ -48,14 +48,15 @@ extension SoundExtent on Sound {
 
   double get volume {
     switch (this) {
-      case Sound.decide:
       case Sound.merge:
-      case Sound.spawn:
-      case Sound.getSkill:
       case Sound.explode:
       case Sound.warp:
       case Sound.trap1:
         return 0.8;
+      case Sound.decide:
+      case Sound.getSkill:
+      case Sound.spawn:
+        return 1.0;
     }
   }
 }

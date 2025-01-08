@@ -408,6 +408,17 @@ abstract class StageObj {
   /// 向きがあるかどうか
   bool get hasVector;
 
+  /// 持っているコイン
+  int get coins => 0;
+
+  /// 攻撃を受ける
+  /// やられたかどうかを返す
+  bool hit(int damageLevel) {
+    if (!killable) return false;
+    level = (level - damageLevel).clamp(0, maxLevel);
+    return level <= 0;
+  }
+
   /// このオブジェクトを削除
   void remove() => valid = false;
 
@@ -1128,7 +1139,7 @@ abstract class StageObj {
         // 移動先が宝箱だった場合
         // TODO:
         // コイン増加
-        stage.coinNum++;
+        stage.coins.actual++;
         // 宝箱消滅
         stage.setStaticType(pos, StageObjType.none);
       } else if (stage.get(pos).type == StageObjType.gorilla) {

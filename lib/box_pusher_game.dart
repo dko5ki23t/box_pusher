@@ -249,7 +249,7 @@ class BoxPusherGame extends FlameGame
   int getCurrentScore() {
     if (_router.routes['game']!.firstChild() != null) {
       final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-      return gameSeq.stage.score;
+      return gameSeq.stage.score.actual;
     } else {
       return 0;
     }

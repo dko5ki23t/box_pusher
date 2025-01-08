@@ -190,9 +190,8 @@ class Player extends StageObj {
     }
   }
 
-  /// 敵の攻撃がプレイヤーに当たる
-  /// 戻り値：ゲームオーバーになるかどうか
-  bool hit() {
+  @override
+  bool hit(int damageLevel) {
     if (isArmerAbilityOn && armerRecoveryTurns == 0) {
       armerRecoveryTurns = armerNeedRecoveryTurns;
       return false;
