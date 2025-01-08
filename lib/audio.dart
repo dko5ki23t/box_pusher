@@ -10,11 +10,17 @@ enum Sound {
   /// マージ音
   merge,
 
+  /// マージ一定数達成によるアイテム出現音
+  spawn,
+
   /// 動物救出時（特殊効果ゲット）
   getSkill,
 
   /// ボム爆発時
   explode,
+
+  /// ワープ使用時
+  warp,
 
   /// トラップレベル1、穴に落として敵を倒す
   trap1,
@@ -27,10 +33,14 @@ extension SoundExtent on Sound {
         return 'audio/kettei.mp3';
       case Sound.merge:
         return 'audio/merge.mp3';
+      case Sound.spawn:
+        return 'audio/spawn.mp3';
       case Sound.getSkill:
         return 'audio/get_skill.mp3';
       case Sound.explode:
         return 'audio/explode.mp3';
+      case Sound.warp:
+        return 'audio/warp.mp3';
       case Sound.trap1:
         return 'audio/trap1.mp3';
     }
@@ -40,8 +50,10 @@ extension SoundExtent on Sound {
     switch (this) {
       case Sound.decide:
       case Sound.merge:
+      case Sound.spawn:
       case Sound.getSkill:
       case Sound.explode:
+      case Sound.warp:
       case Sound.trap1:
         return 0.8;
     }

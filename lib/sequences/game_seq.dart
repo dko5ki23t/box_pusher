@@ -150,6 +150,8 @@ class GameSeq extends Sequence
   late final GameSpriteButton menuButton;
   late final GameTextButton viewModeButton;
 
+  final Blink nextMergeItemBlink = Blink(showDuration: 0.4, hideDuration: 0.1);
+
   @override
   Future<void> onLoad() async {
     coinImg = await Flame.images.load('coin.png');
@@ -696,6 +698,7 @@ class GameSeq extends Sequence
   @override
   void update(double dt) {
     super.update(dt);
+    nextMergeItemBlink.update(dt);
     // ゲームシーケンスでない場合は何もしない
     if (game.getCurrentSeqName() != 'game') return;
     // クリア済みなら何もしない
@@ -730,6 +733,13 @@ class GameSeq extends Sequence
     nextMergeItem.animation = a.isNotEmpty ? a.first : null;
     nextMergeItem2.animation = a.length > 1 ? a[1] : null;
     nextMergeItem3.animation = a.length > 2 ? a[2] : null;
+    // 次1マージでアイテム出現ということを強調するための点滅
+    if (stage.remainMergeCount == 1 && !nextMergeItemBlink.isShowTime) {
+      remainMergeCountText.text = "";
+      nextMergeItem.animation = null;
+      nextMergeItem2.animation = null;
+      nextMergeItem3.animation = null;
+    }
     // スコア表示更新
     scoreText.text = "${stage.scoreVisual}";
     // スコア加算表示

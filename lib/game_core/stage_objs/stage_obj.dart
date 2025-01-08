@@ -1170,6 +1170,8 @@ abstract class StageObj {
       // 移動先がワープだった場合
       pos = stage.getWarpedPoint(pos);
       stage.setObjectPosition(this);
+      // 効果音を鳴らす
+      Audio().playSound(Sound.warp);
     }
   }
 

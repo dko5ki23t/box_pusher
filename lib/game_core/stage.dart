@@ -139,6 +139,9 @@ class Stage {
   /// マージ時のエフェクト画像
   late Image mergeEffectImg;
 
+  /// マージ一定数達成時オブジェクト出現のエフェクト画像
+  late Image spawnEffectImg;
+
   /// 静止物
   final Map<Point, StageObj> _staticObjs = {};
 
@@ -273,6 +276,7 @@ class Stage {
   Future<void> onLoad() async {
     await _objFactory.onLoad();
     mergeEffectImg = await Flame.images.load('merge_effect.png');
+    spawnEffectImg = await Flame.images.load('spawn_effect.png');
     isReady = true;
   }
 
@@ -763,6 +767,32 @@ class Stage {
       } else {
         boxes.add(item);
       }
+      // 出現エフェクトを描画
+      gameWorld.add(
+        SpriteComponent(
+          sprite: Sprite(spawnEffectImg),
+          priority: Stage.dynamicPriority,
+          scale: Vector2(0.8, 1.0),
+          children: [
+            ScaleEffect.by(
+              Vector2(1.5, 1.0),
+              EffectController(duration: 0.5),
+            ),
+            OpacityEffect.by(
+              -1.0,
+              EffectController(duration: 1.0),
+            ),
+            RemoveEffect(delay: 1.0),
+          ],
+          size: Stage.cellSize,
+          anchor: Anchor.center,
+          position: (Vector2(decidedPoints[i].x * Stage.cellSize.x,
+                  decidedPoints[i].y * Stage.cellSize.y) +
+              Stage.cellSize / 2),
+        ),
+      );
+      // 効果音を鳴らす
+      Audio().playSound(Sound.spawn);
     }
   }
 
