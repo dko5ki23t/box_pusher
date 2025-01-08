@@ -166,7 +166,7 @@ class Archer extends StageObj {
   bool playerStartMovingFlag = false;
 
   /// 矢の飛距離
-  int get arrowRange {
+  int get arrowReach {
     int ret = 5;
     if (movePatterns[level]! == EnemyMovePattern.followPlayerAttackStraight3) {
       ret = 3;
@@ -239,15 +239,15 @@ class Archer extends StageObj {
           double angle = 0;
           angle = v.angle(base: Move.down);
           // 矢がオブジェクトに当たる場合、矢の飛距離はそこまでとなる
-          int dist = arrowRange;
+          int dist = arrowReach;
           if (!Config().isArrowPathThrough) {
-            for (dist = 0; dist < arrowRange; dist++) {
+            for (dist = 0; dist < arrowReach; dist++) {
               final obj = stage.getAfterPush(pos + v.point * dist);
               if (!obj.isEnemy && !obj.enemyMovable) {
                 break;
               }
             }
-            if (0 < dist && dist < arrowRange) {
+            if (0 < dist && dist < arrowReach) {
               --dist;
             }
           }
@@ -290,15 +290,15 @@ class Archer extends StageObj {
           }
           for (final v in arrowVectors) {
             // 矢がオブジェクトに当たる場合、矢の飛距離はそこまでとなる
-            int dist = arrowRange;
+            int dist = arrowReach;
             if (!Config().isArrowPathThrough) {
-              for (dist = 0; dist < arrowRange; dist++) {
+              for (dist = 0; dist < arrowReach; dist++) {
                 final obj = stage.get(pos + v.point * dist);
                 if (!obj.isEnemy && !obj.enemyMovable) {
                   break;
                 }
               }
-              if (0 < dist && dist < arrowRange) {
+              if (0 < dist && dist < arrowReach) {
                 --dist;
               }
             }

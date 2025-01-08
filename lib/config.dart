@@ -55,6 +55,9 @@ enum EnemyMovePattern {
   /// プレイヤーの方へ動くor向く、前方3方向の直線5マスを攻撃する
   followPlayerAttack3Straight5,
 
+  /// プレイヤーの方へ動くor向く、攻撃範囲より遠ければワープする、直線5マスを攻撃する
+  followWarpPlayerAttackStraight5,
+
   /// プレイヤーの方へ動くor向く、通れない場合はゴースト化する/通れるならゴースト解除する
   followPlayerWithGhosting,
 

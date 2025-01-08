@@ -34,7 +34,10 @@ class StageObjFactory {
   late final Image errorImg;
   late final List<Image> attackArchersImgs;
   late final Image arrowImg;
-  late final List<Map<Move, Image>> guardianAttackImgs;
+  late final List<Map<Move, Image>> guardianSwordForwardAttackImgs;
+  late final Map<int, Image> guardianSwordRoundAttackImgs;
+  late final Map<int, Image> guardianSubAttackImgs;
+  late final Map<int, Image> guardianArrowMagicAttackImgs;
   late final List<Map<Move, Image>> swordsmanAttackImgs;
   late final List<Image> swordsmanRoundAttackImgs;
   late final List<Image> attackWizardImgs;
@@ -63,13 +66,27 @@ class StageObjFactory {
         await Flame.images.load(name)
     ];
     arrowImg = await Flame.images.load(Archer.arrowImageFileName);
-    guardianAttackImgs = [];
-    for (final names in Guardian.attackImageFileNames) {
+    guardianSwordForwardAttackImgs = [];
+    for (final names in Guardian.swordFowardAttackImageFileNames) {
       Map<Move, Image> images = {};
       for (final entry in names.entries) {
         images[entry.key] = await Flame.images.load(entry.value);
       }
-      guardianAttackImgs.add(images);
+      guardianSwordForwardAttackImgs.add(images);
+    }
+    guardianSwordRoundAttackImgs = {};
+    for (final entry in Guardian.swordRoundAttackImageFileNames.entries) {
+      guardianSwordRoundAttackImgs[entry.key] =
+          await Flame.images.load(entry.value);
+    }
+    guardianSubAttackImgs = {};
+    for (final entry in Guardian.subAttackImageFileNames.entries) {
+      guardianSubAttackImgs[entry.key] = await Flame.images.load(entry.value);
+    }
+    guardianArrowMagicAttackImgs = {};
+    for (final entry in Guardian.arrowMagicImageFileNames.entries) {
+      guardianArrowMagicAttackImgs[entry.key] =
+          await Flame.images.load(entry.value);
     }
     swordsmanAttackImgs = [];
     for (final names in Swordsman.attackImgFileNames) {
@@ -210,7 +227,10 @@ class StageObjFactory {
       case StageObjType.guardian:
         return Guardian(
             guardianImg: baseImages[type]!,
-            attackImgs: guardianAttackImgs,
+            swordForwardAttackImgs: guardianSwordForwardAttackImgs,
+            swordRoundAttackImgs: guardianSwordRoundAttackImgs,
+            subAttackImgs: guardianSubAttackImgs,
+            arrowMagicImgs: guardianArrowMagicAttackImgs,
             errorImg: errorImg,
             scale: scale,
             scaleEffect: scaleEffect,

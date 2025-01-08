@@ -46,6 +46,8 @@ class Point {
     return (x.abs() + y.abs());
   }
 
+  Vector2 toVector() => Vector2(x.toDouble(), y.toDouble());
+
   /// リストの中から最も近い点のリストを返す
   List<Point> closests(List<Point> points) {
     if (points.isEmpty) return [];

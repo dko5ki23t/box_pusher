@@ -269,10 +269,10 @@ abstract class StageObj {
   SpriteAnimationComponent animationComponent;
 
   /// オブジェクトのレベル->向き->アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
+  Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
 
   /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
+  Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
 
   /// 移動中の向き
   Move moving = Move.none;
@@ -626,6 +626,54 @@ abstract class StageObj {
     }
   }
 
+  void _enemyMoveFollowWithWarp(
+    Map<String, dynamic> ret,
+    EnemyMovePattern pattern,
+    Move vector,
+    StageObj target,
+    Player player,
+    Stage stage,
+    Map<Point, Move> prohibitedPoints,
+    int distanceFromTarget, // ターゲットからどれだけ離れていたらワープするか
+  ) {
+    final nearTargetRange = PointDistanceRange(target.pos, distanceFromTarget);
+    if (!nearTargetRange.contains(pos)) {
+      Point warpPoint = pos;
+      // ターゲットの付近の座標から、移動可能な候補を選ぶ
+      List<Point> cand = [];
+      for (final p in nearTargetRange.set) {
+        final obj = stage.get(p, detectPlayer: true);
+        // ワープでいきなりプレイヤーと重ならないようにする
+        if (obj.type == StageObjType.player ||
+            obj.type == StageObjType.warp ||
+            p == (player.pos + player.moving.point)) {
+          continue;
+        }
+        if (Config().allowEnemyMoveToPushingObjectPoint &&
+            player.pushings.isNotEmpty &&
+            player.pushings.first.pos == p) {
+          // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+        } else if (!obj.enemyMovable && !(mergable && isSameTypeLevel(obj))) {
+          // 敵が移動可能でない、かつマージできない
+          continue;
+        }
+        if (!_isEnemyMoveAllowed(p, Move.none, player, prohibitedPoints)) {
+          continue;
+        }
+        cand.add(p);
+      }
+      if (cand.isNotEmpty) {
+        // ワープ位置候補の中からランダムに1つ選ぶ
+        warpPoint = cand.sample(1).first;
+        // ターゲットの近くにワープする
+        ret['warp'] = warpPoint;
+      }
+    } else {
+      _enemyMoveFollow(
+          ret, pattern, vector, target, player, stage, prohibitedPoints);
+    }
+  }
+
   void _enemyMoveFollowWithGhosting(
     Map<String, dynamic> ret,
     EnemyMovePattern pattern,
@@ -829,6 +877,15 @@ abstract class StageObj {
         } else {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
+        }
+        break;
+      case EnemyMovePattern.followWarpPlayerAttackStraight5:
+        // 前方直線状5マスにプレイヤーがいるなら攻撃
+        if (PointRectRange(pos, pos + vector.point * 5).contains(player.pos)) {
+          ret['attack'] = true;
+        } else {
+          _enemyMoveFollowWithWarp(
+              ret, pattern, vector, player, player, stage, prohibitedPoints, 5);
         }
         break;
       case EnemyMovePattern.followPlayerWithGhosting:
