@@ -798,8 +798,10 @@ class ValueWithAddingTime {
   /// 表示上の値更新
   void update(double dt) {
     _visualValue += _addingSpeed * dt;
-    if (_visualValue > _value) {
+    if ((_addingSpeed > 0 && _visualValue > _value) ||
+        (_addingSpeed < 0 && _visualValue < _value)) {
       _visualValue = _value.toDouble();
+      _addingSpeed = 0;
     }
   }
 }

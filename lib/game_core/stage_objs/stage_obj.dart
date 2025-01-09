@@ -21,6 +21,7 @@ import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/pusher.dart';
 import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
+import 'package:box_pusher/game_core/stage_objs/shop.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
@@ -58,6 +59,7 @@ enum StageObjType {
   rabbit,
   kangaroo,
   turtle,
+  shop,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -86,6 +88,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.rabbit: 'rabbit',
     StageObjType.kangaroo: 'kangaroo',
     StageObjType.turtle: 'turtle',
+    StageObjType.shop: 'shop',
   };
 
   String get str => strMap[this]!;
@@ -140,6 +143,8 @@ extension StageObjTypeExtent on StageObjType {
         return Kangaroo;
       case StageObjType.turtle:
         return Turtle;
+      case StageObjType.shop:
+        return Shop;
     }
   }
 
@@ -193,6 +198,8 @@ extension StageObjTypeExtent on StageObjType {
         return Kangaroo.imageFileName;
       case StageObjType.turtle:
         return Turtle.imageFileName;
+      case StageObjType.shop:
+        return Shop.imageFileName;
     }
   }
 
@@ -1135,14 +1142,15 @@ abstract class StageObj {
     if (type == StageObjType.player) {
       // プレイヤー限定の処理
       final player = this as Player;
-      if (stage.get(pos).type == StageObjType.treasureBox) {
+      final obj = stage.get(pos);
+      if (obj.type == StageObjType.treasureBox) {
         // 移動先が宝箱だった場合
         // TODO:
         // コイン増加
         stage.coins.actual++;
         // 宝箱消滅
         stage.setStaticType(pos, StageObjType.none);
-      } else if (stage.get(pos).type == StageObjType.gorilla) {
+      } else if (obj.type == StageObjType.gorilla) {
         // 移動先がゴリラだった場合
         // 手の能力を習得
         player.pushableNum = -1;
@@ -1150,7 +1158,7 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
-      } else if (stage.get(pos).type == StageObjType.rabbit) {
+      } else if (obj.type == StageObjType.rabbit) {
         // 移動先がうさぎだった場合
         // 足の能力を習得
         player.isLegAbilityOn = true;
@@ -1158,7 +1166,7 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
-      } else if (stage.get(pos).type == StageObjType.kangaroo) {
+      } else if (obj.type == StageObjType.kangaroo) {
         // 移動先がカンガルーだった場合
         // ポケットの能力を習得
         player.isPocketAbilityOn = true;
@@ -1166,7 +1174,7 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
-      } else if (stage.get(pos).type == StageObjType.turtle) {
+      } else if (obj.type == StageObjType.turtle) {
         // 移動先が亀だった場合
         // アーマーの能力を習得
         player.isArmerAbilityOn = true;
@@ -1174,6 +1182,24 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
+      } else if (obj.type == StageObjType.shop && (obj as Shop).isPayPlace) {
+        // ショップの葉っぱマーク上に立ったとき
+        // ショップで支払いを要求されているのがコインの場合は
+        if (obj.shopInfo.payCoins > 0) {
+          // コインを支払える、かつオブジェクト出現位置が空いてるなら
+          final getItemPos = pos + Point(2, 0);
+          if (stage.coins.actual >= obj.shopInfo.payCoins &&
+              stage.get(getItemPos).type == StageObjType.shop &&
+              (stage.get(getItemPos) as Shop).isItemPlace) {
+            // コインを支払ってオブジェクト出現
+            stage.coins.actual -= obj.shopInfo.payCoins;
+            // TODO: 押せるオブジェクトだけとは限らない
+            stage.boxes.add(stage.createObject(
+                typeLevel: obj.shopInfo.getObj, pos: getItemPos));
+            // オブジェクト出現エフェクトを表示
+            stage.showSpawnEffect(getItemPos);
+          }
+        }
       }
     }
     // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している

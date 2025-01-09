@@ -482,6 +482,35 @@ class Stage {
     }
   }
 
+  /// オブジェクト出現エフェクト表示
+  void showSpawnEffect(Point pos) {
+    // 出現エフェクトを描画
+    gameWorld.add(
+      SpriteComponent(
+        sprite: Sprite(spawnEffectImg),
+        priority: Stage.dynamicPriority,
+        scale: Vector2(0.8, 1.0),
+        children: [
+          ScaleEffect.by(
+            Vector2(1.5, 1.0),
+            EffectController(duration: 0.5),
+          ),
+          OpacityEffect.by(
+            -1.0,
+            EffectController(duration: 1.0),
+          ),
+          RemoveEffect(delay: 1.0),
+        ],
+        size: Stage.cellSize,
+        anchor: Anchor.center,
+        position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+            Stage.cellSize / 2),
+      ),
+    );
+    // 効果音を鳴らす
+    Audio().playSound(Sound.spawn);
+  }
+
   /// 指定した範囲のブロックを破壊する
   void breakBlocks(Point basePoint, bool Function(Block) canBreakBlockFunc,
       PointRange range) async {
@@ -800,32 +829,8 @@ class Stage {
       } else {
         boxes.add(item);
       }
-      // 出現エフェクトを描画
-      gameWorld.add(
-        SpriteComponent(
-          sprite: Sprite(spawnEffectImg),
-          priority: Stage.dynamicPriority,
-          scale: Vector2(0.8, 1.0),
-          children: [
-            ScaleEffect.by(
-              Vector2(1.5, 1.0),
-              EffectController(duration: 0.5),
-            ),
-            OpacityEffect.by(
-              -1.0,
-              EffectController(duration: 1.0),
-            ),
-            RemoveEffect(delay: 1.0),
-          ],
-          size: Stage.cellSize,
-          anchor: Anchor.center,
-          position: (Vector2(decidedPoints[i].x * Stage.cellSize.x,
-                  decidedPoints[i].y * Stage.cellSize.y) +
-              Stage.cellSize / 2),
-        ),
-      );
-      // 効果音を鳴らす
-      Audio().playSound(Sound.spawn);
+      // オブジェクト出現エフェクトを表示
+      showSpawnEffect(decidedPoints[i]);
     }
   }
 

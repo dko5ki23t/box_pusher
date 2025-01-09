@@ -81,6 +81,10 @@ class Trap extends StageObj {
           if (target.isEnemy && target.killable && target.level <= level) {
             // 敵側の処理が残っているかもしれないので、フレームの最後に消す
             target.removeAfterFrame();
+            // コイン獲得
+            int gotCoins = target.coins;
+            stage.coins.actual += gotCoins;
+            stage.showGotCoinEffect(gotCoins, target.pos);
             // 効果音を鳴らす
             switch (level) {
               default:

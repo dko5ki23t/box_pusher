@@ -26,6 +26,7 @@ const String fixedStaticObjMapConfigFileName =
     'assets/texts/config_fixed_static_obj_map.csv';
 const String mergeAppearObjMapConfigFileName =
     'assets/texts/config_merge_appear_obj_map.csv';
+const String shopInfoConfigFileName = 'assets/texts/config_shop_info.csv';
 
 enum EnemyMovePattern {
   /// 完全にランダムに動く
@@ -148,6 +149,16 @@ class ObjInBlock {
   }
 }
 
+/// ショップの情報
+class ShopInfo {
+  int payCoins;
+  Map<StageObjTypeLevel, int> payObj;
+  StageObjTypeLevel getObj;
+
+  ShopInfo(
+      {required this.payCoins, required this.payObj, required this.getObj});
+}
+
 class Config {
   static final Config _instance = Config._internal();
 
@@ -262,6 +273,18 @@ class Config {
         loadFixedObjMap(await _importCSV(fixedStaticObjMapConfigFileName));
     mergeAppearObjMap = loadMergeAppearObjMap(
         await _importCSV(mergeAppearObjMapConfigFileName));
+    shopInfoMap = loadShopInfo(await _importCSV(shopInfoConfigFileName));
+    // ショップ位置周辺マスを固定マスとして登録
+    for (final shopPos in shopInfoMap.keys) {
+      fixedStaticObjMap[shopPos] =
+          StageObjTypeLevel(type: StageObjType.shop, level: 1); // たぬき
+      fixedStaticObjMap[shopPos + Point(-1, 1)] =
+          StageObjTypeLevel(type: StageObjType.shop, level: 2); // 葉っぱマーク
+      fixedStaticObjMap[shopPos + Point(0, 1)] =
+          StageObjTypeLevel(type: StageObjType.shop, level: 3); // 矢印
+      fixedStaticObjMap[shopPos + Point(1, 1)] =
+          StageObjTypeLevel(type: StageObjType.shop, level: 4); // 星マーク
+    }
     random = Random(debugRandomSeed);
     _isReady = true;
   }
@@ -546,6 +569,32 @@ class Config {
       } else {
         ret[int.parse(vals[0])] = [objs];
       }
+    }
+    return ret;
+  }
+
+  /// ステージ上の位置->ショップ情報のマップ
+  late Map<Point, ShopInfo> shopInfoMap;
+
+  Map<Point, ShopInfo> loadShopInfo(List<List<String>> data) {
+    final Map<Point, ShopInfo> ret = {};
+    // 最初の2行は無視
+    for (int i = 2; i < data.length; i++) {
+      final vals = data[i];
+      Point shopPos = Point(int.parse(vals[0]), int.parse(vals[1]));
+      int payCoins = 0;
+      final Map<StageObjTypeLevel, int> payObjs = {};
+      if (vals[2] == 'coin') {
+        payCoins = int.parse(vals[3]);
+      } else {
+        payObjs[StageObjTypeLevel(
+            type: StageObjTypeExtent.fromStr(vals[2]),
+            level: int.parse(vals[3]))] = 1;
+      }
+      final getObj = StageObjTypeLevel(
+          type: StageObjTypeExtent.fromStr(vals[4]), level: int.parse(vals[5]));
+      ret[shopPos] =
+          ShopInfo(payCoins: payCoins, payObj: payObjs, getObj: getObj);
     }
     return ret;
   }
