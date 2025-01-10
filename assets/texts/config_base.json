@@ -19,6 +19,14 @@
         "desc": "スコア加算表示(+100とか)をマージ位置に表示するかどうか",
         "value": true
     },
+    "showAddedCoinOnCoin": {
+        "desc": "コイン加算表示(+1とか)を現在のコインの上に表示するかどうか",
+        "value": false
+    },
+    "showGotCoinsOnEnemyPos": {
+        "desc": "コイン加算表示(+1とか)を敵位置に表示するかどうか",
+        "value": true
+    },
     "allowMoveStraightWithoutLegAbility": {
         "desc": "足の能力がオフなのに斜め移動をしたとき、上下左右いずれかの移動に切り替えるかどうか(falseなら移動できない)",
         "value": true

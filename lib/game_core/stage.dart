@@ -7,7 +7,6 @@ import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
-import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
@@ -98,6 +97,24 @@ class SetAndDistribution<T> {
   SetAndDistribution(this.set, this.distribution);
 }
 
+class Score extends ValueWithAddingTime {
+  Score(int initialScore)
+      : super(
+          initialValue: initialScore,
+          completeAddingTime: 0.3,
+          maxValue: Stage.maxScore,
+        );
+}
+
+class Coin extends ValueWithAddingTime {
+  Coin(int initialCoin)
+      : super(
+          initialValue: initialCoin,
+          completeAddingTime: 0.3,
+          maxValue: Stage.maxCoin,
+        );
+}
+
 class Stage {
   /// マスのサイズ
   static Vector2 get cellSize => Vector2(32.0, 32.0);
@@ -139,6 +156,12 @@ class Stage {
   /// マージ時のエフェクト画像
   late Image mergeEffectImg;
 
+  /// マージ一定数達成時オブジェクト出現のエフェクト画像
+  late Image spawnEffectImg;
+
+  /// コイン獲得時エフェクト用のコイン画像
+  late Image coinImg;
+
   /// 静止物
   final Map<Point, StageObj> _staticObjs = {};
 
@@ -151,6 +174,9 @@ class Stage {
 
   /// 敵
   StageObjList enemies = StageObjList();
+
+  /// ショップ
+  List<StageObj> shops = [];
 
   /// ワープの場所リスト
   List<Point> warpPoints = [];
@@ -203,53 +229,17 @@ class Stage {
   /// ステージの縦幅
   int get stageHeight => stageRB.y - stageLT.y;
 
-  /// スコア(加算途中の、表示上のスコア)
-  double _scoreVisual = 0;
-
-  /// スコア加算スピード(スコア/s)
-  double _scorePlusSpeed = 0;
-
-  /// スコア加算時間(s)
-  final double _scorePlusTime = 0.3;
-
-  /// コイン数の最大値
-  static int maxCoinNum = 99;
-
-  int _coinNum = 0;
-
-  /// 所持しているコイン数
-  set coinNum(int num) {
-    _coinNum = num.clamp(0, maxCoinNum);
-  }
-
-  int get coinNum => _coinNum;
-
   /// スコアの最大値
   static int maxScore = 99999999;
 
-  int _score = 0;
-
   /// スコア
-  set score(int s) {
-    _score = s.clamp(0, maxScore);
-    _addedScore += (_score - _scoreVisual).round();
-    _scorePlusSpeed = (_score - _scoreVisual) / _scorePlusTime;
-  }
+  Score score = Score(0);
 
-  int get score => _score;
+  /// コイン数の最大値
+  static int maxCoin = 99;
 
-  /// スコア(加算途中の、表示上のスコア)
-  int get scoreVisual => _scoreVisual.round();
-
-  /// 前回get呼び出し時から増えたスコア
-  int _addedScore = 0;
-
-  /// 前回get呼び出し時から増えたスコア
-  int get addedScore {
-    int ret = _addedScore;
-    _addedScore = 0;
-    return ret;
-  }
+  /// 所持しているコイン
+  Coin coins = Coin(0);
 
   /// テストモードかどうか
   final bool testMode;
@@ -273,6 +263,8 @@ class Stage {
   Future<void> onLoad() async {
     await _objFactory.onLoad();
     mergeEffectImg = await Flame.images.load('merge_effect.png');
+    spawnEffectImg = await Flame.images.load('spawn_effect.png');
+    coinImg = await Flame.images.load('coin.png');
     isReady = true;
   }
 
@@ -333,8 +325,8 @@ class Stage {
 
   Future<Map<String, dynamic>> encodeStageData() async {
     final Map<String, dynamic> ret = {};
-    ret['score'] = score;
-    ret['coin'] = coinNum;
+    ret['score'] = score.actual;
+    ret['coin'] = coins.actual;
     ret['stageLT'] = stageLT.encode();
     ret['stageRB'] = stageRB.encode();
     final Map<String, dynamic> encodedCOIBM = {};
@@ -443,6 +435,83 @@ class Stage {
         createAndSetStaticObjWithPattern(Point(x, stageRB.y));
       }
     }
+  }
+
+  /// コイン加算表示(0枚なら表示しない)
+  void showGotCoinEffect(int coins, Point pos) {
+    if (coins > 0 && Config().showGotCoinsOnEnemyPos) {
+      final gotCoinsText = OpacityEffectTextComponent(
+        text: "+$coins",
+        textRenderer: TextPaint(
+          style: Config.gameTextStyle,
+        ),
+      );
+      gameWorld.add(RectangleComponent(
+        priority: Stage.frontPriority,
+        size: Vector2(32.0, 16.0),
+        anchor: Anchor.center,
+        position: Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+            Stage.cellSize / 2 -
+            Config().addedScoreEffectMove,
+        paint: Paint()
+          ..color = Colors.transparent
+          ..style = PaintingStyle.fill,
+        children: [
+          RectangleComponent(
+            paint: Paint()
+              ..color = Colors.transparent
+              ..style = PaintingStyle.fill,
+          ),
+          AlignComponent(
+              alignment: Anchor.centerLeft,
+              child:
+                  SpriteComponent.fromImage(coinImg, scale: Vector2.all(0.5))),
+          AlignComponent(
+            alignment: Anchor.centerRight,
+            child: gotCoinsText,
+          ),
+          SequenceEffect([
+            MoveEffect.by(
+                Config().addedScoreEffectMove,
+                EffectController(
+                  duration: 0.3,
+                )),
+            OpacityEffect.fadeOut(EffectController(duration: 0.5),
+                target: gotCoinsText),
+            RemoveEffect(),
+          ]),
+        ],
+      ));
+    }
+  }
+
+  /// オブジェクト出現エフェクト表示
+  void showSpawnEffect(Point pos) {
+    // 出現エフェクトを描画
+    gameWorld.add(
+      SpriteComponent(
+        sprite: Sprite(spawnEffectImg),
+        priority: Stage.dynamicPriority,
+        scale: Vector2(0.8, 1.0),
+        children: [
+          ScaleEffect.by(
+            Vector2(1.5, 1.0),
+            EffectController(duration: 0.5),
+          ),
+          OpacityEffect.by(
+            -1.0,
+            EffectController(duration: 1.0),
+          ),
+          RemoveEffect(delay: 1.0),
+        ],
+        size: Stage.cellSize,
+        anchor: Anchor.center,
+        position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+            Stage.cellSize / 2),
+      ),
+    );
+    // 効果音を鳴らす
+    Audio().playSound(Sound.spawn);
   }
 
   /// 指定した範囲のブロックを破壊する
@@ -634,7 +703,7 @@ class Stage {
 
     // スコア加算
     int gettingScore = pow(2, (merging.level - 1)).toInt() * 100;
-    score += gettingScore;
+    score.actual += gettingScore;
 
     // スコア加算表示
     if (gettingScore > 0 && Config().showAddedScoreOnMergePos) {
@@ -763,6 +832,8 @@ class Stage {
       } else {
         boxes.add(item);
       }
+      // オブジェクト出現エフェクトを表示
+      showSpawnEffect(decidedPoints[i]);
     }
   }
 
@@ -877,10 +948,9 @@ class Stage {
     stageLT = Point.decode(stageData['stageLT']);
     stageRB = Point.decode(stageData['stageRB']);
     // スコア設定
-    _score = stageData['score'];
-    _scoreVisual = _score.toDouble();
+    score = Score(stageData['score']);
     // コイン数設定
-    coinNum = stageData['coin'];
+    coins = Coin(stageData['coin']);
     // 分布(数)設定
     blockFloorDistribution.clear();
     for (final entry
@@ -897,9 +967,14 @@ class Stage {
 
     // 各種ステージオブジェクト設定
     _staticObjs.clear();
+    shops.clear();
     for (final entry
         in (stageData['staticObjs'] as Map<String, dynamic>).entries) {
-      _staticObjs[Point.decode(entry.key)] = createObjectFromMap(entry.value);
+      final staticObj = createObjectFromMap(entry.value);
+      if (staticObj.type == StageObjType.shop) {
+        shops.add(staticObj);
+      }
+      _staticObjs[Point.decode(entry.key)] = staticObj;
     }
     // gameWorldのchildrenをすべてremoveしてること前提
     boxes.forceClear();
@@ -958,8 +1033,9 @@ class Stage {
     stageLT = Point(-6, -20);
     stageRB = Point(6, 20);
     // スコア初期化
-    _score = 0;
-    _scoreVisual = 0;
+    score = Score(0);
+    // コイン数初期化
+    coins = Coin(0);
     // マージ数初期化
     mergedCount = 0;
     // ブロック破壊時出現アイテム個数初期化
@@ -971,6 +1047,7 @@ class Stage {
       prepareDistributions();
     }
     _staticObjs.clear();
+    shops.clear();
     boxes.forceClear();
     enemies.forceClear();
     for (int y = stageLT.y; y <= stageRB.y; y++) {
@@ -1020,11 +1097,10 @@ class Stage {
 
   void update(
       double dt, Move moveInput, World gameWorld, CameraComponent camera) {
-    // 見かけ上のスコア更新
-    _scoreVisual += _scorePlusSpeed * dt;
-    if (_scoreVisual > _score) {
-      _scoreVisual = _score.toDouble();
-    }
+    // 表示上のスコア更新
+    score.update(dt);
+    // 表示上のコイン数更新
+    coins.update(dt);
     // クリア済みなら何もしない
     if (isClear()) return;
     Move before = player.moving;
@@ -1086,16 +1162,22 @@ class Stage {
     }
     //}
 
+    // ショップ更新(ショップ情報を吹き出しで表示/非表示)
+    for (final shop in shops) {
+      shop.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
+          playerEndMoving, prohibitedPoints);
+    }
+
     // 敵の攻撃について処理
     for (final attack in enemyAttackPoints.entries) {
       // プレイヤーに攻撃が当たった
       if (attack.key == player.pos) {
-        isGameover = player.hit();
+        isGameover = player.hit(attack.value);
       }
       // ガーディアンに攻撃が当たった
       for (final guardian in boxes.where((element) =>
           element.type == StageObjType.guardian && attack.key == element.pos)) {
-        if ((guardian as Guardian).hit(attack.value)) {
+        if (guardian.hit(attack.value)) {
           // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
           guardian.removeAfterFrame();
         }
@@ -1109,13 +1191,13 @@ class Stage {
       if (mergeAffect.enemyDamage > 0) {
         for (final p in mergeAffect.range.set) {
           final obj = get(p);
-          if (obj.isEnemy && obj.killable) {
-            obj.level =
-                (obj.level - mergeAffect.enemyDamage).clamp(0, obj.maxLevel);
-            if (obj.level <= 0) {
-              // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
-              obj.removeAfterFrame();
-            }
+          if (obj.isEnemy && obj.hit(mergeAffect.enemyDamage)) {
+            // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
+            obj.removeAfterFrame();
+            // コイン獲得
+            int gotCoins = obj.coins;
+            coins.actual += gotCoins;
+            showGotCoinEffect(gotCoins, obj.pos);
           }
         }
       }
@@ -1250,10 +1332,14 @@ class Stage {
       {bool addToGameWorld = true}) async {
     if (Config().fixedStaticObjMap.containsKey(pos)) {
       // 固定位置のオブジェクト
-      _staticObjs[pos] = createObject(
+      final staticObj = createObject(
           typeLevel: Config().fixedStaticObjMap[pos]!,
           pos: pos,
           addToGameWorld: addToGameWorld);
+      if (staticObj.type == StageObjType.shop) {
+        shops.add(staticObj);
+      }
+      _staticObjs[pos] = staticObj;
       return;
     } else {
       // その他は定めたパターンに従う

@@ -154,4 +154,7 @@ class Spike extends StageObj {
 
   @override
   bool get hasVector => false;
+
+  @override
+  int get coins => level * 1;
 }

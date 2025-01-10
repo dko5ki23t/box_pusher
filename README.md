@@ -5,8 +5,9 @@
 ステージ上のオブジェクトを押して同じオブジェクトと合体してマージさせよう。
 
 Play with
-* GitHub Pages：https://dko5ki23t.github.io/box_pusher/
-* 
+
+- GitHub Pages：https://dko5ki23t.github.io/box_pusher/
+-
 
 ## ゲームの目的
 
@@ -23,3 +24,5 @@ Play with
 - 動物救出時効果音：[演出・アニメ[1]｜効果音ラボ ペタッ](https://soundeffect-lab.info/sound/anime/)
 - ボム爆発時効果音：[戦闘[2]｜効果音ラボ 大砲 2](https://soundeffect-lab.info/sound/battle/battle2.html)
 - 決定音：[ボタン・システム音[1]｜効果音ラボ キャンセル 4](https://soundeffect-lab.info/sound/button/)
+- マージによるアイテム出現時効果音：[効果音 『 その他音 』 by On-Jin ～音人～ | 消失・しゅぽん](https://on-jin.com/sound/ta.php)
+- ワープ音：[効果音 『 その他音 』 by On-Jin ～音人～ | 瞬間移動](https://on-jin.com/sound/ta.php)

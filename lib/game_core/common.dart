@@ -706,3 +706,102 @@ class Distribution<T> {
 
 /// ランダムに切り上げ/切り下げしたintを返す
 int randomRound(double a) => Config().random.nextBool() ? a.ceil() : a.floor();
+
+/// 点滅について管理するクラス
+class Blink {
+  double _duration = 0;
+  double _showDuration;
+  double _hideDuration;
+  bool _isShowTime = true;
+
+  /// 点滅について管理するクラス
+  /// update()をComponentのupdate()内で呼ぶこと
+  /// * showDuration: 表示する時間[s]
+  /// * hideDuration: 非表示にする時間[s]
+  Blink({required double showDuration, required double hideDuration})
+      : _showDuration = showDuration,
+        _hideDuration = hideDuration;
+
+  /// 点滅に関する情報のリセット
+  void reset({double? showDuration, double? hideDuration}) {
+    _duration = 0;
+    if (showDuration != null) {
+      _showDuration = showDuration;
+    }
+    if (hideDuration != null) {
+      _hideDuration = hideDuration;
+    }
+  }
+
+  /// 経過時間を加算、表示中の時間かどうかを更新(isShowTimeを更新)
+  void update(double dt) {
+    _duration += dt;
+    _isShowTime = true;
+    if (_duration >= _showDuration + _hideDuration) {
+      _duration = 0;
+    } else if (_duration >= _showDuration) {
+      _isShowTime = false;
+    }
+  }
+
+  /// 表示する時間かどうか
+  bool get isShowTime => _isShowTime;
+}
+
+/// 表示上の加算にかかる時間を指定できるカウントシステム
+class ValueWithAddingTime {
+  /// 加算にかかる時間
+  final double completeAddingTime;
+
+  /// 実際の値
+  int _value = 0;
+
+  /// 前回呼び出し時から増えた値
+  int _addedValue = 0;
+
+  /// 加算途中の、表示上の値
+  double _visualValue = 0;
+
+  /// 加算スピード(値/s)
+  double _addingSpeed = 0;
+
+  /// 最大値
+  final int? maxValue;
+
+  ValueWithAddingTime({
+    required this.completeAddingTime,
+    int initialValue = 0,
+    this.maxValue,
+  }) {
+    _value = initialValue;
+    _visualValue = initialValue.toDouble();
+  }
+
+  /// 実際の値
+  int get actual => _value;
+  set actual(int v) {
+    _value = maxValue == null ? v : v.clamp(0, maxValue!);
+    _addedValue += (_value - _visualValue).round();
+    _addingSpeed = (_value - _visualValue) / completeAddingTime;
+  }
+
+  /// 表示上の値(加算途中)
+  int get visual => _visualValue.round();
+
+  /// 前回get呼び出し時から増えた値
+  int get addedValue {
+    int ret = _addedValue;
+    _addedValue = 0;
+    return ret;
+  }
+
+  /// 表示上の値更新
+  void update(double dt) {
+    _visualValue += _addingSpeed * dt;
+    if ((_addingSpeed > 0 && _visualValue > _value) ||
+        (_addingSpeed < 0 && _visualValue < _value)) {
+      _visualValue = _value.toDouble();
+      _addingSpeed = 0;
+    }
+  }
+}

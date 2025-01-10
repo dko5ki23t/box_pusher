@@ -15,6 +15,7 @@ import 'package:box_pusher/game_core/stage_objs/magma.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/pusher.dart';
 import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
+import 'package:box_pusher/game_core/stage_objs/shop.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
@@ -42,6 +43,7 @@ class StageObjFactory {
   late final List<Image> swordsmanRoundAttackImgs;
   late final List<Image> attackWizardImgs;
   late final Image magicImg;
+  late final Image coinImg;
   Map<StageObjType, Image> baseImages = {};
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
@@ -105,6 +107,7 @@ class StageObjFactory {
         await Flame.images.load(name)
     ];
     magicImg = await Flame.images.load(Wizard.magicImageFileName);
+    coinImg = await Flame.images.load('coin.png');
     isReady = true;
   }
 
@@ -169,14 +172,7 @@ class StageObjFactory {
             pos: pos,
             level: typeLevel.level);
       case StageObjType.player:
-        assert(
-            isReady, 'Playerはこの関数で作成せず、StageObjFactory.createPlayer()で作成すること。');
-        return Player(
-            playerImg: baseImages[type]!,
-            errorImg: errorImg,
-            pos: pos,
-            level: typeLevel.level)
-          ..vector = vector;
+        throw ('Playerはこの関数で作成せず、StageObjFactory.createPlayer()で作成すること。');
       case StageObjType.block:
         return Block(
             blockImg: baseImages[type]!,
@@ -318,6 +314,19 @@ class StageObjFactory {
             errorImg: errorImg,
             pos: pos,
             level: typeLevel.level);
+      case StageObjType.shop:
+        return Shop(
+          shopImg: baseImages[type]!,
+          errorImg: errorImg,
+          pos: pos,
+          level: typeLevel.level,
+          coinImg: coinImg,
+          getAnimeFunc: (tl) {
+            return create(typeLevel: tl, pos: Point(0, 0))
+                .animationComponent
+                .animation!;
+          },
+        );
     }
   }
 

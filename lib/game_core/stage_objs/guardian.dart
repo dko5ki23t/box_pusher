@@ -448,12 +448,13 @@ class Guardian extends StageObj {
       if (attacking) {
         for (final p in attackingPoints) {
           final obj = stage.get(p);
-          if (obj.isEnemy && obj.killable) {
-            obj.level = (obj.level - level).clamp(0, obj.maxLevel);
-            if (obj.level <= 0) {
-              // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
-              obj.removeAfterFrame();
-            }
+          if (obj.isEnemy && obj.hit(level)) {
+            // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
+            obj.removeAfterFrame();
+            // コイン獲得
+            int gotCoins = obj.coins;
+            stage.coins.actual += gotCoins;
+            stage.showGotCoinEffect(gotCoins, obj.pos);
           }
         }
         attackingPoints.clear();
@@ -471,14 +472,6 @@ class Guardian extends StageObj {
         stage.setObjectPosition(this);
       }
     }
-  }
-
-  /// 敵の攻撃がプレイヤーに当たる
-  /// obj: 攻撃したオブジェクト
-  /// 戻り値：倒されるかどうか
-  bool hit(int damageLevel) {
-    level = (level - damageLevel).clamp(0, maxLevel);
-    return level <= 0;
   }
 
   @override
@@ -503,7 +496,7 @@ class Guardian extends StageObj {
   bool get isEnemy => false;
 
   @override
-  bool get killable => false;
+  bool get killable => true;
 
   @override
   bool get beltMove => true;

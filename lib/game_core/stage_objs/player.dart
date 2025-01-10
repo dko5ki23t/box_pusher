@@ -99,8 +99,8 @@ class Player extends StageObj {
       }
       // 動けないとしても、向きは変更
       vector = moveInput.toStraightLR();
-      // プレイヤーが壁にぶつかるか
-      if (stage.get(pos + moveInput.point).type == StageObjType.block) {
+      // プレイヤーが壁などにぶつかるか
+      if (stage.get(pos + moveInput.point).stopping) {
         return;
       }
       // 押し始める・押すオブジェクトを決定
@@ -190,9 +190,8 @@ class Player extends StageObj {
     }
   }
 
-  /// 敵の攻撃がプレイヤーに当たる
-  /// 戻り値：ゲームオーバーになるかどうか
-  bool hit() {
+  @override
+  bool hit(int damageLevel) {
     if (isArmerAbilityOn && armerRecoveryTurns == 0) {
       armerRecoveryTurns = armerNeedRecoveryTurns;
       return false;
