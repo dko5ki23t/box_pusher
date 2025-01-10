@@ -448,13 +448,14 @@ class Guardian extends StageObj {
       if (attacking) {
         for (final p in attackingPoints) {
           final obj = stage.get(p);
+          // hit()でレベルを下げる前にコイン数を取得
+          int gettableCoins = obj.coins;
           if (obj.isEnemy && obj.hit(level)) {
             // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
             obj.removeAfterFrame();
             // コイン獲得
-            int gotCoins = obj.coins;
-            stage.coins.actual += gotCoins;
-            stage.showGotCoinEffect(gotCoins, obj.pos);
+            stage.coins.actual += gettableCoins;
+            stage.showGotCoinEffect(gettableCoins, obj.pos);
           }
         }
         attackingPoints.clear();

@@ -1191,13 +1191,14 @@ class Stage {
       if (mergeAffect.enemyDamage > 0) {
         for (final p in mergeAffect.range.set) {
           final obj = get(p);
+          // hit()でレベルを下げる前にコイン数を取得
+          int gettableCoins = obj.coins;
           if (obj.isEnemy && obj.hit(mergeAffect.enemyDamage)) {
             // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
             obj.removeAfterFrame();
             // コイン獲得
-            int gotCoins = obj.coins;
-            coins.actual += gotCoins;
-            showGotCoinEffect(gotCoins, obj.pos);
+            coins.actual += gettableCoins;
+            showGotCoinEffect(gettableCoins, obj.pos);
           }
         }
       }
