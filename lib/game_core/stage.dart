@@ -175,6 +175,9 @@ class Stage {
   /// 敵
   StageObjList enemies = StageObjList();
 
+  /// ショップ
+  List<StageObj> shops = [];
+
   /// ワープの場所リスト
   List<Point> warpPoints = [];
 
@@ -964,9 +967,14 @@ class Stage {
 
     // 各種ステージオブジェクト設定
     _staticObjs.clear();
+    shops.clear();
     for (final entry
         in (stageData['staticObjs'] as Map<String, dynamic>).entries) {
-      _staticObjs[Point.decode(entry.key)] = createObjectFromMap(entry.value);
+      final staticObj = createObjectFromMap(entry.value);
+      if (staticObj.type == StageObjType.shop) {
+        shops.add(staticObj);
+      }
+      _staticObjs[Point.decode(entry.key)] = staticObj;
     }
     // gameWorldのchildrenをすべてremoveしてること前提
     boxes.forceClear();
@@ -1039,6 +1047,7 @@ class Stage {
       prepareDistributions();
     }
     _staticObjs.clear();
+    shops.clear();
     boxes.forceClear();
     enemies.forceClear();
     for (int y = stageLT.y; y <= stageRB.y; y++) {
@@ -1152,6 +1161,12 @@ class Stage {
           playerEndMoving, prohibitedPoints);
     }
     //}
+
+    // ショップ更新(ショップ情報を吹き出しで表示/非表示)
+    for (final shop in shops) {
+      shop.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
+          playerEndMoving, prohibitedPoints);
+    }
 
     // 敵の攻撃について処理
     for (final attack in enemyAttackPoints.entries) {
@@ -1317,10 +1332,14 @@ class Stage {
       {bool addToGameWorld = true}) async {
     if (Config().fixedStaticObjMap.containsKey(pos)) {
       // 固定位置のオブジェクト
-      _staticObjs[pos] = createObject(
+      final staticObj = createObject(
           typeLevel: Config().fixedStaticObjMap[pos]!,
           pos: pos,
           addToGameWorld: addToGameWorld);
+      if (staticObj.type == StageObjType.shop) {
+        shops.add(staticObj);
+      }
+      _staticObjs[pos] = staticObj;
       return;
     } else {
       // その他は定めたパターンに従う

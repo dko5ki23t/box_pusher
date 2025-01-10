@@ -1,3 +1,4 @@
 ショップの位置・交換情報
 pointX, pointY, payObjType, payObjLevel, getObjType, getObjLevel
--3, -3, coin, 1, bomb, 1
+-10, -10, coin, 10, bomb, 1
+10, 10, coin, 10, bomb, 1

@@ -43,6 +43,7 @@ class StageObjFactory {
   late final List<Image> swordsmanRoundAttackImgs;
   late final List<Image> attackWizardImgs;
   late final Image magicImg;
+  late final Image coinImg;
   Map<StageObjType, Image> baseImages = {};
 
   /// effectを追加する際、動きを合わせる基となるエフェクトのコントローラ
@@ -106,6 +107,7 @@ class StageObjFactory {
         await Flame.images.load(name)
     ];
     magicImg = await Flame.images.load(Wizard.magicImageFileName);
+    coinImg = await Flame.images.load('coin.png');
     isReady = true;
   }
 
@@ -314,10 +316,17 @@ class StageObjFactory {
             level: typeLevel.level);
       case StageObjType.shop:
         return Shop(
-            shopImg: baseImages[type]!,
-            errorImg: errorImg,
-            pos: pos,
-            level: typeLevel.level);
+          shopImg: baseImages[type]!,
+          errorImg: errorImg,
+          pos: pos,
+          level: typeLevel.level,
+          coinImg: coinImg,
+          getAnimeFunc: (tl) {
+            return create(typeLevel: tl, pos: Point(0, 0))
+                .animationComponent
+                .animation!;
+          },
+        );
     }
   }
 
