@@ -17,6 +17,7 @@ class Bomb extends StageObj {
   Bomb({
     required Image bombImg,
     required Image errorImg,
+    required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     required super.pos,

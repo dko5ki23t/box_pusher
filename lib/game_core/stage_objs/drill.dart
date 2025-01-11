@@ -14,6 +14,7 @@ class Drill extends StageObj {
   Drill({
     required Image drillImg,
     required Image errorImg,
+    required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     required super.pos,

@@ -5,19 +5,28 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 
-class Pusher extends StageObj {
+class Smoker extends StageObj {
   /// 各レベルに対応する動きのパターン
   final Map<int, EnemyMovePattern> movePatterns = {
-    1: EnemyMovePattern.walkAndPushRandomOrStop,
-    2: EnemyMovePattern.walkAndPushRandomOrStop,
-    3: EnemyMovePattern.walkAndPushRandomOrStop,
+    1: EnemyMovePattern.walkRandomOrStop,
+    2: EnemyMovePattern.walkRandomOrStop,
+    3: EnemyMovePattern.walkRandomOrStop,
   };
 
   /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'pusher.png';
+  static String get imageFileName => 'smoker.png';
 
-  Pusher({
-    required Image pusherImg,
+  /// 煙を吐く間隔
+  static int smokeAttackPeriod = 5;
+
+  /// 煙が残るターン数
+  static int smokeTurns = 3;
+
+  /// 経過ターン数
+  int turns = 0;
+
+  Smoker({
+    required Image smokerImg,
     required Image errorImg,
     required super.savedArg,
     required super.pos,
@@ -33,56 +42,52 @@ class Pusher extends StageObj {
           ),
           levelToAnimations: {
             0: {
-              for (final move in MoveExtent.straights)
-                move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
+              Move.none:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
-            for (int i = 0; i < 3; i++)
-              i + 1: {
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(pusherImg,
-                      srcPosition: Vector2(i * 256 + 128, 0),
+            for (int i = 1; i <= 3; i++)
+              i: {
+                Move.down: SpriteAnimation.spriteList([
+                  Sprite(smokerImg,
+                      srcPosition: Vector2(256 * (i - 1), 0),
                       srcSize: Stage.cellSize),
-                  Sprite(pusherImg,
-                      srcPosition: Vector2(i * 256 + 160, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(pusherImg,
-                      srcPosition: Vector2(i * 256 + 192, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(pusherImg,
-                      srcPosition: Vector2(i * 256 + 224, 0),
+                  Sprite(smokerImg,
+                      srcPosition: Vector2(256 * (i - 1) + 32, 0),
                       srcSize: Stage.cellSize),
                 ], stepTime: Stage.objectStepTime),
                 Move.up: SpriteAnimation.spriteList([
-                  Sprite(pusherImg,
-                      srcPosition: Vector2(i * 256 + 64, 0),
+                  Sprite(smokerImg,
+                      srcPosition: Vector2(256 * (i - 1) + 64, 0),
                       srcSize: Stage.cellSize),
-                  Sprite(pusherImg,
-                      srcPosition: Vector2(i * 256 + 96, 0),
+                  Sprite(smokerImg,
+                      srcPosition: Vector2(256 * (i - 1) + 96, 0),
                       srcSize: Stage.cellSize),
                 ], stepTime: Stage.objectStepTime),
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(pusherImg,
-                      srcPosition: Vector2(i * 256 + 0, 0),
+                Move.left: SpriteAnimation.spriteList([
+                  Sprite(smokerImg,
+                      srcPosition: Vector2(256 * (i - 1) + 128, 0),
                       srcSize: Stage.cellSize),
-                  Sprite(pusherImg,
-                      srcPosition: Vector2(i * 256 + 32, 0),
+                  Sprite(smokerImg,
+                      srcPosition: Vector2(256 * (i - 1) + 160, 0),
+                      srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.right: SpriteAnimation.spriteList([
+                  Sprite(smokerImg,
+                      srcPosition: Vector2(256 * (i - 1) + 192, 0),
+                      srcSize: Stage.cellSize),
+                  Sprite(smokerImg,
+                      srcPosition: Vector2(256 * (i - 1) + 224, 0),
                       srcSize: Stage.cellSize),
                 ], stepTime: Stage.objectStepTime),
               },
           },
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.builder,
+            type: StageObjType.smoker,
             level: level,
           ),
         );
 
   bool playerStartMovingFlag = false;
-
-  /// 一度にいくつのオブジェクトを押せるか(-1なら制限なし)
-  int pushableNum = 1;
 
   @override
   void update(
@@ -97,21 +102,29 @@ class Pusher extends StageObj {
   ) {
     if (playerStartMoving) {
       playerStartMovingFlag = true;
-      // ランダムに移動(オブジェクト押すこともできる)orその場で停止
-      final ret = super.enemyMove(
-        movePatterns[level]!,
-        vector,
-        stage.player,
-        stage,
-        prohibitedPoints,
-        gameWorld: gameWorld,
-        pushableNum: pushableNum,
-      );
-      if (ret.containsKey('move')) {
-        moving = ret['move'] as Move;
-      }
-      if (ret.containsKey('vector')) {
-        vector = ret['vector'] as Move;
+      // 移動/煙吐きを決定
+      if (turns == 0) {
+        // 煙を生成
+        final smoke = stage.createObject(
+            typeLevel:
+                StageObjTypeLevel(type: StageObjType.smoke, level: level),
+            pos: pos,
+            vector: Move.left);
+        stage.enemies.add(smoke);
+      } else {
+        final ret = super.enemyMove(
+          movePatterns[level]!,
+          vector,
+          stage.player,
+          stage,
+          prohibitedPoints,
+        );
+        if (ret.containsKey('move')) {
+          moving = ret['move'] as Move;
+        }
+        if (ret.containsKey('vector')) {
+          vector = ret['vector'] as Move;
+        }
       }
       movingAmount = 0;
     }
@@ -129,22 +142,18 @@ class Pusher extends StageObj {
         // 移動中の場合は画素も考慮
         Vector2 offset = moving.vector * movingAmount;
         stage.setObjectPosition(this, offset: offset);
-        for (final pushing in pushings) {
-          // 押しているオブジェクトの位置変更
-          stage.setObjectPosition(pushing, offset: offset);
-          // 押しているオブジェクトの向き変更
-          pushing.vector = moving.toStraightLR();
-        }
         // ※※※画像の移動ここまで※※※
       }
 
       // 次のマスに移っていたら移動終了
       if (movingAmount >= Stage.cellSize.x) {
+        ++turns;
+        if (turns >= smokeAttackPeriod) {
+          turns = 0;
+        }
         pos += moving.point;
         // 移動後に関する処理
         endMoving(stage, gameWorld);
-        // 押すオブジェクトに関する処理
-        endPushing(stage, gameWorld);
         // ゲームオーバー判定
         if (stage.player.pos == pos) {
           // 同じマスにいる場合はアーマー関係なくゲームオーバー
@@ -189,5 +198,14 @@ class Pusher extends StageObj {
   bool get hasVector => true;
 
   @override
-  int get coins => level * 1;
+  int get coins => level * 2;
+
+  // turnsの保存/読み込み
+  @override
+  int get arg => turns;
+
+  @override
+  void loadArg(int val) {
+    turns = val;
+  }
 }

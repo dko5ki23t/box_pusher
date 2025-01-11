@@ -21,6 +21,7 @@ class Shop extends StageObj {
   Shop({
     required Image shopImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     required Image coinImg,
     required SpriteAnimation Function(StageObjTypeLevel) getAnimeFunc,

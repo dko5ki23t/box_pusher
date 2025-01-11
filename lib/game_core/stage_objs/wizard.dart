@@ -52,6 +52,7 @@ class Wizard extends StageObj {
     required List<Image> attackImgs,
     required Image magicImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   })  : magicAnimations = [

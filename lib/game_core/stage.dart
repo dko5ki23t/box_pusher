@@ -146,8 +146,11 @@ class Stage {
   /// 動く物のzインデックス（プレイヤー、敵など）
   static const movingPriority = 3;
 
+  /// 動く物より前のzインデックス（スモーカーの煙など）
+  static const frontMovingPriority = 4;
+
   /// 画面前面に表示する物（スコア加算表示等）のzインデックス
-  static const frontPriority = 4;
+  static const frontPriority = 5;
 
   bool isReady = false;
 
@@ -276,8 +279,8 @@ class Stage {
     Move vector = Move.down,
     bool addToGameWorld = true,
   }) {
-    final ret =
-        _objFactory.create(typeLevel: typeLevel, pos: pos, vector: vector);
+    final ret = _objFactory.create(
+        typeLevel: typeLevel, pos: pos, vector: vector, savedArg: 0);
     // ComponentをWorldに追加
     if (addToGameWorld) {
       gameWorld.add(ret.animationComponent);
@@ -307,7 +310,8 @@ class Stage {
     effectBase = [
       _objFactory.create(
           typeLevel: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
-          pos: Point(0, 0))
+          pos: Point(0, 0),
+          savedArg: 0)
     ];
     effectBase.first.animationComponent.opacity = 0.0;
     gameWorld.add(effectBase.first.animationComponent);
@@ -1080,7 +1084,8 @@ class Stage {
     }
 
     // プレイヤー作成
-    player = _objFactory.createPlayer(pos: Point(0, 0), vector: Move.down);
+    player = _objFactory.createPlayer(
+        pos: Point(0, 0), vector: Move.down, savedArg: 0);
     gameWorld.add(player.animationComponent);
     // カメラはプレイヤーに追従
     camera.follow(
@@ -1115,6 +1120,10 @@ class Stage {
     for (final belt in beltPoints) {
       _staticObjs[belt]!.update(dt, moveInput, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
+    }
+    // プレイヤーの能力使用不可をすべて解除(この後の敵更新で煙によって使用不可にする)
+    for (final ability in player.isAbilityForbidden.keys) {
+      player.isAbilityForbidden[ability] = false;
     }
     // 敵更新
     final currentEnemies = [...enemies.iterable];
@@ -1414,11 +1423,7 @@ class Stage {
   }
 
   void setHandAbility(bool isOn) {
-    if (isOn) {
-      player.pushableNum = -1;
-    } else {
-      player.pushableNum = 1;
-    }
+    player.isAbilityAquired[PlayerAbility.hand] = isOn;
   }
 
   bool getHandAbility() {
@@ -1426,15 +1431,15 @@ class Stage {
   }
 
   void setLegAbility(bool isOn) {
-    player.isLegAbilityOn = isOn;
+    player.isAbilityAquired[PlayerAbility.leg] = isOn;
   }
 
   bool getLegAbility() {
-    return player.isLegAbilityOn;
+    return player.isAbilityAvailable(PlayerAbility.leg);
   }
 
   bool getPocketAbility() {
-    return player.isPocketAbilityOn;
+    return player.isAbilityAvailable(PlayerAbility.pocket);
   }
 
   void usePocketAbility(World gameWorld) {
@@ -1443,18 +1448,19 @@ class Stage {
 
   /// 現在のポケット能力で有しているオブジェクトの画像
   SpriteAnimation? getPocketAbilitySpriteAnimation() {
-    if (!player.isPocketAbilityOn || player.pocketItem == null) {
+    if (!player.isAbilityAquired[PlayerAbility.pocket]! ||
+        player.pocketItem == null) {
       return null;
     }
     return player.pocketItem!.animationComponent.animation;
   }
 
   void setArmerAbility(bool isOn) {
-    player.isArmerAbilityOn = isOn;
+    player.isAbilityAquired[PlayerAbility.armer] = isOn;
   }
 
   bool getArmerAbility() {
-    return player.isArmerAbilityOn;
+    return player.isAbilityAvailable(PlayerAbility.armer);
   }
 
   int getArmerAbilityRecoveryTurns() {

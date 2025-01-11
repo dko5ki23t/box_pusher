@@ -13,6 +13,7 @@ class Trap extends StageObj {
   Trap({
     required Image trapImg,
     required Image errorImg,
+    required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     required super.pos,

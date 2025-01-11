@@ -12,6 +12,7 @@ class Jewel extends StageObj {
   Jewel({
     required Image jewelImg,
     required Image errorImg,
+    required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     required super.pos,

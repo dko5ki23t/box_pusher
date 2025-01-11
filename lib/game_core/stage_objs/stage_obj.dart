@@ -22,6 +22,8 @@ import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/pusher.dart';
 import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
 import 'package:box_pusher/game_core/stage_objs/shop.dart';
+import 'package:box_pusher/game_core/stage_objs/smoke.dart';
+import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
@@ -55,6 +57,8 @@ enum StageObjType {
   ghost, // オブジェクトをすり抜けて移動できる敵
   builder, // 一定間隔でブロックを置く敵
   pusher, // オブジェクトを押す敵
+  smoker, // 周囲を見えづらく、プレイヤーの能力を使用不能にする煙を出す敵
+  smoke,
   gorilla,
   rabbit,
   kangaroo,
@@ -84,6 +88,8 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.ghost: 'ghost',
     StageObjType.builder: 'builder',
     StageObjType.pusher: 'pusher',
+    StageObjType.smoker: 'smoker',
+    StageObjType.smoke: 'smoke',
     StageObjType.gorilla: 'gorilla',
     StageObjType.rabbit: 'rabbit',
     StageObjType.kangaroo: 'kangaroo',
@@ -135,6 +141,10 @@ extension StageObjTypeExtent on StageObjType {
         return Builder;
       case StageObjType.pusher:
         return Pusher;
+      case StageObjType.smoker:
+        return Smoker;
+      case StageObjType.smoke:
+        return Smoke;
       case StageObjType.gorilla:
         return Gorilla;
       case StageObjType.rabbit:
@@ -190,6 +200,10 @@ extension StageObjTypeExtent on StageObjType {
         return Builder.imageFileName;
       case StageObjType.pusher:
         return Pusher.imageFileName;
+      case StageObjType.smoker:
+        return Smoker.imageFileName;
+      case StageObjType.smoke:
+        return Smoke.imageFileName;
       case StageObjType.gorilla:
         return Gorilla.imageFileName;
       case StageObjType.rabbit:
@@ -303,6 +317,14 @@ abstract class StageObj {
   /// 攻撃中か
   bool attacking = false;
 
+  /// その他保存しておきたいint値(攻撃後ターン数等)
+  /// 使用したい場合はoverrideすること
+  int get arg => 0;
+
+  /// その他保存しておきたいint値を取得
+  /// コンストラクタで呼び出す
+  void loadArg(int val) {}
+
   StageObj({
     required typeLevel,
     required this.animationComponent,
@@ -311,10 +333,12 @@ abstract class StageObj {
     this.valid = true,
     this.validAfterFrame = true,
     required this.pos,
+    required int savedArg,
     Move vector = Move.down,
   }) : _typeLevel = typeLevel {
     level = typeLevel.level;
     this.vector = vector;
+    loadArg(savedArg);
   }
 
   /// タイプ
@@ -1153,6 +1177,7 @@ abstract class StageObj {
       } else if (obj.type == StageObjType.gorilla) {
         // 移動先がゴリラだった場合
         // 手の能力を習得
+        player.isAbilityAquired[PlayerAbility.hand] = true;
         player.pushableNum = -1;
         // ゴリラ、いなくなる
         stage.setStaticType(pos, StageObjType.none);
@@ -1161,7 +1186,7 @@ abstract class StageObj {
       } else if (obj.type == StageObjType.rabbit) {
         // 移動先がうさぎだった場合
         // 足の能力を習得
-        player.isLegAbilityOn = true;
+        player.isAbilityAquired[PlayerAbility.leg] = true;
         // うさぎ、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1169,7 +1194,7 @@ abstract class StageObj {
       } else if (obj.type == StageObjType.kangaroo) {
         // 移動先がカンガルーだった場合
         // ポケットの能力を習得
-        player.isPocketAbilityOn = true;
+        player.isAbilityAquired[PlayerAbility.pocket] = true;
         // カンガルー、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1177,7 +1202,7 @@ abstract class StageObj {
       } else if (obj.type == StageObjType.turtle) {
         // 移動先が亀だった場合
         // アーマーの能力を習得
-        player.isArmerAbilityOn = true;
+        player.isAbilityAquired[PlayerAbility.armer] = true;
         // 亀、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1217,6 +1242,7 @@ abstract class StageObj {
       'typeLevel': _typeLevel.encode(),
       'pos': pos.encode(),
       'vector': vector.index,
+      'arg': arg,
     };
   }
 }

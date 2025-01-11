@@ -53,6 +53,7 @@ class Belt extends StageObj {
     required Move vector,
     required Image levelToAnimationImg,
     required Image errorImg,
+    required super.savedArg,
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(

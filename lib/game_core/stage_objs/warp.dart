@@ -26,6 +26,7 @@ class Warp extends StageObj {
   Warp({
     required Image warpImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(

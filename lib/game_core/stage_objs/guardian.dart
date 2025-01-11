@@ -65,6 +65,7 @@ class Guardian extends StageObj {
     required Map<int, Image> subAttackImgs,
     required Map<int, Image> arrowMagicImgs,
     required Image errorImg,
+    required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     int level = 1,

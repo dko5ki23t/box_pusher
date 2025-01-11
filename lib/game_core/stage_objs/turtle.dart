@@ -12,6 +12,7 @@ class Turtle extends StageObj {
     required super.pos,
     required Image turtleImg,
     required Image errorImg,
+    required super.savedArg,
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(

@@ -7,6 +7,7 @@ import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
@@ -116,9 +117,14 @@ class GameSeq extends Sequence
   late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
+  late final Image handForbiddenImg;
   late final Image legAbilityImg;
+  late final Image legForbiddenImg;
   late final Image armerAbilityImg;
+  late final Image armerForbiddenImg;
   late final Image pocketAbilityImg;
+  late final Image pocketForbiddenImg;
+  late final Image forbiddenImg;
   late final Image settingsImg;
   late final Image diagonalMoveImg;
   late final TextComponent currentPosText;
@@ -161,6 +167,11 @@ class GameSeq extends Sequence
     legAbilityImg = await Flame.images.load('leg_ability.png');
     armerAbilityImg = await Flame.images.load('armer_ability.png');
     pocketAbilityImg = await Flame.images.load('pocket_ability.png');
+    handForbiddenImg = await Flame.images.load('hand_forbidden.png');
+    legForbiddenImg = await Flame.images.load('leg_forbidden.png');
+    armerForbiddenImg = await Flame.images.load('armer_forbidden.png');
+    pocketForbiddenImg = await Flame.images.load('pocket_forbidden.png');
+    forbiddenImg = await Flame.images.load('forbidden_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     diagonalMoveImg = await Flame.images.load('arrows_output.png');
     // ステージ作成
@@ -710,8 +721,18 @@ class GameSeq extends Sequence
     stage.update(dt, pushingMoveButton, game.world, game.camera);
     // 手の能力取得状況更新
     handAbilityOnOffButton.isOn = stage.getHandAbility();
+    if (stage.player.isAbilityForbidden[PlayerAbility.hand]!) {
+      handAbilityOnOffButton.sprite = Sprite(handForbiddenImg);
+    } else {
+      handAbilityOnOffButton.sprite = Sprite(handAbilityImg);
+    }
     // 足の能力取得状況更新
     legAbilityOnOffButton.isOn = stage.getLegAbility();
+    if (stage.player.isAbilityForbidden[PlayerAbility.leg]!) {
+      legAbilityOnOffButton.sprite = Sprite(legForbiddenImg);
+    } else {
+      legAbilityOnOffButton.sprite = Sprite(legAbilityImg);
+    }
     if (beforeLegAbility != stage.getLegAbility() ||
         prevIsDiagonalButtonMode != isDiagonalButtonMode) {
       updatePlayerControllButtons();
@@ -722,11 +743,23 @@ class GameSeq extends Sequence
     armerAbilityOnOffButton.sprite = Sprite(armerAbilityImg,
         srcPosition: Vector2(stage.getArmerAbilityRecoveryTurns() * 32, 0),
         srcSize: Vector2.all(32));
+    if (stage.getArmerAbilityRecoveryTurns() == 0 &&
+        stage.player.isAbilityForbidden[PlayerAbility.armer]!) {
+      armerAbilityOnOffButton.sprite = Sprite(armerForbiddenImg);
+    }
     // ポケットの能力状況更新
     final pocketItemAnimation = stage.getPocketAbilitySpriteAnimation() ??
         SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0);
     pocketAbilityButton.animation = pocketItemAnimation;
     pocketAbilityButton.enabled = stage.getPocketAbility();
+    if (stage.player.isAbilityForbidden[PlayerAbility.pocket]!) {
+      pocketAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+    } else {
+      if (pocketAbilityButton.child!.children.isNotEmpty) {
+        pocketAbilityButton.child!
+            .removeAll(pocketAbilityButton.child!.children);
+      }
+    }
     // 次アイテム出現までのマージ回数更新
     remainMergeCountText.text = "NEXT: ${stage.remainMergeCount}";
     // 次マージ時出現アイテム更新

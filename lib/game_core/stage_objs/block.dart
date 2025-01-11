@@ -15,6 +15,7 @@ class Block extends StageObj {
   Block({
     required Image blockImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   })  : breakingAnimations = {

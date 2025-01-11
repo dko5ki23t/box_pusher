@@ -4,6 +4,14 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/extensions.dart';
 
+/// プレイヤーの能力
+enum PlayerAbility {
+  hand,
+  leg,
+  armer,
+  pocket,
+}
+
 class Player extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'player.png';
@@ -11,6 +19,7 @@ class Player extends StageObj {
   Player({
     required Image playerImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(
@@ -60,20 +69,27 @@ class Player extends StageObj {
           ),
         );
 
+  /// 各能力を習得済みかどうか
+  Map<PlayerAbility, bool> isAbilityAquired = {
+    for (final ability in PlayerAbility.values) ability: false
+  };
+
+  /// 各能力が封印されているかどうか
+  Map<PlayerAbility, bool> isAbilityForbidden = {
+    for (final ability in PlayerAbility.values) ability: false
+  };
+
+  /// 引数で指定した能力を使えるか
+  bool isAbilityAvailable(PlayerAbility ability) {
+    return isAbilityAquired[ability]! && !isAbilityForbidden[ability]!;
+  }
+
   /// 一度にいくつのオブジェクトを押せるか(-1なら制限なし)
-  int pushableNum = 1;
-
-  /// 足の能力が有効か
-  bool isLegAbilityOn = false;
-
-  /// ポケットの能力が有効か
-  bool isPocketAbilityOn = false;
+  int get pushableNum => isAbilityAvailable(PlayerAbility.hand) ? -1 : 1;
+  set pushableNum(int n) {}
 
   /// ポケットの能力で保持しているアイテム
   StageObj? pocketItem;
-
-  /// アーマーの能力が有効か
-  bool isArmerAbilityOn = false;
 
   /// アーマー回復までの残りターン数
   int armerRecoveryTurns = 0;
@@ -162,8 +178,8 @@ class Player extends StageObj {
   }
 
   void usePocketAbility(Stage stage, World gameWorld) {
-    // ポケットの能力を取得していないならreturn
-    if (!isPocketAbilityOn) return;
+    // ポケットの能力を使えないならreturn
+    if (!isAbilityAvailable(PlayerAbility.pocket)) return;
     // 移動中ならreturn
     if (moving != Move.none) return;
 
@@ -192,7 +208,7 @@ class Player extends StageObj {
 
   @override
   bool hit(int damageLevel) {
-    if (isArmerAbilityOn && armerRecoveryTurns == 0) {
+    if (isAbilityAvailable(PlayerAbility.armer) && armerRecoveryTurns == 0) {
       armerRecoveryTurns = armerNeedRecoveryTurns;
       return false;
     } else {
@@ -203,11 +219,11 @@ class Player extends StageObj {
   @override
   Map<String, dynamic> encode() {
     Map<String, dynamic> ret = super.encode();
-    ret['handAbility'] = pushableNum;
-    ret['legAbility'] = isLegAbilityOn;
-    ret['pocketAbility'] = isPocketAbilityOn;
+    ret['handAbility'] = isAbilityAquired[PlayerAbility.hand]! ? -1 : 1;
+    ret['legAbility'] = isAbilityAquired[PlayerAbility.leg]!;
+    ret['pocketAbility'] = isAbilityAquired[PlayerAbility.pocket]!;
     ret['pocketItem'] = pocketItem?.encode();
-    ret['armerAbility'] = isArmerAbilityOn;
+    ret['armerAbility'] = isAbilityAquired[PlayerAbility.armer]!;
     ret['armerRecoveryTurns'] = armerRecoveryTurns;
     return ret;
   }

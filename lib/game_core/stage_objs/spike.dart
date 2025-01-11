@@ -21,6 +21,7 @@ class Spike extends StageObj {
   Spike({
     required Image spikeImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(
