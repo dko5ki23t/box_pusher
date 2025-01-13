@@ -1171,6 +1171,12 @@ class Stage {
     }
     //}
 
+    // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
+    if (player.pocketItem != null && player.pocketItem!.updateInPocket) {
+      player.pocketItem!.update(dt, player.moving, gameWorld, camera, this,
+          playerStartMoving, playerEndMoving, prohibitedPoints);
+    }
+
     // ショップ更新(ショップ情報を吹き出しで表示/非表示)
     for (final shop in shops) {
       shop.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,

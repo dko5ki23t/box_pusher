@@ -157,6 +157,8 @@ class Player extends StageObj {
         // プレーヤー位置更新
         // ※merge()より前で更新することで、敵出現位置を、プレイヤーの目前にさせない
         pos = pos + moving.point;
+        // ポケットに入れているオブジェクトの位置も更新
+        pocketItem?.pos = pos;
         stage.setObjectPosition(this);
         // 移動後に関する処理（ワープで移動、動物の能力取得など）
         endMoving(stage, gameWorld);
@@ -189,6 +191,7 @@ class Player extends StageObj {
       // 押せるものなら入れることができる
       if (target.pushable) {
         pocketItem = target;
+        pocketItem?.pos = pos;
         target.remove();
       }
     } else {

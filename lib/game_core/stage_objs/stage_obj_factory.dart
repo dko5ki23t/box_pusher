@@ -4,6 +4,7 @@ import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
+import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
 import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
@@ -45,6 +46,7 @@ class StageObjFactory {
   late final List<Image> swordsmanRoundAttackImgs;
   late final List<Image> attackWizardImgs;
   late final Image magicImg;
+  late final Image canonballImg;
   late final Image coinImg;
   Map<StageObjType, Image> baseImages = {};
 
@@ -109,6 +111,7 @@ class StageObjFactory {
         await Flame.images.load(name)
     ];
     magicImg = await Flame.images.load(Wizard.magicImageFileName);
+    canonballImg = await Flame.images.load(Canon.canonballFileName);
     coinImg = await Flame.images.load('coin.png');
     isReady = true;
   }
@@ -372,6 +375,17 @@ class StageObjFactory {
                 .animation!;
           },
         );
+      case StageObjType.canon:
+        return Canon(
+            canonImg: baseImages[type]!,
+            canonballImg: canonballImg,
+            errorImg: errorImg,
+            savedArg: savedArg,
+            scale: scale,
+            scaleEffect: scaleEffect,
+            pos: pos,
+            level: typeLevel.level,
+            vector: vector);
     }
   }
 

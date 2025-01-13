@@ -9,6 +9,7 @@ import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
+import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
@@ -64,6 +65,7 @@ enum StageObjType {
   kangaroo,
   turtle,
   shop,
+  canon,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -95,6 +97,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.kangaroo: 'kangaroo',
     StageObjType.turtle: 'turtle',
     StageObjType.shop: 'shop',
+    StageObjType.canon: 'canon',
   };
 
   String get str => strMap[this]!;
@@ -155,6 +158,8 @@ extension StageObjTypeExtent on StageObjType {
         return Turtle;
       case StageObjType.shop:
         return Shop;
+      case StageObjType.canon:
+        return Canon;
     }
   }
 
@@ -214,6 +219,8 @@ extension StageObjTypeExtent on StageObjType {
         return Turtle.imageFileName;
       case StageObjType.shop:
         return Shop.imageFileName;
+      case StageObjType.canon:
+        return Canon.imageFileName;
     }
   }
 
@@ -441,6 +448,9 @@ abstract class StageObj {
 
   /// 持っているコイン
   int get coins => 0;
+
+  /// ポケットに入れていてもupdate()するかどうか
+  bool get updateInPocket => false;
 
   /// 攻撃を受ける
   /// やられたかどうかを返す

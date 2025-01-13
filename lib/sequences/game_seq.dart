@@ -611,7 +611,15 @@ class GameSeq extends Sequence
     abilityButtonPos +=
         Vector2(armerAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
     pocketAbilityButton = GameSpriteAnimationButton(
-      onReleased: () => stage.usePocketAbility(game.world),
+      onReleased: () {
+        // ポケットの能力習得
+        if (game.testMode &&
+            !stage.player.isAbilityAquired[PlayerAbility.pocket]!) {
+          stage.player.isAbilityAquired[PlayerAbility.pocket] = true;
+        } else {
+          stage.usePocketAbility(game.world);
+        }
+      },
       size: pocketAbilityButtonAreaSize,
       position: abilityButtonPos,
       animation:
