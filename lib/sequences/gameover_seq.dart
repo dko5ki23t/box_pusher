@@ -7,17 +7,17 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class GameoverSeq extends Sequence
-    with HasGameReference<BoxPusherGame>, KeyboardHandler {
+class GameoverSeq extends Sequence with KeyboardHandler {
   late final TextComponent scoreText;
   late final GameButtonGroup buttonGroup;
-  late final GameButton restartButton;
-  late final GameButton toTitleButton;
+  late final GameTextButton restartButton;
+  late final GameTextButton toTitleButton;
 
   @override
   Future<void> onLoad() async {
+    final loc = game.localization;
     scoreText = TextComponent(
-      text: "スコア：${game.getCurrentScore()}",
+      text: "${loc.scoreIs}${game.getCurrentScore()}",
       size: Vector2(320.0, 45.0),
       position: Vector2(180.0, 250.0),
       anchor: Anchor.center,
@@ -32,14 +32,14 @@ class GameoverSeq extends Sequence
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 300.0),
       anchor: Anchor.center,
-      text: "もう一度プレイ",
+      text: loc.tryAgain,
       onReleased: () => game.pushAndInitGame(),
     );
     toTitleButton = GameTextButton(
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 350.0),
       anchor: Anchor.center,
-      text: "タイトルへ",
+      text: loc.toTitle,
       onReleased: () => game.pushSeqNamed('title'),
     );
     buttonGroup = GameButtonGroup(buttons: [
@@ -58,7 +58,7 @@ class GameoverSeq extends Sequence
         ),
       ),
       TextComponent(
-        text: "ゲームオーバー",
+        text: loc.gameover,
         size: Vector2(320.0, 45.0),
         position: Vector2(180.0, 180.0),
         anchor: Anchor.center,
@@ -77,7 +77,8 @@ class GameoverSeq extends Sequence
 
   @override
   void update(double dt) {
-    scoreText.text = "スコア：${game.getCurrentScore()}";
+    super.update(dt);
+    scoreText.text = "${game.localization.scoreIs}${game.getCurrentScore()}";
   }
 
   // PCのキーボード入力
@@ -105,5 +106,12 @@ class GameoverSeq extends Sequence
     }
 
     return false;
+  }
+
+  @override
+  void onLangChanged() {
+    final loc = game.localization;
+    restartButton.text = loc.tryAgain;
+    toTitleButton.text = loc.toTitle;
   }
 }

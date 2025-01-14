@@ -1,0 +1,21 @@
+{
+  "@@locale":"en",
+  "clear": "Clear！",
+  "continueGameAfterClear": "Continue",
+  "toTitle": "To Title",
+  "scoreIs": "Score : ",
+  "tryAgain": "Try Again",
+  "gameover": "Gameover",
+  "resume": "Resume",
+  "save": "Save Game",
+  "exit": "Exit",
+  "gameTitle": "Push and Merge",
+  "newGame": "New Game",
+  "loadGame": "Load Game",
+  "controller": "Control Button",
+  "menu": "Menu",
+  "highScore": "High Score",
+  "debug": "Debug",
+  "versionLog": "Version Log",
+  "language": "Language"
+}

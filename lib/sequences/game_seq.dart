@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
@@ -32,8 +31,7 @@ enum DebugViewMode {
   objInBlockMap,
 }
 
-class GameSeq extends Sequence
-    with TapCallbacks, KeyboardHandler, HasGameReference<BoxPusherGame> {
+class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// 画面上部の余白
   static Vector2 get topPaddingSize => Vector2(360.0, 40.0);
 
@@ -1263,4 +1261,7 @@ class GameSeq extends Sequence
 
     return false;
   }
+
+  @override
+  void onLangChanged() {}
 }

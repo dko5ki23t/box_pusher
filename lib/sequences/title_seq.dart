@@ -10,29 +10,45 @@ import 'package:flutter/services.dart';
 //import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-class TitleSeq extends Sequence
-    with /*TapCallbacks,*/ HasGameReference<BoxPusherGame>, KeyboardHandler {
+class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
+  late final TextComponent titleText;
   late final TextComponent highScreText;
   late final GameButtonGroup buttonGroup;
-  late final GameButton fromBeginningButton;
-  late final GameButton continueButton;
+  late final GameTextButton newGameButton;
+  late final GameTextButton continueButton;
+  late final GameTextButton languageButton;
+  late final GameTextButton versionLogButton;
   late final Image bugImage;
   //late final GameButton debugOnOffButton;
-  late final GameButton debugButton;
+  late final GameTextButton debugButton;
 
   @override
   Future<void> onLoad() async {
+    final loc = game.localization;
+    titleText = TextComponent(
+      text: loc.gameTitle,
+      size: Vector2(150.0, 45.0),
+      position: Vector2(180.0, 260.0),
+      anchor: Anchor.center,
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: Config.gameTextFamily,
+          color: Color(0xff000000),
+          fontSize: 40,
+        ),
+      ),
+    );
     highScreText = TextComponent(
-      text: "High Score : ${game.highScore}",
+      text: "${loc.highScore} : ${game.highScore}",
       textRenderer: TextPaint(
         style: Config.gameTextStyle,
       ),
     );
-    fromBeginningButton = GameTextButton(
+    newGameButton = GameTextButton(
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 310.0),
       anchor: Anchor.center,
-      text: "はじめから",
+      text: loc.newGame,
       onReleased: () {
         if (game.stageData.isNotEmpty) {
           game.pushSeqOverlay('confirm_delete_stage_data_dialog');
@@ -45,20 +61,36 @@ class TitleSeq extends Sequence
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 360.0),
       anchor: Anchor.center,
-      text: "つづきから",
+      text: loc.loadGame,
       enabled: game.stageData.isNotEmpty,
       onReleased: () => game.pushAndInitGame(),
     );
     buttonGroup = GameButtonGroup(buttons: [
-      fromBeginningButton,
+      newGameButton,
       continueButton,
     ]);
+    languageButton = GameTextButton(
+      size: Vector2(80.0, 20.0),
+      position: Vector2(300.0, 40.0),
+      anchor: Anchor.center,
+      text: loc.language,
+      onReleased: () => game.changeLocale(),
+    );
+    versionLogButton = GameTextButton(
+      size: Vector2(120.0, 30.0),
+      position: Vector2(180.0, 410.0),
+      anchor: Anchor.center,
+      text: loc.versionLog,
+      onReleased: () async {
+        game.pushSeqOverlay('version_log_dialog');
+      },
+    );
     debugButton = GameTextButton(
       size: Vector2(80.0, 30.0),
       position: Vector2(160.0, 460.0),
       anchor: Anchor.centerLeft,
       enabled: game.testMode,
-      text: "デバッグ",
+      text: loc.debug,
       onReleased: () async {
         game.pushSeqOverlay('debug_dialog');
       },
@@ -74,30 +106,11 @@ class TitleSeq extends Sequence
           ..color = Colors.white
           ..style = PaintingStyle.fill,
       ),
-      TextComponent(
-        text: "押しごと",
-        size: Vector2(150.0, 45.0),
-        position: Vector2(180.0, 260.0),
-        anchor: Anchor.center,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            fontFamily: Config.gameTextFamily,
-            color: Color(0xff000000),
-            fontSize: 40,
-          ),
-        ),
-      ),
-      fromBeginningButton,
+      titleText,
+      newGameButton,
       continueButton,
-      GameTextButton(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 410.0),
-        anchor: Anchor.center,
-        text: "バージョンログ",
-        onReleased: () async {
-          game.pushSeqOverlay('version_log_dialog');
-        },
-      ),
+      languageButton,
+      versionLogButton,
       GameSpriteOnOffButton(
         size: Vector2.all(30),
         position: Vector2(120.0, 460.0),
@@ -143,7 +156,8 @@ class TitleSeq extends Sequence
 
   @override
   void update(double dt) {
-    highScreText.text = "High Score : ${game.highScore}";
+    super.update(dt);
+    highScreText.text = "${game.localization.highScore} : ${game.highScore}";
     continueButton.enabled = game.stageData.isNotEmpty;
     debugButton.enabled = game.testMode;
   }
@@ -173,5 +187,16 @@ class TitleSeq extends Sequence
     }
 
     return false;
+  }
+
+  @override
+  void onLangChanged() {
+    final loc = game.localization;
+    titleText.text = loc.gameTitle;
+    newGameButton.text = loc.newGame;
+    continueButton.text = loc.loadGame;
+    languageButton.text = loc.language;
+    versionLogButton.text = loc.versionLog;
+    debugButton.text = loc.debug;
   }
 }

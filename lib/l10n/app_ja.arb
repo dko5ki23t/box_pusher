@@ -1,0 +1,21 @@
+{
+  "@@locale":"ja",
+  "clear": "クリア！",
+  "continueGameAfterClear": "つづける",
+  "toTitle": "タイトルへ",
+  "scoreIs": "スコア：",
+  "tryAgain": "もう一度プレイ",
+  "gameover": "ゲームオーバー",
+  "resume": "ゲームに戻る",
+  "save": "セーブする",
+  "exit": "あきらめる",
+  "gameTitle": "押しごと",
+  "newGame": "はじめから",
+  "loadGame": "つづきから",
+  "controller": "操作ボタン",
+  "menu": "メニュー",
+  "highScore": "ハイスコア",
+  "debug": "デバッグ",
+  "versionLog": "バージョンログ",
+  "language": "言語"
+}

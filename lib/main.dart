@@ -7,6 +7,8 @@ import 'package:flutter/material.dart' hide Route;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main({
   bool testMode = kDebugMode,
@@ -22,12 +24,20 @@ void main({
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  Locale? locale;
   runApp(
     MaterialApp(
-      title: 'Box Pusher',
+      title: '押しごと -Push and Merge-',
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ja', ''), //日本語
+        Locale('en', ''), //英語
+      ],
       home: MyApp(
-        initialLocale: locale,
         testMode: testMode,
         showAd: showAd,
       ),
@@ -36,14 +46,9 @@ void main({
 }
 
 class MyApp extends StatefulWidget {
-  final Locale? initialLocale;
   final bool testMode;
   final bool showAd;
-  const MyApp(
-      {required this.initialLocale,
-      this.testMode = false,
-      this.showAd = false,
-      super.key});
+  const MyApp({this.testMode = false, this.showAd = false, super.key});
 
   @override
   State<MyApp> createState() => MyAppStateForLocale();
@@ -52,7 +57,6 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppStateForLocale extends State<MyApp> {
-  //Locale? _locale;
   bool showAd = false;
   late Future<void> configFuture;
 
@@ -65,7 +69,6 @@ class MyAppStateForLocale extends State<MyApp> {
     // 各種ゲーム用設定読み込み
     configFuture = Config().initialize();
     showAd = widget.showAd;
-    //_locale = widget.initialLocale;
   }
 
   // This widget is the root of your application.
@@ -82,7 +85,10 @@ class MyAppStateForLocale extends State<MyApp> {
                   Flexible(
                     child: GameWidget.controlled(
                       gameFactory: () => BoxPusherGame(
-                          testMode: widget.testMode, gameFocus: gameFocus),
+                        testMode: widget.testMode,
+                        gameFocus: gameFocus,
+                        initialLocale: Localizations.localeOf(context),
+                      ),
                       loadingBuilder: (context) =>
                           const Center(child: CircularProgressIndicator()),
                       focusNode: gameFocus,
@@ -129,11 +135,5 @@ class MyAppStateForLocale extends State<MyApp> {
             return const Center(child: CircularProgressIndicator());
           }
         });
-  }
-
-  void setLocale(Locale locale) {
-    setState(() {
-      //_locale = locale;
-    });
   }
 }

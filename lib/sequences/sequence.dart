@@ -1,6 +1,9 @@
+import 'package:box_pusher/box_pusher_game.dart';
 import 'package:flame/components.dart';
 
-class Sequence extends Component {
+abstract class Sequence extends Component with HasGameReference<BoxPusherGame> {
+  Language _prevLang = Language.japanese;
+
   void onFocus(String? before) {
     // do nothing
   }
@@ -8,4 +11,15 @@ class Sequence extends Component {
   void onUnFocus() {
     // do nothing
   }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (game.lang != _prevLang) {
+      onLangChanged();
+    }
+    _prevLang = game.lang;
+  }
+
+  void onLangChanged();
 }

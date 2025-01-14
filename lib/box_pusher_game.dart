@@ -25,6 +25,14 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations_ja.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations_en.dart';
+
+enum Language {
+  japanese,
+  english,
+}
 
 class Version {
   int major;
@@ -88,10 +96,43 @@ class BoxPusherGame extends FlameGame
   /// ズーム操作し始めのズーム
   late double startZoom;
 
-  BoxPusherGame({this.testMode = false, required this.gameFocus})
-      : super(
+  /// 言語
+  Language lang = Language.japanese;
+
+  // TODO: ゴリ押し
+  /// ローカライゼーション取得
+  AppLocalizations get localization {
+    switch (lang) {
+      case Language.japanese:
+        return AppLocalizationsJa();
+      case Language.english:
+        return AppLocalizationsEn();
+    }
+  }
+
+  /// ロケール変更
+  void changeLocale() {
+    switch (lang) {
+      case Language.japanese:
+        lang = Language.english;
+        break;
+      case Language.english:
+        lang = Language.japanese;
+        break;
+    }
+  }
+
+  BoxPusherGame({
+    this.testMode = false,
+    required this.gameFocus,
+    required Locale initialLocale,
+  }) : super(
             camera: CameraComponent.withFixedResolution(
-                width: baseSize.x, height: baseSize.y));
+                width: baseSize.x, height: baseSize.y)) {
+    if (initialLocale.languageCode == 'en') {
+      lang = Language.english;
+    }
+  }
 
   // 背景色
   @override
