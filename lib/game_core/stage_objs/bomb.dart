@@ -14,6 +14,20 @@ class Bomb extends StageObj {
   /// 爆発のアニメーション
   final SpriteAnimation explodingBombAnimation;
 
+  /// 爆発寸前エフェクト
+  final redEffect = ColorEffect(
+    const Color(0xffff0000),
+    EffectController(
+      duration: 0.5,
+      reverseDuration: 0.5,
+      infinite: true,
+    ),
+    opacityFrom: 0.2,
+    opacityTo: 0.8,
+  );
+
+  bool isRedEffectUsed = false;
+
   Bomb({
     required Image bombImg,
     required Image errorImg,
@@ -67,12 +81,10 @@ class Bomb extends StageObj {
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
   ) {
-    // プレイヤー位置がボムの周囲非起爆範囲より遠い位置なら爆発
     int n = ((Config().bombNotStartAreaWidth - 1) / 2).floor();
-    if ((stage.player.pos.x < pos.x - n) ||
-        (stage.player.pos.x > pos.x + n) ||
-        (stage.player.pos.y < pos.y - n) ||
-        (stage.player.pos.y > pos.y + n)) {
+    // プレイヤー位置がボムの周囲非起爆範囲より遠い位置なら爆発
+    if (!PointRectRange(pos + Point(-n, -n), pos + Point(n, n))
+        .contains(stage.player.pos)) {
       // 爆発アニメ表示
       final explodingAnimation = SpriteAnimationComponent(
         animation: explodingBombAnimation,
@@ -119,6 +131,23 @@ class Bomb extends StageObj {
       );
       // 効果音を鳴らす
       Audio().playSound(Sound.explode);
+      return;
+    }
+    // 非起爆範囲ギリギリにいる場合は赤く点滅
+    else if (!PointRectRange(
+            pos + Point(-n + 1, -n + 1), pos + Point(n - 1, n - 1))
+        .contains(stage.player.pos)) {
+      if (!isRedEffectUsed) {
+        animationComponent.add(redEffect);
+        isRedEffectUsed = true;
+      }
+    } else {
+      // 赤い点滅エフェクト削除
+      if (isRedEffectUsed) {
+        redEffect.reset();
+        animationComponent.remove(redEffect);
+        isRedEffectUsed = false;
+      }
     }
   }
 
