@@ -677,77 +677,68 @@ class Stage {
   void merge(
     Point pos,
     StageObj merging,
-    World gameWorld, {
-    int breakLeftOffset = -1,
-    int breakTopOffset = -1,
-    int breakRightOffset = 1,
-    int breakBottomOffset = 1,
+    World gameWorld,
+    MergeAffect mergeAffect, {
     bool onlyDelete = false,
-    int enemyDamage = 0, // 敵に与えるダメージ（レベルマイナス）
+    bool countMerge = true, // マージ数としてカウントするか
+    bool addScore = true, // スコア加算するか
   }) {
-    // マージ位置を中心とした四角形範囲
-    final affectRange = PointRectRange(
-        pos + Point(breakLeftOffset, breakTopOffset),
-        pos + Point(breakRightOffset, breakBottomOffset));
-    // マージしたオブジェクトのタイプとレベル
-    final typeLevel =
-        StageObjTypeLevel(type: merging.type, level: merging.level);
     // update()の最後にブロック破壊＆敵へのダメージを処理する
     mergeAffects.add(
-      MergeAffect(
-          basePoint: pos,
-          range: affectRange,
-          canBreakBlockFunc: (block) => Config.canBreakBlock(block, typeLevel),
-          enemyDamage: enemyDamage),
+      mergeAffect,
     );
 
-    // マージ回数およびオブジェクト出現までのマージ回数をインクリメント/デクリメント
-    mergedCount++;
-    remainMergeCount--;
+    if (countMerge) {
+      // マージ回数およびオブジェクト出現までのマージ回数をインクリメント/デクリメント
+      mergedCount++;
+      remainMergeCount--;
+    }
 
-    // スコア加算
-    int gettingScore = pow(2, (merging.level - 1)).toInt() * 100;
-    score.actual += gettingScore;
+    if (addScore) {
+      // スコア加算
+      int gettingScore = pow(2, (merging.level - 1)).toInt() * 100;
+      score.actual += gettingScore;
 
-    // スコア加算表示
-    if (gettingScore > 0 && Config().showAddedScoreOnMergePos) {
-      final addingScoreText = OpacityEffectTextComponent(
-        text: "+$gettingScore",
-        textRenderer: TextPaint(
-          style: Config.gameTextStyle,
-        ),
-      );
-      gameWorld.add(RectangleComponent(
-        priority: frontPriority,
-        anchor: Anchor.center,
-        position: Vector2(pos.x * cellSize.x, pos.y * cellSize.y) +
-            cellSize / 2 -
-            Config().addedScoreEffectMove,
-        paint: Paint()
-          ..color = Colors.transparent
-          ..style = PaintingStyle.fill,
-        children: [
-          RectangleComponent(
-            paint: Paint()
-              ..color = Colors.transparent
-              ..style = PaintingStyle.fill,
+      // スコア加算表示
+      if (gettingScore > 0 && Config().showAddedScoreOnMergePos) {
+        final addingScoreText = OpacityEffectTextComponent(
+          text: "+$gettingScore",
+          textRenderer: TextPaint(
+            style: Config.gameTextStyle,
           ),
-          AlignComponent(
-            alignment: Anchor.center,
-            child: addingScoreText,
-          ),
-          SequenceEffect([
-            MoveEffect.by(
-                Config().addedScoreEffectMove,
-                EffectController(
-                  duration: 0.3,
-                )),
-            OpacityEffect.fadeOut(EffectController(duration: 0.5),
-                target: addingScoreText),
-            RemoveEffect(),
-          ]),
-        ],
-      ));
+        );
+        gameWorld.add(RectangleComponent(
+          priority: frontPriority,
+          anchor: Anchor.center,
+          position: Vector2(pos.x * cellSize.x, pos.y * cellSize.y) +
+              cellSize / 2 -
+              Config().addedScoreEffectMove,
+          paint: Paint()
+            ..color = Colors.transparent
+            ..style = PaintingStyle.fill,
+          children: [
+            RectangleComponent(
+              paint: Paint()
+                ..color = Colors.transparent
+                ..style = PaintingStyle.fill,
+            ),
+            AlignComponent(
+              alignment: Anchor.center,
+              child: addingScoreText,
+            ),
+            SequenceEffect([
+              MoveEffect.by(
+                  Config().addedScoreEffectMove,
+                  EffectController(
+                    duration: 0.3,
+                  )),
+              OpacityEffect.fadeOut(EffectController(duration: 0.5),
+                  target: addingScoreText),
+              RemoveEffect(),
+            ]),
+          ],
+        ));
+      }
     }
 
     if (onlyDelete) {
@@ -761,29 +752,32 @@ class Stage {
       merging.level++;
     }
 
-    // マージエフェクトを描画
-    gameWorld.add(
-      SpriteComponent(
-        sprite: Sprite(mergeEffectImg),
-        priority: Stage.dynamicPriority,
-        scale: Vector2.all(0.8),
-        children: [
-          ScaleEffect.by(
-            Vector2.all(1.5),
-            EffectController(duration: 0.5),
-          ),
-          OpacityEffect.by(
-            -1.0,
-            EffectController(duration: 1.0),
-          ),
-          RemoveEffect(delay: 1.0),
-        ],
-        size: Stage.cellSize,
-        anchor: Anchor.center,
-        position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-            Stage.cellSize / 2),
-      ),
-    );
+    if (!onlyDelete) {
+      // マージエフェクトを描画
+      gameWorld.add(
+        SpriteComponent(
+          sprite: Sprite(mergeEffectImg),
+          priority: Stage.dynamicPriority,
+          scale: Vector2.all(0.8),
+          children: [
+            ScaleEffect.by(
+              Vector2.all(1.5),
+              EffectController(duration: 0.5),
+            ),
+            OpacityEffect.by(
+              -1.0,
+              EffectController(duration: 1.0),
+            ),
+            RemoveEffect(delay: 1.0),
+          ],
+          size: Stage.cellSize,
+          anchor: Anchor.center,
+          position:
+              (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                  Stage.cellSize / 2),
+        ),
+      );
+    }
 
     // 効果音を鳴らす
     Audio().playSound(Sound.merge);

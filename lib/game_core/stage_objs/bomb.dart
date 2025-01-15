@@ -23,7 +23,7 @@ class Bomb extends StageObj {
     required super.pos,
     int level = 1,
   })  : explodingBombAnimation = SpriteAnimation.spriteList([
-          Sprite(bombImg, srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
+          Sprite(bombImg, srcPosition: Vector2(96, 0), srcSize: Stage.cellSize)
         ], stepTime: 1.0),
         super(
           animationComponent: SpriteAnimationComponent(
@@ -41,12 +41,14 @@ class Bomb extends StageObj {
               Move.none:
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
-            1: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(bombImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-              ], stepTime: 1.0)
-            },
+            for (int i = 1; i <= 3; i++)
+              i: {
+                Move.none: SpriteAnimation.spriteList([
+                  Sprite(bombImg,
+                      srcPosition: Vector2(32 * (i - 1), 0),
+                      srcSize: Stage.cellSize)
+                ], stepTime: 1.0)
+              },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.bomb,
@@ -98,16 +100,22 @@ class Bomb extends StageObj {
       gameWorld.add(explodingAnimation);
       // 爆発
       int m = ((Config().bombExplodingAreaWidth - 1) / 2).floor();
+      int mergePow = level;
+      final affect = MergeAffect(
+        basePoint: pos,
+        range: PointRectRange(pos + Point(-m, -m), pos + Point(m, m)),
+        canBreakBlockFunc: (block) =>
+            Config.canBreakBlock(block, mergePow), // 爆弾のレベル分のパワーで周囲を破壊
+        enemyDamage: Config().debugEnemyDamageInExplosion,
+      );
       stage.merge(
         pos,
         this,
         gameWorld,
-        breakLeftOffset: -m,
-        breakTopOffset: -m,
-        breakRightOffset: m,
-        breakBottomOffset: m,
+        affect,
         onlyDelete: true,
-        enemyDamage: Config().debugEnemyDamageInExplosion,
+        countMerge: false,
+        addScore: false,
       );
       // 効果音を鳴らす
       Audio().playSound(Sound.explode);
@@ -130,7 +138,7 @@ class Bomb extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => false;

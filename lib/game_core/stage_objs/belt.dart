@@ -160,8 +160,20 @@ class Belt extends StageObj {
           // 押した先のオブジェクトを調べる
           if (pushing.mergable && pushing.isSameTypeLevel(stage.get(to))) {
             // マージ
-            stage.merge(to, pushing, gameWorld,
-                enemyDamage: Config().debugEnemyDamageInMerge);
+            int mergePow = Config.getMergePower(0, pushing);
+            final affect = MergeAffect(
+              basePoint: to,
+              range: PointRectRange(to + Point(-1, -1), to + Point(1, 1)),
+              canBreakBlockFunc: (block) =>
+                  Config.canBreakBlock(block, mergePow),
+              enemyDamage: Config().debugEnemyDamageInMerge,
+            );
+            stage.merge(
+              to,
+              pushing,
+              gameWorld,
+              affect,
+            );
           }
           // 押したものの位置を設定
           pushing.pos = to;
