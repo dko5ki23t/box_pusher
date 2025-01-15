@@ -16,6 +16,8 @@ class Player extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'player.png';
 
+  final Blink damagedBlink = Blink(showDuration: 0.2, hideDuration: 0.1);
+
   Player({
     required Image playerImg,
     required Image errorImg,
@@ -60,6 +62,39 @@ class Player extends StageObj {
                     srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
                 Sprite(playerImg,
                     srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+            },
+          },
+          // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
+          levelToAttackAnimations: {
+            0: {
+              Move.none:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            },
+            1: {
+              Move.down: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.up: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.left: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.right: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
               ], stepTime: Stage.objectStepTime),
             },
           },
@@ -108,11 +143,23 @@ class Player extends StageObj {
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
   ) {
+    damagedBlink.update(dt);
     if (moving == Move.none) {
       // 移動中でない場合
+      // ダメージを受けたターンなら点滅
+      if (attacking) {
+        if (damagedBlink.isShowTime) {
+          animationComponent.animation = null;
+        } else {
+          vector = vector;
+        }
+      }
+      // ユーザの入力がなければ何もしない
       if (moveInput == Move.none) {
         return;
       }
+      // ダメージを受けていた場合でもアニメーションを元に戻す
+      attacking = false;
       // 動けないとしても、向きは変更
       vector = moveInput.toStraightLR();
       // プレイヤーが壁などにぶつかるか
@@ -211,6 +258,10 @@ class Player extends StageObj {
 
   @override
   bool hit(int damageLevel) {
+    // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
+    attacking = true;
+    vector = vector;
+    // アーマー能力判定
     if (isAbilityAvailable(PlayerAbility.armer) && armerRecoveryTurns == 0) {
       armerRecoveryTurns = armerNeedRecoveryTurns;
       return false;

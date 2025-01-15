@@ -211,8 +211,17 @@ class Stage {
   /// プレイヤー
   late Player player;
 
+  bool _isGameover = false;
+
   /// ゲームオーバーになったかどうか
-  bool isGameover = false;
+  bool get isGameover => _isGameover;
+  set isGameover(bool b) {
+    _isGameover = b;
+    if (b) {
+      // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
+      player.attacking = true;
+    }
+  }
 
   /// ステージの左上座標(プレイヤーの動きにつれて拡張されていく)
   Point stageLT = Point(0, 0);
