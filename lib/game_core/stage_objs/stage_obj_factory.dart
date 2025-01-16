@@ -6,6 +6,7 @@ import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
+import 'package:box_pusher/game_core/stage_objs/girl.dart';
 import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
@@ -361,6 +362,13 @@ class StageObjFactory {
             savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
+      case StageObjType.girl:
+        return Girl(
+            girlImg: baseImages[type]!,
+            errorImg: errorImg,
+            savedArg: savedArg,
+            pos: pos,
+            level: typeLevel.level);
       case StageObjType.shop:
         return Shop(
           shopImg: baseImages[type]!,
@@ -425,7 +433,9 @@ class StageObjFactory {
       ..pocketItem =
           src['pocketItem'] != null ? createFromMap(src['pocketItem']) : null
       ..isAbilityAquired[PlayerAbility.armer] = src['armerAbility'] ?? false
-      ..armerRecoveryTurns = src['armerRecoveryTurns'] ?? 0;
+      ..armerRecoveryTurns = src['armerRecoveryTurns'] ?? 0
+      ..isAbilityAquired[PlayerAbility.eye] = src['eyeAbility'] ?? false
+      ..isAbilityAquired[PlayerAbility.merge] = src['mergeAbility'] ?? false;
   }
 
   void setPosition(StageObj obj, {Vector2? offset}) {

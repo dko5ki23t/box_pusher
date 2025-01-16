@@ -14,6 +14,7 @@ import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
+import 'package:box_pusher/game_core/stage_objs/girl.dart';
 import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
 import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
@@ -64,6 +65,7 @@ enum StageObjType {
   rabbit,
   kangaroo,
   turtle,
+  girl,
   shop,
   canon,
 }
@@ -96,6 +98,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.rabbit: 'rabbit',
     StageObjType.kangaroo: 'kangaroo',
     StageObjType.turtle: 'turtle',
+    StageObjType.girl: 'girl',
     StageObjType.shop: 'shop',
     StageObjType.canon: 'canon',
   };
@@ -156,6 +159,8 @@ extension StageObjTypeExtent on StageObjType {
         return Kangaroo;
       case StageObjType.turtle:
         return Turtle;
+      case StageObjType.girl:
+        return Girl;
       case StageObjType.shop:
         return Shop;
       case StageObjType.canon:
@@ -217,6 +222,8 @@ extension StageObjTypeExtent on StageObjType {
         return Kangaroo.imageFileName;
       case StageObjType.turtle:
         return Turtle.imageFileName;
+      case StageObjType.girl:
+        return Girl.imageFileName;
       case StageObjType.shop:
         return Shop.imageFileName;
       case StageObjType.canon:
@@ -1107,7 +1114,13 @@ abstract class StageObj {
 
   /// 押し終わったときの処理
   /// ※押した者の位置(pos)は移動済みの座標にしてから呼ぶこと
-  void endPushing(Stage stage, World gameWorld) {
+  void endPushing(
+    Stage stage,
+    World gameWorld, {
+    PointRange Function(Point)? mergeRangeFunc,
+    int mergeDamageBase = 0,
+    int mergePowerBase = 0,
+  }) {
     // 押したオブジェクトの中でマージするインデックスを探す
     int mergeIndex = -1; // -1はマージなし
     Point toTo = pos;
@@ -1142,12 +1155,17 @@ abstract class StageObj {
       // 上で探したインデックスと一致するならマージ
       if (i == mergeIndex) {
         // マージ
-        int mergePow = Config.getMergePower(0, pushing);
+        int mergePow = Config.getMergePower(0, pushing) + mergePowerBase;
+        PointRange mergeRange =
+            PointRectRange(toTo + Point(-1, -1), toTo + Point(1, 1));
+        if (mergeRangeFunc != null) {
+          mergeRange = mergeRangeFunc(toTo);
+        }
         final affect = MergeAffect(
           basePoint: toTo,
-          range: PointRectRange(toTo + Point(-1, -1), toTo + Point(1, 1)),
+          range: mergeRange,
           canBreakBlockFunc: (block) => Config.canBreakBlock(block, mergePow),
-          enemyDamage: Config().debugEnemyDamageInMerge,
+          enemyDamage: mergeDamageBase + Config().debugEnemyDamageInMerge,
         );
         stage.merge(
           toTo,
@@ -1225,6 +1243,14 @@ abstract class StageObj {
         // アーマーの能力を習得
         player.isAbilityAquired[PlayerAbility.armer] = true;
         // 亀、いなくなる
+        stage.setStaticType(pos, StageObjType.none);
+        // 効果音を鳴らす
+        Audio().playSound(Sound.getSkill);
+      } else if (obj.type == StageObjType.girl) {
+        // 移動先が女の子だった場合
+        // マージの能力を習得
+        player.isAbilityAquired[PlayerAbility.merge] = true;
+        // 女の子、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);

@@ -212,7 +212,16 @@ class Player extends StageObj {
         // 移動後に関する処理（ワープで移動、動物の能力取得など）
         endMoving(stage, gameWorld);
         // 押すオブジェクトに関する処理
-        endPushing(stage, gameWorld);
+        // マージ能力が有効なら範囲と威力増大
+        endPushing(
+          stage,
+          gameWorld,
+          mergeRangeFunc: isAbilityAvailable(PlayerAbility.merge)
+              ? (pos) => PointDistanceRange(pos, 2)
+              : null,
+          mergeDamageBase: isAbilityAvailable(PlayerAbility.merge) ? 1 : 0,
+          mergePowerBase: isAbilityAvailable(PlayerAbility.merge) ? 1 : 0,
+        );
 
         // 各種移動中変数初期化
         moving = Move.none;
@@ -281,6 +290,8 @@ class Player extends StageObj {
     ret['pocketItem'] = pocketItem?.encode();
     ret['armerAbility'] = isAbilityAquired[PlayerAbility.armer]!;
     ret['armerRecoveryTurns'] = armerRecoveryTurns;
+    ret['eyeAbility'] = isAbilityAquired[PlayerAbility.eye]!;
+    ret['mergeAbility'] = isAbilityAquired[PlayerAbility.merge]!;
     return ret;
   }
 
