@@ -10,6 +10,8 @@ enum PlayerAbility {
   leg,
   armer,
   pocket,
+  eye,
+  merge,
 }
 
 class Player extends StageObj {
