@@ -248,7 +248,7 @@ class Stage {
   Score score = Score(0);
 
   /// コイン数の最大値
-  static int maxCoin = 99;
+  static int maxCoin = 999;
 
   /// 所持しているコイン
   Coin coins = Coin(0);
