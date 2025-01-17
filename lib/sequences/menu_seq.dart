@@ -53,7 +53,10 @@ class MenuSeq extends Sequence with KeyboardHandler {
       position: Vector2(180.0, 450.0),
       anchor: Anchor.center,
       text: "${loc.controller}${Config().playerControllButtonType + 1}",
-      onReleased: () => Config().changePlayerControllButtonType(),
+      onReleased: () {
+        Config().changePlayerControllButtonType();
+        game.updatePlayerControllButtons();
+      },
     );
     buttonGroup = GameButtonGroup(buttons: [
       resumeButton,
@@ -123,12 +126,15 @@ class MenuSeq extends Sequence with KeyboardHandler {
     if (event is RawKeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       buttonGroup.getCurrentFocusButton()?.fire();
-      if (buttonGroup.getCurrentFocusButton()?.keyName != "controllSetting") {
-        buttonGroup.unFocus();
-      }
     }
 
     return false;
+  }
+
+  @override
+  void onUnFocus() {
+    // ボタン群のフォーカスをクリア
+    buttonGroup.unFocus();
   }
 
   @override

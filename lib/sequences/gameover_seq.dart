@@ -102,10 +102,15 @@ class GameoverSeq extends Sequence with KeyboardHandler {
     if (event is RawKeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       buttonGroup.getCurrentFocusButton()?.fire();
-      buttonGroup.unFocus();
     }
 
     return false;
+  }
+
+  @override
+  void onUnFocus() {
+    // ボタン群のフォーカスをクリア
+    buttonGroup.unFocus();
   }
 
   @override

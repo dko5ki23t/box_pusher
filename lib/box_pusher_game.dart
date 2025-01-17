@@ -305,6 +305,13 @@ class BoxPusherGame extends FlameGame
     }
   }
 
+  void updatePlayerControllButtons() {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      gameSeq.updatePlayerControllButtons();
+    }
+  }
+
   @override
   void onRemove() {
     removeAll(children);
