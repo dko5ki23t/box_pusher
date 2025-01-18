@@ -47,6 +47,7 @@ class Archer extends StageObj {
     required List<Image> levelToAttackAnimationImgs,
     required Image arrowImg,
     required Image errorImg,
+    required super.savedArg,
     int level = 1,
   })  : arrowAnimations = [
           for (int i = 1; i <= 3; i++)

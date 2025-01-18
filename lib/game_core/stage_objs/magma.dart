@@ -11,6 +11,7 @@ class Magma extends StageObj {
   Magma({
     required Image magmaImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(

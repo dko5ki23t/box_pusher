@@ -2,28 +2,23 @@ import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
-import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 
-class Jewel extends StageObj {
+class Girl extends StageObj {
   /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'jewels.png';
+  static String get imageFileName => 'girl.png';
 
-  Jewel({
-    required Image jewelImg,
+  Girl({
+    required super.pos,
+    required Image girlImg,
     required Image errorImg,
     required super.savedArg,
-    required Vector2? scale,
-    required ScaleEffect scaleEffect,
-    required super.pos,
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
-            priority: Stage.dynamicPriority,
+            priority: Stage.staticPriority,
             size: Stage.cellSize,
-            scale: scale,
             anchor: Anchor.center,
-            children: [scaleEffect],
             position:
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
@@ -33,17 +28,18 @@ class Jewel extends StageObj {
               Move.none:
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
-            for (int i = 1; i <= 14; i++)
-              i: {
-                Move.none: SpriteAnimation.spriteList([
-                  Sprite(jewelImg,
-                      srcPosition: Vector2((i - 1) * 32, 0),
-                      srcSize: Stage.cellSize)
-                ], stepTime: 1.0)
-              },
+            1: {
+              Move.none: SpriteAnimation.fromFrameData(
+                girlImg,
+                SpriteAnimationData.sequenced(
+                    amount: 2,
+                    stepTime: Stage.objectStepTime,
+                    textureSize: Stage.cellSize),
+              ),
+            },
           },
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.jewel,
+            type: StageObjType.girl,
             level: level,
           ),
         );
@@ -61,7 +57,7 @@ class Jewel extends StageObj {
   ) {}
 
   @override
-  bool get pushable => true;
+  bool get pushable => false;
 
   @override
   bool get stopping => false;
@@ -76,7 +72,7 @@ class Jewel extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 1;
 
   @override
   bool get isEnemy => false;

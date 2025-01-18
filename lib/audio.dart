@@ -85,6 +85,13 @@ extension BgmExtent on Bgm {
 
 bool isLoaded = false;
 
+class AudioPlayerWithStatus {
+  final AudioPlayer player;
+  bool isBusy = false;
+
+  AudioPlayerWithStatus(this.player);
+}
+
 /// 音楽を扱うクラス
 /// 最初に1度onLoad()を呼ぶこと
 class Audio {
@@ -98,7 +105,7 @@ class Audio {
   final int soundPlayerNum = 5;
 
   late AudioPlayer _bgmPlayer;
-  late List<AudioPlayer> _soundPlayers;
+  late List<AudioPlayerWithStatus> _soundPlayers;
 
   final bgmPlayerIdStr = 'box_pusher_bgm_playerId';
 
@@ -108,47 +115,54 @@ class Audio {
     AudioCache(prefix: 'assets/audio/');
 
     // https://qiita.com/kaedeee/items/001635c30f9d8ccbf755
-    const AudioContext audioContext = AudioContext(
-      iOS: AudioContextIOS(
-        category: AVAudioSessionCategory.ambient,
-        options: [
-          AVAudioSessionOptions.defaultToSpeaker,
-          AVAudioSessionOptions.mixWithOthers,
-          AVAudioSessionOptions.allowAirPlay,
-          AVAudioSessionOptions.allowBluetooth,
-          AVAudioSessionOptions.allowBluetoothA2DP,
-        ],
-      ),
-      android: AudioContextAndroid(
-        isSpeakerphoneOn: true,
-        stayAwake: true,
-        contentType: AndroidContentType.sonification,
-        usageType: AndroidUsageType.assistanceSonification,
-        audioFocus: AndroidAudioFocus.none,
-      ),
-    );
+    //const AudioContext audioContext = AudioContext(
+    //  iOS: AudioContextIOS(
+    //    category: AVAudioSessionCategory.ambient,
+    //    options: [
+    //      AVAudioSessionOptions.defaultToSpeaker,
+    //      AVAudioSessionOptions.mixWithOthers,
+    //      AVAudioSessionOptions.allowAirPlay,
+    //      AVAudioSessionOptions.allowBluetooth,
+    //      AVAudioSessionOptions.allowBluetoothA2DP,
+    //    ],
+    //  ),
+    //  android: AudioContextAndroid(
+    //    isSpeakerphoneOn: true,
+    //    stayAwake: true,
+    //    contentType: AndroidContentType.sonification,
+    //    usageType: AndroidUsageType.assistanceSonification,
+    //    audioFocus: AndroidAudioFocus.none,
+    //  ),
+    //);
 
-    AudioPlayer.global.setAudioContext(audioContext);
+    //AudioPlayer.global.setAudioContext(audioContext);
 
     _bgmPlayer = AudioPlayer(playerId: bgmPlayerIdStr);
     // BGMはループ再生するよう設定
     await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-    _soundPlayers = [for (int i = 0; i < soundPlayerNum; i++) AudioPlayer()];
+    _soundPlayers = [
+      for (int i = 0; i < soundPlayerNum; i++)
+        AudioPlayerWithStatus(AudioPlayer()
+          ..onPlayerComplete.listen((event) {
+            _soundPlayers[i].isBusy = false;
+          }))
+    ];
     isLoaded = true;
   }
 
   Future<void> playSound(Sound sound) async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
     for (final player in _soundPlayers) {
-      if (player.state == PlayerState.stopped ||
-          player.state == PlayerState.completed) {
+      if (!player.isBusy) {
+        player.isBusy = true;
         try {
-          await player.play(
+          await player.player.play(
             AssetSource(sound.fileName),
             volume: sound.volume,
           );
         } catch (e) {
           log('[Audio]playSound() error : $e');
+          player.isBusy = false;
         }
         return;
       }
@@ -185,7 +199,7 @@ class Audio {
     assert(!isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
     await _bgmPlayer.dispose();
     for (final player in _soundPlayers) {
-      await player.dispose();
+      await player.player.dispose();
     }
   }
 }

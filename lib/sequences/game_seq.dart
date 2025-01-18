@@ -1,17 +1,19 @@
 import 'dart:math';
 
 import 'package:box_pusher/audio.dart';
+import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
+import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
@@ -31,8 +33,7 @@ enum DebugViewMode {
   objInBlockMap,
 }
 
-class GameSeq extends Sequence
-    with TapCallbacks, KeyboardHandler, HasGameReference<BoxPusherGame> {
+class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// 画面上部の余白
   static Vector2 get topPaddingSize => Vector2(360.0, 40.0);
 
@@ -54,23 +55,29 @@ class GameSeq extends Sequence
   /// プレイヤー操作ボタン領域2
   static Vector2 get xButtonAreaSize2 => Vector2(50.0, 50.0);
 
+  /// プレイヤー操作ジョイスティック位置
+  final Vector2 joyStickPosition = Vector2(
+      BoxPusherGame.baseSize.x / 2,
+      BoxPusherGame.baseSize.y -
+          topPaddingSize.y -
+          menuButtonAreaSize.y -
+          joyStickFieldRadius -
+          40.0);
+
+  /// プレイヤー操作ジョイスティックの半径
+  static double get joyStickRadius => 30.0;
+
+  /// プレイヤー操作ジョイスティック可動域の半径
+  static double get joyStickFieldRadius => 45.0;
+
   /// 画面斜めの操作ボタン領域(xPadding領域と重複。この領域下にはステージ描画もされる。)
   static Vector2 get dButtonAreaSize => Vector2(300.0, 120.0);
 
   /// メニューボタン領域(各種能力ボタン、ステージ名、メニューボタンの領域含む)
   static Vector2 get menuButtonAreaSize => Vector2(360.0, 40.0);
 
-  /// 手の能力ボタン領域
-  static Vector2 get handAbilityButtonAreaSize => Vector2(40.0, 40.0);
-
-  /// 足の能力ボタン領域
-  static Vector2 get legAbilityButtonAreaSize => Vector2(40.0, 40.0);
-
-  /// アーマー能力ボタン領域
-  static Vector2 get armerAbilityButtonAreaSize => Vector2(40.0, 40.0);
-
-  /// ポケット能力ボタン領域
-  static Vector2 get pocketAbilityButtonAreaSize => Vector2(40.0, 40.0);
+  /// 能力ボタン領域
+  static Vector2 get abilityButtonAreaSize => Vector2(40.0, 40.0);
 
   /// 次マージ時出現アイテム領域
   static Vector2 get nextItemAreaSize => Vector2(150.0, 35.0);
@@ -116,9 +123,16 @@ class GameSeq extends Sequence
   late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
+  late final Image handForbiddenImg;
   late final Image legAbilityImg;
+  late final Image legForbiddenImg;
   late final Image armerAbilityImg;
+  late final Image armerForbiddenImg;
   late final Image pocketAbilityImg;
+  late final Image pocketForbiddenImg;
+  late final Image eyeAbilityImg;
+  late final Image mergeAbilityImg;
+  late final Image forbiddenImg;
   late final Image settingsImg;
   late final Image diagonalMoveImg;
   late final TextComponent currentPosText;
@@ -142,11 +156,15 @@ class GameSeq extends Sequence
   late final PositionComponent playerDownRightMoveButton;
   late final ButtonComponent playerControllDiagonalModeButton;
   List<PositionComponent>? playerDiagonalMoveButtons;
+  late final JoyStickComponent playerControllJoyStick;
+  late final CustomPainterComponent playerControllJoyStickField;
   late final RectangleComponent menuArea;
-  late final GameSpriteOnOffButton handAbilityOnOffButton;
-  late final GameSpriteOnOffButton legAbilityOnOffButton;
-  late final GameSpriteOnOffButton armerAbilityOnOffButton;
+  late final GameSpriteAnimationButton handAbilityButton;
+  late final GameSpriteAnimationButton legAbilityButton;
+  late final GameSpriteAnimationButton armerAbilityButton;
   late final GameSpriteAnimationButton pocketAbilityButton;
+  late final GameSpriteAnimationButton eyeAbilityButton;
+  late final GameSpriteAnimationButton mergeAbilityButton;
   late final GameSpriteButton menuButton;
   late final GameTextButton viewModeButton;
 
@@ -161,6 +179,9 @@ class GameSeq extends Sequence
     legAbilityImg = await Flame.images.load('leg_ability.png');
     armerAbilityImg = await Flame.images.load('armer_ability.png');
     pocketAbilityImg = await Flame.images.load('pocket_ability.png');
+    eyeAbilityImg = await Flame.images.load('eye_ability.png');
+    mergeAbilityImg = await Flame.images.load('merge_ability.png');
+    forbiddenImg = await Flame.images.load('forbidden_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     diagonalMoveImg = await Flame.images.load('arrows_output.png');
     // ステージ作成
@@ -472,6 +493,24 @@ class GameSeq extends Sequence
       ],
       size: clipSize,
     );
+    // 操作ジョイスティック
+    playerControllJoyStick = JoyStickComponent(
+      anchor: Anchor.center,
+      position: joyStickPosition,
+      radius: joyStickRadius,
+      fieldRadius: joyStickFieldRadius,
+      inputMove: (move) => pushingMoveButton = move,
+    );
+    // 操作ジョイスティックの可動領域
+    playerControllJoyStickField = CustomPainterComponent(
+        position: joyStickPosition,
+        size: Vector2.all(joyStickFieldRadius) * 2,
+        anchor: Anchor.center,
+        painter: JoyStickFieldPainter(
+          radius: joyStickFieldRadius,
+          strokeWidth: 1,
+          arcStrokeWidth: 3,
+        ));
 
     topGameInfoArea = ButtonComponent(
       button: RectangleComponent(
@@ -564,47 +603,98 @@ class GameSeq extends Sequence
     Vector2 abilityButtonPos =
         Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y);
     // 手の能力ボタン領域
-    handAbilityOnOffButton = GameSpriteOnOffButton(
-      onChanged:
-          game.testMode ? (bool isOn) => stage.setHandAbility(isOn) : null,
-      size: handAbilityButtonAreaSize,
+    handAbilityButton = GameSpriteAnimationButton(
+      onReleased: game.testMode
+          ? () {
+              stage.player.isAbilityAquired[PlayerAbility.hand] =
+                  !stage.player.isAbilityAquired[PlayerAbility.hand]!;
+            }
+          : null,
+      size: abilityButtonAreaSize,
       position: abilityButtonPos,
-      sprite: Sprite(handAbilityImg),
+      animation:
+          SpriteAnimation.spriteList([Sprite(handAbilityImg)], stepTime: 1.0),
     );
     // 足の能力ボタン領域
     abilityButtonPos +=
-        Vector2(handAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
-    legAbilityOnOffButton = GameSpriteOnOffButton(
-      onChanged: game.testMode
-          ? (bool isOn) {
-              stage.setLegAbility(isOn);
+        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    legAbilityButton = GameSpriteAnimationButton(
+      onReleased: game.testMode
+          ? () {
+              stage.player.isAbilityAquired[PlayerAbility.leg] =
+                  !stage.player.isAbilityAquired[PlayerAbility.leg]!;
               updatePlayerControllButtons();
             }
           : null,
-      size: legAbilityButtonAreaSize,
+      size: abilityButtonAreaSize,
       position: abilityButtonPos,
-      sprite: Sprite(legAbilityImg),
+      animation:
+          SpriteAnimation.spriteList([Sprite(legAbilityImg)], stepTime: 1.0),
     );
     // アーマー能力ボタン領域
     abilityButtonPos +=
-        Vector2(legAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
-    armerAbilityOnOffButton = GameSpriteOnOffButton(
-      onChanged:
-          game.testMode ? (bool isOn) => stage.setArmerAbility(isOn) : null,
-      size: armerAbilityButtonAreaSize,
+        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    armerAbilityButton = GameSpriteAnimationButton(
+      onReleased: game.testMode
+          ? () {
+              stage.player.isAbilityAquired[PlayerAbility.armer] =
+                  !stage.player.isAbilityAquired[PlayerAbility.armer]!;
+            }
+          : null,
+      size: abilityButtonAreaSize,
       position: abilityButtonPos,
-      sprite: Sprite(armerAbilityImg,
-          srcPosition: Vector2.zero(), srcSize: Vector2.all(32)),
+      animation: SpriteAnimation.spriteList([
+        Sprite(armerAbilityImg,
+            srcPosition: Vector2.zero(), srcSize: Vector2.all(32))
+      ], stepTime: 1.0),
     );
     // ポケット能力ボタン領域
     abilityButtonPos +=
-        Vector2(armerAbilityButtonAreaSize.x + paddingAbilityButtons, 0);
+        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
     pocketAbilityButton = GameSpriteAnimationButton(
-      onReleased: () => stage.usePocketAbility(game.world),
-      size: pocketAbilityButtonAreaSize,
+      onReleased: () {
+        // ポケットの能力習得
+        if (game.testMode &&
+            !stage.player.isAbilityAquired[PlayerAbility.pocket]!) {
+          stage.player.isAbilityAquired[PlayerAbility.pocket] = true;
+        } else {
+          stage.usePocketAbility(game.world);
+        }
+      },
+      size: abilityButtonAreaSize,
       position: abilityButtonPos,
       animation:
           SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0),
+    );
+    // 予知能力ボタン領域
+    abilityButtonPos +=
+        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    eyeAbilityButton = GameSpriteAnimationButton(
+      onReleased: game.testMode
+          ? () {
+              stage.player.isAbilityAquired[PlayerAbility.eye] =
+                  !stage.player.isAbilityAquired[PlayerAbility.eye]!;
+            }
+          : null,
+      size: abilityButtonAreaSize,
+      position: abilityButtonPos,
+      animation:
+          SpriteAnimation.spriteList([Sprite(eyeAbilityImg)], stepTime: 1.0),
+    );
+    // マージ能力ボタン領域
+    abilityButtonPos +=
+        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
+    mergeAbilityButton = GameSpriteAnimationButton(
+      onReleased: game.testMode
+          ? () {
+              stage.player.isAbilityAquired[PlayerAbility.merge] =
+                  !stage.player.isAbilityAquired[PlayerAbility.merge]!;
+            }
+          : null,
+      size: abilityButtonAreaSize,
+      position: abilityButtonPos,
+      animation:
+          SpriteAnimation.spriteList([Sprite(mergeAbilityImg)], stepTime: 1.0),
     );
     // メニューボタン領域
     menuButton = GameSpriteButton(
@@ -676,13 +766,17 @@ class GameSeq extends Sequence
     // メニュー領域
     add(menuArea);
     // 手の能力ボタン領域
-    add(handAbilityOnOffButton);
+    add(handAbilityButton);
     // 足の能力ボタン領域
-    add(legAbilityOnOffButton);
+    add(legAbilityButton);
     // アーマー能力ボタン領域
-    add(armerAbilityOnOffButton);
+    add(armerAbilityButton);
     // ポケット能力ボタン領域
     add(pocketAbilityButton);
+    // 予知能力ボタン領域
+    add(eyeAbilityButton);
+    // マージ能力ボタン領域
+    add(mergeAbilityButton);
     // メニューボタン領域
     add(menuButton);
     if (game.testMode) {
@@ -709,24 +803,92 @@ class GameSeq extends Sequence
     bool beforeLegAbility = stage.getLegAbility();
     stage.update(dt, pushingMoveButton, game.world, game.camera);
     // 手の能力取得状況更新
-    handAbilityOnOffButton.isOn = stage.getHandAbility();
+    handAbilityButton.enabledBgColor =
+        stage.player.isAbilityAquired[PlayerAbility.hand]!
+            ? Colors.grey
+            : Colors.white;
+    if (stage.player.isAbilityForbidden[PlayerAbility.hand]!) {
+      handAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+    } else {
+      if (handAbilityButton.child!.children.isNotEmpty) {
+        handAbilityButton.child!.removeAll(handAbilityButton.child!.children);
+      }
+    }
     // 足の能力取得状況更新
-    legAbilityOnOffButton.isOn = stage.getLegAbility();
+    legAbilityButton.enabledBgColor =
+        stage.player.isAbilityAquired[PlayerAbility.leg]!
+            ? Colors.grey
+            : Colors.white;
+    if (stage.player.isAbilityForbidden[PlayerAbility.leg]!) {
+      legAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+    } else {
+      if (legAbilityButton.child!.children.isNotEmpty) {
+        legAbilityButton.child!.removeAll(legAbilityButton.child!.children);
+      }
+    }
     if (beforeLegAbility != stage.getLegAbility() ||
         prevIsDiagonalButtonMode != isDiagonalButtonMode) {
       updatePlayerControllButtons();
     }
     prevIsDiagonalButtonMode = isDiagonalButtonMode;
     // アーマーの能力状況更新
-    armerAbilityOnOffButton.isOn = stage.getArmerAbility();
-    armerAbilityOnOffButton.sprite = Sprite(armerAbilityImg,
-        srcPosition: Vector2(stage.getArmerAbilityRecoveryTurns() * 32, 0),
-        srcSize: Vector2.all(32));
+    armerAbilityButton.enabledBgColor =
+        stage.player.isAbilityAquired[PlayerAbility.armer]!
+            ? Colors.grey
+            : Colors.white;
+    armerAbilityButton.animation = SpriteAnimation.spriteList([
+      Sprite(armerAbilityImg,
+          srcPosition: Vector2(stage.getArmerAbilityRecoveryTurns() * 32, 0),
+          srcSize: Vector2.all(32))
+    ], stepTime: 1.0);
+    if (stage.getArmerAbilityRecoveryTurns() == 0 &&
+        stage.player.isAbilityForbidden[PlayerAbility.armer]!) {
+      armerAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+    } else {
+      if (armerAbilityButton.child!.children.isNotEmpty) {
+        armerAbilityButton.child!.removeAll(armerAbilityButton.child!.children);
+      }
+    }
     // ポケットの能力状況更新
     final pocketItemAnimation = stage.getPocketAbilitySpriteAnimation() ??
         SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0);
     pocketAbilityButton.animation = pocketItemAnimation;
-    pocketAbilityButton.enabled = stage.getPocketAbility();
+    pocketAbilityButton.enabledBgColor =
+        stage.player.isAbilityAquired[PlayerAbility.pocket]!
+            ? Colors.grey
+            : Colors.white;
+    if (stage.player.isAbilityForbidden[PlayerAbility.pocket]!) {
+      pocketAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+    } else {
+      if (pocketAbilityButton.child!.children.isNotEmpty) {
+        pocketAbilityButton.child!
+            .removeAll(pocketAbilityButton.child!.children);
+      }
+    }
+    // 予知能力状況更新
+    eyeAbilityButton.enabledBgColor =
+        stage.player.isAbilityAquired[PlayerAbility.eye]!
+            ? Colors.grey
+            : Colors.white;
+    if (stage.player.isAbilityForbidden[PlayerAbility.eye]!) {
+      eyeAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+    } else {
+      if (eyeAbilityButton.child!.children.isNotEmpty) {
+        eyeAbilityButton.child!.removeAll(eyeAbilityButton.child!.children);
+      }
+    }
+    // マージ能力状況更新
+    mergeAbilityButton.enabledBgColor =
+        stage.player.isAbilityAquired[PlayerAbility.merge]!
+            ? Colors.grey
+            : Colors.white;
+    if (stage.player.isAbilityForbidden[PlayerAbility.merge]!) {
+      mergeAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+    } else {
+      if (mergeAbilityButton.child!.children.isNotEmpty) {
+        mergeAbilityButton.child!.removeAll(mergeAbilityButton.child!.children);
+      }
+    }
     // 次アイテム出現までのマージ回数更新
     remainMergeCountText.text = "NEXT: ${stage.remainMergeCount}";
     // 次マージ時出現アイテム更新
@@ -1094,6 +1256,12 @@ class GameSeq extends Sequence
       } else {
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
       }
+    } else if (Config().playerControllButtonType == 2) {
+      (playerControllJoyStickField.painter as JoyStickFieldPainter)
+          .drawDiagonalArcs = stage.getLegAbility();
+      playerControllJoyStick.enableDiagonalInput = stage.getLegAbility();
+      playerControllButtonsArea!
+          .addAll([playerControllJoyStickField, playerControllJoyStick]);
     }
   }
 
@@ -1220,6 +1388,204 @@ class GameSeq extends Sequence
       }
     }
 
+    return false;
+  }
+
+  @override
+  void onLangChanged() {}
+}
+
+/// 操作ジョイスティック
+class JoyStickComponent extends CircleComponent with DragCallbacks {
+  late final Vector2 _initialPosition;
+  Vector2 _mousePosition = Vector2.zero();
+  final void Function(Move) inputMove;
+  bool enableDiagonalInput = false;
+
+  /// 可動域の半径
+  double fieldRadius = 0;
+
+  JoyStickComponent({
+    required super.radius,
+    required super.position,
+    required this.fieldRadius,
+    super.anchor,
+    required this.inputMove,
+    this.enableDiagonalInput = false,
+  }) {
+    _initialPosition = super.position.clone();
+    _mousePosition = super.position.clone();
+    super.paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    super.priority = 100;
+  }
+
+  // 押せる範囲は可動域上とする
+  @override
+  bool containsPoint(Vector2 point) {
+    return Circle(center, fieldRadius).containsPoint(point);
+  }
+
+  @override
+  void onDragStart(DragStartEvent event) {
+    super.onDragStart(event);
+    super.paint.color = const Color(0xffeeeeee);
+  }
+
+  @override
+  void onDragUpdate(DragUpdateEvent event) {
+    _mousePosition += event.localDelta;
+    Vector2 direct = _mousePosition - _initialPosition;
+    inputMove(Move.none);
+    if (direct.length >= fieldRadius * 0.7) {
+      // 入力された向き判定
+      double angle = degrees(Vector2(1, 0).angleToSigned(direct));
+      if (angle < 0) {
+        angle += 360.0;
+      }
+      if (angle <= 20 || angle >= 340) {
+        inputMove(Move.right);
+      } else if (70 <= angle && angle <= 110) {
+        inputMove(Move.down);
+      } else if (160 <= angle && angle <= 200) {
+        inputMove(Move.left);
+      } else if (250 <= angle && angle <= 290) {
+        inputMove(Move.up);
+      } else if (enableDiagonalInput) {
+        if (25 <= angle && angle <= 65) {
+          inputMove(Move.downRight);
+        } else if (115 <= angle && angle <= 155) {
+          inputMove(Move.downLeft);
+        } else if (205 <= angle && angle <= 245) {
+          inputMove(Move.upLeft);
+        } else if (295 <= angle && angle <= 335) {
+          inputMove(Move.upRight);
+        }
+      }
+    }
+    // ジョイスティックは可動域内にとどめる
+    direct.clampLength(0, fieldRadius);
+    position = _initialPosition + direct;
+  }
+
+  @override
+  void onDragEnd(DragEndEvent event) {
+    super.onDragEnd(event);
+    super.paint.color = Colors.white;
+    position = _initialPosition;
+    _mousePosition = _initialPosition.clone();
+    inputMove(Move.none);
+  }
+}
+
+class JoyStickFieldPainter extends CustomPainter {
+  final double radius;
+  final double strokeWidth;
+  final double arcStrokeWidth;
+  bool drawDiagonalArcs = false;
+
+  JoyStickFieldPainter({
+    required this.radius,
+    required this.strokeWidth,
+    required this.arcStrokeWidth,
+    this.drawDiagonalArcs = false,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final framePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    final bgPaint = Paint()
+      ..color = const Color(0x80000000)
+      ..style = PaintingStyle.fill;
+    final arcPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = arcStrokeWidth;
+    final center = Offset(radius, radius);
+    canvas.drawCircle(center, radius, bgPaint);
+    canvas.drawCircle(center, radius, framePaint);
+    canvas.drawArc(
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
+        radians(-20),
+        radians(40),
+        false,
+        arcPaint);
+    canvas.drawArc(
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
+        radians(70),
+        radians(40),
+        false,
+        arcPaint);
+    canvas.drawArc(
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
+        radians(160),
+        radians(40),
+        false,
+        arcPaint);
+    canvas.drawArc(
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
+        radians(250),
+        radians(40),
+        false,
+        arcPaint);
+    if (drawDiagonalArcs) {
+      canvas.drawArc(
+          Rect.fromCircle(
+            center: center,
+            radius: radius,
+          ),
+          radians(25),
+          radians(40),
+          false,
+          arcPaint);
+      canvas.drawArc(
+          Rect.fromCircle(
+            center: center,
+            radius: radius,
+          ),
+          radians(115),
+          radians(40),
+          false,
+          arcPaint);
+      canvas.drawArc(
+          Rect.fromCircle(
+            center: center,
+            radius: radius,
+          ),
+          radians(205),
+          radians(40),
+          false,
+          arcPaint);
+      canvas.drawArc(
+          Rect.fromCircle(
+            center: center,
+            radius: radius,
+          ),
+          radians(295),
+          radians(40),
+          false,
+          arcPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
   }
 }

@@ -146,8 +146,11 @@ class Stage {
   /// 動く物のzインデックス（プレイヤー、敵など）
   static const movingPriority = 3;
 
+  /// 動く物より前のzインデックス（スモーカーの煙など）
+  static const frontMovingPriority = 4;
+
   /// 画面前面に表示する物（スコア加算表示等）のzインデックス
-  static const frontPriority = 4;
+  static const frontPriority = 5;
 
   bool isReady = false;
 
@@ -208,8 +211,17 @@ class Stage {
   /// プレイヤー
   late Player player;
 
+  bool _isGameover = false;
+
   /// ゲームオーバーになったかどうか
-  bool isGameover = false;
+  bool get isGameover => _isGameover;
+  set isGameover(bool b) {
+    _isGameover = b;
+    if (b) {
+      // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
+      player.attacking = true;
+    }
+  }
 
   /// ステージの左上座標(プレイヤーの動きにつれて拡張されていく)
   Point stageLT = Point(0, 0);
@@ -236,7 +248,7 @@ class Stage {
   Score score = Score(0);
 
   /// コイン数の最大値
-  static int maxCoin = 99;
+  static int maxCoin = 999;
 
   /// 所持しているコイン
   Coin coins = Coin(0);
@@ -276,8 +288,8 @@ class Stage {
     Move vector = Move.down,
     bool addToGameWorld = true,
   }) {
-    final ret =
-        _objFactory.create(typeLevel: typeLevel, pos: pos, vector: vector);
+    final ret = _objFactory.create(
+        typeLevel: typeLevel, pos: pos, vector: vector, savedArg: 0);
     // ComponentをWorldに追加
     if (addToGameWorld) {
       gameWorld.add(ret.animationComponent);
@@ -307,7 +319,8 @@ class Stage {
     effectBase = [
       _objFactory.create(
           typeLevel: StageObjTypeLevel(type: StageObjType.jewel, level: 1),
-          pos: Point(0, 0))
+          pos: Point(0, 0),
+          savedArg: 0)
     ];
     effectBase.first.animationComponent.opacity = 0.0;
     gameWorld.add(effectBase.first.animationComponent);
@@ -673,77 +686,68 @@ class Stage {
   void merge(
     Point pos,
     StageObj merging,
-    World gameWorld, {
-    int breakLeftOffset = -1,
-    int breakTopOffset = -1,
-    int breakRightOffset = 1,
-    int breakBottomOffset = 1,
+    World gameWorld,
+    MergeAffect mergeAffect, {
     bool onlyDelete = false,
-    int enemyDamage = 0, // 敵に与えるダメージ（レベルマイナス）
+    bool countMerge = true, // マージ数としてカウントするか
+    bool addScore = true, // スコア加算するか
   }) {
-    // マージ位置を中心とした四角形範囲
-    final affectRange = PointRectRange(
-        pos + Point(breakLeftOffset, breakTopOffset),
-        pos + Point(breakRightOffset, breakBottomOffset));
-    // マージしたオブジェクトのタイプとレベル
-    final typeLevel =
-        StageObjTypeLevel(type: merging.type, level: merging.level);
     // update()の最後にブロック破壊＆敵へのダメージを処理する
     mergeAffects.add(
-      MergeAffect(
-          basePoint: pos,
-          range: affectRange,
-          canBreakBlockFunc: (block) => Config.canBreakBlock(block, typeLevel),
-          enemyDamage: enemyDamage),
+      mergeAffect,
     );
 
-    // マージ回数およびオブジェクト出現までのマージ回数をインクリメント/デクリメント
-    mergedCount++;
-    remainMergeCount--;
+    if (countMerge) {
+      // マージ回数およびオブジェクト出現までのマージ回数をインクリメント/デクリメント
+      mergedCount++;
+      remainMergeCount--;
+    }
 
-    // スコア加算
-    int gettingScore = pow(2, (merging.level - 1)).toInt() * 100;
-    score.actual += gettingScore;
+    if (addScore) {
+      // スコア加算
+      int gettingScore = pow(2, (merging.level - 1)).toInt() * 100;
+      score.actual += gettingScore;
 
-    // スコア加算表示
-    if (gettingScore > 0 && Config().showAddedScoreOnMergePos) {
-      final addingScoreText = OpacityEffectTextComponent(
-        text: "+$gettingScore",
-        textRenderer: TextPaint(
-          style: Config.gameTextStyle,
-        ),
-      );
-      gameWorld.add(RectangleComponent(
-        priority: frontPriority,
-        anchor: Anchor.center,
-        position: Vector2(pos.x * cellSize.x, pos.y * cellSize.y) +
-            cellSize / 2 -
-            Config().addedScoreEffectMove,
-        paint: Paint()
-          ..color = Colors.transparent
-          ..style = PaintingStyle.fill,
-        children: [
-          RectangleComponent(
-            paint: Paint()
-              ..color = Colors.transparent
-              ..style = PaintingStyle.fill,
+      // スコア加算表示
+      if (gettingScore > 0 && Config().showAddedScoreOnMergePos) {
+        final addingScoreText = OpacityEffectTextComponent(
+          text: "+$gettingScore",
+          textRenderer: TextPaint(
+            style: Config.gameTextStyle,
           ),
-          AlignComponent(
-            alignment: Anchor.center,
-            child: addingScoreText,
-          ),
-          SequenceEffect([
-            MoveEffect.by(
-                Config().addedScoreEffectMove,
-                EffectController(
-                  duration: 0.3,
-                )),
-            OpacityEffect.fadeOut(EffectController(duration: 0.5),
-                target: addingScoreText),
-            RemoveEffect(),
-          ]),
-        ],
-      ));
+        );
+        gameWorld.add(RectangleComponent(
+          priority: frontPriority,
+          anchor: Anchor.center,
+          position: Vector2(pos.x * cellSize.x, pos.y * cellSize.y) +
+              cellSize / 2 -
+              Config().addedScoreEffectMove,
+          paint: Paint()
+            ..color = Colors.transparent
+            ..style = PaintingStyle.fill,
+          children: [
+            RectangleComponent(
+              paint: Paint()
+                ..color = Colors.transparent
+                ..style = PaintingStyle.fill,
+            ),
+            AlignComponent(
+              alignment: Anchor.center,
+              child: addingScoreText,
+            ),
+            SequenceEffect([
+              MoveEffect.by(
+                  Config().addedScoreEffectMove,
+                  EffectController(
+                    duration: 0.3,
+                  )),
+              OpacityEffect.fadeOut(EffectController(duration: 0.5),
+                  target: addingScoreText),
+              RemoveEffect(),
+            ]),
+          ],
+        ));
+      }
     }
 
     if (onlyDelete) {
@@ -757,29 +761,32 @@ class Stage {
       merging.level++;
     }
 
-    // マージエフェクトを描画
-    gameWorld.add(
-      SpriteComponent(
-        sprite: Sprite(mergeEffectImg),
-        priority: Stage.dynamicPriority,
-        scale: Vector2.all(0.8),
-        children: [
-          ScaleEffect.by(
-            Vector2.all(1.5),
-            EffectController(duration: 0.5),
-          ),
-          OpacityEffect.by(
-            -1.0,
-            EffectController(duration: 1.0),
-          ),
-          RemoveEffect(delay: 1.0),
-        ],
-        size: Stage.cellSize,
-        anchor: Anchor.center,
-        position: (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-            Stage.cellSize / 2),
-      ),
-    );
+    if (!onlyDelete) {
+      // マージエフェクトを描画
+      gameWorld.add(
+        SpriteComponent(
+          sprite: Sprite(mergeEffectImg),
+          priority: Stage.dynamicPriority,
+          scale: Vector2.all(0.8),
+          children: [
+            ScaleEffect.by(
+              Vector2.all(1.5),
+              EffectController(duration: 0.5),
+            ),
+            OpacityEffect.by(
+              -1.0,
+              EffectController(duration: 1.0),
+            ),
+            RemoveEffect(delay: 1.0),
+          ],
+          size: Stage.cellSize,
+          anchor: Anchor.center,
+          position:
+              (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                  Stage.cellSize / 2),
+        ),
+      );
+    }
 
     // 効果音を鳴らす
     Audio().playSound(Sound.merge);
@@ -1080,7 +1087,8 @@ class Stage {
     }
 
     // プレイヤー作成
-    player = _objFactory.createPlayer(pos: Point(0, 0), vector: Move.down);
+    player = _objFactory.createPlayer(
+        pos: Point(0, 0), vector: Move.down, savedArg: 0);
     gameWorld.add(player.animationComponent);
     // カメラはプレイヤーに追従
     camera.follow(
@@ -1115,6 +1123,10 @@ class Stage {
     for (final belt in beltPoints) {
       _staticObjs[belt]!.update(dt, moveInput, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
+    }
+    // プレイヤーの能力使用不可をすべて解除(この後の敵更新で煙によって使用不可にする)
+    for (final ability in player.isAbilityForbidden.keys) {
+      player.isAbilityForbidden[ability] = false;
     }
     // 敵更新
     final currentEnemies = [...enemies.iterable];
@@ -1162,6 +1174,12 @@ class Stage {
     }
     //}
 
+    // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
+    if (player.pocketItem != null && player.pocketItem!.updateInPocket) {
+      player.pocketItem!.update(dt, player.moving, gameWorld, camera, this,
+          playerStartMoving, playerEndMoving, prohibitedPoints);
+    }
+
     // ショップ更新(ショップ情報を吹き出しで表示/非表示)
     for (final shop in shops) {
       shop.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
@@ -1191,13 +1209,14 @@ class Stage {
       if (mergeAffect.enemyDamage > 0) {
         for (final p in mergeAffect.range.set) {
           final obj = get(p);
+          // hit()でレベルを下げる前にコイン数を取得
+          int gettableCoins = obj.coins;
           if (obj.isEnemy && obj.hit(mergeAffect.enemyDamage)) {
             // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
             obj.removeAfterFrame();
             // コイン獲得
-            int gotCoins = obj.coins;
-            coins.actual += gotCoins;
-            showGotCoinEffect(gotCoins, obj.pos);
+            coins.actual += gettableCoins;
+            showGotCoinEffect(gettableCoins, obj.pos);
           }
         }
       }
@@ -1413,11 +1432,7 @@ class Stage {
   }
 
   void setHandAbility(bool isOn) {
-    if (isOn) {
-      player.pushableNum = -1;
-    } else {
-      player.pushableNum = 1;
-    }
+    player.isAbilityAquired[PlayerAbility.hand] = isOn;
   }
 
   bool getHandAbility() {
@@ -1425,15 +1440,15 @@ class Stage {
   }
 
   void setLegAbility(bool isOn) {
-    player.isLegAbilityOn = isOn;
+    player.isAbilityAquired[PlayerAbility.leg] = isOn;
   }
 
   bool getLegAbility() {
-    return player.isLegAbilityOn;
+    return player.isAbilityAvailable(PlayerAbility.leg);
   }
 
   bool getPocketAbility() {
-    return player.isPocketAbilityOn;
+    return player.isAbilityAvailable(PlayerAbility.pocket);
   }
 
   void usePocketAbility(World gameWorld) {
@@ -1442,18 +1457,19 @@ class Stage {
 
   /// 現在のポケット能力で有しているオブジェクトの画像
   SpriteAnimation? getPocketAbilitySpriteAnimation() {
-    if (!player.isPocketAbilityOn || player.pocketItem == null) {
+    if (!player.isAbilityAquired[PlayerAbility.pocket]! ||
+        player.pocketItem == null) {
       return null;
     }
     return player.pocketItem!.animationComponent.animation;
   }
 
   void setArmerAbility(bool isOn) {
-    player.isArmerAbilityOn = isOn;
+    player.isAbilityAquired[PlayerAbility.armer] = isOn;
   }
 
   bool getArmerAbility() {
-    return player.isArmerAbilityOn;
+    return player.isAbilityAvailable(PlayerAbility.armer);
   }
 
   int getArmerAbilityRecoveryTurns() {

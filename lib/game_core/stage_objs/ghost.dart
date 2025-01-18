@@ -22,6 +22,7 @@ class Ghost extends StageObj {
   Ghost({
     required Image ghostImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   })  : levelToGhostAnimations = {

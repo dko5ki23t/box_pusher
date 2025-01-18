@@ -12,6 +12,7 @@ class Gorilla extends StageObj {
     required super.pos,
     required Image gorillaImg,
     required Image errorImg,
+    required super.savedArg,
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(

@@ -9,10 +9,12 @@ import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
+import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
+import 'package:box_pusher/game_core/stage_objs/girl.dart';
 import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
 import 'package:box_pusher/game_core/stage_objs/guardian.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
@@ -22,6 +24,8 @@ import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/pusher.dart';
 import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
 import 'package:box_pusher/game_core/stage_objs/shop.dart';
+import 'package:box_pusher/game_core/stage_objs/smoke.dart';
+import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
@@ -55,11 +59,15 @@ enum StageObjType {
   ghost, // オブジェクトをすり抜けて移動できる敵
   builder, // 一定間隔でブロックを置く敵
   pusher, // オブジェクトを押す敵
+  smoker, // 周囲を見えづらく、プレイヤーの能力を使用不能にする煙を出す敵
+  smoke,
   gorilla,
   rabbit,
   kangaroo,
   turtle,
+  girl,
   shop,
+  canon,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -84,11 +92,15 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.ghost: 'ghost',
     StageObjType.builder: 'builder',
     StageObjType.pusher: 'pusher',
+    StageObjType.smoker: 'smoker',
+    StageObjType.smoke: 'smoke',
     StageObjType.gorilla: 'gorilla',
     StageObjType.rabbit: 'rabbit',
     StageObjType.kangaroo: 'kangaroo',
     StageObjType.turtle: 'turtle',
+    StageObjType.girl: 'girl',
     StageObjType.shop: 'shop',
+    StageObjType.canon: 'canon',
   };
 
   String get str => strMap[this]!;
@@ -135,6 +147,10 @@ extension StageObjTypeExtent on StageObjType {
         return Builder;
       case StageObjType.pusher:
         return Pusher;
+      case StageObjType.smoker:
+        return Smoker;
+      case StageObjType.smoke:
+        return Smoke;
       case StageObjType.gorilla:
         return Gorilla;
       case StageObjType.rabbit:
@@ -143,8 +159,12 @@ extension StageObjTypeExtent on StageObjType {
         return Kangaroo;
       case StageObjType.turtle:
         return Turtle;
+      case StageObjType.girl:
+        return Girl;
       case StageObjType.shop:
         return Shop;
+      case StageObjType.canon:
+        return Canon;
     }
   }
 
@@ -190,6 +210,10 @@ extension StageObjTypeExtent on StageObjType {
         return Builder.imageFileName;
       case StageObjType.pusher:
         return Pusher.imageFileName;
+      case StageObjType.smoker:
+        return Smoker.imageFileName;
+      case StageObjType.smoke:
+        return Smoke.imageFileName;
       case StageObjType.gorilla:
         return Gorilla.imageFileName;
       case StageObjType.rabbit:
@@ -198,8 +222,12 @@ extension StageObjTypeExtent on StageObjType {
         return Kangaroo.imageFileName;
       case StageObjType.turtle:
         return Turtle.imageFileName;
+      case StageObjType.girl:
+        return Girl.imageFileName;
       case StageObjType.shop:
         return Shop.imageFileName;
+      case StageObjType.canon:
+        return Canon.imageFileName;
     }
   }
 
@@ -303,6 +331,14 @@ abstract class StageObj {
   /// 攻撃中か
   bool attacking = false;
 
+  /// その他保存しておきたいint値(攻撃後ターン数等)
+  /// 使用したい場合はoverrideすること
+  int get arg => 0;
+
+  /// その他保存しておきたいint値を取得
+  /// コンストラクタで呼び出す
+  void loadArg(int val) {}
+
   StageObj({
     required typeLevel,
     required this.animationComponent,
@@ -311,10 +347,12 @@ abstract class StageObj {
     this.valid = true,
     this.validAfterFrame = true,
     required this.pos,
+    required int savedArg,
     Move vector = Move.down,
   }) : _typeLevel = typeLevel {
     level = typeLevel.level;
     this.vector = vector;
+    loadArg(savedArg);
   }
 
   /// タイプ
@@ -417,6 +455,9 @@ abstract class StageObj {
 
   /// 持っているコイン
   int get coins => 0;
+
+  /// ポケットに入れていてもupdate()するかどうか
+  bool get updateInPocket => false;
 
   /// 攻撃を受ける
   /// やられたかどうかを返す
@@ -1073,7 +1114,13 @@ abstract class StageObj {
 
   /// 押し終わったときの処理
   /// ※押した者の位置(pos)は移動済みの座標にしてから呼ぶこと
-  void endPushing(Stage stage, World gameWorld) {
+  void endPushing(
+    Stage stage,
+    World gameWorld, {
+    PointRange Function(Point)? mergeRangeFunc,
+    int mergeDamageBase = 0,
+    int mergePowerBase = 0,
+  }) {
     // 押したオブジェクトの中でマージするインデックスを探す
     int mergeIndex = -1; // -1はマージなし
     Point toTo = pos;
@@ -1108,8 +1155,24 @@ abstract class StageObj {
       // 上で探したインデックスと一致するならマージ
       if (i == mergeIndex) {
         // マージ
-        stage.merge(toTo, pushing, gameWorld,
-            enemyDamage: Config().debugEnemyDamageInMerge);
+        int mergePow = Config.getMergePower(0, pushing) + mergePowerBase;
+        PointRange mergeRange =
+            PointRectRange(toTo + Point(-1, -1), toTo + Point(1, 1));
+        if (mergeRangeFunc != null) {
+          mergeRange = mergeRangeFunc(toTo);
+        }
+        final affect = MergeAffect(
+          basePoint: toTo,
+          range: mergeRange,
+          canBreakBlockFunc: (block) => Config.canBreakBlock(block, mergePow),
+          enemyDamage: mergeDamageBase + Config().debugEnemyDamageInMerge,
+        );
+        stage.merge(
+          toTo,
+          pushing,
+          gameWorld,
+          affect,
+        );
       }
       // 押したものの位置を設定
       pushing.pos = toTo;
@@ -1153,6 +1216,7 @@ abstract class StageObj {
       } else if (obj.type == StageObjType.gorilla) {
         // 移動先がゴリラだった場合
         // 手の能力を習得
+        player.isAbilityAquired[PlayerAbility.hand] = true;
         player.pushableNum = -1;
         // ゴリラ、いなくなる
         stage.setStaticType(pos, StageObjType.none);
@@ -1161,7 +1225,7 @@ abstract class StageObj {
       } else if (obj.type == StageObjType.rabbit) {
         // 移動先がうさぎだった場合
         // 足の能力を習得
-        player.isLegAbilityOn = true;
+        player.isAbilityAquired[PlayerAbility.leg] = true;
         // うさぎ、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1169,7 +1233,7 @@ abstract class StageObj {
       } else if (obj.type == StageObjType.kangaroo) {
         // 移動先がカンガルーだった場合
         // ポケットの能力を習得
-        player.isPocketAbilityOn = true;
+        player.isAbilityAquired[PlayerAbility.pocket] = true;
         // カンガルー、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1177,8 +1241,16 @@ abstract class StageObj {
       } else if (obj.type == StageObjType.turtle) {
         // 移動先が亀だった場合
         // アーマーの能力を習得
-        player.isArmerAbilityOn = true;
+        player.isAbilityAquired[PlayerAbility.armer] = true;
         // 亀、いなくなる
+        stage.setStaticType(pos, StageObjType.none);
+        // 効果音を鳴らす
+        Audio().playSound(Sound.getSkill);
+      } else if (obj.type == StageObjType.girl) {
+        // 移動先が女の子だった場合
+        // マージの能力を習得
+        player.isAbilityAquired[PlayerAbility.merge] = true;
+        // 女の子、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
@@ -1217,6 +1289,7 @@ abstract class StageObj {
       'typeLevel': _typeLevel.encode(),
       'pos': pos.encode(),
       'vector': vector.index,
+      'arg': arg,
     };
   }
 }

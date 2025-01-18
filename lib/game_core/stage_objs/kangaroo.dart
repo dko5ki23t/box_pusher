@@ -12,6 +12,7 @@ class Kangaroo extends StageObj {
     required super.pos,
     required Image kangarooImg,
     required Image errorImg,
+    required super.savedArg,
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(

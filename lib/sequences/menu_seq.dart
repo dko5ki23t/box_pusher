@@ -7,22 +7,22 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class MenuSeq extends Sequence
-    with HasGameReference<BoxPusherGame>, KeyboardHandler {
+class MenuSeq extends Sequence with KeyboardHandler {
   late final GameButtonGroup buttonGroup;
-  late final GameButton resumeButton;
-  late final GameButton saveButton;
-  late final GameButton giveUpButton;
+  late final GameTextButton resumeButton;
+  late final GameTextButton saveButton;
+  late final GameTextButton giveUpButton;
   late final GameTextButton controllSettingButton;
 
   @override
   Future<void> onLoad() async {
+    final loc = game.localization;
     resumeButton = GameTextButton(
       keyName: 'resume',
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 300.0),
       anchor: Anchor.center,
-      text: "ゲームに戻る",
+      text: loc.resume,
       onReleased: () => game.popSeq(),
     );
     saveButton = GameTextButton(
@@ -30,7 +30,7 @@ class MenuSeq extends Sequence
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 350.0),
       anchor: Anchor.center,
-      text: "一時中断する",
+      text: loc.save,
       onReleased: () async {
         await game.setAndSaveStageData();
         game.pushSeqNamed('title');
@@ -41,7 +41,7 @@ class MenuSeq extends Sequence
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 400.0),
       anchor: Anchor.center,
-      text: "あきらめる",
+      text: loc.exit,
       onReleased: () async {
         await game.clearAndSaveStageData();
         game.pushSeqNamed('title');
@@ -52,8 +52,11 @@ class MenuSeq extends Sequence
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 450.0),
       anchor: Anchor.center,
-      text: "操作ボタン${Config().playerControllButtonType + 1}",
-      onReleased: () => Config().changePlayerControllButtonType(),
+      text: "${loc.controller}${Config().playerControllButtonType + 1}",
+      onReleased: () {
+        Config().changePlayerControllButtonType();
+        game.updatePlayerControllButtons();
+      },
     );
     buttonGroup = GameButtonGroup(buttons: [
       resumeButton,
@@ -73,7 +76,7 @@ class MenuSeq extends Sequence
         ),
       ),
       TextComponent(
-        text: "メニュー",
+        text: loc.menu,
         size: Vector2(320.0, 45.0),
         position: Vector2(180.0, 180.0),
         anchor: Anchor.center,
@@ -91,8 +94,9 @@ class MenuSeq extends Sequence
 
   @override
   void update(double dt) {
+    super.update(dt);
     controllSettingButton.text =
-        "操作ボタン${Config().playerControllButtonType + 1}";
+        "${game.localization.controller}${Config().playerControllButtonType + 1}";
   }
 
   // PCのキーボード入力
@@ -122,11 +126,22 @@ class MenuSeq extends Sequence
     if (event is RawKeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       buttonGroup.getCurrentFocusButton()?.fire();
-      if (buttonGroup.getCurrentFocusButton()?.keyName != "controllSetting") {
-        buttonGroup.unFocus();
-      }
     }
 
     return false;
+  }
+
+  @override
+  void onUnFocus() {
+    // ボタン群のフォーカスをクリア
+    buttonGroup.unFocus();
+  }
+
+  @override
+  void onLangChanged() {
+    final loc = game.localization;
+    resumeButton.text = loc.resume;
+    saveButton.text = loc.save;
+    giveUpButton.text = loc.exit;
   }
 }

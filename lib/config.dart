@@ -207,7 +207,7 @@ class Config {
   int _playerControllButtonType = 0;
   int get playerControllButtonType => _playerControllButtonType;
   void changePlayerControllButtonType() {
-    _playerControllButtonType = (_playerControllButtonType + 1) % 2;
+    _playerControllButtonType = (_playerControllButtonType + 1) % 3;
   }
 
   late Random random;
@@ -508,27 +508,36 @@ class Config {
     return jewelLevelInBlockMap.values.last;
   }
 
-  /// マージしたオブジェクトが、対象のブロックを破壊できるかどうか
-  static bool canBreakBlock(Block block, StageObjTypeLevel mergeTypeLevel) {
-    if (mergeTypeLevel.type == StageObjType.block) {
-      return true;
+  /// マージしたオブジェクトの破壊パワー取得
+  static int getMergePower(int basePower, StageObj obj) {
+    if (obj.level >= 13) {
+      return basePower + 4;
+    } else if (obj.level >= 8) {
+      return basePower + 3;
+    } else if (obj.level >= 4) {
+      return basePower + 2;
     }
+    return basePower + 1;
+  }
+
+  /// マージしたオブジェクトが、対象のブロックを破壊できるかどうか
+  static bool canBreakBlock(Block block, int mergePower) {
     switch (block.level) {
       case 1:
-        return true;
+        return mergePower >= 1;
       case 2:
-        return mergeTypeLevel.level >= 4;
+        return mergePower >= 2;
       case 3:
-        return mergeTypeLevel.level >= 8;
+        return mergePower >= 3;
       case 4:
-        return mergeTypeLevel.level >= 13;
+        return mergePower >= 4;
       // ここからは敵が生み出すブロック
       case 101:
-        return mergeTypeLevel.level >= 4;
+        return mergePower >= 2;
       case 102:
-        return mergeTypeLevel.level >= 8;
+        return mergePower >= 3;
       case 103:
-        return mergeTypeLevel.level >= 13;
+        return mergePower >= 4;
       default:
         return false;
     }

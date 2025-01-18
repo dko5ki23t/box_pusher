@@ -19,6 +19,7 @@ class Builder extends StageObj {
   Builder({
     required Image builderImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(

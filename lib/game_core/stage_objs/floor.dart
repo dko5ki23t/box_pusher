@@ -11,6 +11,7 @@ class Floor extends StageObj {
   Floor({
     required Image floorImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(

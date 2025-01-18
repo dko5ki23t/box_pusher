@@ -4,7 +4,9 @@ import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
+import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
+import 'package:box_pusher/game_core/stage_objs/girl.dart';
 import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
 import 'package:box_pusher/game_core/stage_objs/jewel.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
@@ -16,6 +18,8 @@ import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/pusher.dart';
 import 'package:box_pusher/game_core/stage_objs/rabbit.dart';
 import 'package:box_pusher/game_core/stage_objs/shop.dart';
+import 'package:box_pusher/game_core/stage_objs/smoke.dart';
+import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
@@ -43,6 +47,7 @@ class StageObjFactory {
   late final List<Image> swordsmanRoundAttackImgs;
   late final List<Image> attackWizardImgs;
   late final Image magicImg;
+  late final Image canonballImg;
   late final Image coinImg;
   Map<StageObjType, Image> baseImages = {};
 
@@ -107,6 +112,7 @@ class StageObjFactory {
         await Flame.images.load(name)
     ];
     magicImg = await Flame.images.load(Wizard.magicImageFileName);
+    canonballImg = await Flame.images.load(Canon.canonballFileName);
     coinImg = await Flame.images.load('coin.png');
     isReady = true;
   }
@@ -114,6 +120,7 @@ class StageObjFactory {
   StageObj create({
     required StageObjTypeLevel typeLevel,
     required Point pos,
+    required int savedArg,
     Move vector = Move.down,
   }) {
     assert(isReady, 'StageObjFactory.onLoad() is not called!');
@@ -152,12 +159,14 @@ class StageObjFactory {
         return Floor(
             floorImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.jewel:
         return Jewel(
           jewelImg: baseImages[type]!,
           errorImg: errorImg,
+          savedArg: savedArg,
           scale: scale,
           scaleEffect: scaleEffect,
           pos: pos,
@@ -167,6 +176,7 @@ class StageObjFactory {
         return Trap(
             trapImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             scale: scale,
             scaleEffect: scaleEffect,
             pos: pos,
@@ -175,20 +185,24 @@ class StageObjFactory {
         throw ('Playerはこの関数で作成せず、StageObjFactory.createPlayer()で作成すること。');
       case StageObjType.block:
         return Block(
-            blockImg: baseImages[type]!,
-            pos: pos,
-            level: typeLevel.level,
-            errorImg: errorImg);
+          blockImg: baseImages[type]!,
+          pos: pos,
+          level: typeLevel.level,
+          errorImg: errorImg,
+          savedArg: savedArg,
+        );
       case StageObjType.spike:
         return Spike(
             spikeImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.drill:
         return Drill(
             drillImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             scale: scale,
             scaleEffect: scaleEffect,
@@ -197,18 +211,21 @@ class StageObjFactory {
         return TreasureBox(
             treasureBoxImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.warp:
         return Warp(
             warpImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.bomb:
         return Bomb(
             bombImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             scale: scale,
             scaleEffect: scaleEffect,
             pos: pos,
@@ -219,6 +236,7 @@ class StageObjFactory {
             pos: pos,
             level: typeLevel.level,
             errorImg: errorImg,
+            savedArg: savedArg,
             vector: vector);
       case StageObjType.guardian:
         return Guardian(
@@ -228,6 +246,7 @@ class StageObjFactory {
             subAttackImgs: guardianSubAttackImgs,
             arrowMagicImgs: guardianArrowMagicAttackImgs,
             errorImg: errorImg,
+            savedArg: savedArg,
             scale: scale,
             scaleEffect: scaleEffect,
             pos: pos,
@@ -237,12 +256,14 @@ class StageObjFactory {
         return Water(
             waterImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.magma:
         return Magma(
             magmaImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.swordsman:
@@ -251,6 +272,7 @@ class StageObjFactory {
           attackImgs: swordsmanAttackImgs,
           roundAttackImgs: swordsmanRoundAttackImgs,
           errorImg: errorImg,
+          savedArg: savedArg,
           pos: pos,
           level: typeLevel.level,
         )..vector = vector;
@@ -260,6 +282,7 @@ class StageObjFactory {
           levelToAttackAnimationImgs: attackArchersImgs,
           arrowImg: arrowImg,
           errorImg: errorImg,
+          savedArg: savedArg,
           pos: pos,
           level: typeLevel.level,
         )..vector = vector;
@@ -269,6 +292,7 @@ class StageObjFactory {
           attackImgs: attackWizardImgs,
           magicImg: magicImg,
           errorImg: errorImg,
+          savedArg: savedArg,
           pos: pos,
           level: typeLevel.level,
         )..vector = vector;
@@ -276,68 +300,113 @@ class StageObjFactory {
         return Ghost(
             ghostImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.builder:
         return Builder(
           builderImg: baseImages[type]!,
           errorImg: errorImg,
+          savedArg: savedArg,
           pos: pos,
         )..vector = vector;
       case StageObjType.pusher:
         return Pusher(
           pusherImg: baseImages[type]!,
           errorImg: errorImg,
+          savedArg: savedArg,
           pos: pos,
         )..vector = vector;
+      case StageObjType.smoker:
+        return Smoker(
+            smokerImg: baseImages[type]!,
+            errorImg: errorImg,
+            savedArg: savedArg,
+            pos: pos,
+            level: typeLevel.level)
+          ..vector = vector;
+      case StageObjType.smoke:
+        return Smoke(
+          smokeImg: baseImages[type]!,
+          errorImg: errorImg,
+          savedArg: savedArg,
+          pos: pos,
+          lastingTurns: Smoker.smokeTurns,
+          level: typeLevel.level,
+        );
       case StageObjType.gorilla:
         return Gorilla(
             gorillaImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.rabbit:
         return Rabbit(
             rabbitImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.kangaroo:
         return Kangaroo(
             kangarooImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.turtle:
         return Turtle(
             turtleImg: baseImages[type]!,
             errorImg: errorImg,
+            savedArg: savedArg,
+            pos: pos,
+            level: typeLevel.level);
+      case StageObjType.girl:
+        return Girl(
+            girlImg: baseImages[type]!,
+            errorImg: errorImg,
+            savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
       case StageObjType.shop:
         return Shop(
           shopImg: baseImages[type]!,
           errorImg: errorImg,
+          savedArg: savedArg,
           pos: pos,
           level: typeLevel.level,
           coinImg: coinImg,
           getAnimeFunc: (tl) {
-            return create(typeLevel: tl, pos: Point(0, 0))
+            return create(typeLevel: tl, pos: Point(0, 0), savedArg: 0)
                 .animationComponent
                 .animation!;
           },
         );
+      case StageObjType.canon:
+        return Canon(
+            canonImg: baseImages[type]!,
+            canonballImg: canonballImg,
+            errorImg: errorImg,
+            savedArg: savedArg,
+            scale: scale,
+            scaleEffect: scaleEffect,
+            pos: pos,
+            level: typeLevel.level,
+            vector: vector);
     }
   }
 
   Player createPlayer({
     required Point pos,
     required Move vector,
+    required int savedArg,
   }) {
     assert(isReady, 'StageObjFactory.onLoad() is not called!');
     return Player(
       playerImg: baseImages[StageObjType.player]!,
       errorImg: errorImg,
+      savedArg: savedArg,
       pos: pos,
     )..vector = vector;
   }
@@ -347,6 +416,7 @@ class StageObjFactory {
       typeLevel: StageObjTypeLevel.decode(src['typeLevel']),
       pos: Point.decode(src['pos']),
       vector: Move.values[src['vector']],
+      savedArg: src['arg'] ?? 0,
     );
   }
 
@@ -354,14 +424,18 @@ class StageObjFactory {
     return createPlayer(
       pos: Point.decode(src['pos']),
       vector: Move.values[src['vector']],
+      savedArg: src['arg'] ?? 0,
     )
       ..pushableNum = src['handAbility'] ?? 1
-      ..isLegAbilityOn = src['legAbility'] ?? false
-      ..isPocketAbilityOn = src['pocketAbility'] ?? false
+      ..isAbilityAquired[PlayerAbility.hand] = (src['handAbility'] ?? 1) == -1
+      ..isAbilityAquired[PlayerAbility.leg] = src['legAbility'] ?? false
+      ..isAbilityAquired[PlayerAbility.pocket] = src['pocketAbility'] ?? false
       ..pocketItem =
           src['pocketItem'] != null ? createFromMap(src['pocketItem']) : null
-      ..isArmerAbilityOn = src['armerAbility'] ?? false
-      ..armerRecoveryTurns = src['armerRecoveryTurns'] ?? 0;
+      ..isAbilityAquired[PlayerAbility.armer] = src['armerAbility'] ?? false
+      ..armerRecoveryTurns = src['armerRecoveryTurns'] ?? 0
+      ..isAbilityAquired[PlayerAbility.eye] = src['eyeAbility'] ?? false
+      ..isAbilityAquired[PlayerAbility.merge] = src['mergeAbility'] ?? false;
   }
 
   void setPosition(StageObj obj, {Vector2? offset}) {

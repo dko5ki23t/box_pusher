@@ -11,6 +11,7 @@ class TreasureBox extends StageObj {
   TreasureBox({
     required Image treasureBoxImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(

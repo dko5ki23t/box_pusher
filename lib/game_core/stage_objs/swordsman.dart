@@ -66,6 +66,7 @@ class Swordsman extends StageObj {
     required List<Map<Move, Image>> attackImgs,
     required List<Image> roundAttackImgs,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   })  : levelToRoundAttackAnimations = {

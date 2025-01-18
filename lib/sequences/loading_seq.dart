@@ -5,7 +5,7 @@ import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 
-class LoadingSeq extends Sequence with HasGameReference<BoxPusherGame> {
+class LoadingSeq extends Sequence {
   @override
   Future<void> onLoad() async {
     final loadingImage = await Flame.images.load('loading.png');
@@ -32,9 +32,13 @@ class LoadingSeq extends Sequence with HasGameReference<BoxPusherGame> {
 
   @override
   void update(double dt) {
+    super.update(dt);
     // ゲームの準備ができたらこのシーケンスを終わる
     if (game.isGameReady()) {
       game.popSeq();
     }
   }
+
+  @override
+  void onLangChanged() {}
 }

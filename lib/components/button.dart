@@ -6,39 +6,6 @@ import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 
-/// 有効なボタンのPaint
-Paint enabledButtonPaint = Paint()
-  ..color = Colors.white
-  ..style = PaintingStyle.fill;
-
-/// 有効なボタンの枠線のPaint
-Paint enabledButtonFramePaint = Paint()
-  ..color = Colors.blue
-  ..style = PaintingStyle.stroke
-  ..strokeWidth = 3;
-
-/// フォーカス中のボタンの枠線のPaint
-Paint focusedButtonFramePaint = Paint()
-  ..color = Colors.red.shade200
-  ..style = PaintingStyle.stroke
-  ..strokeWidth = 3;
-
-/// 無効なボタンのPaint
-Paint disabledButtonFramePaint = Paint()
-  ..color = Colors.grey
-  ..style = PaintingStyle.fill;
-
-/// 押下されている有効なボタンのPaint
-Paint enabledPressedButtonPaint = Paint()
-  ..color = Colors.blueGrey
-  ..style = PaintingStyle.fill
-  ..strokeWidth = 2;
-
-/// 透明なPaint
-Paint transparentPaint = Paint()
-  ..color = Colors.transparent
-  ..style = PaintingStyle.fill;
-
 class GameButton extends PositionComponent with TapCallbacks {
   void Function()? onPressed;
   void Function()? onReleased;
@@ -54,11 +21,52 @@ class GameButton extends PositionComponent with TapCallbacks {
 
   PositionComponent? child;
 
+  /// 有効なボタンのPaint
+  final Paint _enabledButtonPaint = Paint()
+    ..color = Colors.white
+    ..style = PaintingStyle.fill;
+
+  /// 有効なボタンの枠線のPaint
+  final Paint _enabledButtonFramePaint = Paint()
+    ..color = Colors.blue
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3;
+
+  /// フォーカス中のボタンの枠線のPaint
+  final Paint _focusedButtonFramePaint = Paint()
+    ..color = Colors.red.shade200
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3;
+
+  /// 無効なボタンのPaint
+  final Paint _disabledButtonFramePaint = Paint()
+    ..color = Colors.grey
+    ..style = PaintingStyle.fill;
+
+  /// 押下されている有効なボタンのPaint
+  final Paint _enabledPressedButtonPaint = Paint()
+    ..color = Colors.blueGrey
+    ..style = PaintingStyle.fill
+    ..strokeWidth = 2;
+
+  /// 透明なPaint
+  final Paint _transparentPaint = Paint()
+    ..color = Colors.transparent
+    ..style = PaintingStyle.fill;
+
+  set enabledBgColor(Color color) => _enabledButtonPaint.color = color;
+  set enabledFrameColor(Color color) => _enabledButtonFramePaint.color = color;
+  set focusedFrameColor(Color color) => _focusedButtonFramePaint.color = color;
+  set disabledFrameColor(Color color) =>
+      _disabledButtonFramePaint.color = color;
+  set enabledPressedBgColor(Color color) =>
+      _enabledPressedButtonPaint.color = color;
+
   void _paintButtons() {
     button.paint = enabled
-        ? (focused ? focusedButtonFramePaint : enabledButtonFramePaint)
-        : disabledButtonFramePaint;
-    buttonTop.paint = enabled ? enabledButtonPaint : transparentPaint;
+        ? (focused ? _focusedButtonFramePaint : _enabledButtonFramePaint)
+        : _disabledButtonFramePaint;
+    buttonTop.paint = enabled ? _enabledButtonPaint : _transparentPaint;
   }
 
   GameButton({
@@ -122,8 +130,8 @@ class GameButton extends PositionComponent with TapCallbacks {
     if (enabled) {
       // 決定音を鳴らす
       Audio().playSound(Sound.decide);
-      button.paint = enabledPressedButtonPaint;
-      buttonTop.paint = transparentPaint;
+      button.paint = _enabledPressedButtonPaint;
+      buttonTop.paint = _transparentPaint;
       onPressed?.call();
     }
   }
@@ -132,8 +140,8 @@ class GameButton extends PositionComponent with TapCallbacks {
   @mustCallSuper
   void onTapUp(TapUpEvent event) {
     if (enabled) {
-      button.paint = enabledButtonFramePaint;
-      buttonTop.paint = enabledButtonPaint;
+      button.paint = _enabledButtonFramePaint;
+      buttonTop.paint = _enabledButtonPaint;
       onReleased?.call();
     }
   }
@@ -142,8 +150,8 @@ class GameButton extends PositionComponent with TapCallbacks {
   @mustCallSuper
   void onTapCancel(TapCancelEvent event) {
     if (enabled) {
-      button.paint = enabledButtonFramePaint;
-      buttonTop.paint = enabledButtonPaint;
+      button.paint = _enabledButtonFramePaint;
+      buttonTop.paint = _enabledButtonPaint;
       onCancelled?.call();
     }
   }

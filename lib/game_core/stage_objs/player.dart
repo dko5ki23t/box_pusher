@@ -4,13 +4,26 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/extensions.dart';
 
+/// プレイヤーの能力
+enum PlayerAbility {
+  hand,
+  leg,
+  armer,
+  pocket,
+  eye,
+  merge,
+}
+
 class Player extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'player.png';
 
+  final Blink damagedBlink = Blink(showDuration: 0.2, hideDuration: 0.1);
+
   Player({
     required Image playerImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(
@@ -54,26 +67,66 @@ class Player extends StageObj {
               ], stepTime: Stage.objectStepTime),
             },
           },
+          // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
+          levelToAttackAnimations: {
+            0: {
+              Move.none:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+            },
+            1: {
+              Move.down: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.up: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.left: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+              Move.right: SpriteAnimation.spriteList([
+                Sprite(playerImg,
+                    srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
+                Sprite(playerImg,
+                    srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
+              ], stepTime: Stage.objectStepTime),
+            },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.player,
             level: level,
           ),
         );
 
+  /// 各能力を習得済みかどうか
+  Map<PlayerAbility, bool> isAbilityAquired = {
+    for (final ability in PlayerAbility.values) ability: false
+  };
+
+  /// 各能力が封印されているかどうか
+  Map<PlayerAbility, bool> isAbilityForbidden = {
+    for (final ability in PlayerAbility.values) ability: false
+  };
+
+  /// 引数で指定した能力を使えるか
+  bool isAbilityAvailable(PlayerAbility ability) {
+    return isAbilityAquired[ability]! && !isAbilityForbidden[ability]!;
+  }
+
   /// 一度にいくつのオブジェクトを押せるか(-1なら制限なし)
-  int pushableNum = 1;
-
-  /// 足の能力が有効か
-  bool isLegAbilityOn = false;
-
-  /// ポケットの能力が有効か
-  bool isPocketAbilityOn = false;
+  int get pushableNum => isAbilityAvailable(PlayerAbility.hand) ? -1 : 1;
+  set pushableNum(int n) {}
 
   /// ポケットの能力で保持しているアイテム
   StageObj? pocketItem;
-
-  /// アーマーの能力が有効か
-  bool isArmerAbilityOn = false;
 
   /// アーマー回復までの残りターン数
   int armerRecoveryTurns = 0;
@@ -92,11 +145,23 @@ class Player extends StageObj {
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
   ) {
+    damagedBlink.update(dt);
     if (moving == Move.none) {
       // 移動中でない場合
+      // ダメージを受けたターンなら点滅
+      if (attacking) {
+        if (damagedBlink.isShowTime) {
+          animationComponent.animation = null;
+        } else {
+          vector = vector;
+        }
+      }
+      // ユーザの入力がなければ何もしない
       if (moveInput == Move.none) {
         return;
       }
+      // ダメージを受けていた場合でもアニメーションを元に戻す
+      attacking = false;
       // 動けないとしても、向きは変更
       vector = moveInput.toStraightLR();
       // プレイヤーが壁などにぶつかるか
@@ -141,11 +206,22 @@ class Player extends StageObj {
         // プレーヤー位置更新
         // ※merge()より前で更新することで、敵出現位置を、プレイヤーの目前にさせない
         pos = pos + moving.point;
+        // ポケットに入れているオブジェクトの位置も更新
+        pocketItem?.pos = pos;
         stage.setObjectPosition(this);
         // 移動後に関する処理（ワープで移動、動物の能力取得など）
         endMoving(stage, gameWorld);
         // 押すオブジェクトに関する処理
-        endPushing(stage, gameWorld);
+        // マージ能力が有効なら範囲と威力増大
+        endPushing(
+          stage,
+          gameWorld,
+          mergeRangeFunc: isAbilityAvailable(PlayerAbility.merge)
+              ? (pos) => PointDistanceRange(pos, 2)
+              : null,
+          mergeDamageBase: isAbilityAvailable(PlayerAbility.merge) ? 1 : 0,
+          mergePowerBase: isAbilityAvailable(PlayerAbility.merge) ? 1 : 0,
+        );
 
         // 各種移動中変数初期化
         moving = Move.none;
@@ -162,8 +238,8 @@ class Player extends StageObj {
   }
 
   void usePocketAbility(Stage stage, World gameWorld) {
-    // ポケットの能力を取得していないならreturn
-    if (!isPocketAbilityOn) return;
+    // ポケットの能力を使えないならreturn
+    if (!isAbilityAvailable(PlayerAbility.pocket)) return;
     // 移動中ならreturn
     if (moving != Move.none) return;
 
@@ -173,6 +249,7 @@ class Player extends StageObj {
       // 押せるものなら入れることができる
       if (target.pushable) {
         pocketItem = target;
+        pocketItem?.pos = pos;
         target.remove();
       }
     } else {
@@ -192,7 +269,11 @@ class Player extends StageObj {
 
   @override
   bool hit(int damageLevel) {
-    if (isArmerAbilityOn && armerRecoveryTurns == 0) {
+    // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
+    attacking = true;
+    vector = vector;
+    // アーマー能力判定
+    if (isAbilityAvailable(PlayerAbility.armer) && armerRecoveryTurns == 0) {
       armerRecoveryTurns = armerNeedRecoveryTurns;
       return false;
     } else {
@@ -203,12 +284,14 @@ class Player extends StageObj {
   @override
   Map<String, dynamic> encode() {
     Map<String, dynamic> ret = super.encode();
-    ret['handAbility'] = pushableNum;
-    ret['legAbility'] = isLegAbilityOn;
-    ret['pocketAbility'] = isPocketAbilityOn;
+    ret['handAbility'] = isAbilityAquired[PlayerAbility.hand]! ? -1 : 1;
+    ret['legAbility'] = isAbilityAquired[PlayerAbility.leg]!;
+    ret['pocketAbility'] = isAbilityAquired[PlayerAbility.pocket]!;
     ret['pocketItem'] = pocketItem?.encode();
-    ret['armerAbility'] = isArmerAbilityOn;
+    ret['armerAbility'] = isAbilityAquired[PlayerAbility.armer]!;
     ret['armerRecoveryTurns'] = armerRecoveryTurns;
+    ret['eyeAbility'] = isAbilityAquired[PlayerAbility.eye]!;
+    ret['mergeAbility'] = isAbilityAquired[PlayerAbility.merge]!;
     return ret;
   }
 

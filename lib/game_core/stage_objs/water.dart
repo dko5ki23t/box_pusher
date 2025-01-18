@@ -11,6 +11,7 @@ class Water extends StageObj {
   Water({
     required Image waterImg,
     required Image errorImg,
+    required super.savedArg,
     required super.pos,
     int level = 1,
   }) : super(

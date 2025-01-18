@@ -14,15 +14,30 @@ class Bomb extends StageObj {
   /// 爆発のアニメーション
   final SpriteAnimation explodingBombAnimation;
 
+  /// 爆発寸前エフェクト
+  final redEffect = ColorEffect(
+    const Color(0xffff0000),
+    EffectController(
+      duration: 0.5,
+      reverseDuration: 0.5,
+      infinite: true,
+    ),
+    opacityFrom: 0.2,
+    opacityTo: 0.8,
+  );
+
+  bool isRedEffectUsed = false;
+
   Bomb({
     required Image bombImg,
     required Image errorImg,
+    required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     required super.pos,
     int level = 1,
   })  : explodingBombAnimation = SpriteAnimation.spriteList([
-          Sprite(bombImg, srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
+          Sprite(bombImg, srcPosition: Vector2(96, 0), srcSize: Stage.cellSize)
         ], stepTime: 1.0),
         super(
           animationComponent: SpriteAnimationComponent(
@@ -40,12 +55,14 @@ class Bomb extends StageObj {
               Move.none:
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
-            1: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(bombImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-              ], stepTime: 1.0)
-            },
+            for (int i = 1; i <= 3; i++)
+              i: {
+                Move.none: SpriteAnimation.spriteList([
+                  Sprite(bombImg,
+                      srcPosition: Vector2(32 * (i - 1), 0),
+                      srcSize: Stage.cellSize)
+                ], stepTime: 1.0)
+              },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.bomb,
@@ -64,12 +81,10 @@ class Bomb extends StageObj {
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
   ) {
-    // プレイヤー位置がボムの周囲非起爆範囲より遠い位置なら爆発
     int n = ((Config().bombNotStartAreaWidth - 1) / 2).floor();
-    if ((stage.player.pos.x < pos.x - n) ||
-        (stage.player.pos.x > pos.x + n) ||
-        (stage.player.pos.y < pos.y - n) ||
-        (stage.player.pos.y > pos.y + n)) {
+    // プレイヤー位置がボムの周囲非起爆範囲より遠い位置なら爆発
+    if (!PointRectRange(pos + Point(-n, -n), pos + Point(n, n))
+        .contains(stage.player.pos)) {
       // 爆発アニメ表示
       final explodingAnimation = SpriteAnimationComponent(
         animation: explodingBombAnimation,
@@ -97,19 +112,42 @@ class Bomb extends StageObj {
       gameWorld.add(explodingAnimation);
       // 爆発
       int m = ((Config().bombExplodingAreaWidth - 1) / 2).floor();
+      int mergePow = level;
+      final affect = MergeAffect(
+        basePoint: pos,
+        range: PointRectRange(pos + Point(-m, -m), pos + Point(m, m)),
+        canBreakBlockFunc: (block) =>
+            Config.canBreakBlock(block, mergePow), // 爆弾のレベル分のパワーで周囲を破壊
+        enemyDamage: Config().debugEnemyDamageInExplosion,
+      );
       stage.merge(
         pos,
         this,
         gameWorld,
-        breakLeftOffset: -m,
-        breakTopOffset: -m,
-        breakRightOffset: m,
-        breakBottomOffset: m,
+        affect,
         onlyDelete: true,
-        enemyDamage: Config().debugEnemyDamageInExplosion,
+        countMerge: false,
+        addScore: false,
       );
       // 効果音を鳴らす
       Audio().playSound(Sound.explode);
+      return;
+    }
+    // 非起爆範囲ギリギリにいる場合は赤く点滅
+    else if (!PointRectRange(
+            pos + Point(-n + 1, -n + 1), pos + Point(n - 1, n - 1))
+        .contains(stage.player.pos)) {
+      if (!isRedEffectUsed) {
+        animationComponent.add(redEffect);
+        isRedEffectUsed = true;
+      }
+    } else {
+      // 赤い点滅エフェクト削除
+      if (isRedEffectUsed) {
+        redEffect.reset();
+        animationComponent.remove(redEffect);
+        isRedEffectUsed = false;
+      }
     }
   }
 
@@ -129,7 +167,7 @@ class Bomb extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 20;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => false;
