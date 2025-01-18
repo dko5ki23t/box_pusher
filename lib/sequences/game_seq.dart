@@ -13,6 +13,7 @@ import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
+import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
@@ -54,16 +55,20 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// プレイヤー操作ボタン領域2
   static Vector2 get xButtonAreaSize2 => Vector2(50.0, 50.0);
 
-  /// プレイヤー操作ジョイスティック領域
-  static Vector2 get joyStickAreaSize => Vector2(40.0, 40.0);
-
   /// プレイヤー操作ジョイスティック位置
   final Vector2 joyStickPosition = Vector2(
       BoxPusherGame.baseSize.x / 2,
       BoxPusherGame.baseSize.y -
           topPaddingSize.y -
           menuButtonAreaSize.y -
-          joyStickAreaSize.y);
+          joyStickFieldRadius -
+          40.0);
+
+  /// プレイヤー操作ジョイスティックの半径
+  static double get joyStickRadius => 30.0;
+
+  /// プレイヤー操作ジョイスティック可動域の半径
+  static double get joyStickFieldRadius => 45.0;
 
   /// 画面斜めの操作ボタン領域(xPadding領域と重複。この領域下にはステージ描画もされる。)
   static Vector2 get dButtonAreaSize => Vector2(300.0, 120.0);
@@ -492,22 +497,17 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     playerControllJoyStick = JoyStickComponent(
       anchor: Anchor.center,
       position: joyStickPosition,
-      radius: joyStickAreaSize.x / 2,
-      fieldRadius: joyStickAreaSize.x / 2 + 10,
+      radius: joyStickRadius,
+      fieldRadius: joyStickFieldRadius,
       inputMove: (move) => pushingMoveButton = move,
     );
     // 操作ジョイスティックの可動領域
     playerControllJoyStickField = CustomPainterComponent(
-        position: Vector2(
-            BoxPusherGame.baseSize.x / 2,
-            BoxPusherGame.baseSize.y -
-                topPaddingSize.y -
-                menuButtonAreaSize.y -
-                joyStickAreaSize.y),
-        size: joyStickAreaSize + Vector2.all(20),
+        position: joyStickPosition,
+        size: Vector2.all(joyStickFieldRadius) * 2,
         anchor: Anchor.center,
         painter: JoyStickFieldPainter(
-          radius: joyStickAreaSize.x / 2 + 10,
+          radius: joyStickFieldRadius,
           strokeWidth: 1,
           arcStrokeWidth: 3,
         ));
@@ -1421,6 +1421,12 @@ class JoyStickComponent extends CircleComponent with DragCallbacks {
     super.priority = 100;
   }
 
+  // 押せる範囲は可動域上とする
+  @override
+  bool containsPoint(Vector2 point) {
+    return Circle(center, fieldRadius).containsPoint(point);
+  }
+
   @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
@@ -1432,7 +1438,7 @@ class JoyStickComponent extends CircleComponent with DragCallbacks {
     _mousePosition += event.localDelta;
     Vector2 direct = _mousePosition - _initialPosition;
     inputMove(Move.none);
-    if (direct.length >= fieldRadius) {
+    if (direct.length >= fieldRadius * 0.7) {
       // 入力された向き判定
       double angle = degrees(Vector2(1, 0).angleToSigned(direct));
       if (angle < 0) {

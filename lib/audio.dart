@@ -115,27 +115,27 @@ class Audio {
     AudioCache(prefix: 'assets/audio/');
 
     // https://qiita.com/kaedeee/items/001635c30f9d8ccbf755
-    const AudioContext audioContext = AudioContext(
-      iOS: AudioContextIOS(
-        category: AVAudioSessionCategory.ambient,
-        options: [
-          AVAudioSessionOptions.defaultToSpeaker,
-          AVAudioSessionOptions.mixWithOthers,
-          AVAudioSessionOptions.allowAirPlay,
-          AVAudioSessionOptions.allowBluetooth,
-          AVAudioSessionOptions.allowBluetoothA2DP,
-        ],
-      ),
-      android: AudioContextAndroid(
-        isSpeakerphoneOn: true,
-        stayAwake: true,
-        contentType: AndroidContentType.sonification,
-        usageType: AndroidUsageType.assistanceSonification,
-        audioFocus: AndroidAudioFocus.none,
-      ),
-    );
+    //const AudioContext audioContext = AudioContext(
+    //  iOS: AudioContextIOS(
+    //    category: AVAudioSessionCategory.ambient,
+    //    options: [
+    //      AVAudioSessionOptions.defaultToSpeaker,
+    //      AVAudioSessionOptions.mixWithOthers,
+    //      AVAudioSessionOptions.allowAirPlay,
+    //      AVAudioSessionOptions.allowBluetooth,
+    //      AVAudioSessionOptions.allowBluetoothA2DP,
+    //    ],
+    //  ),
+    //  android: AudioContextAndroid(
+    //    isSpeakerphoneOn: true,
+    //    stayAwake: true,
+    //    contentType: AndroidContentType.sonification,
+    //    usageType: AndroidUsageType.assistanceSonification,
+    //    audioFocus: AndroidAudioFocus.none,
+    //  ),
+    //);
 
-    AudioPlayer.global.setAudioContext(audioContext);
+    //AudioPlayer.global.setAudioContext(audioContext);
 
     _bgmPlayer = AudioPlayer(playerId: bgmPlayerIdStr);
     // BGMはループ再生するよう設定

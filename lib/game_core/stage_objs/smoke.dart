@@ -11,7 +11,7 @@ import 'package:flame/extensions.dart';
 
 class Smoke extends StageObj {
   /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'Smoke.png';
+  static String get imageFileName => 'smoke.png';
 
   /// 経過ターン
   int turns = 0;
