@@ -1,0 +1,15 @@
+固定位置オブジェクトのマップ
+pointX, pointY, obj, level
+-5, -5, gorilla, 1
+5, 5, rabbit, 1
+-10, 10, kangaroo, 1
+10, -10, turtle, 1
+0, -20, girl, 1
+-1, -21, block, 4
+0, -21, block, 4
+1, -21, block, 4
+-1, -20, block, 4
+1, -20, block, 4
+-1, -19, block, 4
+0, -19, block, 4
+1, -19, block, 4
