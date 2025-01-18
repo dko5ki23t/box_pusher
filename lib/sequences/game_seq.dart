@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:box_pusher/audio.dart';
+import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/components/button.dart';
@@ -52,6 +53,17 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
 
   /// プレイヤー操作ボタン領域2
   static Vector2 get xButtonAreaSize2 => Vector2(50.0, 50.0);
+
+  /// プレイヤー操作ジョイスティック領域
+  static Vector2 get joyStickAreaSize => Vector2(40.0, 40.0);
+
+  /// プレイヤー操作ジョイスティック位置
+  final Vector2 joyStickPosition = Vector2(
+      BoxPusherGame.baseSize.x / 2,
+      BoxPusherGame.baseSize.y -
+          topPaddingSize.y -
+          menuButtonAreaSize.y -
+          joyStickAreaSize.y);
 
   /// 画面斜めの操作ボタン領域(xPadding領域と重複。この領域下にはステージ描画もされる。)
   static Vector2 get dButtonAreaSize => Vector2(300.0, 120.0);
@@ -139,6 +151,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final PositionComponent playerDownRightMoveButton;
   late final ButtonComponent playerControllDiagonalModeButton;
   List<PositionComponent>? playerDiagonalMoveButtons;
+  late final JoyStickComponent playerControllJoyStick;
+  late final CustomPainterComponent playerControllJoyStickField;
   late final RectangleComponent menuArea;
   late final GameSpriteAnimationButton handAbilityButton;
   late final GameSpriteAnimationButton legAbilityButton;
@@ -474,6 +488,29 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       ],
       size: clipSize,
     );
+    // 操作ジョイスティック
+    playerControllJoyStick = JoyStickComponent(
+      anchor: Anchor.center,
+      position: joyStickPosition,
+      radius: joyStickAreaSize.x / 2,
+      fieldRadius: joyStickAreaSize.x / 2 + 10,
+      inputMove: (move) => pushingMoveButton = move,
+    );
+    // 操作ジョイスティックの可動領域
+    playerControllJoyStickField = CustomPainterComponent(
+        position: Vector2(
+            BoxPusherGame.baseSize.x / 2,
+            BoxPusherGame.baseSize.y -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                joyStickAreaSize.y),
+        size: joyStickAreaSize + Vector2.all(20),
+        anchor: Anchor.center,
+        painter: JoyStickFieldPainter(
+          radius: joyStickAreaSize.x / 2 + 10,
+          strokeWidth: 1,
+          arcStrokeWidth: 3,
+        ));
 
     topGameInfoArea = ButtonComponent(
       button: RectangleComponent(
@@ -1219,6 +1256,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       } else {
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
       }
+    } else if (Config().playerControllButtonType == 2) {
+      (playerControllJoyStickField.painter as JoyStickFieldPainter)
+          .drawDiagonalArcs = stage.getLegAbility();
+      playerControllJoyStick.enableDiagonalInput = stage.getLegAbility();
+      playerControllButtonsArea!
+          .addAll([playerControllJoyStickField, playerControllJoyStick]);
     }
   }
 
@@ -1350,4 +1393,193 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
 
   @override
   void onLangChanged() {}
+}
+
+/// 操作ジョイスティック
+class JoyStickComponent extends CircleComponent with DragCallbacks {
+  late final Vector2 _initialPosition;
+  Vector2 _mousePosition = Vector2.zero();
+  final void Function(Move) inputMove;
+  bool enableDiagonalInput = false;
+
+  /// 可動域の半径
+  double fieldRadius = 0;
+
+  JoyStickComponent({
+    required super.radius,
+    required super.position,
+    required this.fieldRadius,
+    super.anchor,
+    required this.inputMove,
+    this.enableDiagonalInput = false,
+  }) {
+    _initialPosition = super.position.clone();
+    _mousePosition = super.position.clone();
+    super.paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    super.priority = 100;
+  }
+
+  @override
+  void onDragStart(DragStartEvent event) {
+    super.onDragStart(event);
+    super.paint.color = const Color(0xffeeeeee);
+  }
+
+  @override
+  void onDragUpdate(DragUpdateEvent event) {
+    _mousePosition += event.localDelta;
+    Vector2 direct = _mousePosition - _initialPosition;
+    inputMove(Move.none);
+    if (direct.length >= fieldRadius) {
+      // 入力された向き判定
+      double angle = degrees(Vector2(1, 0).angleToSigned(direct));
+      if (angle < 0) {
+        angle += 360.0;
+      }
+      if (angle <= 20 || angle >= 340) {
+        inputMove(Move.right);
+      } else if (70 <= angle && angle <= 110) {
+        inputMove(Move.down);
+      } else if (160 <= angle && angle <= 200) {
+        inputMove(Move.left);
+      } else if (250 <= angle && angle <= 290) {
+        inputMove(Move.up);
+      } else if (enableDiagonalInput) {
+        if (25 <= angle && angle <= 65) {
+          inputMove(Move.downRight);
+        } else if (115 <= angle && angle <= 155) {
+          inputMove(Move.downLeft);
+        } else if (205 <= angle && angle <= 245) {
+          inputMove(Move.upLeft);
+        } else if (295 <= angle && angle <= 335) {
+          inputMove(Move.upRight);
+        }
+      }
+    }
+    // ジョイスティックは可動域内にとどめる
+    direct.clampLength(0, fieldRadius);
+    position = _initialPosition + direct;
+  }
+
+  @override
+  void onDragEnd(DragEndEvent event) {
+    super.onDragEnd(event);
+    super.paint.color = Colors.white;
+    position = _initialPosition;
+    _mousePosition = _initialPosition.clone();
+    inputMove(Move.none);
+  }
+}
+
+class JoyStickFieldPainter extends CustomPainter {
+  final double radius;
+  final double strokeWidth;
+  final double arcStrokeWidth;
+  bool drawDiagonalArcs = false;
+
+  JoyStickFieldPainter({
+    required this.radius,
+    required this.strokeWidth,
+    required this.arcStrokeWidth,
+    this.drawDiagonalArcs = false,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final framePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+    final bgPaint = Paint()
+      ..color = const Color(0x80000000)
+      ..style = PaintingStyle.fill;
+    final arcPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = arcStrokeWidth;
+    final center = Offset(radius, radius);
+    canvas.drawCircle(center, radius, bgPaint);
+    canvas.drawCircle(center, radius, framePaint);
+    canvas.drawArc(
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
+        radians(-20),
+        radians(40),
+        false,
+        arcPaint);
+    canvas.drawArc(
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
+        radians(70),
+        radians(40),
+        false,
+        arcPaint);
+    canvas.drawArc(
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
+        radians(160),
+        radians(40),
+        false,
+        arcPaint);
+    canvas.drawArc(
+        Rect.fromCircle(
+          center: center,
+          radius: radius,
+        ),
+        radians(250),
+        radians(40),
+        false,
+        arcPaint);
+    if (drawDiagonalArcs) {
+      canvas.drawArc(
+          Rect.fromCircle(
+            center: center,
+            radius: radius,
+          ),
+          radians(25),
+          radians(40),
+          false,
+          arcPaint);
+      canvas.drawArc(
+          Rect.fromCircle(
+            center: center,
+            radius: radius,
+          ),
+          radians(115),
+          radians(40),
+          false,
+          arcPaint);
+      canvas.drawArc(
+          Rect.fromCircle(
+            center: center,
+            radius: radius,
+          ),
+          radians(205),
+          radians(40),
+          false,
+          arcPaint);
+      canvas.drawArc(
+          Rect.fromCircle(
+            center: center,
+            radius: radius,
+          ),
+          radians(295),
+          radians(40),
+          false,
+          arcPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
 }

@@ -207,7 +207,7 @@ class Config {
   int _playerControllButtonType = 0;
   int get playerControllButtonType => _playerControllButtonType;
   void changePlayerControllButtonType() {
-    _playerControllButtonType = (_playerControllButtonType + 1) % 2;
+    _playerControllButtonType = (_playerControllButtonType + 1) % 3;
   }
 
   late Random random;
