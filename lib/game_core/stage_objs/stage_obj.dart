@@ -27,6 +27,7 @@ import 'package:box_pusher/game_core/stage_objs/shop.dart';
 import 'package:box_pusher/game_core/stage_objs/smoke.dart';
 import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
+import 'package:box_pusher/game_core/stage_objs/spike_spawner.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
@@ -68,6 +69,7 @@ enum StageObjType {
   girl,
   shop,
   canon,
+  spikeSpawner,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -101,6 +103,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.girl: 'girl',
     StageObjType.shop: 'shop',
     StageObjType.canon: 'canon',
+    StageObjType.spikeSpawner: 'spikeSpawner',
   };
 
   String get str => strMap[this]!;
@@ -165,6 +168,8 @@ extension StageObjTypeExtent on StageObjType {
         return Shop;
       case StageObjType.canon:
         return Canon;
+      case StageObjType.spikeSpawner:
+        return SpikeSpawner;
     }
   }
 
@@ -228,6 +233,8 @@ extension StageObjTypeExtent on StageObjType {
         return Shop.imageFileName;
       case StageObjType.canon:
         return Canon.imageFileName;
+      case StageObjType.spikeSpawner:
+        return SpikeSpawner.imageFileName;
     }
   }
 

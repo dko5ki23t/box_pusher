@@ -187,6 +187,9 @@ class Stage {
   /// コンベアの場所リスト
   List<Point> beltPoints = [];
 
+  /// 敵涌きスポット
+  List<StageObj> spawners = [];
+
   /// ブロック破壊時に出現した各アイテムの累計個数
   Map<StageObjTypeLevel, int> appearedItemsMap = {};
 
@@ -578,6 +581,9 @@ class Stage {
                   'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
               get(p).vector = MoveExtent.straights.sample(1).first;
               beltPoints.add(p);
+            } else if (item.type == StageObjType.spikeSpawner) {
+              setStaticType(p, StageObjType.spikeSpawner);
+              spawners.add(safeGetStaticObj(p));
             } else {
               final adding = createObject(typeLevel: item, pos: p);
               if (adding.isEnemy) {
@@ -980,6 +986,8 @@ class Stage {
       final staticObj = createObjectFromMap(entry.value);
       if (staticObj.type == StageObjType.shop) {
         shops.add(staticObj);
+      } else if (staticObj.type == StageObjType.spikeSpawner) {
+        spawners.add(staticObj);
       }
       _staticObjs[Point.decode(entry.key)] = staticObj;
     }
@@ -1173,6 +1181,12 @@ class Stage {
           playerEndMoving, prohibitedPoints);
     }
     //}
+
+    // 敵涌きスポット更新
+    for (final spawner in spawners) {
+      spawner.update(dt, player.moving, gameWorld, camera, this,
+          playerStartMoving, playerEndMoving, prohibitedPoints);
+    }
 
     // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
     if (player.pocketItem != null && player.pocketItem!.updateInPocket) {
