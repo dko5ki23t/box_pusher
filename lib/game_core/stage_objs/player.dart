@@ -268,7 +268,7 @@ class Player extends StageObj {
   }
 
   @override
-  bool hit(int damageLevel) {
+  bool hit(int damageLevel, Stage stage) {
     // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
     attacking = true;
     vector = vector;

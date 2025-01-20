@@ -8,6 +8,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
+import 'package:box_pusher/game_core/stage_objs/boneman.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
@@ -69,7 +70,8 @@ enum StageObjType {
   girl,
   shop,
   canon,
-  spikeSpawner,
+  spikeSpawner, // とげの敵を生み出す場
+  boneman, // 骨の敵、倒すと押せるオブジェクト化、一定ターンで復活
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -104,6 +106,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.shop: 'shop',
     StageObjType.canon: 'canon',
     StageObjType.spikeSpawner: 'spikeSpawner',
+    StageObjType.boneman: 'boneman',
   };
 
   String get str => strMap[this]!;
@@ -170,6 +173,8 @@ extension StageObjTypeExtent on StageObjType {
         return Canon;
       case StageObjType.spikeSpawner:
         return SpikeSpawner;
+      case StageObjType.boneman:
+        return Boneman;
     }
   }
 
@@ -235,6 +240,8 @@ extension StageObjTypeExtent on StageObjType {
         return Canon.imageFileName;
       case StageObjType.spikeSpawner:
         return SpikeSpawner.imageFileName;
+      case StageObjType.boneman:
+        return Boneman.imageFileName;
     }
   }
 
@@ -469,9 +476,12 @@ abstract class StageObj {
   /// ポケットに入れていてもupdate()するかどうか
   bool get updateInPocket => false;
 
+  /// トラップでやられる敵かどうか
+  bool get isTrapKillable => isEnemy && killable;
+
   /// 攻撃を受ける
   /// やられたかどうかを返す
-  bool hit(int damageLevel) {
+  bool hit(int damageLevel, Stage stage) {
     if (!killable) return false;
     level = (level - damageLevel).clamp(0, maxLevel);
     return level <= 0;

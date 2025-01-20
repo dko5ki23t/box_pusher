@@ -1204,12 +1204,12 @@ class Stage {
     for (final attack in enemyAttackPoints.entries) {
       // プレイヤーに攻撃が当たった
       if (attack.key == player.pos) {
-        isGameover = player.hit(attack.value);
+        isGameover = player.hit(attack.value, this);
       }
       // ガーディアンに攻撃が当たった
       for (final guardian in boxes.where((element) =>
           element.type == StageObjType.guardian && attack.key == element.pos)) {
-        if (guardian.hit(attack.value)) {
+        if (guardian.hit(attack.value, this)) {
           // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
           guardian.removeAfterFrame();
         }
@@ -1225,7 +1225,7 @@ class Stage {
           final obj = get(p);
           // hit()でレベルを下げる前にコイン数を取得
           int gettableCoins = obj.coins;
-          if (obj.isEnemy && obj.hit(mergeAffect.enemyDamage)) {
+          if (obj.isEnemy && obj.hit(mergeAffect.enemyDamage, this)) {
             // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
             obj.removeAfterFrame();
             // コイン獲得

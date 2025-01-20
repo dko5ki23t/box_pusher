@@ -3,6 +3,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
+import 'package:box_pusher/game_core/stage_objs/boneman.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
@@ -276,6 +277,7 @@ class StageObjFactory {
           savedArg: savedArg,
           pos: pos,
           level: typeLevel.level,
+          setPosition: setPosition,
         )..vector = vector;
       case StageObjType.archer:
         return Archer(
@@ -402,6 +404,13 @@ class StageObjFactory {
             savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
+      case StageObjType.boneman:
+        return Boneman(
+            boneImg: baseImages[type]!,
+            errorImg: errorImg,
+            savedArg: savedArg,
+            pos: pos)
+          ..vector = vector;
     }
   }
 

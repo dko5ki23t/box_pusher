@@ -43,6 +43,10 @@
         "desc": "同じマスに複数の敵の攻撃が重なった時、威力を合算するか（falseなら最大値を採用する）",
         "value": true
     },
+    "consumeTrap": {
+        "desc": "トラップで敵を倒すとトラップを消費（レベル下げ）するか",
+        "value": true
+    },
     "addedScoreEffectMove": {
         "desc": "スコア加算表示(+100とか)エフェクトの移動量",
         "value": {

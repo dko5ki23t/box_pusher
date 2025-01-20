@@ -68,6 +68,7 @@ class Swordsman extends StageObj {
     required Image errorImg,
     required super.savedArg,
     required super.pos,
+    required void Function(StageObj obj, {Vector2? offset}) setPosition,
     int level = 1,
   })  : levelToRoundAttackAnimations = {
           0: {
@@ -206,7 +207,28 @@ class Swordsman extends StageObj {
             type: StageObjType.swordsman,
             level: level,
           ),
-        );
+        ) {
+    // レベル3での2ターン連続斬り途中でセーブされていたら、それを復元
+    attacking = attackingTurns > 0;
+    // TODO: バグる。この後vectorを変えることで、以下で設定したアニメーションが上書きされるから。levelToAttackAnimationにチャンネルを追加とかした方が良さげ
+    if (attacking) {
+      // 攻撃中のアニメーションに変更
+      if (level <= 1) {
+        int key = levelToAttackAnimations.containsKey(level) ? level : 0;
+        animationComponent.animation = levelToAttackAnimations[key]![vector]!;
+        animationComponent.size =
+            animationComponent.animation!.frames.first.sprite.srcSize;
+        setPosition(this, offset: attackAnimationOffset[vector]!);
+      } else {
+        int key = levelToRoundAttackAnimations.containsKey(level) ? level : 0;
+        animationComponent.animation =
+            levelToRoundAttackAnimations[key]![vector]!;
+        animationComponent.size =
+            animationComponent.animation!.frames.first.sprite.srcSize;
+        setPosition(this, offset: roundAttackAnimationOffset);
+      }
+    }
+  }
 
   bool playerStartMovingFlag = false;
 
@@ -361,4 +383,13 @@ class Swordsman extends StageObj {
 
   @override
   int get coins => (level * 1.5).floor();
+
+  // attackingTurnsの保存/読み込み
+  @override
+  int get arg => attackingTurns;
+
+  @override
+  void loadArg(int val) {
+    attackingTurns = val;
+  }
 }
