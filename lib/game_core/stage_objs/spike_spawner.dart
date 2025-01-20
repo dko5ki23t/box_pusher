@@ -84,6 +84,9 @@ class SpikeSpawner extends StageObj {
   bool get puttable => false;
 
   @override
+  bool get playerMovable => true;
+
+  @override
   bool get enemyMovable => true;
 
   @override

@@ -165,7 +165,7 @@ class Player extends StageObj {
       // 動けないとしても、向きは変更
       vector = moveInput.toStraightLR();
       // プレイヤーが壁などにぶつかるか
-      if (stage.get(pos + moveInput.point).stopping) {
+      if (!stage.get(pos + moveInput.point).playerMovable) {
         return;
       }
       // 押し始める・押すオブジェクトを決定
@@ -303,6 +303,9 @@ class Player extends StageObj {
 
   @override
   bool get puttable => false;
+
+  @override
+  bool get playerMovable => false;
 
   @override
   bool get enemyMovable => true;

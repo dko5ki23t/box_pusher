@@ -151,6 +151,9 @@ class Ghost extends StageObj {
   bool get puttable => ghosting;
 
   @override
+  bool get playerMovable => true;
+
+  @override
   bool get enemyMovable => ghosting;
 
   @override

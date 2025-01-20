@@ -29,10 +29,13 @@ class Magma extends StageObj {
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
             1: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(magmaImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-              ], stepTime: 1.0)
+              Move.none: SpriteAnimation.fromFrameData(
+                magmaImg,
+                SpriteAnimationData.sequenced(
+                    amount: 2,
+                    stepTime: Stage.objectStepTime / 2,
+                    textureSize: Stage.cellSize),
+              ),
             },
           },
           typeLevel: StageObjTypeLevel(
@@ -57,10 +60,13 @@ class Magma extends StageObj {
   bool get pushable => false;
 
   @override
-  bool get stopping => true;
+  bool get stopping => false;
 
   @override
   bool get puttable => true;
+
+  @override
+  bool get playerMovable => false;
 
   @override
   bool get enemyMovable => false;

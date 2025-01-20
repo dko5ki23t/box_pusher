@@ -439,6 +439,9 @@ abstract class StageObj {
   /// このオブジェクトは押したオブジェクトの移動先になり得るか
   bool get puttable;
 
+  /// このオブジェクトはプレイヤーの移動先になり得るか
+  bool get playerMovable;
+
   /// このオブジェクトは敵の移動先になり得るか
   bool get enemyMovable;
 
@@ -1184,7 +1187,10 @@ abstract class StageObj {
       // 押したものの位置を設定
       pushing.pos = toTo;
       stage.setObjectPosition(pushing);
-      if (pushing.type == StageObjType.drill && executings[i]) {
+      // 押した先がマグマならオブジェクト蒸発
+      if (stage.safeGetStaticObj(toTo).type == StageObjType.magma) {
+        pushing.remove();
+      } else if (pushing.type == StageObjType.drill && executings[i]) {
         // ドリル使用時
         // ドリルのオブジェクトレベルダウン、0になったら消す
         pushing.level--;
