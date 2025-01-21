@@ -147,7 +147,9 @@ class StageObjFactory {
         type == StageObjType.trap ||
         type == StageObjType.drill ||
         type == StageObjType.bomb ||
-        type == StageObjType.guardian) {
+        type == StageObjType.guardian ||
+        type == StageObjType.canon ||
+        type == StageObjType.boneman) {
       final controller = scaleEffect.controller;
       baseMergable ??= controller;
       controller.advance((isBaseMergableReverse
@@ -409,6 +411,8 @@ class StageObjFactory {
             boneImg: baseImages[type]!,
             errorImg: errorImg,
             savedArg: savedArg,
+            scale: scale,
+            scaleEffect: scaleEffect,
             pos: pos)
           ..vector = vector;
     }
@@ -461,5 +465,32 @@ class StageObjFactory {
         Vector2(obj.pos.x * Stage.cellSize.x, obj.pos.y * Stage.cellSize.y) +
             Stage.cellSize / 2 +
             pixel;
+  }
+
+  /// 押せるオブジェクトに共通して付くエフェクトをセットする
+  void setScaleEffects(StageObj obj) {
+    Vector2 scale = isBaseMergableReverse
+        ? Vector2.all(Stage.mergableZoomRate)
+        : Vector2.all(1.0);
+    final scaleEffect = ScaleEffect.by(
+      isBaseMergableReverse
+          ? Vector2.all(1.0 / Stage.mergableZoomRate)
+          : Vector2.all(Stage.mergableZoomRate),
+      EffectController(
+        onMax: baseMergable == null ? setReverse : null,
+        onMin: baseMergable == null ? setReverse : null,
+        duration: Stage.mergableZoomDuration,
+        reverseDuration: Stage.mergableZoomDuration,
+        infinite: true,
+      ),
+    );
+    final controller = scaleEffect.controller;
+    baseMergable ??= controller;
+    controller.advance((isBaseMergableReverse
+            ? (1.0 - baseMergable!.progress)
+            : baseMergable!.progress) *
+        Stage.mergableZoomDuration);
+    obj.animationComponent.scale = scale;
+    obj.animationComponent.add(scaleEffect);
   }
 }

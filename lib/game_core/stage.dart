@@ -955,6 +955,9 @@ class Stage {
   void setObjectPosition(StageObj obj, {Vector2? offset}) =>
       _objFactory.setPosition(obj, offset: offset);
 
+  /// オブジェクトにスケールエフェクトを設定
+  void setScaleEffects(StageObj obj) => _objFactory.setScaleEffects(obj);
+
   void _setStageDataFromSaveData(
       CameraComponent camera, Map<String, dynamic> stageData) async {
     // ステージ範囲設定

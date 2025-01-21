@@ -3,6 +3,7 @@ import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 
 class Boneman extends StageObj {
@@ -44,6 +45,8 @@ class Boneman extends StageObj {
     required Image boneImg,
     required Image errorImg,
     required super.savedArg,
+    required Vector2? scale,
+    required ScaleEffect scaleEffect,
     required super.pos,
     int level = 1,
   })  : levelToBoneAnimations = {
@@ -153,6 +156,12 @@ class Boneman extends StageObj {
     // 復元された、倒されてからのターン数に応じてアニメーション変更
     attacking = deadTurns > 0;
     _setDeadAnimation();
+    if (attacking) {
+      if (scale != null) {
+        animationComponent.scale = scale;
+      }
+      animationComponent.add(scaleEffect);
+    }
     vector = vector;
   }
 
@@ -221,6 +230,8 @@ class Boneman extends StageObj {
             // 復活
             deadTurns = 0;
             attacking = false;
+            // スケールエフェクト削除
+            animationComponent.removeAll(animationComponent.children);
             vector = Move.down;
             stage.boxes.forceRemove(this);
             stage.enemies.add(this);
@@ -261,6 +272,7 @@ class Boneman extends StageObj {
       // 倒されたアニメーションに切り替える
       attacking = true;
       _setDeadAnimation();
+      stage.setScaleEffects(this);
       vector = vector;
     }
     return false;
@@ -299,9 +311,8 @@ class Boneman extends StageObj {
   @override
   bool get hasVector => deadTurns == 0;
 
-  // マグマに落ちた時のみコイン獲得
   @override
-  int get coins => deadTurns == 0 ? 0 : (level * 2);
+  int get coins => level * 2;
 
   // deadTurnsの保存/読み込み
   @override

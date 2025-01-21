@@ -1199,6 +1199,9 @@ abstract class StageObj {
       stage.setObjectPosition(pushing);
       // 押した先がマグマならオブジェクト蒸発
       if (stage.safeGetStaticObj(toTo).type == StageObjType.magma) {
+        // コイン獲得
+        stage.coins.actual += pushing.coins;
+        stage.showGotCoinEffect(pushing.coins, toTo);
         pushing.remove();
       } else if (pushing.type == StageObjType.drill && executings[i]) {
         // ドリル使用時
