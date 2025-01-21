@@ -109,54 +109,56 @@ class Archer extends StageObj {
               },
           },
           levelToAttackAnimations: {
-            0: {
-              for (final move in MoveExtent.straights)
-                move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-            },
-            for (int i = 1; i <= 3; i++)
-              i: {
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
-                ], stepTime: attackStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
-                ], stepTime: attackStepTime),
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
-                ], stepTime: attackStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
-                  Sprite(levelToAttackAnimationImgs[i - 1],
-                      srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
-                ], stepTime: attackStepTime),
+            1: {
+              0: {
+                for (final move in MoveExtent.straights)
+                  move: SpriteAnimation.spriteList([Sprite(errorImg)],
+                      stepTime: 1.0),
               },
+              for (int i = 1; i <= 3; i++)
+                i: {
+                  Move.down: SpriteAnimation.spriteList([
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
+                  ], stepTime: attackStepTime),
+                  Move.up: SpriteAnimation.spriteList([
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
+                  ], stepTime: attackStepTime),
+                  Move.left: SpriteAnimation.spriteList([
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
+                  ], stepTime: attackStepTime),
+                  Move.right: SpriteAnimation.spriteList([
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
+                    Sprite(levelToAttackAnimationImgs[i - 1],
+                        srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
+                  ], stepTime: attackStepTime),
+                },
+            },
           },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.archer,
@@ -195,11 +197,10 @@ class Archer extends StageObj {
       if (ret.containsKey('attack') && ret['attack']!) {
         attacking = true;
         // 攻撃中のアニメーションに変更
-        int key = levelToAttackAnimations.containsKey(level) ? level : 0;
-        animationComponent.animation = levelToAttackAnimations[key]![vector]!;
         animationComponent.size =
             animationComponent.animation!.frames.first.sprite.srcSize;
         stage.setObjectPosition(this, offset: attackAnimationOffset[vector]!);
+        vector = vector;
       }
       if (ret.containsKey('move')) {
         moving = ret['move'] as Move;

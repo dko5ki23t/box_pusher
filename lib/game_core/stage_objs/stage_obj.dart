@@ -320,8 +320,8 @@ abstract class StageObj {
   /// オブジェクトのレベル->向き->アニメーションのマップ
   Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
 
-  /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
-  Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
+  /// チャンネル->オブジェクトのレベル->向き->攻撃時アニメーションのマップ
+  Map<int, Map<int, Map<Move, SpriteAnimation>>> levelToAttackAnimations;
 
   /// 移動中の向き
   Move moving = Move.none;
@@ -344,6 +344,9 @@ abstract class StageObj {
 
   /// 攻撃中か
   bool attacking = false;
+
+  /// 攻撃のチャンネル
+  int attackCh = 1;
 
   /// その他保存しておきたいint値(攻撃後ターン数等)
   /// 使用したい場合はoverrideすること
@@ -383,7 +386,8 @@ abstract class StageObj {
         // 通常時でのエラー画像を使う
         animationComponent.animation = levelToAnimations[0]![vector];
       } else {
-        animationComponent.animation = levelToAttackAnimations[l]![vector];
+        animationComponent.animation =
+            levelToAttackAnimations[attackCh]![l]![vector];
       }
     } else {
       if (!levelToAnimations.containsKey(l)) {
@@ -409,8 +413,8 @@ abstract class StageObj {
       _vector = Move.none;
     }
     if (attacking) {
-      final animation = levelToAttackAnimations.containsKey(level)
-          ? levelToAttackAnimations[level]![vector]
+      final animation = levelToAttackAnimations[attackCh]!.containsKey(level)
+          ? levelToAttackAnimations[attackCh]![level]![vector]
           : levelToAnimations[0]![vector]; // 通常時でのエラー画像を使う
       animationComponent.animation = animation;
     } else {

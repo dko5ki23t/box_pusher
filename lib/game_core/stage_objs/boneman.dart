@@ -17,15 +17,6 @@ class Boneman extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'boneman.png';
 
-  /// オブジェクトのレベル->骨化アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToBoneAnimations;
-
-  /// オブジェクトのレベル->復活2ターン前アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToRevival2Animations;
-
-  /// オブジェクトのレベル->復活1ターン前アニメーションのマップ
-  final Map<int, Map<Move, SpriteAnimation>> levelToRevival1Animations;
-
   /// 復活に要するターン数(死んでいる期間)
   int get deadPeriod {
     switch (level) {
@@ -49,55 +40,7 @@ class Boneman extends StageObj {
     required ScaleEffect scaleEffect,
     required super.pos,
     int level = 1,
-  })  : levelToBoneAnimations = {
-          0: {
-            Move.none:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-          },
-          for (int i = 1; i <= 3; i++)
-            i: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(boneImg,
-                    srcPosition: Vector2(64 * (i - 1) + 768, 0),
-                    srcSize: Stage.cellSize),
-              ], stepTime: 1.0),
-            },
-        },
-        levelToRevival2Animations = {
-          0: {
-            Move.none:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-          },
-          for (int i = 1; i <= 3; i++)
-            i: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(boneImg,
-                    srcPosition: Vector2(64 * (i - 1) + 768, 0),
-                    srcSize: Stage.cellSize),
-                Sprite(boneImg,
-                    srcPosition: Vector2(64 * (i - 1) + 800, 0),
-                    srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-            },
-        },
-        levelToRevival1Animations = {
-          0: {
-            Move.none:
-                SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-          },
-          for (int i = 1; i <= 3; i++)
-            i: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(boneImg,
-                    srcPosition: Vector2(64 * (i - 1) + 768, 0),
-                    srcSize: Stage.cellSize),
-                Sprite(boneImg,
-                    srcPosition: Vector2(64 * (i - 1) + 800, 0),
-                    srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime / 2),
-            },
-        },
-        super(
+  }) : super(
           animationComponent: SpriteAnimationComponent(
             priority: Stage.movingPriority,
             size: Stage.cellSize,
@@ -148,6 +91,59 @@ class Boneman extends StageObj {
                 ], stepTime: Stage.objectStepTime),
               },
           },
+          levelToAttackAnimations: {
+            // 骨になったときのアニメーション
+            1: {
+              0: {
+                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
+              },
+              for (int i = 1; i <= 3; i++)
+                i: {
+                  Move.none: SpriteAnimation.spriteList([
+                    Sprite(boneImg,
+                        srcPosition: Vector2(64 * (i - 1) + 768, 0),
+                        srcSize: Stage.cellSize),
+                  ], stepTime: 1.0),
+                },
+            },
+            // あと2ターンで復活アニメーション
+            2: {
+              0: {
+                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
+              },
+              for (int i = 1; i <= 3; i++)
+                i: {
+                  Move.none: SpriteAnimation.spriteList([
+                    Sprite(boneImg,
+                        srcPosition: Vector2(64 * (i - 1) + 768, 0),
+                        srcSize: Stage.cellSize),
+                    Sprite(boneImg,
+                        srcPosition: Vector2(64 * (i - 1) + 800, 0),
+                        srcSize: Stage.cellSize),
+                  ], stepTime: Stage.objectStepTime),
+                },
+            },
+            // あと1ターンで復活アニメーション
+            3: {
+              0: {
+                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
+              },
+              for (int i = 1; i <= 3; i++)
+                i: {
+                  Move.none: SpriteAnimation.spriteList([
+                    Sprite(boneImg,
+                        srcPosition: Vector2(64 * (i - 1) + 768, 0),
+                        srcSize: Stage.cellSize),
+                    Sprite(boneImg,
+                        srcPosition: Vector2(64 * (i - 1) + 800, 0),
+                        srcSize: Stage.cellSize),
+                  ], stepTime: Stage.objectStepTime / 2),
+                },
+            },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.boneman,
             level: level,
@@ -155,7 +151,7 @@ class Boneman extends StageObj {
         ) {
     // 復元された、倒されてからのターン数に応じてアニメーション変更
     attacking = deadTurns > 0;
-    _setDeadAnimation();
+    _setAttackCh();
     if (attacking) {
       if (scale != null) {
         animationComponent.scale = scale;
@@ -236,7 +232,7 @@ class Boneman extends StageObj {
             stage.boxes.forceRemove(this);
             stage.enemies.add(this);
           } else {
-            _setDeadAnimation();
+            _setAttackCh();
             vector = vector;
           }
         }
@@ -248,13 +244,13 @@ class Boneman extends StageObj {
     }
   }
 
-  void _setDeadAnimation() {
+  void _setAttackCh() {
     if (deadTurns >= deadPeriod - 1) {
-      levelToAttackAnimations = levelToRevival1Animations;
+      attackCh = 3;
     } else if (deadTurns >= deadPeriod - 2) {
-      levelToAttackAnimations = levelToRevival2Animations;
+      attackCh = 2;
     } else {
-      levelToAttackAnimations = levelToBoneAnimations;
+      attackCh = 1;
     }
   }
 
@@ -271,7 +267,7 @@ class Boneman extends StageObj {
       stage.boxes.add(this);
       // 倒されたアニメーションに切り替える
       attacking = true;
-      _setDeadAnimation();
+      _setAttackCh();
       stage.setScaleEffects(this);
       vector = vector;
     }
