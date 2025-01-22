@@ -8,6 +8,8 @@
   "gameover": "ゲームオーバー",
   "resume": "ゲームに戻る",
   "save": "セーブする",
+  "saved": "セーブ済み",
+  "saveAndToTitle": "セーブしてタイトルへ",
   "exit": "あきらめる",
   "gameTitle": "押しごと",
   "newGame": "はじめから",

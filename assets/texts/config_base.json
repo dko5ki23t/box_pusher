@@ -47,6 +47,10 @@
         "desc": "トラップで敵を倒すとトラップを消費（レベル下げ）するか",
         "value": true
     },
+    "hideGameToMenu": {
+        "desc": "ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか",
+        "value": true
+    },
     "addedScoreEffectMove": {
         "desc": "スコア加算表示(+100とか)エフェクトの移動量",
         "value": {

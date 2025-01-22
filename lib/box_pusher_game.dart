@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
+import 'package:box_pusher/components/confirm_exit_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
 import 'package:box_pusher/components/debug_view_distributions_dialog.dart';
 import 'package:box_pusher/components/version_log_dialog.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
@@ -148,11 +150,20 @@ class BoxPusherGame extends FlameGame
       onShow: () {
         if (_router.currentRoute.name == 'game' &&
             _router.routes['game']!.firstChild() != null) {
-          Audio().resumeBGM();
+          if (!Config().hideGameToMenu) {
+            Audio().resumeBGM();
+          }
         }
       },
       onHide: () {
-        Audio().pauseBGM();
+        if (Config().hideGameToMenu &&
+            _router.currentRoute.name == 'game' &&
+            _router.routes['game']!.firstChild() != null) {
+          // ゲームシーケンスの時はメニュー画面に遷移
+          pushSeqNamed("menu");
+        } else {
+          Audio().pauseBGM();
+        }
       },
     );
 
@@ -175,6 +186,13 @@ class BoxPusherGame extends FlameGame
       'confirm_delete_stage_data_dialog': OverlayRoute(
         (context, game) {
           return ConfirmDeleteStageDataDialog(
+            game: this,
+          );
+        },
+      ),
+      'confirm_exit_dialog': OverlayRoute(
+        (context, game) {
+          return ConfirmExitDialog(
             game: this,
           );
         },
@@ -312,6 +330,21 @@ class BoxPusherGame extends FlameGame
     }
   }
 
+  void setGameover() {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      gameSeq.stage.isGameover = true;
+    }
+  }
+
+  bool? isGameover() {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      return gameSeq.stage.isGameover;
+    }
+    return null;
+  }
+
   @override
   void onRemove() {
     removeAll(children);
@@ -382,7 +415,7 @@ class BoxPusherGame extends FlameGame
         gameSeq.isReady = false;
         pushSeqNamed('game');
         pushSeqNamed('loading');
-        gameSeq.initialize(false);
+        gameSeq.initialize();
         return;
       }
     }

@@ -253,6 +253,7 @@ class Config {
     isArrowPathThrough = jsonData['isArrowPathThrough']['value'];
     sumUpEnemyAttackDamage = jsonData['sumUpEnemyAttackDamage']['value'];
     consumeTrap = jsonData['consumeTrap']['value'];
+    hideGameToMenu = jsonData['hideGameToMenu']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
@@ -328,6 +329,9 @@ class Config {
 
   /// トラップで敵を倒すとトラップを消費（レベル下げ）するか
   late bool consumeTrap;
+
+  /// ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか
+  late bool hideGameToMenu;
 
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;

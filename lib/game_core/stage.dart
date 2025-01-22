@@ -316,7 +316,9 @@ class Stage {
 
   /// ステージを生成する
   void initialize(
-      CameraComponent camera, Map<String, dynamic> stageData, bool t) {
+    CameraComponent camera,
+    Map<String, dynamic> stageData,
+  ) {
     assert(isReady, 'Stage.onLoad() is not called!');
     isGameover = false;
     effectBase = [
