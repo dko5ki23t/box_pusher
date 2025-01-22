@@ -757,6 +757,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
           (Config().debugStageHeight / 2).ceil());
     }
+    // カメラズームをリセット
+    game.camera.viewfinder.zoom = 1.0;
+    // ステージ初期化
     stage.initialize(game.camera, game.stageData);
 
     // セーブデータ削除
@@ -1014,6 +1017,10 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       // BGMストップ
       Audio().stopBGM();
     }
+  }
+
+  void resetCameraPos() {
+    stage.resetCameraPos(game.camera);
   }
 
   ButtonComponent playerControllButton({

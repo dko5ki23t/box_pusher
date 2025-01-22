@@ -345,6 +345,13 @@ class BoxPusherGame extends FlameGame
     return null;
   }
 
+  void resetCameraPos() {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      gameSeq.resetCameraPos();
+    }
+  }
+
   @override
   void onRemove() {
     removeAll(children);

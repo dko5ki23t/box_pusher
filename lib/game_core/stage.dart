@@ -1116,6 +1116,14 @@ class Stage {
     );
   }
 
+  void resetCameraPos(CameraComponent camera) {
+    // カメラはプレイヤーに追従
+    camera.follow(
+      player.animationComponent,
+      maxSpeed: cameraMaxSpeed,
+    );
+  }
+
   void update(
       double dt, Move moveInput, World gameWorld, CameraComponent camera) {
     // 表示上のスコア更新

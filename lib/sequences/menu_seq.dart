@@ -15,6 +15,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
   late final GameTextButton saveAndToTitleButton;
   late final GameTextButton giveUpButton;
   late final GameTextButton controllSettingButton;
+  late final GameTextButton resetCameraButton;
 
   bool isSaved = false;
 
@@ -95,6 +96,18 @@ class MenuSeq extends Sequence with KeyboardHandler {
         game.updatePlayerControllButtons();
       },
     );
+    menuButtonPos += menuButtonOffset;
+    resetCameraButton = GameTextButton(
+      keyName: 'resetCamer',
+      size: menuButtonSize,
+      position: menuButtonPos,
+      anchor: Anchor.center,
+      text: loc.resetCamera,
+      onReleased: () {
+        game.camera.viewfinder.zoom = 1.0;
+        game.resetCameraPos();
+      },
+    );
     buttonGroup = GameButtonGroup(buttons: [
       resumeButton,
       saveButton,
@@ -116,7 +129,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       ),
       menuText,
       resumeButton, saveButton, saveAndToTitleButton,
-      giveUpButton, controllSettingButton,
+      giveUpButton, controllSettingButton, resetCameraButton,
     ]);
   }
 
@@ -190,5 +203,6 @@ class MenuSeq extends Sequence with KeyboardHandler {
     resumeButton.text = loc.resume;
     saveButton.text = loc.save;
     giveUpButton.text = loc.exit;
+    resetCameraButton.text = loc.resetCamera;
   }
 }
