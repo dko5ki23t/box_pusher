@@ -270,6 +270,34 @@ class BoxPusherGame extends FlameGame
       Config().playerControllButtonType =
           PlayerControllButtonType.values[index];
     }
+    int volume = 100;
+    try {
+      volume = _userConfigData['volume'];
+    } catch (e) {
+      log(e.toString());
+    }
+    Config().audioVolume = volume;
+  }
+
+  /// 【デバッグ】文字列からセーブデータをインポート->成功したかどうかを返す
+  Future<bool> importSaveDataFromString(String saveData) async {
+    try {
+      final jsonMap = jsonDecode(saveData);
+      _stageData = jsonMap['stageData'] ?? {};
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  /// 【デバッグ】セーブデータをファイルにエクスポート
+  String exportSaveDataToString() {
+    return jsonEncode({
+      'highScore': _highScore,
+      'stageData': _stageData,
+      'userConfigData': _userConfigData,
+      'version': _saveDataVersion.toString(),
+    });
   }
 
   /// ハイスコアの更新・セーブデータに保存
@@ -316,6 +344,7 @@ class BoxPusherGame extends FlameGame
   /// 操作方法や音量等のコンフィグ情報をセーブデータに保存
   Future<void> saveUserConfigData() async {
     _userConfigData['controller'] = Config().playerControllButtonType.index;
+    _userConfigData['volume'] = Config().audioVolume;
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
@@ -336,7 +365,7 @@ class BoxPusherGame extends FlameGame
   Map<String, dynamic> getDefaultUserConfig() {
     return {
       'controller': PlayerControllButtonType.joyStick.index,
-      'volume': 50,
+      'volume': 100,
     };
   }
 

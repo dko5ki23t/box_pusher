@@ -222,6 +222,9 @@ class Config {
   PlayerControllButtonType playerControllButtonType =
       PlayerControllButtonType.onScreenEdge;
 
+  /// ゲーム音量(0~100)
+  int audioVolume = 100;
+
   late Random random;
 
   /// 分布表示に使用する色
