@@ -68,14 +68,17 @@ enum EnemyMovePattern {
 
 /// プレイヤー操作ボタンタイプ
 enum PlayerControllButtonType {
+  /// ジョイスティック
+  joyStick,
+
   /// 画面端にボタン配置
   onScreenEdge,
 
   /// 画面下部にまとめて配置
   onScreenBottom,
 
-  /// ジョイスティック
-  joyStick,
+  /// ボタンなし
+  noButton,
 }
 
 class BlockFloorPattern {
