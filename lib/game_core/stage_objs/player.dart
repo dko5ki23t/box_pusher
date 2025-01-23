@@ -69,35 +69,37 @@ class Player extends StageObj {
           },
           // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
           levelToAttackAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
             1: {
-              Move.down: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.up: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.left: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.right: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
+              0: {
+                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
+              },
+              1: {
+                Move.down: SpriteAnimation.spriteList([
+                  Sprite(playerImg,
+                      srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
+                  Sprite(playerImg,
+                      srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.up: SpriteAnimation.spriteList([
+                  Sprite(playerImg,
+                      srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
+                  Sprite(playerImg,
+                      srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.left: SpriteAnimation.spriteList([
+                  Sprite(playerImg,
+                      srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
+                  Sprite(playerImg,
+                      srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+                Move.right: SpriteAnimation.spriteList([
+                  Sprite(playerImg,
+                      srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
+                  Sprite(playerImg,
+                      srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
+                ], stepTime: Stage.objectStepTime),
+              },
             },
           },
           typeLevel: StageObjTypeLevel(
@@ -165,7 +167,7 @@ class Player extends StageObj {
       // 動けないとしても、向きは変更
       vector = moveInput.toStraightLR();
       // プレイヤーが壁などにぶつかるか
-      if (stage.get(pos + moveInput.point).stopping) {
+      if (!stage.get(pos + moveInput.point).playerMovable) {
         return;
       }
       // 押し始める・押すオブジェクトを決定
@@ -268,7 +270,7 @@ class Player extends StageObj {
   }
 
   @override
-  bool hit(int damageLevel) {
+  bool hit(int damageLevel, Stage stage) {
     // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
     attacking = true;
     vector = vector;
@@ -303,6 +305,9 @@ class Player extends StageObj {
 
   @override
   bool get puttable => false;
+
+  @override
+  bool get playerMovable => false;
 
   @override
   bool get enemyMovable => true;

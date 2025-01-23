@@ -66,6 +66,18 @@ enum EnemyMovePattern {
   walkAndPushRandomOrStop,
 }
 
+/// プレイヤー操作ボタンタイプ
+enum PlayerControllButtonType {
+  /// 画面端にボタン配置
+  onScreenEdge,
+
+  /// 画面下部にまとめて配置
+  onScreenBottom,
+
+  /// ジョイスティック
+  joyStick,
+}
+
 class BlockFloorPattern {
   /// 床の割合
   final Map<StageObjTypeLevel, int> floorPercents;
@@ -204,11 +216,8 @@ class Config {
   }
 
   /// プレイヤー操作ボタンのタイプ
-  int _playerControllButtonType = 0;
-  int get playerControllButtonType => _playerControllButtonType;
-  void changePlayerControllButtonType() {
-    _playerControllButtonType = (_playerControllButtonType + 1) % 3;
-  }
+  PlayerControllButtonType playerControllButtonType =
+      PlayerControllButtonType.onScreenEdge;
 
   late Random random;
 
@@ -252,6 +261,8 @@ class Config {
         jsonData['setObjInBlockWithDistributionAlgorithm']['value'];
     isArrowPathThrough = jsonData['isArrowPathThrough']['value'];
     sumUpEnemyAttackDamage = jsonData['sumUpEnemyAttackDamage']['value'];
+    consumeTrap = jsonData['consumeTrap']['value'];
+    hideGameToMenu = jsonData['hideGameToMenu']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
@@ -324,6 +335,12 @@ class Config {
 
   /// 同じマスに複数の敵の攻撃が重なった時、威力を合算するか（falseなら最大値を採用する）
   late bool sumUpEnemyAttackDamage;
+
+  /// トラップで敵を倒すとトラップを消費（レベル下げ）するか
+  late bool consumeTrap;
+
+  /// ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか
+  late bool hideGameToMenu;
 
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;

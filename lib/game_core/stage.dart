@@ -187,6 +187,9 @@ class Stage {
   /// コンベアの場所リスト
   List<Point> beltPoints = [];
 
+  /// 敵涌きスポット
+  List<StageObj> spawners = [];
+
   /// ブロック破壊時に出現した各アイテムの累計個数
   Map<StageObjTypeLevel, int> appearedItemsMap = {};
 
@@ -313,7 +316,9 @@ class Stage {
 
   /// ステージを生成する
   void initialize(
-      CameraComponent camera, Map<String, dynamic> stageData, bool t) {
+    CameraComponent camera,
+    Map<String, dynamic> stageData,
+  ) {
     assert(isReady, 'Stage.onLoad() is not called!');
     isGameover = false;
     effectBase = [
@@ -578,6 +583,9 @@ class Stage {
                   'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
               get(p).vector = MoveExtent.straights.sample(1).first;
               beltPoints.add(p);
+            } else if (item.type == StageObjType.spikeSpawner) {
+              setStaticType(p, StageObjType.spikeSpawner);
+              spawners.add(safeGetStaticObj(p));
             } else {
               final adding = createObject(typeLevel: item, pos: p);
               if (adding.isEnemy) {
@@ -949,6 +957,9 @@ class Stage {
   void setObjectPosition(StageObj obj, {Vector2? offset}) =>
       _objFactory.setPosition(obj, offset: offset);
 
+  /// オブジェクトにスケールエフェクトを設定
+  void setScaleEffects(StageObj obj) => _objFactory.setScaleEffects(obj);
+
   void _setStageDataFromSaveData(
       CameraComponent camera, Map<String, dynamic> stageData) async {
     // ステージ範囲設定
@@ -980,6 +991,8 @@ class Stage {
       final staticObj = createObjectFromMap(entry.value);
       if (staticObj.type == StageObjType.shop) {
         shops.add(staticObj);
+      } else if (staticObj.type == StageObjType.spikeSpawner) {
+        spawners.add(staticObj);
       }
       _staticObjs[Point.decode(entry.key)] = staticObj;
     }
@@ -1103,6 +1116,14 @@ class Stage {
     );
   }
 
+  void resetCameraPos(CameraComponent camera) {
+    // カメラはプレイヤーに追従
+    camera.follow(
+      player.animationComponent,
+      maxSpeed: cameraMaxSpeed,
+    );
+  }
+
   void update(
       double dt, Move moveInput, World gameWorld, CameraComponent camera) {
     // 表示上のスコア更新
@@ -1174,6 +1195,12 @@ class Stage {
     }
     //}
 
+    // 敵涌きスポット更新
+    for (final spawner in spawners) {
+      spawner.update(dt, player.moving, gameWorld, camera, this,
+          playerStartMoving, playerEndMoving, prohibitedPoints);
+    }
+
     // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
     if (player.pocketItem != null && player.pocketItem!.updateInPocket) {
       player.pocketItem!.update(dt, player.moving, gameWorld, camera, this,
@@ -1190,12 +1217,12 @@ class Stage {
     for (final attack in enemyAttackPoints.entries) {
       // プレイヤーに攻撃が当たった
       if (attack.key == player.pos) {
-        isGameover = player.hit(attack.value);
+        isGameover = player.hit(attack.value, this);
       }
       // ガーディアンに攻撃が当たった
       for (final guardian in boxes.where((element) =>
           element.type == StageObjType.guardian && attack.key == element.pos)) {
-        if (guardian.hit(attack.value)) {
+        if (guardian.hit(attack.value, this)) {
           // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
           guardian.removeAfterFrame();
         }
@@ -1211,7 +1238,7 @@ class Stage {
           final obj = get(p);
           // hit()でレベルを下げる前にコイン数を取得
           int gettableCoins = obj.coins;
-          if (obj.isEnemy && obj.hit(mergeAffect.enemyDamage)) {
+          if (obj.isEnemy && obj.hit(mergeAffect.enemyDamage, this)) {
             // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
             obj.removeAfterFrame();
             // コイン獲得

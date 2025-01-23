@@ -220,6 +220,9 @@ class Belt extends StageObj {
   bool get puttable => true;
 
   @override
+  bool get playerMovable => true;
+
+  @override
   bool get enemyMovable => true;
 
   @override

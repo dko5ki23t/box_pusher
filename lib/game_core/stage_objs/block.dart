@@ -113,6 +113,9 @@ class Block extends StageObj {
   bool get puttable => false;
 
   @override
+  bool get playerMovable => false;
+
+  @override
   bool get enemyMovable => false;
 
   @override

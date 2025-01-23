@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class GameoverSeq extends Sequence with KeyboardHandler {
+  late final TextComponent gameoverText;
   late final TextComponent scoreText;
   late final GameButtonGroup buttonGroup;
   late final GameTextButton restartButton;
@@ -16,6 +17,18 @@ class GameoverSeq extends Sequence with KeyboardHandler {
   @override
   Future<void> onLoad() async {
     final loc = game.localization;
+    gameoverText = TextComponent(
+      text: loc.gameover,
+      size: Vector2(320.0, 45.0),
+      position: Vector2(180.0, 180.0),
+      anchor: Anchor.center,
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontFamily: Config.gameTextFamily,
+          fontSize: 35,
+        ),
+      ),
+    );
     scoreText = TextComponent(
       text: "${loc.scoreIs}${game.getCurrentScore()}",
       size: Vector2(320.0, 45.0),
@@ -57,18 +70,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
             ..strokeWidth = 2,
         ),
       ),
-      TextComponent(
-        text: loc.gameover,
-        size: Vector2(320.0, 45.0),
-        position: Vector2(180.0, 180.0),
-        anchor: Anchor.center,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            fontFamily: Config.gameTextFamily,
-            fontSize: 35,
-          ),
-        ),
-      ),
+      gameoverText,
       scoreText,
       restartButton,
       toTitleButton,
@@ -116,6 +118,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
   @override
   void onLangChanged() {
     final loc = game.localization;
+    gameoverText.text = loc.gameover;
     restartButton.text = loc.tryAgain;
     toTitleButton.text = loc.toTitle;
   }

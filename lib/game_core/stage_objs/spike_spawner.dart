@@ -4,15 +4,15 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 
-class Gorilla extends StageObj {
+class SpikeSpawner extends StageObj {
   /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'gorilla.png';
+  static String get imageFileName => 'spawner.png';
 
-  Gorilla({
-    required super.pos,
-    required Image gorillaImg,
+  SpikeSpawner({
+    required Image spawnerImg,
     required Image errorImg,
     required super.savedArg,
+    required super.pos,
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
@@ -30,7 +30,7 @@ class Gorilla extends StageObj {
             },
             1: {
               Move.none: SpriteAnimation.fromFrameData(
-                gorillaImg,
+                spawnerImg,
                 SpriteAnimationData.sequenced(
                     amount: 2,
                     stepTime: Stage.objectStepTime,
@@ -39,10 +39,15 @@ class Gorilla extends StageObj {
             },
           },
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.gorilla,
+            type: StageObjType.spikeSpawner,
             level: level,
           ),
         );
+
+  static int get spawnTurn => 5;
+
+  /// 敵を生み出すまでにあと何ターンあるか
+  int remainTurnToSpawn = spawnTurn;
 
   @override
   void update(
@@ -54,7 +59,20 @@ class Gorilla extends StageObj {
     bool playerStartMoving,
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
-  ) {}
+  ) {
+    if (playerEndMoving) {
+      if (--remainTurnToSpawn <= 0) {
+        // この場所が空いているなら
+        if (stage.get(pos) == this) {
+          // 敵を生み出す
+          stage.enemies.add(stage.createObject(
+              typeLevel: StageObjTypeLevel(type: StageObjType.spike),
+              pos: pos));
+          remainTurnToSpawn = spawnTurn;
+        }
+      }
+    }
+  }
 
   @override
   bool get pushable => false;
@@ -69,10 +87,10 @@ class Gorilla extends StageObj {
   bool get playerMovable => true;
 
   @override
-  bool get enemyMovable => false;
+  bool get enemyMovable => true;
 
   @override
-  bool get mergable => level < maxLevel;
+  bool get mergable => false;
 
   @override
   int get maxLevel => 1;
@@ -84,7 +102,7 @@ class Gorilla extends StageObj {
   bool get killable => false;
 
   @override
-  bool get beltMove => true;
+  bool get beltMove => false;
 
   @override
   bool get hasVector => false;

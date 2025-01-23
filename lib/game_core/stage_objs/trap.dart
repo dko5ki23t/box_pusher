@@ -1,4 +1,5 @@
 import 'package:box_pusher/audio.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -92,6 +93,11 @@ class Trap extends StageObj {
                 Audio().playSound(Sound.trap1);
                 break;
             }
+            if (Config().consumeTrap) {
+              // トラップのレベルを下げる、0以下になったら消す
+              --level;
+              if (level <= 0) removeAfterFrame();
+            }
           }
         }
       }
@@ -99,7 +105,7 @@ class Trap extends StageObj {
     // このオブジェクトと同じ位置の、罠レベル以下の敵を消す
     if (playerEndMoving) {
       final killing = stage.get(pos);
-      if (killing.isEnemy && killing.killable && killing.level <= level) {
+      if (killing.isTrapKillable && killing.level <= level) {
         // 敵側の処理が残っているかもしれないので、フレームの最後に消す
         killing.removeAfterFrame();
         // コイン獲得
@@ -111,6 +117,11 @@ class Trap extends StageObj {
           default:
             Audio().playSound(Sound.trap1);
             break;
+        }
+        if (Config().consumeTrap) {
+          // トラップのレベルを下げる、0以下になったら消す
+          --level;
+          if (level <= 0) removeAfterFrame();
         }
       }
     }
@@ -124,6 +135,9 @@ class Trap extends StageObj {
 
   @override
   bool get puttable => false;
+
+  @override
+  bool get playerMovable => true;
 
   @override
   bool get enemyMovable => true;

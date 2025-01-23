@@ -3,6 +3,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
+import 'package:box_pusher/game_core/stage_objs/boneman.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
@@ -21,6 +22,7 @@ import 'package:box_pusher/game_core/stage_objs/shop.dart';
 import 'package:box_pusher/game_core/stage_objs/smoke.dart';
 import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
+import 'package:box_pusher/game_core/stage_objs/spike_spawner.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
@@ -145,7 +147,9 @@ class StageObjFactory {
         type == StageObjType.trap ||
         type == StageObjType.drill ||
         type == StageObjType.bomb ||
-        type == StageObjType.guardian) {
+        type == StageObjType.guardian ||
+        type == StageObjType.canon ||
+        type == StageObjType.boneman) {
       final controller = scaleEffect.controller;
       baseMergable ??= controller;
       controller.advance((isBaseMergableReverse
@@ -275,6 +279,7 @@ class StageObjFactory {
           savedArg: savedArg,
           pos: pos,
           level: typeLevel.level,
+          setPosition: setPosition,
         )..vector = vector;
       case StageObjType.archer:
         return Archer(
@@ -394,6 +399,22 @@ class StageObjFactory {
             pos: pos,
             level: typeLevel.level,
             vector: vector);
+      case StageObjType.spikeSpawner:
+        return SpikeSpawner(
+            spawnerImg: baseImages[type]!,
+            errorImg: errorImg,
+            savedArg: savedArg,
+            pos: pos,
+            level: typeLevel.level);
+      case StageObjType.boneman:
+        return Boneman(
+            boneImg: baseImages[type]!,
+            errorImg: errorImg,
+            savedArg: savedArg,
+            scale: scale,
+            scaleEffect: scaleEffect,
+            pos: pos)
+          ..vector = vector;
     }
   }
 
@@ -444,5 +465,32 @@ class StageObjFactory {
         Vector2(obj.pos.x * Stage.cellSize.x, obj.pos.y * Stage.cellSize.y) +
             Stage.cellSize / 2 +
             pixel;
+  }
+
+  /// 押せるオブジェクトに共通して付くエフェクトをセットする
+  void setScaleEffects(StageObj obj) {
+    Vector2 scale = isBaseMergableReverse
+        ? Vector2.all(Stage.mergableZoomRate)
+        : Vector2.all(1.0);
+    final scaleEffect = ScaleEffect.by(
+      isBaseMergableReverse
+          ? Vector2.all(1.0 / Stage.mergableZoomRate)
+          : Vector2.all(Stage.mergableZoomRate),
+      EffectController(
+        onMax: baseMergable == null ? setReverse : null,
+        onMin: baseMergable == null ? setReverse : null,
+        duration: Stage.mergableZoomDuration,
+        reverseDuration: Stage.mergableZoomDuration,
+        infinite: true,
+      ),
+    );
+    final controller = scaleEffect.controller;
+    baseMergable ??= controller;
+    controller.advance((isBaseMergableReverse
+            ? (1.0 - baseMergable!.progress)
+            : baseMergable!.progress) *
+        Stage.mergableZoomDuration);
+    obj.animationComponent.scale = scale;
+    obj.animationComponent.add(scaleEffect);
   }
 }

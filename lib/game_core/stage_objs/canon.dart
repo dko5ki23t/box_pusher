@@ -123,7 +123,7 @@ class Canon extends StageObj {
         final obj = stage.get(p);
         // hit()でレベルを下げる前にコイン数を取得
         int gettableCoins = obj.coins;
-        if (obj.isEnemy && obj.hit(level)) {
+        if (obj.isEnemy && obj.hit(level, stage)) {
           // 敵側の処理が残ってるかもしれないので、フレーム処理終了後に消す
           obj.removeAfterFrame();
           // コイン獲得
@@ -172,6 +172,9 @@ class Canon extends StageObj {
 
   @override
   bool get puttable => false;
+
+  @override
+  bool get playerMovable => true;
 
   @override
   bool get enemyMovable => false;

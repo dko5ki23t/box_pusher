@@ -8,6 +8,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
+import 'package:box_pusher/game_core/stage_objs/boneman.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
@@ -27,6 +28,7 @@ import 'package:box_pusher/game_core/stage_objs/shop.dart';
 import 'package:box_pusher/game_core/stage_objs/smoke.dart';
 import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
+import 'package:box_pusher/game_core/stage_objs/spike_spawner.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
@@ -68,6 +70,8 @@ enum StageObjType {
   girl,
   shop,
   canon,
+  spikeSpawner, // とげの敵を生み出す場
+  boneman, // 骨の敵、倒すと押せるオブジェクト化、一定ターンで復活
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -101,6 +105,8 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.girl: 'girl',
     StageObjType.shop: 'shop',
     StageObjType.canon: 'canon',
+    StageObjType.spikeSpawner: 'spikeSpawner',
+    StageObjType.boneman: 'boneman',
   };
 
   String get str => strMap[this]!;
@@ -165,6 +171,10 @@ extension StageObjTypeExtent on StageObjType {
         return Shop;
       case StageObjType.canon:
         return Canon;
+      case StageObjType.spikeSpawner:
+        return SpikeSpawner;
+      case StageObjType.boneman:
+        return Boneman;
     }
   }
 
@@ -228,6 +238,10 @@ extension StageObjTypeExtent on StageObjType {
         return Shop.imageFileName;
       case StageObjType.canon:
         return Canon.imageFileName;
+      case StageObjType.spikeSpawner:
+        return SpikeSpawner.imageFileName;
+      case StageObjType.boneman:
+        return Boneman.imageFileName;
     }
   }
 
@@ -306,8 +320,8 @@ abstract class StageObj {
   /// オブジェクトのレベル->向き->アニメーションのマップ
   Map<int, Map<Move, SpriteAnimation>> levelToAnimations;
 
-  /// オブジェクトのレベル->向き->攻撃時アニメーションのマップ
-  Map<int, Map<Move, SpriteAnimation>> levelToAttackAnimations;
+  /// チャンネル->オブジェクトのレベル->向き->攻撃時アニメーションのマップ
+  Map<int, Map<int, Map<Move, SpriteAnimation>>> levelToAttackAnimations;
 
   /// 移動中の向き
   Move moving = Move.none;
@@ -330,6 +344,9 @@ abstract class StageObj {
 
   /// 攻撃中か
   bool attacking = false;
+
+  /// 攻撃のチャンネル
+  int attackCh = 1;
 
   /// その他保存しておきたいint値(攻撃後ターン数等)
   /// 使用したい場合はoverrideすること
@@ -369,7 +386,8 @@ abstract class StageObj {
         // 通常時でのエラー画像を使う
         animationComponent.animation = levelToAnimations[0]![vector];
       } else {
-        animationComponent.animation = levelToAttackAnimations[l]![vector];
+        animationComponent.animation =
+            levelToAttackAnimations[attackCh]![l]![vector];
       }
     } else {
       if (!levelToAnimations.containsKey(l)) {
@@ -395,8 +413,8 @@ abstract class StageObj {
       _vector = Move.none;
     }
     if (attacking) {
-      final animation = levelToAttackAnimations.containsKey(level)
-          ? levelToAttackAnimations[level]![vector]
+      final animation = levelToAttackAnimations[attackCh]!.containsKey(level)
+          ? levelToAttackAnimations[attackCh]![level]![vector]
           : levelToAnimations[0]![vector]; // 通常時でのエラー画像を使う
       animationComponent.animation = animation;
     } else {
@@ -432,6 +450,9 @@ abstract class StageObj {
   /// このオブジェクトは押したオブジェクトの移動先になり得るか
   bool get puttable;
 
+  /// このオブジェクトはプレイヤーの移動先になり得るか
+  bool get playerMovable;
+
   /// このオブジェクトは敵の移動先になり得るか
   bool get enemyMovable;
 
@@ -459,9 +480,12 @@ abstract class StageObj {
   /// ポケットに入れていてもupdate()するかどうか
   bool get updateInPocket => false;
 
+  /// トラップでやられる敵かどうか
+  bool get isTrapKillable => isEnemy && killable;
+
   /// 攻撃を受ける
   /// やられたかどうかを返す
-  bool hit(int damageLevel) {
+  bool hit(int damageLevel, Stage stage) {
     if (!killable) return false;
     level = (level - damageLevel).clamp(0, maxLevel);
     return level <= 0;
@@ -1177,7 +1201,13 @@ abstract class StageObj {
       // 押したものの位置を設定
       pushing.pos = toTo;
       stage.setObjectPosition(pushing);
-      if (pushing.type == StageObjType.drill && executings[i]) {
+      // 押した先がマグマならオブジェクト蒸発
+      if (stage.safeGetStaticObj(toTo).type == StageObjType.magma) {
+        // コイン獲得
+        stage.coins.actual += pushing.coins;
+        stage.showGotCoinEffect(pushing.coins, toTo);
+        pushing.remove();
+      } else if (pushing.type == StageObjType.drill && executings[i]) {
         // ドリル使用時
         // ドリルのオブジェクトレベルダウン、0になったら消す
         pushing.level--;

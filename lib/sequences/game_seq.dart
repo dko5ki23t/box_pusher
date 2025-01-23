@@ -190,7 +190,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // 画面コンポーネント作成
     _createComponents();
     // 画面コンポーネント初期化
-    initialize(true);
+    initialize();
   }
 
   @override
@@ -745,7 +745,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   }
 
   // 初期化（というよりリセット）
-  void initialize(bool t) {
+  void initialize() {
     // 準備中にする
     isReady = false;
     removeAll(children);
@@ -757,7 +757,13 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
           (Config().debugStageHeight / 2).ceil());
     }
-    stage.initialize(game.camera, game.stageData, t);
+    // カメラズームをリセット
+    game.camera.viewfinder.zoom = 1.0;
+    // ステージ初期化
+    stage.initialize(game.camera, game.stageData);
+
+    // セーブデータ削除
+    game.clearAndSaveStageData();
 
     // プレイヤー操作ボタン領域
     add(playerControllButtonsArea!);
@@ -798,8 +804,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     if (game.getCurrentSeqName() != 'game') return;
     // クリア済みなら何もしない
     if (stage.isClear()) return;
-    // ゲームオーバー済みなら何もしない
-    if (stage.isGameover) return;
     bool beforeLegAbility = stage.getLegAbility();
     stage.update(dt, pushingMoveButton, game.world, game.camera);
     // 手の能力取得状況更新
@@ -1008,11 +1012,15 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       if (stage.score.actual > game.highScore) {
         game.setAndSaveHighScore(stage.score.actual);
       }
-      // BGMストップ
-      Audio().stopBGM();
       // ゲームオーバーシーケンスへ
       game.pushSeqNamed('gameover');
+      // BGMストップ
+      Audio().stopBGM();
     }
+  }
+
+  void resetCameraPos() {
+    stage.resetCameraPos(game.camera);
   }
 
   ButtonComponent playerControllButton({
@@ -1082,7 +1090,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
 
   void updatePlayerControllButtons() {
     playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
-    if (Config().playerControllButtonType == 0) {
+    if (Config().playerControllButtonType ==
+        PlayerControllButtonType.onScreenEdge) {
       playerUpMoveButton.size = yButtonAreaSize;
       playerUpMoveButton.button?.size = yButtonAreaSize;
       playerUpMoveButton.buttonDown?.size = yButtonAreaSize;
@@ -1179,7 +1188,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       } else {
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
       }
-    } else if (Config().playerControllButtonType == 1) {
+    } else if (Config().playerControllButtonType ==
+        PlayerControllButtonType.onScreenBottom) {
       playerUpMoveButton.size = xButtonAreaSize2;
       playerUpMoveButton.button?.size = xButtonAreaSize2;
       playerUpMoveButton.buttonDown?.size = xButtonAreaSize2;
@@ -1256,7 +1266,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       } else {
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
       }
-    } else if (Config().playerControllButtonType == 2) {
+    } else if (Config().playerControllButtonType ==
+        PlayerControllButtonType.joyStick) {
       (playerControllJoyStickField.painter as JoyStickFieldPainter)
           .drawDiagonalArcs = stage.getLegAbility();
       playerControllJoyStick.enableDiagonalInput = stage.getLegAbility();

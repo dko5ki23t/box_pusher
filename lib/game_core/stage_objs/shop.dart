@@ -193,6 +193,9 @@ class Shop extends StageObj {
   bool get puttable => level > 1;
 
   @override
+  bool get playerMovable => !stopping;
+
+  @override
   bool get enemyMovable => level > 1;
 
   @override

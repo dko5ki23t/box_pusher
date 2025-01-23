@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
+import 'package:box_pusher/components/confirm_exit_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
 import 'package:box_pusher/components/debug_view_distributions_dialog.dart';
 import 'package:box_pusher/components/version_log_dialog.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
@@ -85,6 +88,10 @@ class BoxPusherGame extends FlameGame
   Map<String, dynamic> _stageData = {};
   Map<String, dynamic> get stageData => _stageData;
 
+  /// 操作方法や音量等のコンフィグ情報
+  Map<String, dynamic> _userConfigData = {};
+  Map<String, dynamic> get userConfigData => _userConfigData;
+
   /// セーブデータのバージョン（アプリバージョン）
   Version _saveDataVersion = Version(0, 0, 0);
 
@@ -148,11 +155,20 @@ class BoxPusherGame extends FlameGame
       onShow: () {
         if (_router.currentRoute.name == 'game' &&
             _router.routes['game']!.firstChild() != null) {
-          Audio().resumeBGM();
+          if (!Config().hideGameToMenu) {
+            Audio().resumeBGM();
+          }
         }
       },
       onHide: () {
-        Audio().pauseBGM();
+        if (Config().hideGameToMenu &&
+            _router.currentRoute.name == 'game' &&
+            _router.routes['game']!.firstChild() != null) {
+          // ゲームシーケンスの時はメニュー画面に遷移
+          pushSeqNamed("menu");
+        } else {
+          Audio().pauseBGM();
+        }
       },
     );
 
@@ -175,6 +191,13 @@ class BoxPusherGame extends FlameGame
       'confirm_delete_stage_data_dialog': OverlayRoute(
         (context, game) {
           return ConfirmDeleteStageDataDialog(
+            game: this,
+          );
+        },
+      ),
+      'confirm_exit_dialog': OverlayRoute(
+        (context, game) {
+          return ConfirmExitDialog(
             game: this,
           );
         },
@@ -209,9 +232,12 @@ class BoxPusherGame extends FlameGame
       try {
         _highScore = prefs.getInt('highScore') ?? 0;
         _stageData = jsonDecode(prefs.getString('stageData') ?? '');
+        _userConfigData = jsonDecode(prefs.getString('userConfigData') ??
+            jsonEncode(getDefaultUserConfig()));
         _saveDataVersion = Version.parse(prefs.getString('version')!);
       } catch (e) {
         _stageData = {};
+        _userConfigData = getDefaultUserConfig();
         setAndSaveHighScore(0);
         _saveDataVersion = Version.parse(packageInfo.version);
       }
@@ -223,13 +249,26 @@ class BoxPusherGame extends FlameGame
         final saveData = await saveDataFile.readAsString();
         final jsonMap = jsonDecode(saveData);
         _highScore = jsonMap['highScore'];
-        _stageData = jsonMap['stageData'];
+        _stageData = jsonMap['stageData'] ?? {};
+        _userConfigData = jsonMap['userConfigData'] ?? getDefaultUserConfig();
         _saveDataVersion = Version.parse(jsonMap['version']);
       } catch (e) {
         _stageData = {};
+        _userConfigData = getDefaultUserConfig();
         setAndSaveHighScore(0);
         _saveDataVersion = Version.parse(packageInfo.version);
       }
+    }
+    // ユーザ設定コンフィグデータを反映
+    int index = 0;
+    try {
+      index = _userConfigData['controller'];
+    } catch (e) {
+      log(e.toString());
+    }
+    if (index < PlayerControllButtonType.values.length) {
+      Config().playerControllButtonType =
+          PlayerControllButtonType.values[index];
     }
   }
 
@@ -240,11 +279,13 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
       await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'userConfigData': _userConfigData,
         'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
@@ -259,15 +300,44 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
       await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'userConfigData': _userConfigData,
         'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
     }
+  }
+
+  /// 操作方法や音量等のコンフィグ情報をセーブデータに保存
+  Future<void> saveUserConfigData() async {
+    _userConfigData['controller'] = Config().playerControllButtonType.index;
+    if (kIsWeb) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('highScore', _highScore);
+      await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
+      await prefs.setString('version', _saveDataVersion.toString());
+    } else {
+      String jsonText = jsonEncode({
+        'highScore': _highScore,
+        'stageData': _stageData,
+        'userConfigData': _userConfigData,
+        'version': _saveDataVersion.toString(),
+      });
+      await saveDataFile.writeAsString(jsonText);
+    }
+  }
+
+  Map<String, dynamic> getDefaultUserConfig() {
+    return {
+      'controller': 0,
+      'volume': 50,
+    };
   }
 
   Future<void> clearAndSaveStageData() async {
@@ -309,6 +379,28 @@ class BoxPusherGame extends FlameGame
     if (_router.routes['game']!.firstChild() != null) {
       final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       gameSeq.updatePlayerControllButtons();
+    }
+  }
+
+  void setGameover() {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      gameSeq.stage.isGameover = true;
+    }
+  }
+
+  bool? isGameover() {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      return gameSeq.stage.isGameover;
+    }
+    return null;
+  }
+
+  void resetCameraPos() {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      gameSeq.resetCameraPos();
     }
   }
 
@@ -382,7 +474,7 @@ class BoxPusherGame extends FlameGame
         gameSeq.isReady = false;
         pushSeqNamed('game');
         pushSeqNamed('loading');
-        gameSeq.initialize(false);
+        gameSeq.initialize();
         return;
       }
     }
