@@ -1,0 +1,8 @@
+rangeType, point1X, point1Y, point2X, point2Y, distance, total, floorNone, floorWater, floorMagma, blockL1, blockL2, blockL3, blockL4
+distance, 0, 0, 0, 0, 8,145,0,0,0,145,0,0,0
+distance, 0, 0, 0, 0, 10,76,2,0,0,74,0,0,0
+distance, 0, 0, 0, 0, 15,260,5,0,0,229,26,0,0
+distance, 0, 0, 0, 0, 20,360,7,0,0,317,32,4,0
+distance, 0, 0, 0, 0, 25,460,5,5,0,396,46,9,0
+distance, 0, 0, 0, 0, 30,560,6,0,6,448,78,17,6
+distance, 0, 0, 0, 0, 100,18340,0,0,917,9170,4585,2934,1284
