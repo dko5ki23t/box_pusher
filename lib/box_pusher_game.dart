@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:box_pusher/audio.dart';
@@ -86,6 +87,10 @@ class BoxPusherGame extends FlameGame
   /// プレイ中のステージ情報
   Map<String, dynamic> _stageData = {};
   Map<String, dynamic> get stageData => _stageData;
+
+  /// 操作方法や音量等のコンフィグ情報
+  Map<String, dynamic> _userConfigData = {};
+  Map<String, dynamic> get userConfigData => _userConfigData;
 
   /// セーブデータのバージョン（アプリバージョン）
   Version _saveDataVersion = Version(0, 0, 0);
@@ -227,9 +232,12 @@ class BoxPusherGame extends FlameGame
       try {
         _highScore = prefs.getInt('highScore') ?? 0;
         _stageData = jsonDecode(prefs.getString('stageData') ?? '');
+        _userConfigData = jsonDecode(prefs.getString('userConfigData') ??
+            jsonEncode(getDefaultUserConfig()));
         _saveDataVersion = Version.parse(prefs.getString('version')!);
       } catch (e) {
         _stageData = {};
+        _userConfigData = getDefaultUserConfig();
         setAndSaveHighScore(0);
         _saveDataVersion = Version.parse(packageInfo.version);
       }
@@ -241,13 +249,26 @@ class BoxPusherGame extends FlameGame
         final saveData = await saveDataFile.readAsString();
         final jsonMap = jsonDecode(saveData);
         _highScore = jsonMap['highScore'];
-        _stageData = jsonMap['stageData'];
+        _stageData = jsonMap['stageData'] ?? {};
+        _userConfigData = jsonMap['userConfigData'] ?? getDefaultUserConfig();
         _saveDataVersion = Version.parse(jsonMap['version']);
       } catch (e) {
         _stageData = {};
+        _userConfigData = getDefaultUserConfig();
         setAndSaveHighScore(0);
         _saveDataVersion = Version.parse(packageInfo.version);
       }
+    }
+    // ユーザ設定コンフィグデータを反映
+    int index = 0;
+    try {
+      index = _userConfigData['controller'];
+    } catch (e) {
+      log(e.toString());
+    }
+    if (index < PlayerControllButtonType.values.length) {
+      Config().playerControllButtonType =
+          PlayerControllButtonType.values[index];
     }
   }
 
@@ -258,11 +279,13 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
       await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'userConfigData': _userConfigData,
         'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
@@ -277,15 +300,44 @@ class BoxPusherGame extends FlameGame
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
       await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'userConfigData': _userConfigData,
         'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
     }
+  }
+
+  /// 操作方法や音量等のコンフィグ情報をセーブデータに保存
+  Future<void> saveUserConfigData() async {
+    _userConfigData['controller'] = Config().playerControllButtonType.index;
+    if (kIsWeb) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('highScore', _highScore);
+      await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
+      await prefs.setString('version', _saveDataVersion.toString());
+    } else {
+      String jsonText = jsonEncode({
+        'highScore': _highScore,
+        'stageData': _stageData,
+        'userConfigData': _userConfigData,
+        'version': _saveDataVersion.toString(),
+      });
+      await saveDataFile.writeAsString(jsonText);
+    }
+  }
+
+  Map<String, dynamic> getDefaultUserConfig() {
+    return {
+      'controller': 0,
+      'volume': 50,
+    };
   }
 
   Future<void> clearAndSaveStageData() async {

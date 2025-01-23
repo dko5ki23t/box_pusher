@@ -90,9 +90,14 @@ class MenuSeq extends Sequence with KeyboardHandler {
       size: menuButtonSize,
       position: menuButtonPos,
       anchor: Anchor.center,
-      text: "${loc.controller}${Config().playerControllButtonType + 1}",
+      text: "${loc.controller}${Config().playerControllButtonType.index + 1}",
       onReleased: () {
-        Config().changePlayerControllButtonType();
+        int index = Config().playerControllButtonType.index + 1;
+        if (index >= PlayerControllButtonType.values.length) {
+          index = 0;
+        }
+        Config().playerControllButtonType =
+            PlayerControllButtonType.values[index];
         game.updatePlayerControllButtons();
       },
     );
@@ -138,7 +143,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
     super.update(dt);
     final loc = game.localization;
     controllSettingButton.text =
-        "${loc.controller}${Config().playerControllButtonType + 1}";
+        "${loc.controller}${Config().playerControllButtonType.index + 1}";
     // セーブ済みならボタンを無効化&テキスト変更
     saveButton.text = isSaved ? loc.saved : loc.save;
     saveButton.enabled = !isSaved;
@@ -194,6 +199,8 @@ class MenuSeq extends Sequence with KeyboardHandler {
     buttonGroup.unFocus();
     // セーブしたかどうかをクリア
     isSaved = false;
+    // ユーザ設定コンフィグをセーブ
+    game.saveUserConfigData();
   }
 
   @override

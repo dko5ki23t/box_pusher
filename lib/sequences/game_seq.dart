@@ -1090,7 +1090,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
 
   void updatePlayerControllButtons() {
     playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
-    if (Config().playerControllButtonType == 0) {
+    if (Config().playerControllButtonType ==
+        PlayerControllButtonType.onScreenEdge) {
       playerUpMoveButton.size = yButtonAreaSize;
       playerUpMoveButton.button?.size = yButtonAreaSize;
       playerUpMoveButton.buttonDown?.size = yButtonAreaSize;
@@ -1187,7 +1188,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       } else {
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
       }
-    } else if (Config().playerControllButtonType == 1) {
+    } else if (Config().playerControllButtonType ==
+        PlayerControllButtonType.onScreenBottom) {
       playerUpMoveButton.size = xButtonAreaSize2;
       playerUpMoveButton.button?.size = xButtonAreaSize2;
       playerUpMoveButton.buttonDown?.size = xButtonAreaSize2;
@@ -1264,7 +1266,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       } else {
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
       }
-    } else if (Config().playerControllButtonType == 2) {
+    } else if (Config().playerControllButtonType ==
+        PlayerControllButtonType.joyStick) {
       (playerControllJoyStickField.painter as JoyStickFieldPainter)
           .drawDiagonalArcs = stage.getLegAbility();
       playerControllJoyStick.enableDiagonalInput = stage.getLegAbility();

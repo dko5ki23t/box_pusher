@@ -248,7 +248,7 @@ class DebugDialogState extends State<DebugDialog> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done) {
                   return Text(
-                      '使用ブラウザ：${browserNameToStr(snapshot.data!.browserName)}');
+                      '使用ブラウザ：${browserNameToStr(snapshot.data!.browserName)} ${snapshot.data!.platform}');
                 } else {
                   return const Text('使用ブラウザ：読み込み中...');
                 }

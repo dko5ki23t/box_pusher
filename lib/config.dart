@@ -66,6 +66,18 @@ enum EnemyMovePattern {
   walkAndPushRandomOrStop,
 }
 
+/// プレイヤー操作ボタンタイプ
+enum PlayerControllButtonType {
+  /// 画面端にボタン配置
+  onScreenEdge,
+
+  /// 画面下部にまとめて配置
+  onScreenBottom,
+
+  /// ジョイスティック
+  joyStick,
+}
+
 class BlockFloorPattern {
   /// 床の割合
   final Map<StageObjTypeLevel, int> floorPercents;
@@ -204,11 +216,8 @@ class Config {
   }
 
   /// プレイヤー操作ボタンのタイプ
-  int _playerControllButtonType = 0;
-  int get playerControllButtonType => _playerControllButtonType;
-  void changePlayerControllButtonType() {
-    _playerControllButtonType = (_playerControllButtonType + 1) % 3;
-  }
+  PlayerControllButtonType playerControllButtonType =
+      PlayerControllButtonType.onScreenEdge;
 
   late Random random;
 
