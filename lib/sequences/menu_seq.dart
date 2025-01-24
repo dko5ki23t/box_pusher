@@ -34,6 +34,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: Config.gameTextFamily,
+          color: Colors.white,
           fontSize: 35,
         ),
       ),

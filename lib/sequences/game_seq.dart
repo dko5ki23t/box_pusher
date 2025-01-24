@@ -33,6 +33,45 @@ enum DebugViewMode {
   objInBlockMap,
 }
 
+/// チュートリアル
+enum Tutorial {
+  /// 移動
+  move,
+
+  /// プッシュ
+  push,
+
+  /// マージ
+  merge,
+
+  /// 動物
+  animals,
+
+  /// 女の子を助けよう
+  girl,
+
+  /// その他操作
+  other,
+
+  /// 手の能力
+  handAbility,
+
+  /// 足の能力
+  legAbility,
+
+  /// ポケットの能力
+  pocketAbility,
+
+  /// アーマーの能力
+  armerAbility,
+
+  /// 予知能力
+  eyeAbility,
+
+  /// マージの能力
+  mergeAbility,
+}
+
 class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// 画面上部の余白
   static Vector2 get topPaddingSize => Vector2(360.0, 40.0);
@@ -110,6 +149,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// 準備できたかどうか
   bool isReady = false;
 
+  /// 現在表示中のチュートリアル
+  Tutorial? currentTutorial = Tutorial.move;
+
+  /// 前フレームのチュートリアル
+  Tutorial? _prevTutorial;
+
   /// ステージオブジェクト
   late Stage stage;
 
@@ -135,6 +180,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final Image forbiddenImg;
   late final Image settingsImg;
   late final Image diagonalMoveImg;
+  late final Image tutorial1Img;
+  late final Image tutorial2Img;
   late final TextComponent currentPosText;
   late final TextComponent remainMergeCountText;
   late final SpriteAnimationComponent nextMergeItem;
@@ -167,6 +214,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final GameSpriteAnimationButton mergeAbilityButton;
   late final GameSpriteButton menuButton;
   late final GameTextButton viewModeButton;
+  late final PositionComponent tutorialArea;
 
   final Blink nextMergeItemBlink = Blink(showDuration: 0.4, hideDuration: 0.1);
 
@@ -184,6 +232,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     forbiddenImg = await Flame.images.load('forbidden_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     diagonalMoveImg = await Flame.images.load('arrows_output.png');
+    tutorial1Img = await Flame.images.load('tutorial1.png');
+    tutorial2Img = await Flame.images.load('tutorial2.png');
     // ステージ作成
     stage = Stage(testMode: game.testMode, gameWorld: game.world);
     await stage.onLoad();
@@ -742,6 +792,11 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         },
       );
     }
+    // チュートリアル表示領域
+    tutorialArea = PositionComponent(
+      position: Vector2.zero(),
+      size: BoxPusherGame.baseSize,
+    );
   }
 
   // 初期化（というよりリセット）
@@ -765,8 +820,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // セーブデータ削除
     game.clearAndSaveStageData();
 
-    // プレイヤー操作ボタン領域
-    add(playerControllButtonsArea!);
     // 画面上部ゲーム情報領域
     add(topGameInfoArea);
     // メニュー領域
@@ -785,12 +838,16 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     add(mergeAbilityButton);
     // メニューボタン領域
     add(menuButton);
+    // プレイヤー操作ボタン領域
+    add(playerControllButtonsArea!);
     if (game.testMode) {
       // 【テストモード時】現在座標表示領域
       add(currentPosText);
       // 【テストモード】現在の表示モード切り替えボタン
       add(viewModeButton);
     }
+    // チュートリアル表示領域
+    add(tutorialArea);
 
     // 準備完了
     isReady = true;
@@ -804,6 +861,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     if (game.getCurrentSeqName() != 'game') return;
     // クリア済みなら何もしない
     if (stage.isClear()) return;
+    // チュートリアル表示
+    if (_updateTutorial()) return;
+    // 移動の入力があったら移動チュートリアル終了
+    if (pushingMoveButton != Move.none) {
+      currentTutorial = null;
+    }
     bool beforeLegAbility = stage.getLegAbility();
     stage.update(dt, pushingMoveButton, game.world, game.camera);
     // 手の能力取得状況更新
@@ -1293,6 +1356,55 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       case PlayerControllButtonType.noButton:
         break;
     }
+  }
+
+  /// チュートリアル表示の更新、戻り値は、以降のupdate()を停止するかどうか
+  bool _updateTutorial() {
+    // チュートリアル変更時
+    if (_prevTutorial != currentTutorial) {
+      tutorialArea.removeAll(tutorialArea.children);
+      switch (currentTutorial) {
+        case Tutorial.move:
+          tutorialArea.addAll(
+            [
+              SpriteComponent.fromImage(tutorial2Img),
+              SpriteAnimationComponent.fromFrameData(
+                tutorial1Img,
+                SpriteAnimationData.sequenced(
+                    amount: 2,
+                    stepTime: Stage.objectStepTime,
+                    textureSize: BoxPusherGame.baseSize),
+              ),
+            ],
+          );
+          break;
+        case Tutorial.push:
+          break;
+        case Tutorial.merge:
+          break;
+        case Tutorial.animals:
+          break;
+        case Tutorial.girl:
+          break;
+        case Tutorial.other:
+          break;
+        case Tutorial.handAbility:
+          break;
+        case Tutorial.legAbility:
+          break;
+        case Tutorial.pocketAbility:
+          break;
+        case Tutorial.armerAbility:
+          break;
+        case Tutorial.eyeAbility:
+          break;
+        case Tutorial.mergeAbility:
+          break;
+        case null:
+      }
+    }
+    _prevTutorial = currentTutorial;
+    return false;
   }
 
   // TapCallbacks実装時には必要(PositionComponentでは不要)
