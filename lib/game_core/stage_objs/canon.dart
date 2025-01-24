@@ -70,7 +70,7 @@ class Canon extends StageObj {
             },
           },
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.trap,
+            type: StageObjType.canon,
             level: level,
           ),
         ) {

@@ -271,6 +271,8 @@ class Config {
     hideGameToMenu = jsonData['hideGameToMenu']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
+    vectorData = jsonData['updateRange']['value'];
+    updateRange = Point(vectorData['x'], vectorData['y']);
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
     bombExplodingAreaWidth = jsonData['bombExplodingAreaWidth']['value'];
     builderBuildBlockTurn = jsonData['builderBuildBlockTurn']['value'];
@@ -350,6 +352,9 @@ class Config {
 
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;
+
+  /// update()で更新する範囲（プレイヤー位置を起点としてこの分だけ左上、右下に移動した点で四角形を作る）
+  late Point updateRange;
 
   /// ボムが起爆しない正方形範囲の辺の長さ(必ず奇数で)
   late int bombNotStartAreaWidth;

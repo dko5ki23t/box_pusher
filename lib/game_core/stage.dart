@@ -1149,8 +1149,14 @@ class Stage {
     for (final ability in player.isAbilityForbidden.keys) {
       player.isAbilityForbidden[ability] = false;
     }
+
+    // ここから先更新対象となる範囲
+    final updateTargetRange = PointRectRange(
+        player.pos - Config().updateRange, player.pos + Config().updateRange);
+
     // 敵更新
-    final currentEnemies = [...enemies.iterable];
+    final currentEnemies = [...enemies.iterable]
+        .where((element) => updateTargetRange.contains(element.pos));
     for (final enemy in currentEnemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
@@ -1186,17 +1192,16 @@ class Stage {
       }
     }
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
-    //// これらはプレイヤーの移動開始/完了時のみ動かす
-    //if (playerStartMoving || playerEndMoving) {
-    final currentBoxes = [...boxes.iterable];
+    final currentBoxes = [...boxes.iterable]
+        .where((element) => updateTargetRange.contains(element.pos));
     for (final box in currentBoxes) {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           playerEndMoving, prohibitedPoints);
     }
-    //}
 
     // 敵涌きスポット更新
-    for (final spawner in spawners) {
+    for (final spawner in spawners
+        .where((element) => updateTargetRange.contains(element.pos))) {
       spawner.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
