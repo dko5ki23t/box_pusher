@@ -269,6 +269,7 @@ class Config {
     sumUpEnemyAttackDamage = jsonData['sumUpEnemyAttackDamage']['value'];
     consumeTrap = jsonData['consumeTrap']['value'];
     hideGameToMenu = jsonData['hideGameToMenu']['value'];
+    spawnItemAroundPlayer = jsonData['spawnItemAroundPlayer']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     vectorData = jsonData['updateRange']['value'];
@@ -349,6 +350,9 @@ class Config {
 
   /// ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか
   late bool hideGameToMenu;
+
+  /// マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))
+  late bool spawnItemAroundPlayer = true;
 
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;

@@ -51,6 +51,10 @@
         "desc": "ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか",
         "value": true
     },
+    "spawnItemAroundPlayer": {
+        "desc": "マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))",
+        "value": true
+    },
     "addedScoreEffectMove": {
         "desc": "スコア加算表示(+100とか)エフェクトの移動量",
         "value": {

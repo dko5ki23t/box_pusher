@@ -805,35 +805,44 @@ class Stage {
     // ステージ上にアイテムをランダムに配置
     // ステージ中央から時計回りに渦巻き状に移動して床があればランダムでアイテム設置
     Point p = Point(0, 0);
+    if (Config().spawnItemAroundPlayer) {
+      p = player.pos.copy();
+    }
     List<Point> decidedPoints = [];
     final maxMoveCount = max(stageWidth, stageHeight);
     // whileでいいが、念のため
-    for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
+    for (int moveCount = 1; moveCount < maxMoveCount; moveCount += 2) {
       // 特定方向に動いて、ランダムにアイテムを設置する処理
-      void moveAndSet(Move m, int c) {
+      void moveAndSet(Move m, int c, int percent) {
         for (int i = 0; i < c; i++) {
           p += m.point;
           if (get(p, detectPlayer: true).type == StageObjType.none &&
-              Config().random.nextInt(maxMoveCount) < c) {
+              Config().random.nextInt(100) < percent) {
             decidedPoints.add(p.copy());
             if (decidedPoints.length >= nextMergeItems.length) break;
           }
         }
       }
 
+      // 出現確率(中央付近ほど確率低くする=プレイヤーのすぐ近くに敵を涌かせないため)
+      int percentFunc(int x) {
+        return x > 3 ? ((x - 3) * (x - 3) * 0.5).round() : 0;
+      }
+
       // 上に移動
-      moveAndSet(Move.up, moveCount);
+      moveAndSet(Move.up, moveCount, percentFunc(moveCount));
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 右に移動
-      moveAndSet(Move.right, moveCount);
+      moveAndSet(Move.right, moveCount, percentFunc(moveCount));
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 下に移動
-      moveAndSet(Move.down, moveCount + 1);
+      moveAndSet(Move.down, moveCount + 1, percentFunc(moveCount));
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 左に移動
-      moveAndSet(Move.left, moveCount + 1);
+      moveAndSet(Move.left, moveCount + 1, percentFunc(moveCount));
       if (decidedPoints.length >= nextMergeItems.length) break;
     }
+    // 確率やマスの埋まり具合によってはアイテムが出現しない場合アリ
     for (int i = 0; i < decidedPoints.length; i++) {
       final nextMergeItem = nextMergeItems[i];
       final item = createObject(
