@@ -181,7 +181,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final Image settingsImg;
   late final Image diagonalMoveImg;
   late final Image tutorial1Img;
-  late final Image tutorial2Img;
   late final TextComponent currentPosText;
   late final TextComponent remainMergeCountText;
   late final SpriteAnimationComponent nextMergeItem;
@@ -233,7 +232,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     settingsImg = await Flame.images.load('settings.png');
     diagonalMoveImg = await Flame.images.load('arrows_output.png');
     tutorial1Img = await Flame.images.load('tutorial1.png');
-    tutorial2Img = await Flame.images.load('tutorial2.png');
     // ステージ作成
     stage = Stage(testMode: game.testMode, gameWorld: game.world);
     await stage.onLoad();
@@ -1367,7 +1365,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         case Tutorial.move:
           tutorialArea.addAll(
             [
-              SpriteComponent.fromImage(tutorial2Img),
+              CustomPainterComponent(
+                  size: BoxPusherGame.baseSize,
+                  painter: TutorialCircleHolePainter(
+                    radius: joyStickFieldRadius * 1.1,
+                    center: Vector2(0, topPaddingSize.y) + joyStickPosition,
+                  )),
               SpriteAnimationComponent.fromFrameData(
                 tutorial1Img,
                 SpriteAnimationData.sequenced(
@@ -1724,6 +1727,60 @@ class JoyStickFieldPainter extends CustomPainter {
           false,
           arcPaint);
     }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+class TutorialCircleHolePainter extends CustomPainter {
+  final Vector2 center;
+  final double radius;
+
+  TutorialCircleHolePainter({
+    required this.radius,
+    required this.center,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0x80000000);
+
+    double x = center.x - radius;
+    //final path = Path()
+    //  ..moveTo(0, 0)
+    //  ..lineTo(0, y)
+    //  ..lineTo(x + w, y)
+    //  ..lineTo(x + w, y + h)
+    //  ..lineTo(x, y + h)
+    //  ..lineTo(x, y)
+    //  ..lineTo(0, y)
+    //  ..lineTo(0, size.height)
+    //  ..lineTo(size.width, size.height)
+    //  ..lineTo(size.width, 0)
+    //  ..close();
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(0, center.y)
+      ..lineTo(x, center.y)
+      ..arcTo(Rect.fromCircle(center: center.toOffset(), radius: radius), pi,
+          pi * 0.5, false)
+      ..arcTo(Rect.fromCircle(center: center.toOffset(), radius: radius),
+          pi * 1.5, pi * 0.5, false)
+      ..arcTo(Rect.fromCircle(center: center.toOffset(), radius: radius), 0,
+          pi * 0.5, false)
+      ..arcTo(Rect.fromCircle(center: center.toOffset(), radius: radius),
+          pi * 0.5, pi * 0.5, false)
+      ..lineTo(x, center.y)
+      ..lineTo(0, center.y)
+      ..lineTo(0, size.height)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
   }
 
   @override
