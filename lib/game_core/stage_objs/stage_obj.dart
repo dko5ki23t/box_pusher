@@ -483,6 +483,9 @@ abstract class StageObj {
   /// トラップでやられる敵かどうか
   bool get isTrapKillable => isEnemy && killable;
 
+  /// プレイヤーの味方か（敵の攻撃を受けるか）
+  bool get isAlly => false;
+
   /// 攻撃を受ける
   /// やられたかどうかを返す
   bool hit(int damageLevel, Stage stage) {

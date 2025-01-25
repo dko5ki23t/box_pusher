@@ -1224,9 +1224,9 @@ class Stage {
       if (attack.key == player.pos) {
         isGameover = player.hit(attack.value, this);
       }
-      // ガーディアンに攻撃が当たった
-      for (final guardian in boxes.where((element) =>
-          element.type == StageObjType.guardian && attack.key == element.pos)) {
+      // ガーディアン等の味方に攻撃が当たった
+      for (final guardian in boxes
+          .where((element) => element.isAlly && attack.key == element.pos)) {
         if (guardian.hit(attack.value, this)) {
           // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
           guardian.removeAfterFrame();

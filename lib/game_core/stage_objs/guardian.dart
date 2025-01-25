@@ -345,9 +345,7 @@ class Guardian extends StageObj {
                 for (attackingReach = 0; attackingReach < 5; attackingReach++) {
                   final obj =
                       stage.getAfterPush(pos + vector.point * attackingReach);
-                  if (obj.type != StageObjType.guardian &&
-                      !obj.isEnemy &&
-                      !obj.enemyMovable) {
+                  if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
                     break;
                   }
                 }
@@ -509,4 +507,7 @@ class Guardian extends StageObj {
 
   @override
   bool get hasVector => true;
+
+  @override
+  bool get isAlly => true;
 }
