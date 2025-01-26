@@ -120,6 +120,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       saveAndToTitleButton,
       giveUpButton,
       controllSettingButton,
+      resetCameraButton,
     ]);
     addAll([
       // 背景をボタンにする(押すとメニュー閉じる)にすることで、背後のゲーム画面での操作を不可能にする

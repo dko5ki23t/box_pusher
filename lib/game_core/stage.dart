@@ -826,7 +826,7 @@ class Stage {
 
       // 出現確率(中央付近ほど確率低くする=プレイヤーのすぐ近くに敵を涌かせないため)
       int percentFunc(int x) {
-        return x > 3 ? ((x - 3) * (x - 3) * 0.5).round() : 0;
+        return x > 1 ? ((x - 1) * (x - 1) * 0.5).round() : 0;
       }
 
       // 上に移動

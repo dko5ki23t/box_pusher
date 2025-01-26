@@ -9,7 +9,7 @@ class Spike extends StageObj {
   /// 各レベルに対応する動きのパターン
   final Map<int, EnemyMovePattern> movePatterns = {
     1: EnemyMovePattern.mergeWalkRandomOrStop,
-    2: EnemyMovePattern.walkRandomOrStop,
+    2: EnemyMovePattern.mergeWalkRandomOrStop,
     3: EnemyMovePattern.followPlayer,
   };
 

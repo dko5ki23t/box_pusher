@@ -155,6 +155,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// 前フレームのチュートリアル
   Tutorial? _prevTutorial;
 
+  double countForTutorial = 0.0;
+  Move firstMoving = Move.none;
+
   /// ステージオブジェクト
   late Stage stage;
 
@@ -181,6 +184,10 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final Image settingsImg;
   late final Image diagonalMoveImg;
   late final Image tutorial1Img;
+  late final Image longTapImg;
+  late final Image tutorial2Img;
+  late final Image tutorial3Img;
+  late final Image spaceKeyImg;
   late final TextComponent currentPosText;
   late final TextComponent remainMergeCountText;
   late final SpriteAnimationComponent nextMergeItem;
@@ -232,6 +239,10 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     settingsImg = await Flame.images.load('settings.png');
     diagonalMoveImg = await Flame.images.load('arrows_output.png');
     tutorial1Img = await Flame.images.load('tutorial1.png');
+    longTapImg = await Flame.images.load('long_tap.png');
+    tutorial2Img = await Flame.images.load('tutorial2.png');
+    tutorial3Img = await Flame.images.load('tutorial3.png');
+    spaceKeyImg = await Flame.images.load('space_key_icon.png');
     // ステージ作成
     stage = Stage(testMode: game.testMode, gameWorld: game.world);
     await stage.onLoad();
@@ -860,9 +871,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // クリア済みなら何もしない
     if (stage.isClear()) return;
     // チュートリアル表示
-    if (_updateTutorial()) return;
+    if (_updateTutorial(dt)) return;
     // 移動の入力があったら移動チュートリアル終了
-    if (pushingMoveButton != Move.none) {
+    if (currentTutorial == Tutorial.move && pushingMoveButton != Move.none) {
       currentTutorial = null;
     }
     bool beforeLegAbility = stage.getLegAbility();
@@ -1357,7 +1368,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   }
 
   /// チュートリアル表示の更新、戻り値は、以降のupdate()を停止するかどうか
-  bool _updateTutorial() {
+  bool _updateTutorial(double dt) {
     // チュートリアル変更時
     if (_prevTutorial != currentTutorial) {
       tutorialArea.removeAll(tutorialArea.children);
@@ -1365,12 +1376,15 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         case Tutorial.move:
           tutorialArea.addAll(
             [
-              CustomPainterComponent(
-                  size: BoxPusherGame.baseSize,
-                  painter: TutorialCircleHolePainter(
-                    radius: joyStickFieldRadius * 1.1,
-                    center: Vector2(0, topPaddingSize.y) + joyStickPosition,
-                  )),
+              ButtonComponent(
+                size: BoxPusherGame.baseSize,
+                button: CustomPainterComponent(
+                    size: BoxPusherGame.baseSize,
+                    painter: TutorialCircleHolePainter(
+                      radius: joyStickFieldRadius * 1.2,
+                      center: Vector2(0, topPaddingSize.y) + joyStickPosition,
+                    )),
+              ),
               SpriteAnimationComponent.fromFrameData(
                 tutorial1Img,
                 SpriteAnimationData.sequenced(
@@ -1378,14 +1392,193 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
                     stepTime: Stage.objectStepTime,
                     textureSize: BoxPusherGame.baseSize),
               ),
+              CircleComponent(
+                radius: joyStickRadius,
+                anchor: Anchor.center,
+                position: Vector2(0, topPaddingSize.y) + joyStickPosition,
+                paint: Paint()..color = const Color(0x80ffffff),
+                children: [
+                  SequenceEffect(
+                    [
+                      for (final move in MoveExtent.straights) ...[
+                        OpacityEffect.fadeIn(
+                          EffectController(duration: 0.5),
+                        ),
+                        MoveEffect.by(
+                          move.vector * joyStickFieldRadius,
+                          EffectController(
+                            duration: 1.0,
+                            curve: Curves.decelerate,
+                          ),
+                        ),
+                        OpacityEffect.fadeOut(
+                          EffectController(duration: 0.5),
+                        ),
+                        MoveEffect.to(
+                          Vector2(0, topPaddingSize.y) + joyStickPosition,
+                          EffectController(
+                            duration: 0.1,
+                          ),
+                        ),
+                      ]
+                    ],
+                    infinite: true,
+                  ),
+                ],
+              ),
+              SpriteComponent.fromImage(
+                longTapImg,
+                size: Vector2(35, 50),
+                position:
+                    Vector2(-15, topPaddingSize.y - 10) + joyStickPosition,
+                children: [
+                  SequenceEffect(
+                    [
+                      for (final move in MoveExtent.straights) ...[
+                        OpacityEffect.fadeIn(
+                          EffectController(duration: 0.5),
+                        ),
+                        MoveEffect.by(
+                          move.vector * joyStickFieldRadius,
+                          EffectController(
+                            duration: 1.0,
+                            curve: Curves.decelerate,
+                          ),
+                        ),
+                        OpacityEffect.fadeOut(
+                          EffectController(duration: 0.5),
+                        ),
+                        MoveEffect.to(
+                          Vector2(-15, topPaddingSize.y - 10) +
+                              joyStickPosition,
+                          EffectController(
+                            duration: 0.1,
+                          ),
+                        ),
+                      ]
+                    ],
+                    infinite: true,
+                  ),
+                ],
+              ),
             ],
           );
+          countForTutorial = 0.0;
           break;
         case Tutorial.push:
           break;
         case Tutorial.merge:
           break;
         case Tutorial.animals:
+          // ゴリラとうさぎの場所取得
+          // (0, 0)
+          final original = (Vector2(
+                          BoxPusherGame.baseSize.x,
+                          640.0 -
+                              topPaddingSize.y -
+                              menuButtonAreaSize.y +
+                              44) -
+                      Stage.cellSize) *
+                  0.5 +
+              firstMoving.oppsite.vector * Stage.cellSize.x;
+
+          final gorilaPos = original;
+          final bunnyPos = game.camera.localToGlobal(Stage.cellSize * 5);
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  currentTutorial = Tutorial.girl;
+                },
+                size: BoxPusherGame.baseSize,
+                button: CustomPainterComponent(
+                    size: BoxPusherGame.baseSize,
+                    painter: TutorialMultiRRectHolePainter(
+                      ltToWh: {
+                        gorilaPos: Vector2.all(32),
+                        bunnyPos: Vector2.all(32),
+                      },
+                      radius: 8,
+                    )),
+              ),
+              PositionComponent(
+                position: Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
+                size: Vector2(250, 40),
+                anchor: Anchor.center,
+                children: [
+                  OpacityEffectTextComponent(
+                    text: "タップまたは",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                        fontFamily: Config.gameTextFamily,
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                    children: [
+                      SequenceEffect(
+                        [
+                          OpacityEffect.fadeIn(
+                            EffectController(duration: 1.0),
+                          ),
+                          OpacityEffect.fadeOut(
+                            EffectController(duration: 1.0),
+                          ),
+                        ],
+                        infinite: true,
+                      ),
+                    ],
+                  ),
+                  SpriteAnimationComponent.fromFrameData(
+                    spaceKeyImg,
+                    SpriteAnimationData.sequenced(
+                        amount: 2,
+                        stepTime: Stage.objectStepTime,
+                        textureSize: Vector2(34, 15)),
+                    position: Vector2(125, 0),
+                    size: Vector2(60, 30),
+                    children: [
+                      SequenceEffect(
+                        [
+                          OpacityEffect.fadeIn(
+                            EffectController(duration: 1.0),
+                          ),
+                          OpacityEffect.fadeOut(
+                            EffectController(duration: 1.0),
+                          ),
+                        ],
+                        infinite: true,
+                      ),
+                    ],
+                  ),
+                  OpacityEffectTextComponent(
+                    text: "で次へ",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                        fontFamily: Config.gameTextFamily,
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                    position: Vector2(190, 0),
+                    children: [
+                      SequenceEffect(
+                        [
+                          OpacityEffect.fadeIn(
+                            EffectController(duration: 1.0),
+                          ),
+                          OpacityEffect.fadeOut(
+                            EffectController(duration: 1.0),
+                          ),
+                        ],
+                        infinite: true,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          );
           break;
         case Tutorial.girl:
           break;
@@ -1403,10 +1596,186 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           break;
         case Tutorial.mergeAbility:
           break;
-        case null:
+        default:
+          break;
+      }
+      if (_prevTutorial == Tutorial.move) {
+        currentTutorial = Tutorial.push;
+        _prevTutorial = currentTutorial;
+        countForTutorial = 0.0;
+        return false;
       }
     }
     _prevTutorial = currentTutorial;
+    switch (currentTutorial) {
+      case Tutorial.push:
+        double prevMovingAmount = countForTutorial * Stage.playerSpeed;
+        countForTutorial += dt;
+        double movingAmount = countForTutorial * Stage.playerSpeed;
+        if (movingAmount < Stage.cellSize.x / 2) {
+          return false;
+        } else
+        // 初めてマスの半分移動したら
+        if (prevMovingAmount < Stage.cellSize.x) {
+          firstMoving = stage.player.moving;
+          tutorialArea.removeAll(tutorialArea.children);
+          final holePosition = Vector2(
+                  BoxPusherGame.baseSize.x * 0.5 - 30,
+                  (640.0 - topPaddingSize.y - menuButtonAreaSize.y) * 0.5 +
+                      15) +
+              Vector2(15 * firstMoving.vector.x, 15 * firstMoving.vector.y);
+          final imgPosition = Vector2(BoxPusherGame.baseSize.x * 0.5,
+              (640.0 - topPaddingSize.y - menuButtonAreaSize.y) * 0.5 + -30);
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                size: BoxPusherGame.baseSize,
+                button: CustomPainterComponent(
+                    size: BoxPusherGame.baseSize,
+                    painter: TutorialRRectHolePainter(
+                      lt: holePosition,
+                      w: 60,
+                      h: 60,
+                      radius: 8,
+                    )),
+              ),
+              SpriteComponent.fromImage(
+                tutorial2Img,
+                size: Vector2(150, 70),
+                position: imgPosition,
+                anchor: Anchor.center,
+              ),
+            ],
+          );
+        } else if (countForTutorial > 3.0) {
+          currentTutorial = Tutorial.merge;
+          countForTutorial = 0.0;
+          return false;
+        }
+        return true;
+      case Tutorial.merge:
+        double prevMovingAmount = countForTutorial * Stage.playerSpeed;
+        countForTutorial += dt;
+        double movingAmount = countForTutorial * Stage.playerSpeed;
+        if (movingAmount < Stage.cellSize.x * 0.5) {
+          return false;
+        } else
+        // 初めてマス半分移動したら
+        if (prevMovingAmount < Stage.cellSize.x * 0.5) {
+          tutorialArea.removeAll(tutorialArea.children);
+          final holePosition = Vector2(
+                  BoxPusherGame.baseSize.x * 0.5 - 50,
+                  (640.0 - topPaddingSize.y - menuButtonAreaSize.y) * 0.5 -
+                      12) +
+              Vector2(30 * firstMoving.vector.x, 30 * firstMoving.vector.y);
+          final imgPosition = Vector2(BoxPusherGame.baseSize.x * 0.5,
+              (640.0 - topPaddingSize.y - menuButtonAreaSize.y) * 0.5 - 100);
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  currentTutorial = Tutorial.animals;
+                  countForTutorial = 0;
+                },
+                size: BoxPusherGame.baseSize,
+                button: CustomPainterComponent(
+                    size: BoxPusherGame.baseSize,
+                    painter: TutorialRRectHolePainter(
+                      lt: holePosition,
+                      w: 100,
+                      h: 100,
+                      radius: 8,
+                    )),
+              ),
+              SpriteComponent.fromImage(
+                tutorial3Img,
+                size: Vector2(180, 76),
+                position: imgPosition,
+                anchor: Anchor.center,
+              ),
+              PositionComponent(
+                position: Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
+                size: Vector2(250, 40),
+                anchor: Anchor.center,
+                children: [
+                  OpacityEffectTextComponent(
+                    text: "タップまたは",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                        fontFamily: Config.gameTextFamily,
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                    children: [
+                      SequenceEffect(
+                        [
+                          OpacityEffect.fadeIn(
+                            EffectController(duration: 1.0),
+                          ),
+                          OpacityEffect.fadeOut(
+                            EffectController(duration: 1.0),
+                          ),
+                        ],
+                        infinite: true,
+                      ),
+                    ],
+                  ),
+                  SpriteAnimationComponent.fromFrameData(
+                    spaceKeyImg,
+                    SpriteAnimationData.sequenced(
+                        amount: 2,
+                        stepTime: Stage.objectStepTime,
+                        textureSize: Vector2(34, 15)),
+                    position: Vector2(125, 0),
+                    size: Vector2(60, 30),
+                    children: [
+                      SequenceEffect(
+                        [
+                          OpacityEffect.fadeIn(
+                            EffectController(duration: 1.0),
+                          ),
+                          OpacityEffect.fadeOut(
+                            EffectController(duration: 1.0),
+                          ),
+                        ],
+                        infinite: true,
+                      ),
+                    ],
+                  ),
+                  OpacityEffectTextComponent(
+                    text: "で次へ",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                        fontFamily: Config.gameTextFamily,
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
+                    ),
+                    position: Vector2(190, 0),
+                    children: [
+                      SequenceEffect(
+                        [
+                          OpacityEffect.fadeIn(
+                            EffectController(duration: 1.0),
+                          ),
+                          OpacityEffect.fadeOut(
+                            EffectController(duration: 1.0),
+                          ),
+                        ],
+                        infinite: true,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+        return true;
+      default:
+        break;
+    }
     return false;
   }
 
@@ -1749,18 +2118,6 @@ class TutorialCircleHolePainter extends CustomPainter {
     final paint = Paint()..color = const Color(0x80000000);
 
     double x = center.x - radius;
-    //final path = Path()
-    //  ..moveTo(0, 0)
-    //  ..lineTo(0, y)
-    //  ..lineTo(x + w, y)
-    //  ..lineTo(x + w, y + h)
-    //  ..lineTo(x, y + h)
-    //  ..lineTo(x, y)
-    //  ..lineTo(0, y)
-    //  ..lineTo(0, size.height)
-    //  ..lineTo(size.width, size.height)
-    //  ..lineTo(size.width, 0)
-    //  ..close();
     final path = Path()
       ..moveTo(0, 0)
       ..lineTo(0, center.y)
@@ -1775,6 +2132,109 @@ class TutorialCircleHolePainter extends CustomPainter {
           pi * 0.5, pi * 0.5, false)
       ..lineTo(x, center.y)
       ..lineTo(0, center.y)
+      ..lineTo(0, size.height)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+class TutorialRRectHolePainter extends CustomPainter {
+  final Vector2 lt;
+  final double w;
+  final double h;
+  final double radius;
+
+  TutorialRRectHolePainter({
+    required this.lt,
+    required this.w,
+    required this.h,
+    required this.radius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0x80000000);
+    double diameter = radius * 2;
+
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(0, lt.y + radius)
+      ..arcTo(
+          Rect.fromLTWH(lt.x, lt.y, diameter, diameter), pi, pi * 0.5, false)
+      ..arcTo(Rect.fromLTWH(lt.x + w - diameter, lt.y, diameter, diameter),
+          pi * 1.5, pi * 0.5, false)
+      ..arcTo(
+          Rect.fromLTWH(
+              lt.x + w - diameter, lt.y + h - diameter, diameter, diameter),
+          0,
+          pi * 0.5,
+          false)
+      ..arcTo(Rect.fromLTWH(lt.x, lt.y + h - diameter, diameter, diameter),
+          pi * 0.5, pi * 0.5, false)
+      ..lineTo(lt.x, lt.y + radius)
+      ..lineTo(0, lt.y + radius)
+      ..lineTo(0, size.height)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+class TutorialMultiRRectHolePainter extends CustomPainter {
+  /// 左上座標->幅・高さ それぞれの四角形はy座標上で重ならないとする
+  final Map<Vector2, Vector2> ltToWh;
+  final double radius;
+
+  TutorialMultiRRectHolePainter({
+    required this.ltToWh,
+    required this.radius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0x80000000);
+    double diameter = radius * 2;
+
+    final path = Path()..moveTo(0, 0);
+
+    for (final e in ltToWh.entries) {
+      final lt = e.key;
+      double w = e.value.x;
+      double h = e.value.y;
+
+      path
+        ..lineTo(0, lt.y + radius)
+        ..arcTo(
+            Rect.fromLTWH(lt.x, lt.y, diameter, diameter), pi, pi * 0.5, false)
+        ..arcTo(Rect.fromLTWH(lt.x + w - diameter, lt.y, diameter, diameter),
+            pi * 1.5, pi * 0.5, false)
+        ..arcTo(
+            Rect.fromLTWH(
+                lt.x + w - diameter, lt.y + h - diameter, diameter, diameter),
+            0,
+            pi * 0.5,
+            false)
+        ..arcTo(Rect.fromLTWH(lt.x, lt.y + h - diameter, diameter, diameter),
+            pi * 0.5, pi * 0.5, false)
+        ..lineTo(lt.x, lt.y + radius)
+        ..lineTo(0, lt.y + radius);
+    }
+    path
       ..lineTo(0, size.height)
       ..lineTo(size.width, size.height)
       ..lineTo(size.width, 0)
