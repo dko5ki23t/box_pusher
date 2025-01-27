@@ -16,28 +16,13 @@ class Ghost extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'ghost.png';
 
-  /// オブジェクトのレベル->ゴースト化アニメーションのマップ
-  final Map<int, SpriteAnimation> levelToGhostAnimations;
-
   Ghost({
     required Image ghostImg,
     required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
-  })  : levelToGhostAnimations = {
-          0: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-          for (int i = 1; i <= 3; i++)
-            i: SpriteAnimation.spriteList([
-              Sprite(ghostImg,
-                  srcPosition: Vector2(128 * (i - 1) + 64, 0),
-                  srcSize: Stage.cellSize),
-              Sprite(ghostImg,
-                  srcPosition: Vector2(128 * (i - 1) + 96, 0),
-                  srcSize: Stage.cellSize),
-            ], stepTime: Stage.objectStepTime),
-        },
-        super(
+  }) : super(
           animationComponent: SpriteAnimationComponent(
             priority: Stage.movingPriority,
             size: Stage.cellSize,
@@ -63,6 +48,25 @@ class Ghost extends StageObj {
                 ], stepTime: Stage.objectStepTime),
               },
           },
+          levelToAttackAnimations: {
+            1: {
+              0: {
+                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
+                    stepTime: 1.0),
+              },
+              for (int i = 1; i <= 3; i++)
+                i: {
+                  Move.none: SpriteAnimation.spriteList([
+                    Sprite(ghostImg,
+                        srcPosition: Vector2(128 * (i - 1) + 64, 0),
+                        srcSize: Stage.cellSize),
+                    Sprite(ghostImg,
+                        srcPosition: Vector2(128 * (i - 1) + 96, 0),
+                        srcSize: Stage.cellSize),
+                  ], stepTime: Stage.objectStepTime),
+                },
+            },
+          },
           typeLevel: StageObjTypeLevel(
             type: StageObjType.ghost,
             level: level,
@@ -72,7 +76,8 @@ class Ghost extends StageObj {
   bool playerStartMovingFlag = false;
 
   /// すり抜け中か
-  bool ghosting = false;
+  bool get ghosting => attacking;
+  set ghosting(bool b) => attacking = b;
 
   @override
   void update(
@@ -94,13 +99,11 @@ class Ghost extends StageObj {
       if (ret.containsKey('ghost') && ret['ghost']! && !ghosting) {
         ghosting = true;
         // ゴースト化したアニメーションに変更
-        int key = levelToGhostAnimations.containsKey(level) ? level : 0;
-        animationComponent.animation = levelToGhostAnimations[key]!;
+        vector = vector;
       } else if (ret.containsKey('ghost') && !ret['ghost']! && ghosting) {
         ghosting = false;
         // 元のアニメーションに変更
-        int key = levelToAnimations.containsKey(level) ? level : 0;
-        animationComponent.animation = levelToAnimations[key]![Move.none]!;
+        vector = vector;
       } else if (ret.containsKey('move')) {
         moving = ret['move'] as Move;
       }

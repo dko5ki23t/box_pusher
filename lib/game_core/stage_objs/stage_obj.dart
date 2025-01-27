@@ -382,7 +382,7 @@ abstract class StageObj {
   set level(int l) {
     // 攻撃中かどうか、レベル、向きでアニメーションを変更する
     if (attacking) {
-      if (!levelToAttackAnimations.containsKey(l)) {
+      if (!levelToAttackAnimations[attackCh]!.containsKey(l)) {
         log('no attacking animation for level $l in ${_typeLevel.type}');
         // 通常時でのエラー画像を使う
         animationComponent.animation = levelToAnimations[0]![vector];
