@@ -20,5 +20,19 @@
   "highScore": "ハイスコア",
   "debug": "デバッグ",
   "versionLog": "バージョンログ",
-  "language": "English"
+  "language": "English",
+  "tapOr": "タップまたは",
+  "toNext": "で次へ",
+  "to": "で",
+  "returnGame": "ゲームに戻る",
+  "animalTutorial1": "動物に触れると",
+  "animalTutorial2": "能力ゲット",
+  "girlTutorial1": "どこかにいる女の子を",
+  "girlTutorial2": "見つけ出そう",
+  "otherTutorial1": "あと何回マージで",
+  "otherTutorial2": "右のアイテムが",
+  "otherTutorial3": "出現するか",
+  "otherTutorial4": "獲得スコア",
+  "otherTutorial5": "獲得コイン",
+  "otherTutorial6": "マップは移動・拡大縮小できます"
 }

@@ -68,11 +68,162 @@ class Tutorial {
   /// 移動チュートリアルで移動した向き
   Move _firstMoving = Move.none;
 
+  /// 「タップまたはスペースキーで次へ」の領域
+  PositionComponent tapOrSpaceToNextComponent(
+    Vector2 position,
+    BoxPusherGame game,
+  ) {
+    final tapOrSpaceToNextSize =
+        game.lang == Language.japanese ? Vector2(250, 40) : Vector2(200, 40);
+    const tapOrSpaceToNextTextStyle = TextStyle(
+      fontFamily: Config.gameTextFamily,
+      color: Colors.white,
+      fontSize: 20,
+    );
+    final tapOrSpaceToNextPosList = game.lang == Language.japanese
+        ? [
+            Vector2(0, 0),
+            Vector2(125, 0),
+            Vector2(190, 0),
+          ]
+        : [
+            Vector2(0, 0),
+            Vector2(68, 0),
+            Vector2(140, 0),
+          ];
+    SequenceEffect tapOrSpaceToNextEffect() => SequenceEffect(
+          [
+            OpacityEffect.fadeIn(
+              EffectController(duration: 1.0),
+            ),
+            OpacityEffect.fadeOut(
+              EffectController(duration: 1.0),
+            ),
+          ],
+          infinite: true,
+        );
+
+    return PositionComponent(
+      position: position,
+      size: tapOrSpaceToNextSize,
+      anchor: Anchor.center,
+      children: [
+        OpacityEffectTextComponent(
+          text: game.localization.tapOr,
+          textRenderer: TextPaint(
+            style: tapOrSpaceToNextTextStyle,
+          ),
+          children: [tapOrSpaceToNextEffect()],
+        ),
+        SpriteAnimationComponent.fromFrameData(
+          spaceKeyImg,
+          SpriteAnimationData.sequenced(
+              amount: 2,
+              stepTime: Stage.objectStepTime,
+              textureSize: Vector2(34, 15)),
+          position: tapOrSpaceToNextPosList[1],
+          size: Vector2(60, 30),
+          children: [tapOrSpaceToNextEffect()],
+        ),
+        OpacityEffectTextComponent(
+          text: game.localization.toNext,
+          textRenderer: TextPaint(
+            style: tapOrSpaceToNextTextStyle,
+          ),
+          position: tapOrSpaceToNextPosList[2],
+          children: [tapOrSpaceToNextEffect()],
+        ),
+      ],
+    );
+  }
+
+  /// 「タップまたはスペースキーでゲームに戻る」の領域
+  PositionComponent tapOrSpaceToReturnComponent(
+    Vector2 position,
+    BoxPusherGame game,
+  ) {
+    final tapOrSpaceToReturnSize =
+        game.lang == Language.japanese ? Vector2(250, 80) : Vector2(200, 80);
+    const tapOrSpaceToReturnTextStyle = TextStyle(
+      fontFamily: Config.gameTextFamily,
+      color: Colors.white,
+      fontSize: 20,
+    );
+    final tapOrSpaceToReturnPosList = game.lang == Language.japanese
+        ? [
+            Vector2(20, 0),
+            Vector2(145, 0),
+            Vector2(210, 0),
+          ]
+        : [
+            Vector2(40, 0),
+            Vector2(108, 0),
+            Vector2(140, 0),
+          ];
+    SequenceEffect tapOrSpaceToReturnEffect() => SequenceEffect(
+          [
+            OpacityEffect.fadeIn(
+              EffectController(duration: 1.0),
+            ),
+            OpacityEffect.fadeOut(
+              EffectController(duration: 1.0),
+            ),
+          ],
+          infinite: true,
+        );
+
+    return PositionComponent(
+      position: position,
+      size: tapOrSpaceToReturnSize,
+      anchor: Anchor.center,
+      children: [
+        OpacityEffectTextComponent(
+          text: game.localization.tapOr,
+          position: tapOrSpaceToReturnPosList[0],
+          textRenderer: TextPaint(
+            style: tapOrSpaceToReturnTextStyle,
+          ),
+          children: [tapOrSpaceToReturnEffect()],
+        ),
+        SpriteAnimationComponent.fromFrameData(
+          spaceKeyImg,
+          SpriteAnimationData.sequenced(
+              amount: 2,
+              stepTime: Stage.objectStepTime,
+              textureSize: Vector2(34, 15)),
+          position: tapOrSpaceToReturnPosList[1],
+          size: Vector2(60, 30),
+          children: [tapOrSpaceToReturnEffect()],
+        ),
+        OpacityEffectTextComponent(
+          text: game.localization.to,
+          textRenderer: TextPaint(
+            style: tapOrSpaceToReturnTextStyle,
+          ),
+          position: tapOrSpaceToReturnPosList[2],
+          children: [tapOrSpaceToReturnEffect()],
+        ),
+        OpacityEffectTextComponent(
+          text: game.localization.returnGame,
+          textRenderer: TextPaint(
+            style: tapOrSpaceToReturnTextStyle,
+          ),
+          position: tapOrSpaceToReturnSize * 0.5,
+          anchor: Anchor.topCenter,
+          children: [tapOrSpaceToReturnEffect()],
+        ),
+      ],
+    );
+  }
+
   late final Image tutorial1Img;
   late final Image longTapImg;
   late final Image tutorial2Img;
   late final Image tutorial3Img;
   late final Image spaceKeyImg;
+  late final Image girlImg;
+  late final Image pinchInOutImg;
+  late final Image mouseWheelImg;
 
   late final PositionComponent tutorialArea;
 
@@ -82,6 +233,9 @@ class Tutorial {
     tutorial2Img = await Flame.images.load('tutorial2.png');
     tutorial3Img = await Flame.images.load('tutorial3.png');
     spaceKeyImg = await Flame.images.load('space_key_icon.png');
+    girlImg = await Flame.images.load('girl_tutorial.png');
+    pinchInOutImg = await Flame.images.load('pinch_inout.png');
+    mouseWheelImg = await Flame.images.load('mouse_wheel.png');
 
     // チュートリアル表示領域
     tutorialArea = PositionComponent(
@@ -91,7 +245,11 @@ class Tutorial {
   }
 
   /// チュートリアル表示の更新、戻り値は、以降のupdate()を停止するかどうか
-  bool updateTutorial(double dt, Move playerMoving) {
+  bool updateTutorial(
+    double dt,
+    Move playerMoving,
+    BoxPusherGame game,
+  ) {
     // チュートリアル変更時
     if (_prev != current) {
       tutorialArea.removeAll(tutorialArea.children);
@@ -196,6 +354,9 @@ class Tutorial {
         case TutorialState.merge:
           break;
         case TutorialState.animals:
+          // カメラをステージの原点位置に移動
+          game.camera.moveTo(Vector2(Stage.cellSize.x * 0.5, 0),
+              speed: Stage.cellSize.x * 3);
           // ゴリラとうさぎの場所取得
           // (0, 0)
           final original = (Vector2(
@@ -206,10 +367,10 @@ class Tutorial {
                               44) -
                       Stage.cellSize) *
                   0.5 +
-              _firstMoving.oppsite.vector * Stage.cellSize.x;
+              Vector2(-4, 28);
 
-          final gorilaPos = original;
-          final bunnyPos = Vector2.zero();
+          final gorilaPos = original + Vector2(-5, -5) * Stage.cellSize.x;
+          final bunnyPos = original + Vector2(5, 5) * Stage.cellSize.x;
           tutorialArea.addAll(
             [
               ButtonComponent(
@@ -221,106 +382,342 @@ class Tutorial {
                     size: BoxPusherGame.baseSize,
                     painter: TutorialMultiRRectHolePainter(
                       ltToWh: {
-                        gorilaPos: Vector2.all(32),
-                        bunnyPos: Vector2.all(32),
+                        gorilaPos: Vector2.all(40),
+                        bunnyPos: Vector2.all(40),
                       },
                       radius: 8,
                     )),
               ),
-              PositionComponent(
-                position: Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
-                size: Vector2(250, 40),
+              TextComponent(
+                text: game.localization.animalTutorial1,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(0, 40),
                 anchor: Anchor.center,
-                children: [
-                  OpacityEffectTextComponent(
-                    text: "タップまたは",
-                    textRenderer: TextPaint(
-                      style: const TextStyle(
-                        fontFamily: Config.gameTextFamily,
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
-                    ),
-                    children: [
-                      SequenceEffect(
-                        [
-                          OpacityEffect.fadeIn(
-                            EffectController(duration: 1.0),
-                          ),
-                          OpacityEffect.fadeOut(
-                            EffectController(duration: 1.0),
-                          ),
-                        ],
-                        infinite: true,
-                      ),
-                    ],
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 25,
                   ),
-                  SpriteAnimationComponent.fromFrameData(
-                    spaceKeyImg,
-                    SpriteAnimationData.sequenced(
-                        amount: 2,
-                        stepTime: Stage.objectStepTime,
-                        textureSize: Vector2(34, 15)),
-                    position: Vector2(125, 0),
-                    size: Vector2(60, 30),
-                    children: [
-                      SequenceEffect(
-                        [
-                          OpacityEffect.fadeIn(
-                            EffectController(duration: 1.0),
-                          ),
-                          OpacityEffect.fadeOut(
-                            EffectController(duration: 1.0),
-                          ),
-                        ],
-                        infinite: true,
-                      ),
-                    ],
+                ),
+              ),
+              TextComponent(
+                text: game.localization.animalTutorial2,
+                position: Vector2(
+                        BoxPusherGame.baseSize.x,
+                        640.0 -
+                            GameSeq.topPaddingSize.y -
+                            GameSeq.menuButtonAreaSize.y) *
+                    0.5,
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 25,
                   ),
-                  OpacityEffectTextComponent(
-                    text: "で次へ",
-                    textRenderer: TextPaint(
-                      style: const TextStyle(
-                        fontFamily: Config.gameTextFamily,
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
-                    ),
-                    position: Vector2(190, 0),
-                    children: [
-                      SequenceEffect(
-                        [
-                          OpacityEffect.fadeIn(
-                            EffectController(duration: 1.0),
-                          ),
-                          OpacityEffect.fadeOut(
-                            EffectController(duration: 1.0),
-                          ),
-                        ],
-                        infinite: true,
-                      ),
-                    ],
-                  ),
-                ],
+                ),
+              ),
+              tapOrSpaceToNextComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
+                game,
               ),
             ],
           );
           break;
         case TutorialState.girl:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = TutorialState.other;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              SpriteAnimationComponent.fromFrameData(
+                girlImg,
+                SpriteAnimationData.sequenced(
+                    amount: 2,
+                    stepTime: Stage.objectStepTime,
+                    textureSize: Vector2.all(49)),
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(0, 90),
+                anchor: Anchor.center,
+                scale: Vector2.all(1.2),
+              ),
+              TextComponent(
+                text: game.localization.girlTutorial1,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(0, 40),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 25,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.girlTutorial2,
+                position: Vector2(
+                        BoxPusherGame.baseSize.x,
+                        640.0 -
+                            GameSeq.topPaddingSize.y -
+                            GameSeq.menuButtonAreaSize.y) *
+                    0.5,
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 25,
+                  ),
+                ),
+              ),
+              tapOrSpaceToNextComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
+                game,
+              ),
+            ],
+          );
           break;
         case TutorialState.other:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = null;
+                },
+                size: BoxPusherGame.baseSize,
+                button: CustomPainterComponent(
+                    size: BoxPusherGame.baseSize,
+                    painter: TutorialMultiRRectHolePainter(
+                      ltToWh: {
+                        Vector2.all(5): Vector2(120, 40),
+                        Vector2(135, 5): Vector2(90, 40),
+                        Vector2(305, 5): Vector2(50, 40),
+                      },
+                      radius: 8,
+                    )),
+              ),
+              TextComponent(
+                text: game.localization.otherTutorial1,
+                position: Vector2(5, 55),
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.otherTutorial2,
+                position: Vector2(5, 70),
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.otherTutorial3,
+                position: Vector2(5, 85),
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.otherTutorial4,
+                position: Vector2(BoxPusherGame.baseSize.x * 0.5, 55),
+                anchor: Anchor.topCenter,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.otherTutorial5,
+                position: Vector2(BoxPusherGame.baseSize.x - 5, 55),
+                anchor: Anchor.topRight,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              SpriteComponent.fromImage(
+                pinchInOutImg,
+                size: Vector2(32, 45),
+                position: Vector2(BoxPusherGame.baseSize.x * 0.5 - 45, 290),
+              ),
+              SpriteComponent.fromImage(
+                mouseWheelImg,
+                size: Vector2(32, 45),
+                position: Vector2(BoxPusherGame.baseSize.x * 0.5 + 13, 290),
+              ),
+              TextComponent(
+                text: game.localization.otherTutorial6,
+                position: Vector2(BoxPusherGame.baseSize.x * 0.5, 350),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              tapOrSpaceToReturnComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
+                game,
+              ),
+            ],
+          );
           break;
         case TutorialState.handAbility:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = null;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              tapOrSpaceToReturnComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
+                game,
+              ),
+            ],
+          );
           break;
         case TutorialState.legAbility:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = null;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              tapOrSpaceToReturnComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
+                game,
+              ),
+            ],
+          );
           break;
         case TutorialState.pocketAbility:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = null;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              tapOrSpaceToReturnComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
+                game,
+              ),
+            ],
+          );
           break;
         case TutorialState.armerAbility:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = null;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              tapOrSpaceToReturnComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
+                game,
+              ),
+            ],
+          );
           break;
         case TutorialState.eyeAbility:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = null;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              tapOrSpaceToReturnComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
+                game,
+              ),
+            ],
+          );
           break;
         case TutorialState.mergeAbility:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = null;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              tapOrSpaceToReturnComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
+                game,
+              ),
+            ],
+          );
           break;
         default:
           break;
@@ -435,81 +832,9 @@ class Tutorial {
                 position: imgPosition,
                 anchor: Anchor.center,
               ),
-              PositionComponent(
-                position: Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
-                size: Vector2(250, 40),
-                anchor: Anchor.center,
-                children: [
-                  OpacityEffectTextComponent(
-                    text: "タップまたは",
-                    textRenderer: TextPaint(
-                      style: const TextStyle(
-                        fontFamily: Config.gameTextFamily,
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
-                    ),
-                    children: [
-                      SequenceEffect(
-                        [
-                          OpacityEffect.fadeIn(
-                            EffectController(duration: 1.0),
-                          ),
-                          OpacityEffect.fadeOut(
-                            EffectController(duration: 1.0),
-                          ),
-                        ],
-                        infinite: true,
-                      ),
-                    ],
-                  ),
-                  SpriteAnimationComponent.fromFrameData(
-                    spaceKeyImg,
-                    SpriteAnimationData.sequenced(
-                        amount: 2,
-                        stepTime: Stage.objectStepTime,
-                        textureSize: Vector2(34, 15)),
-                    position: Vector2(125, 0),
-                    size: Vector2(60, 30),
-                    children: [
-                      SequenceEffect(
-                        [
-                          OpacityEffect.fadeIn(
-                            EffectController(duration: 1.0),
-                          ),
-                          OpacityEffect.fadeOut(
-                            EffectController(duration: 1.0),
-                          ),
-                        ],
-                        infinite: true,
-                      ),
-                    ],
-                  ),
-                  OpacityEffectTextComponent(
-                    text: "で次へ",
-                    textRenderer: TextPaint(
-                      style: const TextStyle(
-                        fontFamily: Config.gameTextFamily,
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
-                    ),
-                    position: Vector2(190, 0),
-                    children: [
-                      SequenceEffect(
-                        [
-                          OpacityEffect.fadeIn(
-                            EffectController(duration: 1.0),
-                          ),
-                          OpacityEffect.fadeOut(
-                            EffectController(duration: 1.0),
-                          ),
-                        ],
-                        infinite: true,
-                      ),
-                    ],
-                  ),
-                ],
+              tapOrSpaceToNextComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
+                game,
               ),
             ],
           );
@@ -517,6 +842,14 @@ class Tutorial {
         }
         return true;
       case TutorialState.animals:
+      case TutorialState.girl:
+      case TutorialState.other:
+      case TutorialState.handAbility:
+      case TutorialState.legAbility:
+      case TutorialState.pocketAbility:
+      case TutorialState.armerAbility:
+      case TutorialState.mergeAbility:
+      case TutorialState.eyeAbility:
         return true;
       default:
         break;
@@ -530,14 +863,6 @@ class Tutorial {
     switch (current) {
       case TutorialState.move:
       case TutorialState.push:
-        //case TutorialState.girl:
-        //case TutorialState.other:
-        //case TutorialState.handAbility:
-        //case TutorialState.legAbility:
-        //case TutorialState.pocketAbility:
-        //case TutorialState.armerAbility:
-        //case TutorialState.eyeAbility:
-        //case TutorialState.mergeAbility:
         return true;
       case TutorialState.merge:
         if (isMergeVisible) {
@@ -548,6 +873,18 @@ class Tutorial {
         break;
       case TutorialState.animals:
         current = TutorialState.girl;
+        return true;
+      case TutorialState.girl:
+        current = TutorialState.other;
+        return true;
+      case TutorialState.other:
+      case TutorialState.handAbility:
+      case TutorialState.legAbility:
+      case TutorialState.pocketAbility:
+      case TutorialState.armerAbility:
+      case TutorialState.eyeAbility:
+      case TutorialState.mergeAbility:
+        current = null;
         return true;
       default:
         break;

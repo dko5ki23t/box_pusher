@@ -20,5 +20,19 @@
   "highScore": "High Score",
   "debug": "Debug",
   "versionLog": "Version Log",
-  "language": "日本語"
+  "language": "日本語",
+  "tapOr": "Tap or",
+  "toNext": "to Next",
+  "to": "",
+  "returnGame": "to Return Game",
+  "animalTutorial1": "Get Abilities by",
+  "animalTutorial2": "Touching the Animals",
+  "girlTutorial1": "Find the Girlfriend",
+  "girlTutorial2": "somewhere",
+  "otherTutorial1": "How many times",
+  "otherTutorial2": "the item on the right",
+  "otherTutorial3": "appear after merging",
+  "otherTutorial4": "Score",
+  "otherTutorial5": "Coins",
+  "otherTutorial6": "You can move, zoom in and out the map"
 }

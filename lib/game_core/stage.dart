@@ -12,6 +12,7 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj_factory.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
+import 'package:box_pusher/game_core/tutorial.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/effects.dart';
@@ -268,10 +269,16 @@ class Stage {
   /// ゲームワールド
   final World gameWorld;
 
+  /// チュートリアル
+  final Tutorial tutorial;
+
   /// 敵による攻撃の座標->攻撃のレベル
   final Map<Point, int> enemyAttackPoints = {};
 
-  Stage({required this.testMode, required this.gameWorld}) {
+  Stage(
+      {required this.testMode,
+      required this.gameWorld,
+      required this.tutorial}) {
     _objFactory = StageObjFactory();
   }
 

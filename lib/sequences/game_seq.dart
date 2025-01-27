@@ -191,7 +191,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // チュートリアルの画像読み込み
     await tutorial.onLoad();
     // ステージ作成
-    stage = Stage(testMode: game.testMode, gameWorld: game.world);
+    stage = Stage(
+        testMode: game.testMode, gameWorld: game.world, tutorial: tutorial);
     await stage.onLoad();
     // 画面コンポーネント作成
     _createComponents();
@@ -812,7 +813,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // クリア済みなら何もしない
     if (stage.isClear()) return;
     // チュートリアル表示
-    if (tutorial.updateTutorial(dt, stage.player.moving)) return;
+    if (tutorial.updateTutorial(dt, stage.player.moving, game)) {
+      return;
+    }
     // 移動の入力があったら移動チュートリアル終了
     if (tutorial.current == TutorialState.move &&
         pushingMoveButton != Move.none) {
