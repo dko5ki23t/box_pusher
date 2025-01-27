@@ -465,6 +465,10 @@ class BoxPusherGame extends FlameGame
   void onScaleStart(ScaleStartInfo info) {
     // ゲームシーケンス中のみ有効
     if (_router.currentRoute.name != 'game') return;
+    if ((_router.routes['game']!.firstChild() as GameSeq).tutorial.current !=
+        null) {
+      return;
+    }
     gameZoom = camera.viewfinder.zoom;
   }
 
@@ -472,10 +476,13 @@ class BoxPusherGame extends FlameGame
   void onScaleUpdate(ScaleUpdateInfo info) {
     // ゲームシーケンス中のみ有効
     if (_router.currentRoute.name != 'game') return;
+    if ((_router.routes['game']!.firstChild() as GameSeq).tutorial.current !=
+        null) {
+      return;
+    }
     final currentScale = info.scale.global;
     if (!currentScale.isIdentity()) {
-      camera.viewfinder.zoom = gameZoom * currentScale.y;
-      clampZoom();
+      camera.viewfinder.zoom = (gameZoom * currentScale.y).clamp(0.5, 3.0);
     } else {
       final delta = info.delta.global * -1.0;
       camera.moveBy(delta);
@@ -487,13 +494,13 @@ class BoxPusherGame extends FlameGame
   void onScroll(PointerScrollInfo info) {
     // ゲームシーケンス中のみ有効
     if (_router.currentRoute.name != 'game') return;
+    if ((_router.routes['game']!.firstChild() as GameSeq).tutorial.current !=
+        null) {
+      return;
+    }
     gameZoom += info.scrollDelta.global.y * -0.001;
     gameZoom = gameZoom.clamp(0.5, 3.0);
     camera.viewfinder.zoom = gameZoom;
-  }
-
-  void clampZoom() {
-    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.5, 3.0);
   }
 
   void pushAndInitGame({bool initialize = true}) {
