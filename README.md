@@ -27,3 +27,5 @@ Play with
 - マージによるアイテム出現時効果音：[効果音 『 その他音 』 by On-Jin ～音人～ | 消失・しゅぽん](https://on-jin.com/sound/ta.php)
 - ワープ音：[効果音 『 その他音 』 by On-Jin ～音人～ | 瞬間移動](https://on-jin.com/sound/ta.php)
 - タップ長押しアイコン：[タップ・長押しのアイコン | フリーのアイコンイラスト素材 icon-pit](https://icon-pit.com/pictogram/9692)
+- ピンチイン/アウトアイコン：[ポイント・チェックのアイコン | フリーのアイコンイラスト素材 icon-pit](https://icon-pit.com/pictogram/9311)
+- マウスアイコン：[マウスのアイコン | フリーのアイコンイラスト素材 icon-pit](https://icon-pit.com/pictogram/1351)
