@@ -51,11 +51,22 @@
         "desc": "ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか",
         "value": true
     },
+    "spawnItemAroundPlayer": {
+        "desc": "マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))",
+        "value": true
+    },
     "addedScoreEffectMove": {
         "desc": "スコア加算表示(+100とか)エフェクトの移動量",
         "value": {
             "x": 0.0,
             "y": -10.0
+        }
+    },
+    "updateRange": {
+        "desc": "update()で更新する範囲（プレイヤー位置を起点としてこの分だけ左上、右下に移動した点で四角形を作る）",
+        "value": {
+            "x": 20,
+            "y": 30
         }
     },
     "bombNotStartAreaWidth": {
