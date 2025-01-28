@@ -506,6 +506,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       position: joyStickPosition,
       radius: joyStickRadius,
       fieldRadius: joyStickFieldRadius,
+      onControllStart: () => game.canMoveCamera = false,
+      onControllEnd: () => game.canMoveCamera = true,
       inputMove: (move) => pushingMoveButton = move,
     );
     // 操作ジョイスティックの可動領域
@@ -1361,7 +1363,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   // PCのキーボード入力
   @override
   bool onKeyEvent(
-    RawKeyEvent event,
+    KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
     // ゲームシーケンスでない場合は何もせず、キー処理を他に渡す
@@ -1419,7 +1421,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     }
 
     // スペースキー->メニューを開く/チュートリアルを進める
-    if (event is RawKeyDownEvent &&
+    if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       if (!tutorial.onNextKey()) {
         if (menuButton.onReleased != null) {
@@ -1429,7 +1431,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     }
 
     // Pキー->ポケットの能力を使う
-    if (event is RawKeyDownEvent &&
+    if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.keyP)) {
       if (pocketAbilityButton.onReleased != null) {
         pocketAbilityButton.onReleased!();

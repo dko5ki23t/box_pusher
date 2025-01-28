@@ -10,6 +10,8 @@ class JoyStickComponent extends CircleComponent with DragCallbacks {
   Vector2 _mousePosition = Vector2.zero();
   final void Function(Move) inputMove;
   bool enableDiagonalInput = false;
+  final void Function() onControllStart;
+  final void Function() onControllEnd;
 
   /// 可動域の半径
   double fieldRadius = 0;
@@ -20,6 +22,8 @@ class JoyStickComponent extends CircleComponent with DragCallbacks {
     required this.fieldRadius,
     super.anchor,
     required this.inputMove,
+    required this.onControllStart,
+    required this.onControllEnd,
     this.enableDiagonalInput = false,
   }) {
     _initialPosition = super.position.clone();
@@ -40,6 +44,7 @@ class JoyStickComponent extends CircleComponent with DragCallbacks {
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     super.paint.color = const Color(0xffeeeeee);
+    onControllStart();
   }
 
   @override
@@ -85,6 +90,7 @@ class JoyStickComponent extends CircleComponent with DragCallbacks {
     position = _initialPosition;
     _mousePosition = _initialPosition.clone();
     inputMove(Move.none);
+    onControllEnd();
   }
 }
 
