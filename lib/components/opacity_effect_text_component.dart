@@ -16,7 +16,7 @@ mixin HasOpacityProvider on Component implements OpacityProvider {
   set opacity(double value) {
     if (value == _opacity) return;
     _opacity = value;
-    _paint = Paint()..color = Colors.white.withOpacity(value);
+    _paint = Paint()..color = Colors.white.withValues(alpha: value);
   }
 
   @override
