@@ -34,6 +34,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: Config.gameTextFamily,
+          color: Colors.white,
           fontSize: 35,
         ),
       ),
@@ -119,6 +120,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       saveAndToTitleButton,
       giveUpButton,
       controllSettingButton,
+      resetCameraButton,
     ]);
     addAll([
       // 背景をボタンにする(押すとメニュー閉じる)にすることで、背後のゲーム画面での操作を不可能にする
@@ -153,7 +155,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
   // PCのキーボード入力
   @override
   bool onKeyEvent(
-    RawKeyEvent event,
+    KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
     // メニューシーケンスでない場合は何もせず、キー処理を他に渡す
@@ -168,13 +170,13 @@ class MenuSeq extends Sequence with KeyboardHandler {
     }
 
     // Escキー->メニューを閉じる
-    if (event is RawKeyDownEvent &&
+    if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.escape)) {
       game.popSeq();
     }
 
     // スペースキー->フォーカスしているボタンを押す
-    if (event is RawKeyDownEvent &&
+    if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       buttonGroup.getCurrentFocusButton()?.fire();
     }

@@ -25,6 +25,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: Config.gameTextFamily,
+          color: Colors.white,
           fontSize: 35,
         ),
       ),
@@ -37,6 +38,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: Config.gameTextFamily,
+          color: Colors.white,
           fontSize: 30,
         ),
       ),
@@ -86,7 +88,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
   // PCのキーボード入力
   @override
   bool onKeyEvent(
-    RawKeyEvent event,
+    KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
     // ゲームオーバーシーケンスでない場合は何もせず、キー処理を他に渡す
@@ -101,7 +103,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
     }
 
     // スペースキー->フォーカスしているボタンを押す
-    if (event is RawKeyDownEvent &&
+    if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       buttonGroup.getCurrentFocusButton()?.fire();
     }

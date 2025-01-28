@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/config.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -247,11 +250,65 @@ class DebugDialogState extends State<DebugDialog> {
               }),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done) {
-                  return Text(
-                      '使用ブラウザ：${browserNameToStr(snapshot.data!.browserName)} ${snapshot.data!.platform}');
+                  return snapshot.data == null
+                      ? const Text('アプリ版(ブラウザなし)')
+                      : Text(
+                          '使用ブラウザ：${browserNameToStr(snapshot.data!.browserName)} ${snapshot.data!.platform}');
                 } else {
                   return const Text('使用ブラウザ：読み込み中...');
                 }
+              },
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Flexible(
+            child: TextButton(
+              child: const Text(
+                'セーブデータをインポート...',
+                style: Config.gameTextStyle,
+              ),
+              onPressed: () async {
+                // ファイル選択ダイアログ
+                const XTypeGroup typeGroup = XTypeGroup(
+                  label: 'json',
+                  extensions: ['json'],
+                );
+                final XFile? file =
+                    await openFile(acceptedTypeGroups: [typeGroup]);
+                if (file == null) {
+                  return;
+                }
+                final String fileContent = await file.readAsString();
+                await widget.game.importSaveDataFromString(fileContent);
+              },
+            ),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Flexible(
+            child: TextButton(
+              child: const Text(
+                'セーブデータをエクスポート...',
+                style: Config.gameTextStyle,
+              ),
+              onPressed: () async {
+                const String fileName = 'save_data.json';
+                final FileSaveLocation? result =
+                    await getSaveLocation(suggestedName: fileName);
+                if (result == null) {
+                  // Operation was canceled by the user.
+                  return;
+                }
+
+                final Uint8List fileData = Uint8List.fromList(
+                    widget.game.exportSaveDataToString().codeUnits);
+                const String mimeType = 'application/json';
+                final XFile textFile = XFile.fromData(fileData,
+                    mimeType: mimeType, name: fileName);
+                await textFile.saveTo(result.path);
               },
             ),
           ),

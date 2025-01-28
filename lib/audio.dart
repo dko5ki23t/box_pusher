@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:box_pusher/config.dart';
 
 /// 効果音
 enum Sound {
@@ -52,11 +53,11 @@ extension SoundExtent on Sound {
       case Sound.explode:
       case Sound.warp:
       case Sound.trap1:
-        return 0.8;
+        return 0.8 * Config().audioVolume * 0.01;
       case Sound.decide:
       case Sound.getSkill:
       case Sound.spawn:
-        return 1.0;
+        return 1.0 * Config().audioVolume * 0.01;
     }
   }
 }
@@ -78,7 +79,7 @@ extension BgmExtent on Bgm {
   double get volume {
     switch (this) {
       case Bgm.game:
-        return 0.3;
+        return 0.3 * Config().audioVolume * 0.01;
     }
   }
 }

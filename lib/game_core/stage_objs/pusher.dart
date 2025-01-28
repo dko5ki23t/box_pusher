@@ -74,7 +74,7 @@ class Pusher extends StageObj {
               },
           },
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.builder,
+            type: StageObjType.pusher,
             level: level,
           ),
         );

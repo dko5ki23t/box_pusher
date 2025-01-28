@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/box_pusher_game.dart';
+import 'package:box_pusher/components/joy_stick_component.dart';
 import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/components/button.dart';
@@ -9,11 +10,11 @@ import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:box_pusher/game_core/tutorial.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
-import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
@@ -56,7 +57,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   static Vector2 get xButtonAreaSize2 => Vector2(50.0, 50.0);
 
   /// プレイヤー操作ジョイスティック位置
-  final Vector2 joyStickPosition = Vector2(
+  static Vector2 get joyStickPosition => Vector2(
       BoxPusherGame.baseSize.x / 2,
       BoxPusherGame.baseSize.y -
           topPaddingSize.y -
@@ -110,6 +111,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// 準備できたかどうか
   bool isReady = false;
 
+  /// チュートリアル
+  Tutorial tutorial = Tutorial();
+
   /// ステージオブジェクト
   late Stage stage;
 
@@ -157,7 +161,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final ButtonComponent playerControllDiagonalModeButton;
   List<PositionComponent>? playerDiagonalMoveButtons;
   late final JoyStickComponent playerControllJoyStick;
-  late final CustomPainterComponent playerControllJoyStickField;
+  late final JoyStickFieldComponent playerControllJoyStickField;
   late final RectangleComponent menuArea;
   late final GameSpriteAnimationButton handAbilityButton;
   late final GameSpriteAnimationButton legAbilityButton;
@@ -184,8 +188,11 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     forbiddenImg = await Flame.images.load('forbidden_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     diagonalMoveImg = await Flame.images.load('arrows_output.png');
+    // チュートリアルの画像読み込み
+    await tutorial.onLoad();
     // ステージ作成
-    stage = Stage(testMode: game.testMode, gameWorld: game.world);
+    stage = Stage(
+        testMode: game.testMode, gameWorld: game.world, tutorial: tutorial);
     await stage.onLoad();
     // 画面コンポーネント作成
     _createComponents();
@@ -499,18 +506,19 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       position: joyStickPosition,
       radius: joyStickRadius,
       fieldRadius: joyStickFieldRadius,
+      onControllStart: () => game.canMoveCamera = false,
+      onControllEnd: () => game.canMoveCamera = true,
       inputMove: (move) => pushingMoveButton = move,
     );
     // 操作ジョイスティックの可動領域
-    playerControllJoyStickField = CustomPainterComponent(
-        position: joyStickPosition,
-        size: Vector2.all(joyStickFieldRadius) * 2,
-        anchor: Anchor.center,
-        painter: JoyStickFieldPainter(
-          radius: joyStickFieldRadius,
-          strokeWidth: 1,
-          arcStrokeWidth: 3,
-        ));
+    playerControllJoyStickField = JoyStickFieldComponent(
+      position: joyStickPosition,
+      size: Vector2.all(joyStickFieldRadius) * 2,
+      anchor: Anchor.center,
+      radius: joyStickFieldRadius,
+      strokeWidth: 1,
+      arcStrokeWidth: 3,
+    );
 
     topGameInfoArea = ButtonComponent(
       button: RectangleComponent(
@@ -765,8 +773,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // セーブデータ削除
     game.clearAndSaveStageData();
 
-    // プレイヤー操作ボタン領域
-    add(playerControllButtonsArea!);
     // 画面上部ゲーム情報領域
     add(topGameInfoArea);
     // メニュー領域
@@ -785,12 +791,16 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     add(mergeAbilityButton);
     // メニューボタン領域
     add(menuButton);
+    // プレイヤー操作ボタン領域
+    add(playerControllButtonsArea!);
     if (game.testMode) {
       // 【テストモード時】現在座標表示領域
       add(currentPosText);
       // 【テストモード】現在の表示モード切り替えボタン
       add(viewModeButton);
     }
+    // チュートリアル表示領域
+    add(tutorial.tutorialArea);
 
     // 準備完了
     isReady = true;
@@ -804,6 +814,15 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     if (game.getCurrentSeqName() != 'game') return;
     // クリア済みなら何もしない
     if (stage.isClear()) return;
+    // チュートリアル表示
+    if (tutorial.updateTutorial(dt, stage.player.moving, game)) {
+      return;
+    }
+    // 移動の入力があったら移動チュートリアル終了
+    if (tutorial.current == TutorialState.move &&
+        pushingMoveButton != Move.none) {
+      tutorial.current = null;
+    }
     bool beforeLegAbility = stage.getLegAbility();
     stage.update(dt, pushingMoveButton, game.world, game.camera);
     // 手の能力取得状況更新
@@ -1090,28 +1109,32 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
 
   void updatePlayerControllButtons() {
     playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
-    if (Config().playerControllButtonType ==
-        PlayerControllButtonType.onScreenEdge) {
-      playerUpMoveButton.size = yButtonAreaSize;
-      playerUpMoveButton.button?.size = yButtonAreaSize;
-      playerUpMoveButton.buttonDown?.size = yButtonAreaSize;
-      playerUpMoveButton.position = Vector2.all(0);
-      playerDownMoveButton.size = yButtonAreaSize;
-      playerDownMoveButton.button?.size = yButtonAreaSize;
-      playerDownMoveButton.buttonDown?.size = yButtonAreaSize;
-      playerDownMoveButton.position = Vector2(0,
-          640.0 - topPaddingSize.y - menuButtonAreaSize.y - yButtonAreaSize.y);
-      playerLeftMoveButton.size = xButtonAreaReal;
-      playerLeftMoveButton.button?.size = xButtonAreaReal;
-      playerLeftMoveButton.buttonDown?.size = xButtonAreaReal;
-      playerLeftMoveButton.position = Vector2(0, yButtonAreaSize.y);
-      playerRightMoveButton.size = xButtonAreaReal;
-      playerRightMoveButton.button?.size = xButtonAreaReal;
-      playerRightMoveButton.buttonDown?.size = xButtonAreaReal;
-      playerRightMoveButton.position =
-          Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y);
-      if (Config().wideDiagonalMoveButton) {
-        /*
+    switch (Config().playerControllButtonType) {
+      case PlayerControllButtonType.onScreenEdge:
+        playerUpMoveButton.size = yButtonAreaSize;
+        playerUpMoveButton.button?.size = yButtonAreaSize;
+        playerUpMoveButton.buttonDown?.size = yButtonAreaSize;
+        playerUpMoveButton.position = Vector2.all(0);
+        playerDownMoveButton.size = yButtonAreaSize;
+        playerDownMoveButton.button?.size = yButtonAreaSize;
+        playerDownMoveButton.buttonDown?.size = yButtonAreaSize;
+        playerDownMoveButton.position = Vector2(
+            0,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                yButtonAreaSize.y);
+        playerLeftMoveButton.size = xButtonAreaReal;
+        playerLeftMoveButton.button?.size = xButtonAreaReal;
+        playerLeftMoveButton.buttonDown?.size = xButtonAreaReal;
+        playerLeftMoveButton.position = Vector2(0, yButtonAreaSize.y);
+        playerRightMoveButton.size = xButtonAreaReal;
+        playerRightMoveButton.button?.size = xButtonAreaReal;
+        playerRightMoveButton.buttonDown?.size = xButtonAreaReal;
+        playerRightMoveButton.position =
+            Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y);
+        if (Config().wideDiagonalMoveButton) {
+          /*
         playerUpLeftMoveButton.size = yButtonAreaSize;
         playerUpLeftMoveButton.button?.size = yButtonAreaSize;
         playerUpLeftMoveButton.buttonDown?.size = yButtonAreaSize;
@@ -1135,144 +1158,158 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         playerRightMoveButton.position =
             Vector2(360.0 - xButtonAreaSize.x, yButtonAreaSize.y);
         */
-      } else {
-        playerUpLeftMoveButton.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+        } else {
+          playerUpLeftMoveButton.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          (playerUpLeftMoveButton as ButtonComponent).button?.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          (playerUpLeftMoveButton as ButtonComponent).buttonDown?.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          playerUpLeftMoveButton.position = Vector2.all(0);
+          playerUpRightMoveButton.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          (playerUpRightMoveButton as ButtonComponent).button?.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          (playerUpRightMoveButton as ButtonComponent).buttonDown?.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          playerUpRightMoveButton.position =
+              Vector2(360.0 - xButtonAreaSize.x, 0);
+          playerDownLeftMoveButton.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          (playerDownLeftMoveButton as ButtonComponent).button?.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          (playerDownLeftMoveButton as ButtonComponent).buttonDown?.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          playerDownLeftMoveButton.position = Vector2(
+              0,
+              640.0 -
+                  topPaddingSize.y -
+                  menuButtonAreaSize.y -
+                  yButtonAreaSize.y);
+          playerDownRightMoveButton.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          (playerDownRightMoveButton as ButtonComponent).button?.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          (playerDownRightMoveButton as ButtonComponent).buttonDown?.size =
+              Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+          playerDownRightMoveButton.position = Vector2(
+              360.0 - xButtonAreaSize.x,
+              640.0 -
+                  topPaddingSize.y -
+                  menuButtonAreaSize.y -
+                  yButtonAreaSize.y);
+        }
+        if (stage.getLegAbility()) {
+          if (Config().wideDiagonalMoveButton) {
+            clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
+            playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+          } else {
+            playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+            playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
+          }
+        } else {
+          playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
+        }
+        break;
+      case PlayerControllButtonType.onScreenBottom:
+        playerUpMoveButton.size = xButtonAreaSize2;
+        playerUpMoveButton.button?.size = xButtonAreaSize2;
+        playerUpMoveButton.buttonDown?.size = xButtonAreaSize2;
+        playerUpMoveButton.position = Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 2);
+        playerDownMoveButton.size = xButtonAreaSize2;
+        playerDownMoveButton.button?.size = xButtonAreaSize2;
+        playerDownMoveButton.buttonDown?.size = xButtonAreaSize2;
+        playerDownMoveButton.position = Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y);
+        playerLeftMoveButton.size = xButtonAreaSize2;
+        playerLeftMoveButton.button?.size = xButtonAreaSize2;
+        playerLeftMoveButton.buttonDown?.size = xButtonAreaSize2;
+        playerLeftMoveButton.position = Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 1.5);
+        playerRightMoveButton.size = xButtonAreaSize2;
+        playerRightMoveButton.button?.size = xButtonAreaSize2;
+        playerRightMoveButton.buttonDown?.size = xButtonAreaSize2;
+        playerRightMoveButton.position = Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 1.5);
+        playerUpLeftMoveButton.size = xButtonAreaSize2;
         (playerUpLeftMoveButton as ButtonComponent).button?.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+            xButtonAreaSize2;
         (playerUpLeftMoveButton as ButtonComponent).buttonDown?.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
-        playerUpLeftMoveButton.position = Vector2.all(0);
-        playerUpRightMoveButton.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+            xButtonAreaSize2;
+        playerUpLeftMoveButton.position = Vector2(
+            180 - xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 2);
+        playerUpRightMoveButton.size = xButtonAreaSize2;
         (playerUpRightMoveButton as ButtonComponent).button?.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+            xButtonAreaSize2;
         (playerUpRightMoveButton as ButtonComponent).buttonDown?.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
-        playerUpRightMoveButton.position =
-            Vector2(360.0 - xButtonAreaSize.x, 0);
-        playerDownLeftMoveButton.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+            xButtonAreaSize2;
+        playerUpRightMoveButton.position = Vector2(
+            180,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 2);
+        playerDownLeftMoveButton.size = xButtonAreaSize2;
         (playerDownLeftMoveButton as ButtonComponent).button?.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+            xButtonAreaSize2;
         (playerDownLeftMoveButton as ButtonComponent).buttonDown?.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+            xButtonAreaSize2;
         playerDownLeftMoveButton.position = Vector2(
-            0,
+            180 - xButtonAreaSize2.x,
             640.0 -
                 topPaddingSize.y -
                 menuButtonAreaSize.y -
-                yButtonAreaSize.y);
-        playerDownRightMoveButton.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+                xButtonAreaSize2.y);
+        playerDownRightMoveButton.size = xButtonAreaSize2;
         (playerDownRightMoveButton as ButtonComponent).button?.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+            xButtonAreaSize2;
         (playerDownRightMoveButton as ButtonComponent).buttonDown?.size =
-            Vector2(xButtonAreaSize.x, yButtonAreaSize.y);
+            xButtonAreaSize2;
         playerDownRightMoveButton.position = Vector2(
-            360.0 - xButtonAreaSize.x,
+            180,
             640.0 -
                 topPaddingSize.y -
                 menuButtonAreaSize.y -
-                yButtonAreaSize.y);
-      }
-      if (stage.getLegAbility()) {
-        if (Config().wideDiagonalMoveButton) {
-          clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!);
-          playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+                xButtonAreaSize2.y);
+        if (stage.getLegAbility()) {
+          playerControllButtonsArea!.add(playerControllDiagonalModeButton);
+        }
+        if (stage.getLegAbility() && isDiagonalButtonMode) {
           playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
         } else {
           playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
         }
-      } else {
-        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-      }
-    } else if (Config().playerControllButtonType ==
-        PlayerControllButtonType.onScreenBottom) {
-      playerUpMoveButton.size = xButtonAreaSize2;
-      playerUpMoveButton.button?.size = xButtonAreaSize2;
-      playerUpMoveButton.buttonDown?.size = xButtonAreaSize2;
-      playerUpMoveButton.position = Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 2);
-      playerDownMoveButton.size = xButtonAreaSize2;
-      playerDownMoveButton.button?.size = xButtonAreaSize2;
-      playerDownMoveButton.buttonDown?.size = xButtonAreaSize2;
-      playerDownMoveButton.position = Vector2((360.0 - xButtonAreaSize2.x) / 2,
-          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y);
-      playerLeftMoveButton.size = xButtonAreaSize2;
-      playerLeftMoveButton.button?.size = xButtonAreaSize2;
-      playerLeftMoveButton.buttonDown?.size = xButtonAreaSize2;
-      playerLeftMoveButton.position = Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 1.5);
-      playerRightMoveButton.size = xButtonAreaSize2;
-      playerRightMoveButton.button?.size = xButtonAreaSize2;
-      playerRightMoveButton.buttonDown?.size = xButtonAreaSize2;
-      playerRightMoveButton.position = Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 1.5);
-      playerUpLeftMoveButton.size = xButtonAreaSize2;
-      (playerUpLeftMoveButton as ButtonComponent).button?.size =
-          xButtonAreaSize2;
-      (playerUpLeftMoveButton as ButtonComponent).buttonDown?.size =
-          xButtonAreaSize2;
-      playerUpLeftMoveButton.position = Vector2(
-          180 - xButtonAreaSize2.x,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 2);
-      playerUpRightMoveButton.size = xButtonAreaSize2;
-      (playerUpRightMoveButton as ButtonComponent).button?.size =
-          xButtonAreaSize2;
-      (playerUpRightMoveButton as ButtonComponent).buttonDown?.size =
-          xButtonAreaSize2;
-      playerUpRightMoveButton.position = Vector2(
-          180,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 2);
-      playerDownLeftMoveButton.size = xButtonAreaSize2;
-      (playerDownLeftMoveButton as ButtonComponent).button?.size =
-          xButtonAreaSize2;
-      (playerDownLeftMoveButton as ButtonComponent).buttonDown?.size =
-          xButtonAreaSize2;
-      playerDownLeftMoveButton.position = Vector2(180 - xButtonAreaSize2.x,
-          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y);
-      playerDownRightMoveButton.size = xButtonAreaSize2;
-      (playerDownRightMoveButton as ButtonComponent).button?.size =
-          xButtonAreaSize2;
-      (playerDownRightMoveButton as ButtonComponent).buttonDown?.size =
-          xButtonAreaSize2;
-      playerDownRightMoveButton.position = Vector2(180,
-          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y);
-      if (stage.getLegAbility()) {
-        playerControllButtonsArea!.add(playerControllDiagonalModeButton);
-      }
-      if (stage.getLegAbility() && isDiagonalButtonMode) {
-        playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!);
-      } else {
-        playerControllButtonsArea!.addAll(playerStraightMoveButtons!);
-      }
-    } else if (Config().playerControllButtonType ==
-        PlayerControllButtonType.joyStick) {
-      (playerControllJoyStickField.painter as JoyStickFieldPainter)
-          .drawDiagonalArcs = stage.getLegAbility();
-      playerControllJoyStick.enableDiagonalInput = stage.getLegAbility();
-      playerControllButtonsArea!
-          .addAll([playerControllJoyStickField, playerControllJoyStick]);
+        break;
+      case PlayerControllButtonType.joyStick:
+        playerControllJoyStickField.drawDiagonalArcs = stage.getLegAbility();
+        playerControllJoyStick.enableDiagonalInput = stage.getLegAbility();
+        playerControllButtonsArea!
+            .addAll([playerControllJoyStickField, playerControllJoyStick]);
+        break;
+      case PlayerControllButtonType.noButton:
+        break;
     }
   }
 
@@ -1326,7 +1363,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   // PCのキーボード入力
   @override
   bool onKeyEvent(
-    RawKeyEvent event,
+    KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
     // ゲームシーケンスでない場合は何もせず、キー処理を他に渡す
@@ -1383,16 +1420,18 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       pushingMoveButton = Move.none;
     }
 
-    // スペースキー->メニューを開く
-    if (event is RawKeyDownEvent &&
+    // スペースキー->メニューを開く/チュートリアルを進める
+    if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
-      if (menuButton.onReleased != null) {
-        menuButton.onReleased!();
+      if (!tutorial.onNextKey()) {
+        if (menuButton.onReleased != null) {
+          menuButton.onReleased!();
+        }
       }
     }
 
     // Pキー->ポケットの能力を使う
-    if (event is RawKeyDownEvent &&
+    if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.keyP)) {
       if (pocketAbilityButton.onReleased != null) {
         pocketAbilityButton.onReleased!();
@@ -1404,199 +1443,4 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
 
   @override
   void onLangChanged() {}
-}
-
-/// 操作ジョイスティック
-class JoyStickComponent extends CircleComponent with DragCallbacks {
-  late final Vector2 _initialPosition;
-  Vector2 _mousePosition = Vector2.zero();
-  final void Function(Move) inputMove;
-  bool enableDiagonalInput = false;
-
-  /// 可動域の半径
-  double fieldRadius = 0;
-
-  JoyStickComponent({
-    required super.radius,
-    required super.position,
-    required this.fieldRadius,
-    super.anchor,
-    required this.inputMove,
-    this.enableDiagonalInput = false,
-  }) {
-    _initialPosition = super.position.clone();
-    _mousePosition = super.position.clone();
-    super.paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    super.priority = 100;
-  }
-
-  // 押せる範囲は可動域上とする
-  @override
-  bool containsPoint(Vector2 point) {
-    return Circle(center, fieldRadius).containsPoint(point);
-  }
-
-  @override
-  void onDragStart(DragStartEvent event) {
-    super.onDragStart(event);
-    super.paint.color = const Color(0xffeeeeee);
-  }
-
-  @override
-  void onDragUpdate(DragUpdateEvent event) {
-    _mousePosition += event.localDelta;
-    Vector2 direct = _mousePosition - _initialPosition;
-    inputMove(Move.none);
-    if (direct.length >= fieldRadius * 0.7) {
-      // 入力された向き判定
-      double angle = degrees(Vector2(1, 0).angleToSigned(direct));
-      if (angle < 0) {
-        angle += 360.0;
-      }
-      if (angle <= 20 || angle >= 340) {
-        inputMove(Move.right);
-      } else if (70 <= angle && angle <= 110) {
-        inputMove(Move.down);
-      } else if (160 <= angle && angle <= 200) {
-        inputMove(Move.left);
-      } else if (250 <= angle && angle <= 290) {
-        inputMove(Move.up);
-      } else if (enableDiagonalInput) {
-        if (25 <= angle && angle <= 65) {
-          inputMove(Move.downRight);
-        } else if (115 <= angle && angle <= 155) {
-          inputMove(Move.downLeft);
-        } else if (205 <= angle && angle <= 245) {
-          inputMove(Move.upLeft);
-        } else if (295 <= angle && angle <= 335) {
-          inputMove(Move.upRight);
-        }
-      }
-    }
-    // ジョイスティックは可動域内にとどめる
-    direct.clampLength(0, fieldRadius);
-    position = _initialPosition + direct;
-  }
-
-  @override
-  void onDragEnd(DragEndEvent event) {
-    super.onDragEnd(event);
-    super.paint.color = Colors.white;
-    position = _initialPosition;
-    _mousePosition = _initialPosition.clone();
-    inputMove(Move.none);
-  }
-}
-
-class JoyStickFieldPainter extends CustomPainter {
-  final double radius;
-  final double strokeWidth;
-  final double arcStrokeWidth;
-  bool drawDiagonalArcs = false;
-
-  JoyStickFieldPainter({
-    required this.radius,
-    required this.strokeWidth,
-    required this.arcStrokeWidth,
-    this.drawDiagonalArcs = false,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final framePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-    final bgPaint = Paint()
-      ..color = const Color(0x80000000)
-      ..style = PaintingStyle.fill;
-    final arcPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = arcStrokeWidth;
-    final center = Offset(radius, radius);
-    canvas.drawCircle(center, radius, bgPaint);
-    canvas.drawCircle(center, radius, framePaint);
-    canvas.drawArc(
-        Rect.fromCircle(
-          center: center,
-          radius: radius,
-        ),
-        radians(-20),
-        radians(40),
-        false,
-        arcPaint);
-    canvas.drawArc(
-        Rect.fromCircle(
-          center: center,
-          radius: radius,
-        ),
-        radians(70),
-        radians(40),
-        false,
-        arcPaint);
-    canvas.drawArc(
-        Rect.fromCircle(
-          center: center,
-          radius: radius,
-        ),
-        radians(160),
-        radians(40),
-        false,
-        arcPaint);
-    canvas.drawArc(
-        Rect.fromCircle(
-          center: center,
-          radius: radius,
-        ),
-        radians(250),
-        radians(40),
-        false,
-        arcPaint);
-    if (drawDiagonalArcs) {
-      canvas.drawArc(
-          Rect.fromCircle(
-            center: center,
-            radius: radius,
-          ),
-          radians(25),
-          radians(40),
-          false,
-          arcPaint);
-      canvas.drawArc(
-          Rect.fromCircle(
-            center: center,
-            radius: radius,
-          ),
-          radians(115),
-          radians(40),
-          false,
-          arcPaint);
-      canvas.drawArc(
-          Rect.fromCircle(
-            center: center,
-            radius: radius,
-          ),
-          radians(205),
-          radians(40),
-          false,
-          arcPaint);
-      canvas.drawArc(
-          Rect.fromCircle(
-            center: center,
-            radius: radius,
-          ),
-          radians(295),
-          radians(40),
-          false,
-          arcPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
-  }
 }

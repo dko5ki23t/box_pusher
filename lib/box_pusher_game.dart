@@ -9,6 +9,7 @@ import 'package:box_pusher/components/debug_dialog.dart';
 import 'package:box_pusher/components/debug_view_distributions_dialog.dart';
 import 'package:box_pusher/components/version_log_dialog.dart';
 import 'package:box_pusher/config.dart';
+import 'package:box_pusher/custom_scale_detector.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
@@ -56,7 +57,7 @@ class Version {
 class BoxPusherGame extends FlameGame
     with
         SingleGameInstance,
-        ScaleDetector, // ピンチイン・ピンチアウト検出用（マップの拡大縮小のため）
+        CustomScaleDetector, // ピンチイン・ピンチアウト検出用（マップの拡大縮小のため）
         ScrollDetector, // マウスホイール検出用（マップの拡大縮小のため）
         HasKeyboardHandlerComponents {
   late final RouterComponent _router;
@@ -102,6 +103,9 @@ class BoxPusherGame extends FlameGame
 
   /// ズーム操作し始めのズーム
   late double startZoom;
+
+  /// ドラッグ操作でカメラ移動できるか(ジョイスティックをドラッグ中ならfalseにする)
+  bool canMoveCamera = true;
 
   /// 言語
   Language lang = Language.japanese;
@@ -270,6 +274,34 @@ class BoxPusherGame extends FlameGame
       Config().playerControllButtonType =
           PlayerControllButtonType.values[index];
     }
+    int volume = 100;
+    try {
+      volume = _userConfigData['volume'];
+    } catch (e) {
+      log(e.toString());
+    }
+    Config().audioVolume = volume;
+  }
+
+  /// 【デバッグ】文字列からセーブデータをインポート->成功したかどうかを返す
+  Future<bool> importSaveDataFromString(String saveData) async {
+    try {
+      final jsonMap = jsonDecode(saveData);
+      _stageData = jsonMap['stageData'] ?? {};
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
+  /// 【デバッグ】セーブデータをファイルにエクスポート
+  String exportSaveDataToString() {
+    return jsonEncode({
+      'highScore': _highScore,
+      'stageData': _stageData,
+      'userConfigData': _userConfigData,
+      'version': _saveDataVersion.toString(),
+    });
   }
 
   /// ハイスコアの更新・セーブデータに保存
@@ -316,6 +348,7 @@ class BoxPusherGame extends FlameGame
   /// 操作方法や音量等のコンフィグ情報をセーブデータに保存
   Future<void> saveUserConfigData() async {
     _userConfigData['controller'] = Config().playerControllButtonType.index;
+    _userConfigData['volume'] = Config().audioVolume;
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
@@ -335,8 +368,8 @@ class BoxPusherGame extends FlameGame
 
   Map<String, dynamic> getDefaultUserConfig() {
     return {
-      'controller': 0,
-      'volume': 50,
+      'controller': PlayerControllButtonType.joyStick.index,
+      'volume': 100,
     };
   }
 
@@ -432,10 +465,18 @@ class BoxPusherGame extends FlameGame
     }
   }*/
 
+  void clampZoom() {
+    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.5, 3.0);
+  }
+
   @override
   void onScaleStart(ScaleStartInfo info) {
     // ゲームシーケンス中のみ有効
     if (_router.currentRoute.name != 'game') return;
+    if ((_router.routes['game']!.firstChild() as GameSeq).tutorial.current !=
+        null) {
+      return;
+    }
     gameZoom = camera.viewfinder.zoom;
   }
 
@@ -443,14 +484,34 @@ class BoxPusherGame extends FlameGame
   void onScaleUpdate(ScaleUpdateInfo info) {
     // ゲームシーケンス中のみ有効
     if (_router.currentRoute.name != 'game') return;
+    if ((_router.routes['game']!.firstChild() as GameSeq).tutorial.current !=
+        null) {
+      return;
+    }
     final currentScale = info.scale.global;
     if (!currentScale.isIdentity()) {
       camera.viewfinder.zoom = gameZoom * currentScale.y;
       clampZoom();
     } else {
-      final delta = info.delta.global * -1.0;
-      camera.moveBy(delta);
+      // 実行されない（CostomScaleDetectorを使用した弊害？ https://github.com/flame-engine/flame/issues/2635）
+      // ->代わりにonDragUpdateを使う
+      final delta = info.delta.global;
+      camera.moveBy(-delta);
       //camera.viewfinder.position.translate(-delta.x, -delta.y);
+    }
+  }
+
+  @override
+  void onDragUpdate(int pointerId, DragUpdateInfo info) {
+    // ゲームシーケンス中のみ有効
+    if (_router.currentRoute.name != 'game') return;
+    if ((_router.routes['game']!.firstChild() as GameSeq).tutorial.current !=
+        null) {
+      return;
+    }
+    if (canMoveCamera) {
+      final delta = info.delta.global;
+      camera.moveBy(-delta);
     }
   }
 
@@ -458,13 +519,13 @@ class BoxPusherGame extends FlameGame
   void onScroll(PointerScrollInfo info) {
     // ゲームシーケンス中のみ有効
     if (_router.currentRoute.name != 'game') return;
+    if ((_router.routes['game']!.firstChild() as GameSeq).tutorial.current !=
+        null) {
+      return;
+    }
     gameZoom += info.scrollDelta.global.y * -0.001;
     gameZoom = gameZoom.clamp(0.5, 3.0);
     camera.viewfinder.zoom = gameZoom;
-  }
-
-  void clampZoom() {
-    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.5, 3.0);
   }
 
   void pushAndInitGame({bool initialize = true}) {

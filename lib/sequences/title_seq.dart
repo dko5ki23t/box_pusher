@@ -165,7 +165,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   // PCのキーボード入力
   @override
   bool onKeyEvent(
-    RawKeyEvent event,
+    KeyEvent event,
     Set<LogicalKeyboardKey> keysPressed,
   ) {
     // タイトルシーケンスでない場合は何もせず、キー処理を他に渡す
@@ -180,7 +180,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     }
 
     // スペースキー->フォーカスしているボタンを押す
-    if (event is RawKeyDownEvent &&
+    if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       buttonGroup.getCurrentFocusButton()?.fire();
     }

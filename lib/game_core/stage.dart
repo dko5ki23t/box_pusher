@@ -12,6 +12,7 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj_factory.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
+import 'package:box_pusher/game_core/tutorial.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/effects.dart';
@@ -268,10 +269,16 @@ class Stage {
   /// ゲームワールド
   final World gameWorld;
 
+  /// チュートリアル
+  final Tutorial tutorial;
+
   /// 敵による攻撃の座標->攻撃のレベル
   final Map<Point, int> enemyAttackPoints = {};
 
-  Stage({required this.testMode, required this.gameWorld}) {
+  Stage(
+      {required this.testMode,
+      required this.gameWorld,
+      required this.tutorial}) {
     _objFactory = StageObjFactory();
   }
 
@@ -805,35 +812,44 @@ class Stage {
     // ステージ上にアイテムをランダムに配置
     // ステージ中央から時計回りに渦巻き状に移動して床があればランダムでアイテム設置
     Point p = Point(0, 0);
+    if (Config().spawnItemAroundPlayer) {
+      p = player.pos.copy();
+    }
     List<Point> decidedPoints = [];
     final maxMoveCount = max(stageWidth, stageHeight);
     // whileでいいが、念のため
-    for (int moveCount = 1; moveCount < maxMoveCount; moveCount++) {
+    for (int moveCount = 1; moveCount < maxMoveCount; moveCount += 2) {
       // 特定方向に動いて、ランダムにアイテムを設置する処理
-      void moveAndSet(Move m, int c) {
+      void moveAndSet(Move m, int c, int percent) {
         for (int i = 0; i < c; i++) {
           p += m.point;
           if (get(p, detectPlayer: true).type == StageObjType.none &&
-              Config().random.nextInt(maxMoveCount) < c) {
+              Config().random.nextInt(100) < percent) {
             decidedPoints.add(p.copy());
             if (decidedPoints.length >= nextMergeItems.length) break;
           }
         }
       }
 
+      // 出現確率(中央付近ほど確率低くする=プレイヤーのすぐ近くに敵を涌かせないため)
+      int percentFunc(int x) {
+        return x > 1 ? ((x - 1) * (x - 1) * 0.5).round() : 0;
+      }
+
       // 上に移動
-      moveAndSet(Move.up, moveCount);
+      moveAndSet(Move.up, moveCount, percentFunc(moveCount));
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 右に移動
-      moveAndSet(Move.right, moveCount);
+      moveAndSet(Move.right, moveCount, percentFunc(moveCount));
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 下に移動
-      moveAndSet(Move.down, moveCount + 1);
+      moveAndSet(Move.down, moveCount + 1, percentFunc(moveCount));
       if (decidedPoints.length >= nextMergeItems.length) break;
       // 左に移動
-      moveAndSet(Move.left, moveCount + 1);
+      moveAndSet(Move.left, moveCount + 1, percentFunc(moveCount));
       if (decidedPoints.length >= nextMergeItems.length) break;
     }
+    // 確率やマスの埋まり具合によってはアイテムが出現しない場合アリ
     for (int i = 0; i < decidedPoints.length; i++) {
       final nextMergeItem = nextMergeItems[i];
       final item = createObject(
@@ -1149,8 +1165,14 @@ class Stage {
     for (final ability in player.isAbilityForbidden.keys) {
       player.isAbilityForbidden[ability] = false;
     }
+
+    // ここから先更新対象となる範囲
+    final updateTargetRange = PointRectRange(
+        player.pos - Config().updateRange, player.pos + Config().updateRange);
+
     // 敵更新
-    final currentEnemies = [...enemies.iterable];
+    final currentEnemies = [...enemies.iterable]
+        .where((element) => updateTargetRange.contains(element.pos));
     for (final enemy in currentEnemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
@@ -1186,17 +1208,16 @@ class Stage {
       }
     }
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
-    //// これらはプレイヤーの移動開始/完了時のみ動かす
-    //if (playerStartMoving || playerEndMoving) {
-    final currentBoxes = [...boxes.iterable];
+    final currentBoxes = [...boxes.iterable]
+        .where((element) => updateTargetRange.contains(element.pos));
     for (final box in currentBoxes) {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           playerEndMoving, prohibitedPoints);
     }
-    //}
 
     // 敵涌きスポット更新
-    for (final spawner in spawners) {
+    for (final spawner in spawners
+        .where((element) => updateTargetRange.contains(element.pos))) {
       spawner.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
@@ -1219,9 +1240,9 @@ class Stage {
       if (attack.key == player.pos) {
         isGameover = player.hit(attack.value, this);
       }
-      // ガーディアンに攻撃が当たった
-      for (final guardian in boxes.where((element) =>
-          element.type == StageObjType.guardian && attack.key == element.pos)) {
+      // ガーディアン等の味方に攻撃が当たった
+      for (final guardian in boxes
+          .where((element) => element.isAlly && attack.key == element.pos)) {
         if (guardian.hit(attack.value, this)) {
           // ガーディアン側の処理が残っているかもしれないので、このフレームの最後に消す
           guardian.removeAfterFrame();

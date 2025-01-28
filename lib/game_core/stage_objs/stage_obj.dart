@@ -36,6 +36,7 @@ import 'package:box_pusher/game_core/stage_objs/turtle.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:box_pusher/game_core/stage_objs/water.dart';
 import 'package:box_pusher/game_core/stage_objs/wizard.dart';
+import 'package:box_pusher/game_core/tutorial.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart' hide Block;
 
@@ -381,7 +382,7 @@ abstract class StageObj {
   set level(int l) {
     // 攻撃中かどうか、レベル、向きでアニメーションを変更する
     if (attacking) {
-      if (!levelToAttackAnimations.containsKey(l)) {
+      if (!levelToAttackAnimations[attackCh]!.containsKey(l)) {
         log('no attacking animation for level $l in ${_typeLevel.type}');
         // 通常時でのエラー画像を使う
         animationComponent.animation = levelToAnimations[0]![vector];
@@ -482,6 +483,9 @@ abstract class StageObj {
 
   /// トラップでやられる敵かどうか
   bool get isTrapKillable => isEnemy && killable;
+
+  /// プレイヤーの味方か（敵の攻撃を受けるか）
+  bool get isAlly => false;
 
   /// 攻撃を受ける
   /// やられたかどうかを返す
@@ -1248,6 +1252,8 @@ abstract class StageObj {
         // 手の能力を習得
         player.isAbilityAquired[PlayerAbility.hand] = true;
         player.pushableNum = -1;
+        // 手の能力のチュートリアル表示
+        stage.tutorial.current = TutorialState.handAbility;
         // ゴリラ、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1256,6 +1262,8 @@ abstract class StageObj {
         // 移動先がうさぎだった場合
         // 足の能力を習得
         player.isAbilityAquired[PlayerAbility.leg] = true;
+        // 足の能力のチュートリアル表示
+        stage.tutorial.current = TutorialState.legAbility;
         // うさぎ、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1264,6 +1272,8 @@ abstract class StageObj {
         // 移動先がカンガルーだった場合
         // ポケットの能力を習得
         player.isAbilityAquired[PlayerAbility.pocket] = true;
+        // ポケットの能力のチュートリアル表示
+        stage.tutorial.current = TutorialState.pocketAbility;
         // カンガルー、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1272,6 +1282,8 @@ abstract class StageObj {
         // 移動先が亀だった場合
         // アーマーの能力を習得
         player.isAbilityAquired[PlayerAbility.armer] = true;
+        // アーマーの能力のチュートリアル表示
+        stage.tutorial.current = TutorialState.armerAbility;
         // 亀、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
@@ -1280,6 +1292,8 @@ abstract class StageObj {
         // 移動先が女の子だった場合
         // マージの能力を習得
         player.isAbilityAquired[PlayerAbility.merge] = true;
+        // マージの能力のチュートリアル表示
+        stage.tutorial.current = TutorialState.mergeAbility;
         // 女の子、いなくなる
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
