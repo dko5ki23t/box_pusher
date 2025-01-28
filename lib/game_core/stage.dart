@@ -1348,6 +1348,7 @@ class Stage {
   // 【テストモード】範囲の表示を作成
   void _createDistributionView() {
     int colorIdx = -1;
+    blockFloorMapView.clear();
     for (final entry in blockFloorDistribution.entries) {
       // 表示の色分け
       colorIdx = (++colorIdx) % Config.distributionMapColors.length;

@@ -778,7 +778,7 @@ class Tutorial {
               ),
             ],
           );
-        } else if (_countForTutorial > 3.0) {
+        } else if (_countForTutorial > 2.0) {
           current = TutorialState.merge;
           _countForTutorial = 0.0;
           return false;

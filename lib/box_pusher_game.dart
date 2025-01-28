@@ -535,7 +535,7 @@ class BoxPusherGame extends FlameGame
         gameSeq.isReady = false;
         pushSeqNamed('game');
         pushSeqNamed('loading');
-        gameSeq.initialize();
+        gameSeq.initialize(addComponents: false);
         return;
       }
     }

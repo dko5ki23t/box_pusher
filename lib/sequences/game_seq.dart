@@ -197,7 +197,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // 画面コンポーネント作成
     _createComponents();
     // 画面コンポーネント初期化
-    initialize();
+    initialize(addComponents: true);
   }
 
   @override
@@ -753,10 +753,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   }
 
   // 初期化（というよりリセット）
-  void initialize() {
+  void initialize({required bool addComponents}) {
     // 準備中にする
     isReady = false;
-    removeAll(children);
     game.world.removeAll(game.world.children);
     // デバッグモードのときはステージの最大幅・高さを指定する
     if (game.testMode) {
@@ -773,34 +772,36 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // セーブデータ削除
     game.clearAndSaveStageData();
 
-    // 画面上部ゲーム情報領域
-    add(topGameInfoArea);
-    // メニュー領域
-    add(menuArea);
-    // 手の能力ボタン領域
-    add(handAbilityButton);
-    // 足の能力ボタン領域
-    add(legAbilityButton);
-    // アーマー能力ボタン領域
-    add(armerAbilityButton);
-    // ポケット能力ボタン領域
-    add(pocketAbilityButton);
-    // 予知能力ボタン領域
-    add(eyeAbilityButton);
-    // マージ能力ボタン領域
-    add(mergeAbilityButton);
-    // メニューボタン領域
-    add(menuButton);
-    // プレイヤー操作ボタン領域
-    add(playerControllButtonsArea!);
-    if (game.testMode) {
-      // 【テストモード時】現在座標表示領域
-      add(currentPosText);
-      // 【テストモード】現在の表示モード切り替えボタン
-      add(viewModeButton);
+    if (addComponents) {
+      // 画面上部ゲーム情報領域
+      add(topGameInfoArea);
+      // メニュー領域
+      add(menuArea);
+      // 手の能力ボタン領域
+      add(handAbilityButton);
+      // 足の能力ボタン領域
+      add(legAbilityButton);
+      // アーマー能力ボタン領域
+      add(armerAbilityButton);
+      // ポケット能力ボタン領域
+      add(pocketAbilityButton);
+      // 予知能力ボタン領域
+      add(eyeAbilityButton);
+      // マージ能力ボタン領域
+      add(mergeAbilityButton);
+      // メニューボタン領域
+      add(menuButton);
+      // プレイヤー操作ボタン領域
+      add(playerControllButtonsArea!);
+      if (game.testMode) {
+        // 【テストモード時】現在座標表示領域
+        add(currentPosText);
+        // 【テストモード】現在の表示モード切り替えボタン
+        add(viewModeButton);
+      }
+      // チュートリアル表示領域
+      add(tutorial.tutorialArea);
     }
-    // チュートリアル表示領域
-    add(tutorial.tutorialArea);
 
     // 準備完了
     isReady = true;
