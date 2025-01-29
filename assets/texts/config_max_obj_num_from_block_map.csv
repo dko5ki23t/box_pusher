@@ -1,5 +1,5 @@
 ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限(対象の行は、それより上の行までの個数制限との差分)
 rangeType, point1X, point1Y, point2X, point2Y, distance, obj1, level1, num1, obj2, level2, num2, ...
-distance, 0, 0, 0, 0, 20, trap, 1, 5, guardian, 1, 5, bomb, 1, 1
-distance, 0, 0, 0, 0, 30, trap, 1, 3, bomb, 1, 1, warp, 1, 2
+distance, 0, 0, 0, 0, 20, trap, 1, 5, drill, 1, 2, bomb, 1, 1
+distance, 0, 0, 0, 0, 30, trap, 1, 3, drill, 1, 5, bomb, 1, 1, warp, 1, 2
 distance, 0, 0, 0, 0, 1000, bomb, 1, 1

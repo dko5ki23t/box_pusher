@@ -413,7 +413,8 @@ class StageObjFactory {
             savedArg: savedArg,
             scale: scale,
             scaleEffect: scaleEffect,
-            pos: pos)
+            pos: pos,
+            level: typeLevel.level)
           ..vector = vector;
     }
   }
