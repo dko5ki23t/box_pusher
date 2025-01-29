@@ -1,3 +1,4 @@
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -99,6 +100,18 @@ class Canon extends StageObj {
     if (playerStartMoving) {
       // 飛距離
       int dist = 3;
+      if (!Config().isArrowPathThrough) {
+        // 砲弾がオブジェクトに当たる場合は飛距離はそこまで
+        for (dist = 0; dist < 3; dist++) {
+          final obj = stage.getAfterPush(pos + vector.point * dist);
+          if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
+            break;
+          }
+        }
+        if (0 < dist && dist < 3) {
+          --dist;
+        }
+      }
       gameWorld.add(SpriteAnimationComponent(
         animation: canonballAnimations[level - 1],
         priority: Stage.movingPriority,

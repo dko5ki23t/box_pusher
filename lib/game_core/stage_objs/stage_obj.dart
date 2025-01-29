@@ -1332,10 +1332,13 @@ abstract class StageObj {
     // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している
     if (stage.safeGetStaticObj(pos).type == StageObjType.warp) {
       // 移動先がワープだった場合
+      Point orgPos = pos.copy();
       pos = stage.getWarpedPoint(pos);
       stage.setObjectPosition(this);
-      // 効果音を鳴らす
-      Audio().playSound(Sound.warp);
+      // 実際にワープしていたら効果音を鳴らす
+      if (orgPos != pos) {
+        Audio().playSound(Sound.warp);
+      }
     }
   }
 
