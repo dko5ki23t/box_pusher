@@ -1,12 +1,20 @@
+import 'package:box_pusher/components/rounded_component.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/layout.dart';
 
 class Turtle extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'turtle.png';
+
+  /// 「Help」の吹き出し
+  late final RoundedComponent talkBubble;
+
+  final Blink bubbleBlink = Blink(showDuration: 1.5, hideDuration: 1.5);
 
   Turtle({
     required super.pos,
@@ -42,7 +50,27 @@ class Turtle extends StageObj {
             type: StageObjType.turtle,
             level: level,
           ),
-        );
+        ) {
+    talkBubble = RoundedComponent(
+      size: Vector2(Stage.cellSize.x * 3, Stage.cellSize.y * 0.8),
+      cornerRadius: 25,
+      color: const Color(0xc0ffffff),
+      position: Vector2(pos.x * Stage.cellSize.x + Stage.cellSize.x * 0.5,
+          (pos.y - 1) * Stage.cellSize.y + Stage.cellSize.y * 0.5),
+      anchor: Anchor.center,
+      priority: Stage.frontPriority,
+      children: [
+        AlignComponent(
+            alignment: Anchor.center,
+            child: TextComponent(
+              text: 'HELP!',
+              textRenderer: TextPaint(
+                style: Config.gameTextStyle,
+              ),
+            )),
+      ],
+    );
+  }
 
   @override
   void update(
@@ -54,7 +82,15 @@ class Turtle extends StageObj {
     bool playerStartMoving,
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
-  ) {}
+  ) {
+    bubbleBlink.update(dt);
+    bool alreadyContains = gameWorld.contains(talkBubble);
+    if (!alreadyContains && bubbleBlink.isShowTime) {
+      gameWorld.add(talkBubble);
+    } else if (alreadyContains && !bubbleBlink.isShowTime) {
+      gameWorld.remove(talkBubble);
+    }
+  }
 
   @override
   bool get pushable => false;
@@ -88,4 +124,7 @@ class Turtle extends StageObj {
 
   @override
   bool get hasVector => false;
+
+  @override
+  bool get isAnimals => true;
 }

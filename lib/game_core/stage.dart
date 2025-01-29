@@ -179,8 +179,8 @@ class Stage {
   /// 敵
   StageObjList enemies = StageObjList();
 
-  /// ショップ
-  List<StageObj> shops = [];
+  /// 動物
+  List<StageObj> animals = [];
 
   /// ワープの場所リスト
   List<Point> warpPoints = [];
@@ -1001,14 +1001,15 @@ class Stage {
 
     // 各種ステージオブジェクト設定
     _staticObjs.clear();
-    shops.clear();
+    animals.clear();
+    spawners.clear();
     for (final entry
         in (stageData['staticObjs'] as Map<String, dynamic>).entries) {
       final staticObj = createObjectFromMap(entry.value);
-      if (staticObj.type == StageObjType.shop) {
-        shops.add(staticObj);
-      } else if (staticObj.type == StageObjType.spikeSpawner) {
+      if (staticObj.type == StageObjType.spikeSpawner) {
         spawners.add(staticObj);
+      } else if (staticObj.isAnimals) {
+        animals.add(staticObj);
       }
       _staticObjs[Point.decode(entry.key)] = staticObj;
     }
@@ -1083,7 +1084,8 @@ class Stage {
       prepareDistributions();
     }
     _staticObjs.clear();
-    shops.clear();
+    animals.clear();
+    spawners.clear();
     boxes.forceClear();
     enemies.forceClear();
     for (int y = stageLT.y; y <= stageRB.y; y++) {
@@ -1228,10 +1230,10 @@ class Stage {
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
 
-    // ショップ更新(ショップ情報を吹き出しで表示/非表示)
-    for (final shop in shops) {
-      shop.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
-          playerEndMoving, prohibitedPoints);
+    // 動物更新(吹き出しを表示/非表示)
+    for (final animal in animals) {
+      animal.update(dt, player.moving, gameWorld, camera, this,
+          playerStartMoving, playerEndMoving, prohibitedPoints);
     }
 
     // 敵の攻撃について処理
@@ -1404,8 +1406,10 @@ class Stage {
           typeLevel: Config().fixedStaticObjMap[pos]!,
           pos: pos,
           addToGameWorld: addToGameWorld);
-      if (staticObj.type == StageObjType.shop) {
-        shops.add(staticObj);
+      if (staticObj.isAnimals) {
+        animals.add(staticObj);
+      } else if (staticObj.type == StageObjType.spikeSpawner) {
+        spawners.add(staticObj);
       }
       _staticObjs[pos] = staticObj;
       return;

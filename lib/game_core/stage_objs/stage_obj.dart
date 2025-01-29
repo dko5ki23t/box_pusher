@@ -487,6 +487,9 @@ abstract class StageObj {
   /// プレイヤーの味方か（敵の攻撃を受けるか）
   bool get isAlly => false;
 
+  /// 動物か
+  bool get isAnimals => false;
+
   /// 攻撃を受ける
   /// やられたかどうかを返す
   bool hit(int damageLevel, Stage stage) {

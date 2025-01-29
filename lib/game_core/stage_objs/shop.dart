@@ -221,4 +221,7 @@ class Shop extends StageObj {
 
   /// 交換で手に入るオブジェクトが出現する場所か
   bool get isItemPlace => level == 4;
+
+  @override
+  bool get isAnimals => true;
 }
