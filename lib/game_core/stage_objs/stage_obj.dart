@@ -349,6 +349,9 @@ abstract class StageObj {
   /// 攻撃のチャンネル
   int attackCh = 1;
 
+  /// 氷により、強制的に移動させられる方向
+  Move forceMoving = Move.none;
+
   /// その他保存しておきたいint値(攻撃後ターン数等)
   /// 使用したい場合はoverrideすること
   int get arg => 0;
@@ -441,6 +444,8 @@ abstract class StageObj {
     Map<Point, Move>
         prohibitedPoints, // 今は移動可能だが、他のオブジェクトが同時期に移動してくるため移動不可な座標と向きのMap（例えば、移動しているオブジェクトに対してその交差するように移動できないようにするためのMap）
   );
+
+  void onRemove(World gameWorld) {}
 
   /// このオブジェクトは押せるか
   bool get pushable;
@@ -1319,6 +1324,9 @@ abstract class StageObj {
             stage.showSpawnEffect(getItemPos);
           }
         }
+      } else if (obj.type == StageObjType.water) {
+        // 氷の上に立ったとき
+        forceMoving = moving;
       }
     }
     // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している

@@ -29,10 +29,11 @@ class Water extends StageObj {
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
             1: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(waterImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-              ], stepTime: 1.0)
+              for (final move in MoveExtent.straights)
+                move: SpriteAnimation.spriteList([
+                  Sprite(waterImg,
+                      srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
+                ], stepTime: 1.0)
             },
           },
           typeLevel: StageObjTypeLevel(
@@ -57,16 +58,16 @@ class Water extends StageObj {
   bool get pushable => false;
 
   @override
-  bool get stopping => true;
+  bool get stopping => false;
 
   @override
-  bool get puttable => false;
+  bool get puttable => true;
 
   @override
-  bool get playerMovable => false;
+  bool get playerMovable => true;
 
   @override
-  bool get enemyMovable => false;
+  bool get enemyMovable => true;
 
   @override
   bool get mergable => false;
@@ -84,5 +85,5 @@ class Water extends StageObj {
   bool get beltMove => false;
 
   @override
-  bool get hasVector => false;
+  bool get hasVector => true;
 }

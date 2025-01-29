@@ -93,6 +93,13 @@ class Rabbit extends StageObj {
   }
 
   @override
+  void onRemove(World gameWorld) {
+    if (gameWorld.contains(talkBubble)) {
+      gameWorld.remove(talkBubble);
+    }
+  }
+
+  @override
   bool get pushable => false;
 
   @override

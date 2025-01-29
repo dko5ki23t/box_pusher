@@ -59,6 +59,7 @@ class StageObjList {
   void removeAllInvalidObjects(World gameWorld) {
     for (final obj in _objs
         .where((element) => !element.valid || !element.validAfterFrame)) {
+      obj.onRemove(gameWorld);
       gameWorld.remove(obj.animationComponent);
     }
     _objs.removeWhere((element) => !element.valid || !element.validAfterFrame);
@@ -947,8 +948,19 @@ class Stage {
 
   void setStaticType(Point p, StageObjType type, {int level = 1}) {
     gameWorld.remove(_staticObjs[p]!.animationComponent);
+    _staticObjs[p]!.onRemove(gameWorld);
+    if (_staticObjs[p]!.isAnimals) {
+      animals.remove(_staticObjs[p]!);
+    } else if (_staticObjs[p]!.type == StageObjType.spikeSpawner) {
+      spawners.remove(_staticObjs[p]!);
+    }
     _staticObjs[p] = createObject(
         typeLevel: StageObjTypeLevel(type: type, level: level), pos: p);
+    if (_staticObjs[p]!.isAnimals) {
+      animals.add(_staticObjs[p]!);
+    } else if (_staticObjs[p]!.type == StageObjType.spikeSpawner) {
+      spawners.add(_staticObjs[p]!);
+    }
   }
 
   /// 敵による攻撃の座標を追加する（ターン終了後に一度に判定する）
@@ -1160,7 +1172,7 @@ class Stage {
     bool playerEndMoving = (before != Move.none && player.moving == Move.none);
     // コンベア更新
     for (final belt in beltPoints) {
-      _staticObjs[belt]!.update(dt, moveInput, gameWorld, camera, this,
+      _staticObjs[belt]!.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
     // プレイヤーの能力使用不可をすべて解除(この後の敵更新で煙によって使用不可にする)

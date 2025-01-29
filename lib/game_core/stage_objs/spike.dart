@@ -88,6 +88,10 @@ class Spike extends StageObj {
       if (ret.containsKey('move')) {
         moving = ret['move'] as Move;
       }
+      if (forceMoving != Move.none) {
+        moving = forceMoving;
+        forceMoving = Move.none;
+      }
       movingAmount = 0;
       _playerStartMovingFlag = true;
     }

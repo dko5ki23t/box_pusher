@@ -158,25 +158,27 @@ class Player extends StageObj {
           vector = vector;
         }
       }
-      // ユーザの入力がなければ何もしない
-      if (moveInput == Move.none) {
+      Move actualMove = forceMoving != Move.none ? forceMoving : moveInput;
+      forceMoving = Move.none;
+      // ユーザの入力や氷で滑る移動がなければ何もしない
+      if (actualMove == Move.none) {
         return;
       }
       // ダメージを受けていた場合でもアニメーションを元に戻す
       attacking = false;
       // 動けないとしても、向きは変更
-      vector = moveInput.toStraightLR();
+      vector = actualMove.toStraightLR();
       // プレイヤーが壁などにぶつかるか
-      if (!stage.get(pos + moveInput.point).playerMovable) {
+      if (!stage.get(pos + actualMove.point).playerMovable) {
         return;
       }
       // 押し始める・押すオブジェクトを決定
-      if (!startPushing(moveInput, pushableNum, stage, gameWorld,
+      if (!startPushing(actualMove, pushableNum, stage, gameWorld,
           prohibitedPoints, pushings, executings)) {
         // 押せない等で移動できないならreturn
         return;
       }
-      moving = moveInput;
+      moving = actualMove;
       movingAmount = 0.0;
       // 移動先に他のオブジェクトが移動できないようにする
       prohibitedPoints[pos + moving.point] = Move.none;

@@ -208,6 +208,10 @@ class Archer extends StageObj {
       if (ret.containsKey('vector')) {
         vector = ret['vector'] as Move;
       }
+      if (forceMoving != Move.none) {
+        moving = forceMoving;
+        forceMoving = Move.none;
+      }
       movingAmount = 0;
     }
 
