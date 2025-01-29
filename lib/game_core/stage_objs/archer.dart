@@ -39,7 +39,8 @@ class Archer extends StageObj {
   static const double attackStepTime = 32.0 / Stage.playerSpeed / 4;
 
   /// 矢が飛ぶ時間
-  static final arrowMoveTime = Stage.cellSize.x / 2 / Stage.playerSpeed;
+  double arrowMoveTime(int dist) =>
+      Stage.cellSize.x / 2 / Stage.playerSpeed * (dist / arrowReach);
 
   Archer({
     required super.pos,
@@ -247,15 +248,13 @@ class Archer extends StageObj {
           // 矢がオブジェクトに当たる場合、矢の飛距離はそこまでとなる
           int dist = arrowReach;
           if (!Config().isArrowPathThrough) {
-            for (dist = 0; dist < arrowReach; dist++) {
+            for (dist = 1; dist < arrowReach + 1; dist++) {
               final obj = stage.getAfterPush(pos + v.point * dist);
               if (!obj.isEnemy && !obj.enemyMovable) {
                 break;
               }
             }
-            if (0 < dist && dist < arrowReach) {
-              --dist;
-            }
+            --dist;
           }
           gameWorld.add(SpriteAnimationComponent(
             animation: arrowAnimations[level - 1],
@@ -264,9 +263,9 @@ class Archer extends StageObj {
               MoveEffect.by(
                 Vector2(Stage.cellSize.x * v.vector.x * dist,
                     Stage.cellSize.y * v.vector.y * dist),
-                EffectController(duration: arrowMoveTime),
+                EffectController(duration: arrowMoveTime(dist)),
               ),
-              RemoveEffect(delay: arrowMoveTime),
+              RemoveEffect(delay: arrowMoveTime(dist)),
             ],
             size: Stage.cellSize,
             anchor: Anchor.center,

@@ -51,8 +51,12 @@ class Guardian extends StageObj {
   /// 弓矢/魔法攻撃時の1コマ時間
   static const double subAttackStepTime = 32.0 / Stage.playerSpeed / 4;
 
+  /// 飛び道具の最大飛距離
+  final int maxReach = 5;
+
   /// 飛び道具が飛ぶ時間
-  static final arrowMagicMoveTime = Stage.cellSize.x / 2 / Stage.playerSpeed;
+  double arrowMagicMoveTime(int dist) =>
+      Stage.cellSize.x / 2 / Stage.playerSpeed * (dist / maxReach);
 
   Guardian({
     required super.pos,
@@ -329,7 +333,7 @@ class Guardian extends StageObj {
         }
         if (!attacking) {
           // 前方直線5マスへの飛び道具
-          attackingReach = 5;
+          attackingReach = maxReach;
           for (final attackPoint
               in PointLineRange(pos + vector.point, vector, attackingReach)
                   .set) {
@@ -342,16 +346,16 @@ class Guardian extends StageObj {
               vector = vector;
               if (level == 2 && !Config().isArrowPathThrough) {
                 // 矢がオブジェクトに当たる場合は飛距離はそこまで
-                for (attackingReach = 0; attackingReach < 5; attackingReach++) {
+                for (attackingReach = 1;
+                    attackingReach < maxReach + 1;
+                    attackingReach++) {
                   final obj =
                       stage.getAfterPush(pos + vector.point * attackingReach);
                   if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
                     break;
                   }
                 }
-                if (0 < attackingReach && attackingReach < 5) {
-                  --attackingReach;
-                }
+                --attackingReach;
               }
               attackingPoints.addAll(
                   PointLineRange(pos + vector.point, vector, attackingReach)
@@ -425,9 +429,9 @@ class Guardian extends StageObj {
             MoveEffect.by(
               Vector2(Stage.cellSize.x * vector.vector.x * attackingReach,
                   Stage.cellSize.y * vector.vector.y * attackingReach),
-              EffectController(duration: arrowMagicMoveTime),
+              EffectController(duration: arrowMagicMoveTime(attackingReach)),
             ),
-            RemoveEffect(delay: arrowMagicMoveTime),
+            RemoveEffect(delay: arrowMagicMoveTime(attackingReach)),
           ],
           size: Stage.cellSize,
           anchor: Anchor.center,

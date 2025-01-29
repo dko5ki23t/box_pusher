@@ -16,8 +16,12 @@ class Canon extends StageObj {
   /// 砲弾のアニメーション
   final List<SpriteAnimation> canonballAnimations;
 
+  /// 砲弾の飛距離
+  final int attackingReach = 3;
+
   /// 砲弾が飛ぶ時間
-  static final canonballMoveTime = Stage.cellSize.x / 2 / Stage.playerSpeed;
+  double canonballMoveTime(int dist) =>
+      Stage.cellSize.x / 2 / Stage.playerSpeed * (dist / attackingReach);
 
   Canon({
     required Image canonImg,
@@ -99,19 +103,18 @@ class Canon extends StageObj {
     // 砲弾発射
     if (playerStartMoving) {
       // 飛距離
-      int dist = 3;
+      int dist = attackingReach;
       if (!Config().isArrowPathThrough) {
         // 砲弾がオブジェクトに当たる場合は飛距離はそこまで
-        for (dist = 0; dist < 3; dist++) {
+        for (dist = 1; dist < attackingReach + 1; dist++) {
           final obj = stage.getAfterPush(pos + vector.point * dist);
           if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
             break;
           }
         }
-        if (0 < dist && dist < 3) {
-          --dist;
-        }
+        --dist;
       }
+
       gameWorld.add(SpriteAnimationComponent(
         animation: canonballAnimations[level - 1],
         priority: Stage.movingPriority,
@@ -119,9 +122,9 @@ class Canon extends StageObj {
           MoveEffect.by(
             Vector2(Stage.cellSize.x * vector.point.x * dist,
                 Stage.cellSize.y * vector.point.y * dist),
-            EffectController(duration: canonballMoveTime),
+            EffectController(duration: canonballMoveTime(dist)),
           ),
-          RemoveEffect(delay: canonballMoveTime),
+          RemoveEffect(delay: canonballMoveTime(dist)),
         ],
         size: Stage.cellSize,
         anchor: Anchor.center,
