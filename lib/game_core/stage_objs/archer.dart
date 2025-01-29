@@ -256,24 +256,26 @@ class Archer extends StageObj {
             }
             --dist;
           }
-          gameWorld.add(SpriteAnimationComponent(
-            animation: arrowAnimations[level - 1],
-            priority: Stage.movingPriority,
-            children: [
-              MoveEffect.by(
-                Vector2(Stage.cellSize.x * v.vector.x * dist,
-                    Stage.cellSize.y * v.vector.y * dist),
-                EffectController(duration: arrowMoveTime(dist)),
-              ),
-              RemoveEffect(delay: arrowMoveTime(dist)),
-            ],
-            size: Stage.cellSize,
-            anchor: Anchor.center,
-            angle: angle,
-            position:
-                Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-                    Stage.cellSize / 2,
-          ));
+          if (dist > 0) {
+            gameWorld.add(SpriteAnimationComponent(
+              animation: arrowAnimations[level - 1],
+              priority: Stage.movingPriority,
+              children: [
+                MoveEffect.by(
+                  Vector2(Stage.cellSize.x * v.vector.x * dist,
+                      Stage.cellSize.y * v.vector.y * dist),
+                  EffectController(duration: arrowMoveTime(dist)),
+                ),
+                RemoveEffect(delay: arrowMoveTime(dist)),
+              ],
+              size: Stage.cellSize,
+              anchor: Anchor.center,
+              angle: angle,
+              position:
+                  Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                      Stage.cellSize / 2,
+            ));
+          }
         }
       }
 

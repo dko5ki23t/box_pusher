@@ -430,7 +430,8 @@ class Stage {
   /// ステージの範囲を拡大する
   void expandStageSize(Point newLT, Point newRB) {
     // 左端拡大
-    for (int i = 0; i < stageLT.x - newLT.x; i++) {
+    int expandNum = stageLT.x - newLT.x;
+    for (int i = 0; i < expandNum; i++) {
       if (stageLT.x <= stageMaxLT.x) break;
       stageLT.x--;
       for (int y = stageLT.y; y <= stageRB.y; y++) {
@@ -438,7 +439,8 @@ class Stage {
       }
     }
     // 右端拡大
-    for (int i = 0; i < newRB.x - stageRB.x; i++) {
+    expandNum = newRB.x - stageRB.x;
+    for (int i = 0; i < expandNum; i++) {
       if (stageRB.x >= stageMaxRB.x) break;
       stageRB.x++;
       for (int y = stageLT.y; y <= stageRB.y; y++) {
@@ -446,7 +448,8 @@ class Stage {
       }
     }
     // 上端拡大
-    for (int i = 0; i < stageLT.y - newLT.y; i++) {
+    expandNum = stageLT.y - newLT.y;
+    for (int i = 0; i < expandNum; i++) {
       if (stageLT.y <= stageMaxLT.y) break;
       stageLT.y--;
       for (int x = stageLT.x; x <= stageRB.x; x++) {
@@ -454,7 +457,8 @@ class Stage {
       }
     }
     // 下端拡大
-    for (int i = 0; i < newRB.y - stageRB.y; i++) {
+    expandNum = newRB.y - stageRB.y;
+    for (int i = 0; i < expandNum; i++) {
       if (stageRB.y >= stageMaxRB.y) break;
       stageRB.y++;
       for (int x = stageLT.x; x <= stageRB.x; x++) {
@@ -1184,6 +1188,12 @@ class Stage {
     final updateTargetRange = PointRectRange(
         player.pos - Config().updateRange, player.pos + Config().updateRange);
 
+    // 床類更新（氷でアイテムを滑らす等）
+    for (final p in updateTargetRange.set) {
+      _staticObjs[p]?.update(dt, player.moving, gameWorld, camera, this,
+          playerStartMoving, playerEndMoving, prohibitedPoints);
+    }
+
     // 敵更新
     final currentEnemies = [...enemies.iterable]
         .where((element) => updateTargetRange.contains(element.pos));
@@ -1411,7 +1421,7 @@ class Stage {
 
   /// 引数で指定した位置に、パターンに従った静止物を生成する
   void createAndSetStaticObjWithPattern(Point pos,
-      {bool addToGameWorld = true}) async {
+      {bool addToGameWorld = true}) {
     if (Config().fixedStaticObjMap.containsKey(pos)) {
       // 固定位置のオブジェクト
       final staticObj = createObject(

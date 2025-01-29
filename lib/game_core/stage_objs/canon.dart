@@ -114,25 +114,27 @@ class Canon extends StageObj {
         }
         --dist;
       }
-
-      gameWorld.add(SpriteAnimationComponent(
-        animation: canonballAnimations[level - 1],
-        priority: Stage.movingPriority,
-        children: [
-          MoveEffect.by(
-            Vector2(Stage.cellSize.x * vector.point.x * dist,
-                Stage.cellSize.y * vector.point.y * dist),
-            EffectController(duration: canonballMoveTime(dist)),
-          ),
-          RemoveEffect(delay: canonballMoveTime(dist)),
-        ],
-        size: Stage.cellSize,
-        anchor: Anchor.center,
-        position: Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-            Stage.cellSize / 2,
-      ));
-      attackingPoints
-          .addAll(PointLineRange(pos + vector.point, vector, dist).set);
+      if (dist > 0) {
+        gameWorld.add(SpriteAnimationComponent(
+          animation: canonballAnimations[level - 1],
+          priority: Stage.movingPriority,
+          children: [
+            MoveEffect.by(
+              Vector2(Stage.cellSize.x * vector.point.x * dist,
+                  Stage.cellSize.y * vector.point.y * dist),
+              EffectController(duration: canonballMoveTime(dist)),
+            ),
+            RemoveEffect(delay: canonballMoveTime(dist)),
+          ],
+          size: Stage.cellSize,
+          anchor: Anchor.center,
+          position:
+              Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                  Stage.cellSize / 2,
+        ));
+        attackingPoints
+            .addAll(PointLineRange(pos + vector.point, vector, dist).set);
+      }
     }
     if (playerEndMoving) {
       for (final p in attackingPoints) {

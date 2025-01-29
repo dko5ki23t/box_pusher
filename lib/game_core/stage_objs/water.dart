@@ -42,6 +42,8 @@ class Water extends StageObj {
           ),
         );
 
+  bool playerStartMovingFlag = false;
+
   @override
   void update(
     double dt,
@@ -52,7 +54,47 @@ class Water extends StageObj {
     bool playerStartMoving,
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
-  ) {}
+  ) {
+    if (playerStartMoving) {
+      playerStartMovingFlag = true;
+      // 一旦位置を変える
+      pos += moving.oppsite.point;
+      startPushing(
+          moving, 1, stage, gameWorld, prohibitedPoints, pushings, executings);
+      // 位置を元に戻す
+      pos += moving.point;
+      movingAmount = 0;
+    }
+
+    if (playerStartMovingFlag) {
+      // 移動中の場合(このフレームで移動開始した場合を含む)
+      // 移動量加算
+      movingAmount += dt * Stage.playerSpeed;
+      if (movingAmount >= Stage.cellSize.x) {
+        movingAmount = Stage.cellSize.x;
+      }
+
+      // ※※※画像の移動ここから※※※
+      Vector2 offset = moving.vector * movingAmount;
+      for (final pushing in pushings) {
+        // 押しているオブジェクトの位置変更
+        stage.setObjectPosition(pushing, offset: offset);
+        // 押しているオブジェクトの向き変更
+        pushing.vector = moving.toStraightLR();
+      }
+      // ※※※画像の移動ここまで※※※
+
+      // 次のマスに移っていたら移動終了
+      if (movingAmount >= Stage.cellSize.x) {
+        // 押すオブジェクトに関する処理
+        endPushing(stage, gameWorld);
+        movingAmount = 0;
+        pushings.clear();
+        executings.clear();
+        playerStartMovingFlag = false;
+      }
+    }
+  }
 
   @override
   bool get pushable => false;

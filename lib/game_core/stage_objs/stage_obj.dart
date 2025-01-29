@@ -1219,6 +1219,9 @@ abstract class StageObj {
         stage.coins.actual += pushing.coins;
         stage.showGotCoinEffect(pushing.coins, toTo);
         pushing.remove();
+      } else if (stage.safeGetStaticObj(toTo).type == StageObjType.water) {
+        // 押した先が氷なら滑るように設定
+        stage.safeGetStaticObj(toTo).moving = moving;
       } else if (pushing.type == StageObjType.drill && executings[i]) {
         // ドリル使用時
         // ドリルのオブジェクトレベルダウン、0になったら消す

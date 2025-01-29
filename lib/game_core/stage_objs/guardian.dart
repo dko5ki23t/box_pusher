@@ -422,24 +422,26 @@ class Guardian extends StageObj {
           movingAmount >= Stage.cellSize.x / 2) {
         double angle = 0;
         angle = vector.angle(base: Move.down);
-        gameWorld.add(SpriteAnimationComponent(
-          animation: arrowMagicAnimations[level]!,
-          priority: Stage.movingPriority,
-          children: [
-            MoveEffect.by(
-              Vector2(Stage.cellSize.x * vector.vector.x * attackingReach,
-                  Stage.cellSize.y * vector.vector.y * attackingReach),
-              EffectController(duration: arrowMagicMoveTime(attackingReach)),
-            ),
-            RemoveEffect(delay: arrowMagicMoveTime(attackingReach)),
-          ],
-          size: Stage.cellSize,
-          anchor: Anchor.center,
-          angle: angle,
-          position:
-              Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-                  Stage.cellSize / 2,
-        ));
+        if (attackingReach > 0) {
+          gameWorld.add(SpriteAnimationComponent(
+            animation: arrowMagicAnimations[level]!,
+            priority: Stage.movingPriority,
+            children: [
+              MoveEffect.by(
+                Vector2(Stage.cellSize.x * vector.vector.x * attackingReach,
+                    Stage.cellSize.y * vector.vector.y * attackingReach),
+                EffectController(duration: arrowMagicMoveTime(attackingReach)),
+              ),
+              RemoveEffect(delay: arrowMagicMoveTime(attackingReach)),
+            ],
+            size: Stage.cellSize,
+            anchor: Anchor.center,
+            angle: angle,
+            position:
+                Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                    Stage.cellSize / 2,
+          ));
+        }
       }
     }
 
