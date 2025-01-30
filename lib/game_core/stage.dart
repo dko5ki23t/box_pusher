@@ -6,7 +6,6 @@ import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
-import 'package:box_pusher/game_core/stage_objs/ghost.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
@@ -877,11 +876,11 @@ class Stage {
     if (detectPlayer && player.pos == p) {
       return player;
     }
-    final box = boxes.firstWhereOrNull((element) => element.pos == p);
-    final enemy = enemies.firstWhereOrNull((element) => element.pos == p);
-    // TODO:ゴーストのためだけにこの条件ここに書いてていい？
-    if (enemy != null &&
-        !(enemy.type == StageObjType.ghost && (enemy as Ghost).ghosting)) {
+    final box = boxes
+        .firstWhereOrNull((element) => element.pos == p && !element.isOverlay);
+    final enemy = enemies
+        .firstWhereOrNull((element) => element.pos == p && !element.isOverlay);
+    if (enemy != null) {
       return enemy;
     } else if (box != null) {
       return box;

@@ -1,38 +1,43 @@
-import 'dart:math';
-
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
-import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 
-class Smoke extends StageObj {
+class Fire extends StageObj {
   /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'smoke.png';
+  static String get imageFileName => 'fire.png';
 
   /// 経過ターン
   int turns = 0;
 
   /// 消えるまでのターン数
-  final int lastingTurns;
+  int get lastingTurns {
+    switch (level) {
+      case 2:
+        return 4;
+      case 3:
+        return 8;
+      default:
+        return 1;
+    }
+  }
 
   /// 封じたプレイヤーの能力（煙から出たらリセットされる）
   List<PlayerAbility> forbidedAbility = [];
 
-  Smoke({
-    required Image smokeImg,
+  Fire({
+    required Image fireImg,
     required Image errorImg,
     required super.savedArg,
-    required this.lastingTurns,
     required super.pos,
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
             priority: Stage.frontMovingPriority,
-            size: Stage.cellSize * 5,
+            size: Stage.cellSize,
             anchor: Anchor.center,
             position:
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
@@ -46,23 +51,25 @@ class Smoke extends StageObj {
             for (int i = 1; i <= 3; i++)
               i: {
                 Move.none: SpriteAnimation.spriteList([
-                  Sprite(smokeImg,
-                      srcPosition: Vector2(320 * (i - 1), 0),
-                      srcSize: Vector2.all(160)),
-                  Sprite(smokeImg,
-                      srcPosition: Vector2(320 * (i - 1) + 160, 0),
-                      srcSize: Vector2.all(160)),
+                  Sprite(fireImg,
+                      srcPosition: Vector2(64 * (i - 1), 0),
+                      srcSize: Stage.cellSize),
+                  Sprite(fireImg,
+                      srcPosition: Vector2(64 * (i - 1) + 32, 0),
+                      srcSize: Stage.cellSize),
                 ], stepTime: Stage.objectStepTime),
               },
           },
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.smoke,
+            type: StageObjType.fire,
             level: level,
           ),
         ) {
     // 透明度変更
-    animationComponent.add(OpacityEffect.to(
-        max(0, 0.9 - 0.3 * turns), EffectController(duration: 0)));
+    if (turns >= lastingTurns - 1) {
+      animationComponent
+          .add(OpacityEffect.to(0.5, EffectController(duration: 0)));
+    }
   }
 
   @override
@@ -79,41 +86,25 @@ class Smoke extends StageObj {
     // 移動し始めのフレームの場合
     if (playerStartMoving) {
       ++turns;
+      if (stage.safeGetStaticObj(pos).type == StageObjType.water) {
+        // 氷は溶かして消滅
+        stage.setStaticType(pos, StageObjType.none);
+        validAfterFrame = false;
+      }
       if (turns >= lastingTurns) {
         // オブジェクト削除
         validAfterFrame = false;
       }
       // 透明度変更
-      animationComponent.add(OpacityEffect.to(
-          max(0, 0.9 - 0.3 * turns), EffectController(duration: 0)));
+      if (turns >= lastingTurns - 1) {
+        animationComponent
+            .add(OpacityEffect.to(0.5, EffectController(duration: 0)));
+      }
     }
-    bool coverPlayer = PointRectRange(pos + Point(-2, -2), pos + Point(2, 2))
-        .contains(stage.player.pos);
-    if (coverPlayer) {
-      // プレイヤーの能力を使用不可にする
-      if (forbidedAbility.length < level) {
-        int n = level - forbidedAbility.length;
-        // プレイヤーが使用可能な能力のリスト作成
-        final List<PlayerAbility> availables = [];
-        for (final ability in PlayerAbility.values) {
-          if (stage.player.isAbilityAvailable(ability)) {
-            availables.add(ability);
-          }
-        }
-        // 使用可能な能力がなければ何もしない
-        if (availables.isEmpty) return;
-        if (n >= availables.length) {
-          forbidedAbility.addAll(availables);
-        } else {
-          // ランダムに選ぶ
-          forbidedAbility.addAll(availables.sample(n));
-        }
-      }
-      for (final ability in forbidedAbility) {
-        stage.player.isAbilityForbidden[ability] = true;
-      }
-    } else {
-      forbidedAbility.clear();
+    // 移動終了時のフレームの場合
+    else if (playerEndMoving) {
+      // 攻撃情報を追加
+      stage.addEnemyAttackDamage(level, {pos});
     }
   }
 
@@ -133,7 +124,7 @@ class Smoke extends StageObj {
   bool get enemyMovable => true;
 
   @override
-  bool get mergable => level < maxLevel;
+  bool get mergable => false;
 
   @override
   int get maxLevel => 3;

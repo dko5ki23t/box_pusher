@@ -6,6 +6,7 @@ import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/boneman.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/canon.dart';
+import 'package:box_pusher/game_core/stage_objs/fire.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
 import 'package:box_pusher/game_core/stage_objs/girl.dart';
 import 'package:box_pusher/game_core/stage_objs/gorilla.dart';
@@ -308,6 +309,14 @@ class StageObjFactory {
             savedArg: savedArg,
             pos: pos,
             level: typeLevel.level);
+      case StageObjType.fire:
+        return Fire(
+          fireImg: baseImages[type]!,
+          errorImg: errorImg,
+          savedArg: savedArg,
+          pos: pos,
+          level: typeLevel.level,
+        );
       case StageObjType.builder:
         return Builder(
           builderImg: baseImages[type]!,

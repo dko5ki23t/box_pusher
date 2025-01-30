@@ -29,3 +29,4 @@ Play with
 - タップ長押しアイコン：[タップ・長押しのアイコン | フリーのアイコンイラスト素材 icon-pit](https://icon-pit.com/pictogram/9692)
 - ピンチイン/アウトアイコン：[ポイント・チェックのアイコン | フリーのアイコンイラスト素材 icon-pit](https://icon-pit.com/pictogram/9311)
 - マウスアイコン：[マウスのアイコン | フリーのアイコンイラスト素材 icon-pit](https://icon-pit.com/pictogram/1351)
+- 炎：[火の玉のアイコン素材 | アイコン素材ダウンロードサイト「icooon-mono」 | 商用利用可能なアイコン素材が無料(フリー)ダウンロードできるサイト](https://icooon-mono.com/11143-%e7%81%ab%e3%81%ae%e7%8e%89%e3%81%ae%e3%82%a2%e3%82%a4%e3%82%b3%e3%83%b3%e7%b4%a0%e6%9d%90/)

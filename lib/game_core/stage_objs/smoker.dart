@@ -108,8 +108,7 @@ class Smoker extends StageObj {
         final smoke = stage.createObject(
             typeLevel:
                 StageObjTypeLevel(type: StageObjType.smoke, level: level),
-            pos: pos,
-            vector: Move.left);
+            pos: pos);
         stage.enemies.add(smoke);
       } else {
         final ret = super.enemyMove(

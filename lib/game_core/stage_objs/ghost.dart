@@ -16,6 +16,9 @@ class Ghost extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'ghost.png';
 
+  /// ゴースト状態になってからの経過ターン数
+  int ghostTurns = 0;
+
   Ghost({
     required Image ghostImg,
     required Image errorImg,
@@ -92,6 +95,14 @@ class Ghost extends StageObj {
   ) {
     if (playerStartMoving) {
       playerStartMovingFlag = true;
+      if ((ghostTurns > 0 && (ghostTurns == 1 || ghostTurns % 3 == 0)) &&
+          level > 1) {
+        // 火の玉を設置
+        final fire = stage.createObject(
+            typeLevel: StageObjTypeLevel(type: StageObjType.fire, level: level),
+            pos: pos);
+        stage.enemies.add(fire);
+      }
       // 移動/ゴースト化/ゴースト解除を決定
       final ret = super.enemyMove(
           movePatterns[level]!, vector, stage.player, stage, prohibitedPoints,
@@ -102,6 +113,7 @@ class Ghost extends StageObj {
         vector = vector;
       } else if (ret.containsKey('ghost') && !ret['ghost']! && ghosting) {
         ghosting = false;
+        ghostTurns = 0;
         // 元のアニメーションに変更
         vector = vector;
       } else if (ret.containsKey('move')) {
@@ -141,6 +153,10 @@ class Ghost extends StageObj {
         if (stage.player.pos == pos && !ghosting) {
           // 同じマスにいる場合はアーマー関係なくゲームオーバー
           stage.isGameover = true;
+        }
+        // ゴースト継続ターン追加
+        if (ghosting) {
+          ghostTurns++;
         }
         moving = Move.none;
         movingAmount = 0;
@@ -185,4 +201,17 @@ class Ghost extends StageObj {
 
   @override
   int get coins => level * 2;
+
+  // Stage.get()の対象にならない(オブジェクトと重なってるのに敵の移動先にならないように)
+  @override
+  bool get isOverlay => ghosting;
+
+  // ghostTurnsの保存/読み込み
+  @override
+  int get arg => ghostTurns;
+
+  @override
+  void loadArg(int val) {
+    ghostTurns = val;
+  }
 }

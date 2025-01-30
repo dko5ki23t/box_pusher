@@ -12,6 +12,7 @@ import 'package:box_pusher/game_core/stage_objs/boneman.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
+import 'package:box_pusher/game_core/stage_objs/fire.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
@@ -59,7 +60,8 @@ enum StageObjType {
   swordsman, // 剣を使う敵
   archer, // 弓を使う敵
   wizard, // 魔法を使う敵
-  ghost, // オブジェクトをすり抜けて移動できる敵
+  ghost, // オブジェクトをすり抜けて移動できる敵（ゴースト）
+  fire, // ゴーストが残す炎（設置型）
   builder, // 一定間隔でブロックを置く敵
   pusher, // オブジェクトを押す敵
   smoker, // 周囲を見えづらく、プレイヤーの能力を使用不能にする煙を出す敵
@@ -95,6 +97,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.archer: 'archer',
     StageObjType.wizard: 'wizard',
     StageObjType.ghost: 'ghost',
+    StageObjType.fire: 'fire',
     StageObjType.builder: 'builder',
     StageObjType.pusher: 'pusher',
     StageObjType.smoker: 'smoker',
@@ -150,6 +153,8 @@ extension StageObjTypeExtent on StageObjType {
         return Wizard;
       case StageObjType.ghost:
         return Ghost;
+      case StageObjType.fire:
+        return Fire;
       case StageObjType.builder:
         return Builder;
       case StageObjType.pusher:
@@ -217,6 +222,8 @@ extension StageObjTypeExtent on StageObjType {
         return Wizard.imageFileName;
       case StageObjType.ghost:
         return Ghost.imageFileName;
+      case StageObjType.fire:
+        return Fire.imageFileName;
       case StageObjType.builder:
         return Builder.imageFileName;
       case StageObjType.pusher:
@@ -494,6 +501,9 @@ abstract class StageObj {
 
   /// 動物か
   bool get isAnimals => false;
+
+  /// 他オブジェクトに重ねているか（trueの場合、Stage.get()で取得する対象にならない）
+  bool get isOverlay => false;
 
   /// 攻撃を受ける
   /// やられたかどうかを返す
