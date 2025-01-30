@@ -265,7 +265,7 @@ class Boneman extends StageObj {
     if (!killable) return false;
     // レベルは下がらない
     // level = (level - damageLevel).clamp(0, maxLevel);
-    if (damageLevel >= level) {
+    if (damageLevel - cutDamage >= level) {
       deadTurns = 1;
       stage.enemies.forceRemove(this);
       stage.boxes.add(this);

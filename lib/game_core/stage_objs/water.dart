@@ -63,10 +63,14 @@ class Water extends StageObj {
       playerStartMovingFlag = true;
       // 一旦位置を変える
       pos += moving.oppsite.point;
-      startPushing(
+      // 押すのを試みる。押せない場合はmovingをnoneに
+      bool canPush = startPushing(
           moving, 1, stage, gameWorld, prohibitedPoints, pushings, executings);
       // 位置を元に戻す
       pos += moving.point;
+      if (!canPush) {
+        moving = Move.none;
+      }
       movingAmount = 0;
     }
 

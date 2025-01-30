@@ -82,7 +82,7 @@ class Pusher extends StageObj {
   bool playerStartMovingFlag = false;
 
   /// 一度にいくつのオブジェクトを押せるか(-1なら制限なし)
-  int pushableNum = 1;
+  int get pushableNum => level;
 
   @override
   void update(

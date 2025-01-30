@@ -6,6 +6,7 @@ import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
+import 'package:box_pusher/game_core/stage_objs/barrierman.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/boneman.dart';
@@ -75,6 +76,7 @@ enum StageObjType {
   canon,
   spikeSpawner, // とげの敵を生み出す場
   boneman, // 骨の敵、倒すと押せるオブジェクト化、一定ターンで復活
+  barrierman, // 範囲内の敵に一定以上ダメージを軽減させるバリアを展開する敵
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -111,6 +113,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.canon: 'canon',
     StageObjType.spikeSpawner: 'spikeSpawner',
     StageObjType.boneman: 'boneman',
+    StageObjType.barrierman: 'barrierman',
   };
 
   String get str => strMap[this]!;
@@ -181,6 +184,8 @@ extension StageObjTypeExtent on StageObjType {
         return SpikeSpawner;
       case StageObjType.boneman:
         return Boneman;
+      case StageObjType.barrierman:
+        return Barrierman;
     }
   }
 
@@ -250,6 +255,8 @@ extension StageObjTypeExtent on StageObjType {
         return SpikeSpawner.imageFileName;
       case StageObjType.boneman:
         return Boneman.imageFileName;
+      case StageObjType.barrierman:
+        return Barrierman.imageFileName;
     }
   }
 
@@ -358,6 +365,9 @@ abstract class StageObj {
 
   /// 氷により、強制的に移動させられる方向
   Move forceMoving = Move.none;
+
+  /// バリア範囲内にいることでカットするダメージ（敵用、Stage.update()で毎回0にリセットされる）
+  int cutDamage = 0;
 
   /// その他保存しておきたいint値(攻撃後ターン数等)
   /// 使用したい場合はoverrideすること
@@ -509,7 +519,9 @@ abstract class StageObj {
   /// やられたかどうかを返す
   bool hit(int damageLevel, Stage stage) {
     if (!killable) return false;
-    level = (level - damageLevel).clamp(0, maxLevel);
+    int damageAfterCut = damageLevel - cutDamage;
+    if (damageAfterCut < 0) damageAfterCut = 0;
+    level = (level - damageAfterCut).clamp(0, maxLevel);
     return level <= 0;
   }
 

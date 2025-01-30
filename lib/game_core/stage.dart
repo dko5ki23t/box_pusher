@@ -1182,6 +1182,12 @@ class Stage {
     for (final ability in player.isAbilityForbidden.keys) {
       player.isAbilityForbidden[ability] = false;
     }
+    // 敵のダメージカットをリセット(この後の敵更新でバリアによってセットされる)
+    if (playerEndMoving) {
+      for (final enemy in enemies.iterable) {
+        enemy.cutDamage = 0;
+      }
+    }
 
     // ここから先更新対象となる範囲
     final updateTargetRange = PointRectRange(
