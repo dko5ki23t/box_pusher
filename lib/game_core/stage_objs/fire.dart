@@ -66,10 +66,8 @@ class Fire extends StageObj {
           ),
         ) {
     // 透明度変更
-    if (turns >= lastingTurns - 1) {
-      animationComponent
-          .add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-    }
+    animationComponent.add(OpacityEffect.to(
+        turns >= lastingTurns - 1 ? 0.5 : 0.8, EffectController(duration: 0)));
   }
 
   @override

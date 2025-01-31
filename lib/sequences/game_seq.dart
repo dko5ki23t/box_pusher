@@ -78,7 +78,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   static Vector2 get menuButtonAreaSize => Vector2(360.0, 40.0);
 
   /// 能力ボタン領域
-  static Vector2 get abilityButtonAreaSize => Vector2(40.0, 40.0);
+  static Vector2 get abilityButtonAreaSize => Vector2(30.0, 30.0);
 
   /// 次マージ時出現アイテム領域
   static Vector2 get nextItemAreaSize => Vector2(150.0, 35.0);
@@ -127,13 +127,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final Image coinImg;
   late final Image playerControllArrowImg;
   late final Image handAbilityImg;
-  late final Image handForbiddenImg;
   late final Image legAbilityImg;
-  late final Image legForbiddenImg;
   late final Image armerAbilityImg;
-  late final Image armerForbiddenImg;
   late final Image pocketAbilityImg;
-  late final Image pocketForbiddenImg;
   late final Image eyeAbilityImg;
   late final Image mergeAbilityImg;
   late final Image forbiddenImg;
@@ -163,13 +159,13 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final JoyStickComponent playerControllJoyStick;
   late final JoyStickFieldComponent playerControllJoyStickField;
   late final RectangleComponent menuArea;
-  late final GameSpriteAnimationButton handAbilityButton;
-  late final GameSpriteAnimationButton legAbilityButton;
-  late final GameSpriteAnimationButton armerAbilityButton;
-  late final GameSpriteAnimationButton pocketAbilityButton;
-  late final GameSpriteAnimationButton eyeAbilityButton;
-  late final GameSpriteAnimationButton mergeAbilityButton;
-  late final GameSpriteButton menuButton;
+  late final ButtonComponent handAbilityButton;
+  late final ButtonComponent legAbilityButton;
+  late final ButtonComponent armerAbilityButton;
+  late final ButtonComponent pocketAbilityButton;
+  late final ButtonComponent eyeAbilityButton;
+  late final ButtonComponent mergeAbilityButton;
+  late final ButtonComponent menuButton;
   late final GameTextButton viewModeButton;
 
   final Blink nextMergeItemBlink = Blink(showDuration: 0.4, hideDuration: 0.1);
@@ -596,22 +592,32 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       size: menuButtonAreaSize,
       position: Vector2(0, 640.0 - menuButtonAreaSize.y),
       paint: Paint()
-        ..color = Colors.green
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-      children: [
-        RectangleComponent(
-          size: menuButtonAreaSize,
-          paint: Paint()
-            ..color = Colors.white
-            ..style = PaintingStyle.fill,
-        ),
-      ],
+        ..color = const Color(0x80000000)
+        ..style = PaintingStyle.fill,
     );
-    Vector2 abilityButtonPos =
-        Vector2(xPaddingSize.x, 640.0 - menuButtonAreaSize.y);
+    menuArea.add(
+      PositionComponent(
+        position: Vector2(xPaddingSize.x, 0),
+        size: Vector2(60, menuButtonAreaSize.y),
+        children: [
+          AlignComponent(
+            alignment: Anchor.center,
+            child: TextComponent(
+              text: "ABILITIES:",
+              textRenderer: TextPaint(
+                style: const TextStyle(
+                  fontFamily: Config.gameTextFamily,
+                  color: Colors.white,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
     // 手の能力ボタン領域
-    handAbilityButton = GameSpriteAnimationButton(
+    handAbilityButton = ButtonComponent(
       onReleased: game.testMode
           ? () {
               stage.player.isAbilityAquired[PlayerAbility.hand] =
@@ -619,14 +625,14 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             }
           : null,
       size: abilityButtonAreaSize,
-      position: abilityButtonPos,
-      animation:
-          SpriteAnimation.spriteList([Sprite(handAbilityImg)], stepTime: 1.0),
+      button: SpriteAnimationComponent(
+        animation:
+            SpriteAnimation.spriteList([Sprite(handAbilityImg)], stepTime: 1.0),
+        size: abilityButtonAreaSize,
+      ),
     );
     // 足の能力ボタン領域
-    abilityButtonPos +=
-        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
-    legAbilityButton = GameSpriteAnimationButton(
+    legAbilityButton = ButtonComponent(
       onReleased: game.testMode
           ? () {
               stage.player.isAbilityAquired[PlayerAbility.leg] =
@@ -635,14 +641,14 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             }
           : null,
       size: abilityButtonAreaSize,
-      position: abilityButtonPos,
-      animation:
-          SpriteAnimation.spriteList([Sprite(legAbilityImg)], stepTime: 1.0),
+      button: SpriteAnimationComponent(
+        animation:
+            SpriteAnimation.spriteList([Sprite(legAbilityImg)], stepTime: 1.0),
+        size: abilityButtonAreaSize,
+      ),
     );
     // アーマー能力ボタン領域
-    abilityButtonPos +=
-        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
-    armerAbilityButton = GameSpriteAnimationButton(
+    armerAbilityButton = ButtonComponent(
       onReleased: game.testMode
           ? () {
               stage.player.isAbilityAquired[PlayerAbility.armer] =
@@ -650,16 +656,16 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             }
           : null,
       size: abilityButtonAreaSize,
-      position: abilityButtonPos,
-      animation: SpriteAnimation.spriteList([
-        Sprite(armerAbilityImg,
-            srcPosition: Vector2.zero(), srcSize: Vector2.all(32))
-      ], stepTime: 1.0),
+      button: SpriteAnimationComponent(
+        animation: SpriteAnimation.spriteList([
+          Sprite(armerAbilityImg,
+              srcPosition: Vector2.zero(), srcSize: Vector2.all(48))
+        ], stepTime: 1.0),
+        size: abilityButtonAreaSize,
+      ),
     );
     // ポケット能力ボタン領域
-    abilityButtonPos +=
-        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
-    pocketAbilityButton = GameSpriteAnimationButton(
+    pocketAbilityButton = ButtonComponent(
       onReleased: () {
         // ポケットの能力習得
         if (game.testMode &&
@@ -670,14 +676,14 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         }
       },
       size: abilityButtonAreaSize,
-      position: abilityButtonPos,
-      animation:
-          SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0),
+      button: SpriteAnimationComponent(
+        animation: SpriteAnimation.spriteList([Sprite(pocketAbilityImg)],
+            stepTime: 1.0),
+        size: abilityButtonAreaSize,
+      ),
     );
-    // 予知能力ボタン領域
-    abilityButtonPos +=
-        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
-    eyeAbilityButton = GameSpriteAnimationButton(
+    // 予知能力ボタン領域(未実装)
+    eyeAbilityButton = ButtonComponent(
       onReleased: game.testMode
           ? () {
               stage.player.isAbilityAquired[PlayerAbility.eye] =
@@ -685,14 +691,14 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             }
           : null,
       size: abilityButtonAreaSize,
-      position: abilityButtonPos,
-      animation:
-          SpriteAnimation.spriteList([Sprite(eyeAbilityImg)], stepTime: 1.0),
+      button: SpriteAnimationComponent(
+        animation:
+            SpriteAnimation.spriteList([Sprite(eyeAbilityImg)], stepTime: 1.0),
+        size: abilityButtonAreaSize,
+      ),
     );
     // マージ能力ボタン領域
-    abilityButtonPos +=
-        Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
-    mergeAbilityButton = GameSpriteAnimationButton(
+    mergeAbilityButton = ButtonComponent(
       onReleased: game.testMode
           ? () {
               stage.player.isAbilityAquired[PlayerAbility.merge] =
@@ -700,18 +706,32 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             }
           : null,
       size: abilityButtonAreaSize,
-      position: abilityButtonPos,
-      animation:
-          SpriteAnimation.spriteList([Sprite(mergeAbilityImg)], stepTime: 1.0),
+      button: SpriteAnimationComponent(
+        animation: SpriteAnimation.spriteList([Sprite(mergeAbilityImg)],
+            stepTime: 1.0),
+        size: abilityButtonAreaSize,
+      ),
     );
+    // メニューボタンと能力ボタンのセパレート
+    menuArea.add(RectangleComponent(
+      position: Vector2(
+          360.0 -
+              xPaddingSize.x -
+              settingsButtonAreaSize.x -
+              paddingAbilityButtons,
+          5),
+      size: Vector2(1.5, 30),
+      paint: Paint()..color = Colors.white,
+    ));
     // メニューボタン領域
-    menuButton = GameSpriteButton(
+    menuButton = ButtonComponent(
       size: settingsButtonAreaSize,
-      position: Vector2(360.0 - xPaddingSize.x - settingsButtonAreaSize.x,
-          640.0 - menuButtonAreaSize.y),
-      sprite: Sprite(settingsImg),
+      position: Vector2(360.0 - xPaddingSize.x - settingsButtonAreaSize.x, 0),
+      button:
+          SpriteComponent.fromImage(settingsImg, size: settingsButtonAreaSize),
       onReleased: () => game.pushSeqNamed("menu"),
     );
+    menuArea.add(menuButton);
     if (game.testMode) {
       // 【テストモード時】現在座標表示領域
       currentPosText = TextComponent(
@@ -777,20 +797,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       add(topGameInfoArea);
       // メニュー領域
       add(menuArea);
-      // 手の能力ボタン領域
-      add(handAbilityButton);
-      // 足の能力ボタン領域
-      add(legAbilityButton);
-      // アーマー能力ボタン領域
-      add(armerAbilityButton);
-      // ポケット能力ボタン領域
-      add(pocketAbilityButton);
-      // 予知能力ボタン領域
-      add(eyeAbilityButton);
-      // マージ能力ボタン領域
-      add(mergeAbilityButton);
-      // メニューボタン領域
-      add(menuButton);
       // プレイヤー操作ボタン領域
       add(playerControllButtonsArea!);
       if (game.testMode) {
@@ -802,6 +808,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       // チュートリアル表示領域
       add(tutorial.tutorialArea);
     }
+    // メニュー領域更新
+    updateMenuArea();
 
     // 準備完了
     isReady = true;
@@ -825,92 +833,88 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       tutorial.current = null;
     }
     bool beforeLegAbility = stage.getLegAbility();
+    // 能力の習得状況
+    final Map<PlayerAbility, bool> beforeAquiredAbilities = {};
+    beforeAquiredAbilities.addEntries(stage.player.isAbilityAquired.entries);
     stage.update(dt, pushingMoveButton, game.world, game.camera);
-    // 手の能力取得状況更新
-    handAbilityButton.enabledBgColor =
-        stage.player.isAbilityAquired[PlayerAbility.hand]!
-            ? Colors.grey
-            : Colors.white;
+    // 能力の習得状況に変化があれば、下のメニュー領域を更新
+    bool existNewAbility = false;
+    for (final entry in stage.player.isAbilityAquired.entries) {
+      if (beforeAquiredAbilities[entry.key]! != entry.value) {
+        existNewAbility = true;
+        break;
+      }
+    }
+    if (existNewAbility) {
+      updateMenuArea();
+    }
+    // 手の能力禁止状況更新
     if (stage.player.isAbilityForbidden[PlayerAbility.hand]!) {
-      handAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+      handAbilityButton.button!.add(SpriteComponent.fromImage(forbiddenImg));
     } else {
-      if (handAbilityButton.child!.children.isNotEmpty) {
-        handAbilityButton.child!.removeAll(handAbilityButton.child!.children);
+      if (handAbilityButton.button!.children.isNotEmpty) {
+        handAbilityButton.button!.removeAll(handAbilityButton.button!.children);
       }
     }
-    // 足の能力取得状況更新
-    legAbilityButton.enabledBgColor =
-        stage.player.isAbilityAquired[PlayerAbility.leg]!
-            ? Colors.grey
-            : Colors.white;
+    // 足の能力禁止状況更新
     if (stage.player.isAbilityForbidden[PlayerAbility.leg]!) {
-      legAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+      legAbilityButton.button!.add(SpriteComponent.fromImage(forbiddenImg));
     } else {
-      if (legAbilityButton.child!.children.isNotEmpty) {
-        legAbilityButton.child!.removeAll(legAbilityButton.child!.children);
+      if (legAbilityButton.button!.children.isNotEmpty) {
+        legAbilityButton.button!.removeAll(legAbilityButton.button!.children);
       }
     }
+    // 足の能力使用可否によって操作ボタン更新
     if (beforeLegAbility != stage.getLegAbility() ||
         prevIsDiagonalButtonMode != isDiagonalButtonMode) {
       updatePlayerControllButtons();
     }
     prevIsDiagonalButtonMode = isDiagonalButtonMode;
-    // アーマーの能力状況更新
-    armerAbilityButton.enabledBgColor =
-        stage.player.isAbilityAquired[PlayerAbility.armer]!
-            ? Colors.grey
-            : Colors.white;
-    armerAbilityButton.animation = SpriteAnimation.spriteList([
+    // アーマーの能力禁止状況更新
+    (armerAbilityButton.button! as SpriteAnimationComponent).animation =
+        SpriteAnimation.spriteList([
       Sprite(armerAbilityImg,
-          srcPosition: Vector2(stage.getArmerAbilityRecoveryTurns() * 32, 0),
-          srcSize: Vector2.all(32))
+          srcPosition: Vector2(stage.getArmerAbilityRecoveryTurns() * 48, 0),
+          srcSize: Vector2.all(50))
     ], stepTime: 1.0);
-    if (stage.getArmerAbilityRecoveryTurns() == 0 &&
+    if (stage.getArmerAbilityRecoveryTurns() != 0 ||
         stage.player.isAbilityForbidden[PlayerAbility.armer]!) {
-      armerAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+      armerAbilityButton.button!.add(SpriteComponent.fromImage(forbiddenImg));
     } else {
-      if (armerAbilityButton.child!.children.isNotEmpty) {
-        armerAbilityButton.child!.removeAll(armerAbilityButton.child!.children);
+      if (armerAbilityButton.button!.children.isNotEmpty) {
+        armerAbilityButton.button!
+            .removeAll(armerAbilityButton.button!.children);
       }
     }
     // ポケットの能力状況更新
     final pocketItemAnimation = stage.getPocketAbilitySpriteAnimation() ??
         SpriteAnimation.spriteList([Sprite(pocketAbilityImg)], stepTime: 1.0);
-    pocketAbilityButton.animation = pocketItemAnimation;
-    pocketAbilityButton.enabledBgColor =
-        stage.player.isAbilityAquired[PlayerAbility.pocket]!
-            ? Colors.grey
-            : Colors.white;
+    (pocketAbilityButton.button! as SpriteAnimationComponent).animation =
+        pocketItemAnimation;
+    // ポケットの能力禁止状況更新
     if (stage.player.isAbilityForbidden[PlayerAbility.pocket]!) {
-      pocketAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+      pocketAbilityButton.button!.add(SpriteComponent.fromImage(forbiddenImg));
     } else {
-      if (pocketAbilityButton.child!.children.isNotEmpty) {
-        pocketAbilityButton.child!
-            .removeAll(pocketAbilityButton.child!.children);
+      if (pocketAbilityButton.button!.children.isNotEmpty) {
+        pocketAbilityButton.button!
+            .removeAll(pocketAbilityButton.button!.children);
       }
     }
-    // 予知能力状況更新
-    eyeAbilityButton.enabledBgColor =
-        stage.player.isAbilityAquired[PlayerAbility.eye]!
-            ? Colors.grey
-            : Colors.white;
+    // 予知能力禁止状況更新
     if (stage.player.isAbilityForbidden[PlayerAbility.eye]!) {
-      eyeAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+      eyeAbilityButton.button!.add(SpriteComponent.fromImage(forbiddenImg));
     } else {
-      if (eyeAbilityButton.child!.children.isNotEmpty) {
-        eyeAbilityButton.child!.removeAll(eyeAbilityButton.child!.children);
+      if (eyeAbilityButton.button!.children.isNotEmpty) {
+        eyeAbilityButton.button!.removeAll(eyeAbilityButton.button!.children);
       }
     }
-    // マージ能力状況更新
-    mergeAbilityButton.enabledBgColor =
-        stage.player.isAbilityAquired[PlayerAbility.merge]!
-            ? Colors.grey
-            : Colors.white;
+    // マージ能力禁止状況更新
     if (stage.player.isAbilityForbidden[PlayerAbility.merge]!) {
-      mergeAbilityButton.child!.add(SpriteComponent.fromImage(forbiddenImg));
+      mergeAbilityButton.button!.add(SpriteComponent.fromImage(forbiddenImg));
     } else {
-      if (mergeAbilityButton.child!.children.isNotEmpty) {
-        mergeAbilityButton.child!.removeAll(mergeAbilityButton.child!.children);
+      if (mergeAbilityButton.button!.children.isNotEmpty) {
+        mergeAbilityButton.button!
+            .removeAll(mergeAbilityButton.button!.children);
       }
     }
     // 次アイテム出現までのマージ回数更新
@@ -1311,6 +1315,46 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         break;
       case PlayerControllButtonType.noButton:
         break;
+    }
+  }
+
+  /// 画面下部メニュー領域を更新（主に能力を獲得したときに呼び出す）
+  void updateMenuArea() {
+    Map<ButtonComponent, bool> abilityButtonMap = {};
+    if (game.testMode) {
+      abilityButtonMap = {
+        handAbilityButton: true,
+        legAbilityButton: true,
+        armerAbilityButton: true,
+        pocketAbilityButton: true,
+        mergeAbilityButton: true,
+      };
+    } else {
+      abilityButtonMap[handAbilityButton] =
+          stage.player.isAbilityAquired[PlayerAbility.hand]!;
+      abilityButtonMap[legAbilityButton] =
+          stage.player.isAbilityAquired[PlayerAbility.leg]!;
+      abilityButtonMap[armerAbilityButton] =
+          stage.player.isAbilityAquired[PlayerAbility.armer]!;
+      abilityButtonMap[pocketAbilityButton] =
+          stage.player.isAbilityAquired[PlayerAbility.pocket]!;
+      abilityButtonMap[mergeAbilityButton] =
+          stage.player.isAbilityAquired[PlayerAbility.merge]!;
+    }
+    // 位置・表示非表示を設定
+    Vector2 abilityButtonPos = Vector2(xPaddingSize.x + 60, 5);
+    for (final entry in abilityButtonMap.entries) {
+      bool contains = menuArea.contains(entry.key);
+      if (entry.value) {
+        entry.key.position = abilityButtonPos.clone();
+        abilityButtonPos +=
+            Vector2(abilityButtonAreaSize.x + paddingAbilityButtons, 0);
+        if (!contains) {
+          menuArea.add(entry.key);
+        }
+      } else if (contains) {
+        menuArea.remove(entry.key);
+      }
     }
   }
 

@@ -148,8 +148,6 @@ class Builder extends StageObj {
         if (--remainTurnToBuild <= 0) {
           remainTurnToBuild = 0;
           final buildPosType = stage.get(pos + vector.point).type;
-          // TODO: 普通の床限定にして良いか
-          // TODO: とりあえずワープには置けないようにすべき
           if (buildPosType == StageObjType.none &&
               stage.player.pos != pos + vector.point) {
             // ブロック設置

@@ -349,7 +349,7 @@ class Config {
   late bool consumeTrap;
 
   /// ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか
-  late bool hideGameToMenu;
+  late bool hideGameToMenu = true;
 
   /// マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))
   late bool spawnItemAroundPlayer = true;
