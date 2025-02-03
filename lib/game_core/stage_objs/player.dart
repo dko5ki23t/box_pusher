@@ -20,6 +20,8 @@ class Player extends StageObj {
 
   final Blink damagedBlink = Blink(showDuration: 0.2, hideDuration: 0.1);
 
+  static Vector2 playerImgSize = Vector2(40, 40);
+
   Player({
     required Image playerImg,
     required Image errorImg,
@@ -43,27 +45,27 @@ class Player extends StageObj {
             1: {
               Move.down: SpriteAnimation.spriteList([
                 Sprite(playerImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+                    srcPosition: Vector2(0, 0), srcSize: playerImgSize),
                 Sprite(playerImg,
-                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+                    srcPosition: Vector2(40, 0), srcSize: playerImgSize),
               ], stepTime: Stage.objectStepTime),
               Move.up: SpriteAnimation.spriteList([
                 Sprite(playerImg,
-                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+                    srcPosition: Vector2(80, 0), srcSize: playerImgSize),
                 Sprite(playerImg,
-                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
+                    srcPosition: Vector2(120, 0), srcSize: playerImgSize),
               ], stepTime: Stage.objectStepTime),
               Move.left: SpriteAnimation.spriteList([
                 Sprite(playerImg,
-                    srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
+                    srcPosition: Vector2(160, 0), srcSize: playerImgSize),
                 Sprite(playerImg,
-                    srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
+                    srcPosition: Vector2(200, 0), srcSize: playerImgSize),
               ], stepTime: Stage.objectStepTime),
               Move.right: SpriteAnimation.spriteList([
                 Sprite(playerImg,
-                    srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
+                    srcPosition: Vector2(240, 0), srcSize: playerImgSize),
                 Sprite(playerImg,
-                    srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
+                    srcPosition: Vector2(280, 0), srcSize: playerImgSize),
               ], stepTime: Stage.objectStepTime),
             },
           },
@@ -77,27 +79,27 @@ class Player extends StageObj {
               1: {
                 Move.down: SpriteAnimation.spriteList([
                   Sprite(playerImg,
-                      srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
+                      srcPosition: Vector2(0, 0), srcSize: playerImgSize),
                   Sprite(playerImg,
-                      srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
+                      srcPosition: Vector2(40, 0), srcSize: playerImgSize),
                 ], stepTime: Stage.objectStepTime),
                 Move.up: SpriteAnimation.spriteList([
                   Sprite(playerImg,
-                      srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
+                      srcPosition: Vector2(80, 0), srcSize: playerImgSize),
                   Sprite(playerImg,
-                      srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
+                      srcPosition: Vector2(120, 0), srcSize: playerImgSize),
                 ], stepTime: Stage.objectStepTime),
                 Move.left: SpriteAnimation.spriteList([
                   Sprite(playerImg,
-                      srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
+                      srcPosition: Vector2(160, 0), srcSize: playerImgSize),
                   Sprite(playerImg,
-                      srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
+                      srcPosition: Vector2(200, 0), srcSize: playerImgSize),
                 ], stepTime: Stage.objectStepTime),
                 Move.right: SpriteAnimation.spriteList([
                   Sprite(playerImg,
-                      srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
+                      srcPosition: Vector2(240, 0), srcSize: playerImgSize),
                   Sprite(playerImg,
-                      srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
+                      srcPosition: Vector2(280, 0), srcSize: playerImgSize),
                 ], stepTime: Stage.objectStepTime),
               },
             },

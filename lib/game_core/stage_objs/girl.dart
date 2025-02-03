@@ -16,6 +16,8 @@ class Girl extends StageObj {
 
   final Blink bubbleBlink = Blink(showDuration: 1.5, hideDuration: 1.5);
 
+  static Vector2 girlImgSize = Vector2(40, 40);
+
   Girl({
     required super.pos,
     required Image girlImg,
@@ -42,7 +44,7 @@ class Girl extends StageObj {
                 SpriteAnimationData.sequenced(
                     amount: 2,
                     stepTime: Stage.objectStepTime,
-                    textureSize: Stage.cellSize),
+                    textureSize: girlImgSize),
               ),
             },
           },

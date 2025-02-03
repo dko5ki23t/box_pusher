@@ -112,7 +112,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   bool isReady = false;
 
   /// チュートリアル
-  Tutorial tutorial = Tutorial();
+  late Tutorial tutorial = Tutorial(gameSeq: this);
 
   /// ステージオブジェクト
   late Stage stage;
@@ -1355,6 +1355,24 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       } else if (contains) {
         menuArea.remove(entry.key);
       }
+    }
+  }
+
+  Vector2 getAbilityButtonPos(PlayerAbility ability) {
+    Vector2 ret = menuArea.position.clone();
+    switch (ability) {
+      case PlayerAbility.hand:
+        return ret + handAbilityButton.position;
+      case PlayerAbility.leg:
+        return ret + legAbilityButton.position;
+      case PlayerAbility.pocket:
+        return ret + pocketAbilityButton.position;
+      case PlayerAbility.armer:
+        return ret + armerAbilityButton.position;
+      case PlayerAbility.merge:
+        return ret + mergeAbilityButton.position;
+      default:
+        return ret.clone();
     }
   }
 

@@ -2,15 +2,19 @@ import 'dart:math';
 
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/opacity_effect_text_component.dart';
+import 'package:box_pusher/components/rounded_component.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
+import 'package:box_pusher/game_core/stage_objs/girl.dart';
+import 'package:box_pusher/game_core/stage_objs/player.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
+import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 
 /// チュートリアル
@@ -216,6 +220,79 @@ class Tutorial {
     );
   }
 
+  /// 能力習得画面コンポーネント
+  ButtonComponent gotAbilityScreen({
+    required BoxPusherGame game,
+    required PlayerAbility ability,
+    required Image animalImg,
+    required List<Component> descriptions,
+    Vector2? imgTextureSize,
+  }) {
+    return ButtonComponent(
+      onReleased: () {
+        current = null;
+      },
+      size: BoxPusherGame.baseSize,
+      button: CustomPainterComponent(
+        size: BoxPusherGame.baseSize,
+        painter: TutorialCircleHolePainter(
+          radius: GameSeq.abilityButtonAreaSize.x,
+          center: gameSeq.getAbilityButtonPos(ability) +
+              GameSeq.abilityButtonAreaSize * 0.5,
+        ),
+        children: [
+          SpriteComponent.fromImage(
+            gotAbilityImg,
+            size: Vector2(280, 50),
+            position: Vector2(BoxPusherGame.baseSize.x * 0.5, 150),
+            anchor: Anchor.center,
+          ),
+          RoundedComponent(
+            size: Vector2(Stage.cellSize.x * 3, Stage.cellSize.y * 0.8),
+            cornerRadius: 25,
+            color: const Color(0xc0ffffff),
+            position: Vector2(BoxPusherGame.baseSize.x * 0.5, 210),
+            anchor: Anchor.center,
+            priority: Stage.frontPriority,
+            children: [
+              AlignComponent(
+                  alignment: Anchor.center,
+                  child: TextComponent(
+                    text: 'THANK YOU',
+                    textRenderer: TextPaint(
+                      style: Config.gameTextStyle,
+                    ),
+                  )),
+            ],
+          ),
+          CircleComponent(
+            position: Vector2(BoxPusherGame.baseSize.x * 0.5, 260),
+            anchor: Anchor.center,
+            scale: Vector2.all(1.4),
+            radius: 20,
+            paint: Paint()..color = const Color(0xc0ffffff),
+          ),
+          SpriteAnimationComponent.fromFrameData(
+            animalImg,
+            SpriteAnimationData.sequenced(
+              amount: 2,
+              stepTime: Stage.objectStepTime,
+              textureSize: imgTextureSize ?? Stage.cellSize,
+            ),
+            position: Vector2(BoxPusherGame.baseSize.x * 0.5, 260),
+            anchor: Anchor.center,
+            scale: Vector2.all(1.4),
+          ),
+          ...descriptions,
+          tapOrSpaceToReturnComponent(
+            Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
+            game,
+          ),
+        ],
+      ),
+    );
+  }
+
   late final Image tutorial1Img;
   late final Image longTapImg;
   late final Image tutorial2Img;
@@ -224,8 +301,23 @@ class Tutorial {
   late final Image girlImg;
   late final Image pinchInOutImg;
   late final Image mouseWheelImg;
+  late final Image gotAbilityImg;
+  late final Image gorillaImg;
+  late final Image rabbitImg;
+  late final Image kangarooImg;
+  late final Image turtleImg;
+  late final Image shiftKeyImg;
+  late final Image upKeyImg;
+  late final Image downKeyImg;
+  late final Image leftKeyImg;
+  late final Image rightKeyImg;
+  late final Image pKeyImg;
 
   late final PositionComponent tutorialArea;
+
+  final GameSeq gameSeq;
+
+  Tutorial({required this.gameSeq});
 
   Future<void> onLoad() async {
     tutorial1Img = await Flame.images.load('tutorial1.png');
@@ -233,9 +325,20 @@ class Tutorial {
     tutorial2Img = await Flame.images.load('tutorial2.png');
     tutorial3Img = await Flame.images.load('tutorial3.png');
     spaceKeyImg = await Flame.images.load('space_key_icon.png');
-    girlImg = await Flame.images.load('girl_tutorial.png');
+    girlImg = await Flame.images.load('girl_org.png');
     pinchInOutImg = await Flame.images.load('pinch_inout.png');
     mouseWheelImg = await Flame.images.load('mouse_wheel.png');
+    gotAbilityImg = await Flame.images.load('tutorial_ability.png');
+    gorillaImg = await Flame.images.load('gorilla_org.png');
+    rabbitImg = await Flame.images.load('rabbit_org.png');
+    kangarooImg = await Flame.images.load('kangaroo_org.png');
+    turtleImg = await Flame.images.load('turtle_org.png');
+    shiftKeyImg = await Flame.images.load('shift_key_icon.png');
+    upKeyImg = await Flame.images.load('up_key_icon.png');
+    downKeyImg = await Flame.images.load('down_key_icon.png');
+    leftKeyImg = await Flame.images.load('left_key_icon.png');
+    rightKeyImg = await Flame.images.load('right_key_icon.png');
+    pKeyImg = await Flame.images.load('p_key_icon.png');
 
     // チュートリアル表示領域
     tutorialArea = PositionComponent(
@@ -442,12 +545,25 @@ class Tutorial {
                     size: BoxPusherGame.baseSize,
                     paint: Paint()..color = const Color(0x80000000)),
               ),
+              CircleComponent(
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(0, 90),
+                anchor: Anchor.center,
+                scale: Vector2.all(1.4),
+                radius: 20,
+                paint: Paint()..color = const Color(0xc0ffffff),
+              ),
               SpriteAnimationComponent.fromFrameData(
                 girlImg,
                 SpriteAnimationData.sequenced(
                     amount: 2,
                     stepTime: Stage.objectStepTime,
-                    textureSize: Vector2.all(49)),
+                    textureSize: Girl.girlImgSize),
                 position: Vector2(
                             BoxPusherGame.baseSize.x,
                             640.0 -
@@ -606,79 +722,249 @@ class Tutorial {
           );
           break;
         case TutorialState.handAbility:
-          tutorialArea.addAll(
-            [
-              ButtonComponent(
-                onReleased: () {
-                  current = null;
-                },
-                size: BoxPusherGame.baseSize,
-                button: RectangleComponent(
-                    size: BoxPusherGame.baseSize,
-                    paint: Paint()..color = const Color(0x80000000)),
-              ),
-              tapOrSpaceToReturnComponent(
-                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
-                game,
-              ),
-            ],
+          tutorialArea.add(
+            gotAbilityScreen(
+                game: game,
+                ability: PlayerAbility.hand,
+                animalImg: gorillaImg,
+                descriptions: [
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 340),
+                    anchor: Anchor.center,
+                    text: "一直線上にあるアイテムなら一度にいくつでも",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 20),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 370),
+                    anchor: Anchor.center,
+                    text: "押せるようになりました",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 20),
+                    ),
+                  ),
+                ]),
           );
           break;
         case TutorialState.legAbility:
-          tutorialArea.addAll(
-            [
-              ButtonComponent(
-                onReleased: () {
-                  current = null;
-                },
-                size: BoxPusherGame.baseSize,
-                button: RectangleComponent(
-                    size: BoxPusherGame.baseSize,
-                    paint: Paint()..color = const Color(0x80000000)),
-              ),
-              tapOrSpaceToReturnComponent(
-                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
-                game,
-              ),
-            ],
+          tutorialArea.add(
+            gotAbilityScreen(
+                game: game,
+                ability: PlayerAbility.leg,
+                animalImg: rabbitImg,
+                descriptions: [
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 340),
+                    anchor: Anchor.center,
+                    text: "斜め4方向にも",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 20),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 370),
+                    anchor: Anchor.center,
+                    text: "移動できるようになりました",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 20),
+                    ),
+                  ),
+                  PositionComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 410),
+                    size: Vector2(234, 34),
+                    anchor: Anchor.center,
+                    children: [
+                      SpriteAnimationComponent.fromFrameData(
+                        shiftKeyImg,
+                        SpriteAnimationData.sequenced(
+                            amount: 2,
+                            stepTime: Stage.objectStepTime,
+                            textureSize: Vector2(34, 17)),
+                        size: Vector2(68, 34),
+                      ),
+                      TextComponent(
+                        text: '+',
+                        position: Vector2(74, 0),
+                        textRenderer: TextPaint(
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: Config.gameTextFamily,
+                              fontSize: 20),
+                        ),
+                      ),
+                      SpriteAnimationComponent.fromFrameData(
+                        upKeyImg,
+                        position: Vector2(92, 0),
+                        SpriteAnimationData.sequenced(
+                            amount: 2,
+                            stepTime: Stage.objectStepTime,
+                            textureSize: Vector2(21, 20)),
+                        size: Vector2(34, 34),
+                      ),
+                      SpriteAnimationComponent.fromFrameData(
+                        downKeyImg,
+                        position: Vector2(128, 0),
+                        SpriteAnimationData.sequenced(
+                            amount: 2,
+                            stepTime: Stage.objectStepTime,
+                            textureSize: Vector2(21, 20)),
+                        size: Vector2(34, 34),
+                      ),
+                      SpriteAnimationComponent.fromFrameData(
+                        leftKeyImg,
+                        position: Vector2(164, 0),
+                        SpriteAnimationData.sequenced(
+                            amount: 2,
+                            stepTime: Stage.objectStepTime,
+                            textureSize: Vector2(21, 20)),
+                        size: Vector2(34, 34),
+                      ),
+                      SpriteAnimationComponent.fromFrameData(
+                        rightKeyImg,
+                        position: Vector2(200, 0),
+                        SpriteAnimationData.sequenced(
+                            amount: 2,
+                            stepTime: Stage.objectStepTime,
+                            textureSize: Vector2(21, 20)),
+                        size: Vector2(34, 34),
+                      ),
+                    ],
+                  ),
+                ]),
           );
           break;
         case TutorialState.pocketAbility:
-          tutorialArea.addAll(
-            [
-              ButtonComponent(
-                onReleased: () {
-                  current = null;
-                },
-                size: BoxPusherGame.baseSize,
-                button: RectangleComponent(
-                    size: BoxPusherGame.baseSize,
-                    paint: Paint()..color = const Color(0x80000000)),
-              ),
-              tapOrSpaceToReturnComponent(
-                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
-                game,
-              ),
-            ],
+          tutorialArea.add(
+            gotAbilityScreen(
+                game: game,
+                ability: PlayerAbility.pocket,
+                animalImg: kangarooImg,
+                descriptions: [
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 330),
+                    anchor: Anchor.center,
+                    text: "目の前のアイテムをポケットに入れる/",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 15),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 360),
+                    anchor: Anchor.center,
+                    text: "ポケットに入っているアイテムを目の前に出す",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 15),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 390),
+                    anchor: Anchor.center,
+                    text: "ことができるようになりました",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 15),
+                    ),
+                  ),
+                  PositionComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 440),
+                    size: Vector2(300, 60),
+                    anchor: Anchor.center,
+                    children: [
+                      SpriteAnimationComponent.fromFrameData(
+                        pKeyImg,
+                        SpriteAnimationData.sequenced(
+                            amount: 2,
+                            stepTime: Stage.objectStepTime,
+                            textureSize: Vector2(21, 20)),
+                        size: Vector2(34, 34),
+                      ),
+                      TextComponent(
+                        text: 'または下のポケットボタンをタップで',
+                        position: Vector2(40, 5),
+                        textRenderer: TextPaint(
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: Config.gameTextFamily,
+                              fontSize: 15),
+                        ),
+                      ),
+                      TextComponent(
+                        text: '能力を使用できます',
+                        position: Vector2(90, 35),
+                        textRenderer: TextPaint(
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontFamily: Config.gameTextFamily,
+                              fontSize: 15),
+                        ),
+                      ),
+                    ],
+                  ),
+                ]),
           );
           break;
         case TutorialState.armerAbility:
-          tutorialArea.addAll(
-            [
-              ButtonComponent(
-                onReleased: () {
-                  current = null;
-                },
-                size: BoxPusherGame.baseSize,
-                button: RectangleComponent(
-                    size: BoxPusherGame.baseSize,
-                    paint: Paint()..color = const Color(0x80000000)),
-              ),
-              tapOrSpaceToReturnComponent(
-                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
-                game,
-              ),
-            ],
+          tutorialArea.add(
+            gotAbilityScreen(
+                game: game,
+                ability: PlayerAbility.armer,
+                animalImg: turtleImg,
+                descriptions: [
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 340),
+                    anchor: Anchor.center,
+                    text: "敵の攻撃を1度防ぐことができるようになりました",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 15),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 370),
+                    anchor: Anchor.center,
+                    text: "1度攻撃を受けると3ターンの間",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 15),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 400),
+                    anchor: Anchor.center,
+                    text: "この能力は使えません",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 15),
+                    ),
+                  ),
+                ]),
           );
           break;
         case TutorialState.eyeAbility:
@@ -701,22 +987,58 @@ class Tutorial {
           );
           break;
         case TutorialState.mergeAbility:
-          tutorialArea.addAll(
-            [
-              ButtonComponent(
-                onReleased: () {
-                  current = null;
-                },
-                size: BoxPusherGame.baseSize,
-                button: RectangleComponent(
-                    size: BoxPusherGame.baseSize,
-                    paint: Paint()..color = const Color(0x80000000)),
-              ),
-              tapOrSpaceToReturnComponent(
-                Vector2(BoxPusherGame.baseSize.x * 0.5, 530),
-                game,
-              ),
-            ],
+          tutorialArea.add(
+            gotAbilityScreen(
+                game: game,
+                ability: PlayerAbility.merge,
+                animalImg: girlImg,
+                imgTextureSize: Girl.girlImgSize,
+                descriptions: [
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 340),
+                    anchor: Anchor.center,
+                    text: "マージした時ブロック破壊の",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 20),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 370),
+                    anchor: Anchor.center,
+                    text: "威力と範囲が上がり、",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 20),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 400),
+                    anchor: Anchor.center,
+                    text: "範囲内の敵にダメージを",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 20),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 430),
+                    anchor: Anchor.center,
+                    text: "与えるようになりました",
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 20),
+                    ),
+                  ),
+                ]),
           );
           break;
         default:
