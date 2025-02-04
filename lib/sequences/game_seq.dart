@@ -1517,8 +1517,11 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
 
     // 移動のチュートリアルだった場合、操作ボタンはなしにする
     if (tutorial.current == TutorialState.move &&
-        pushingMoveButton != Move.none) {
+        pushingMoveButton != Move.none &&
+        Config().playerControllButtonType !=
+            PlayerControllButtonType.noButton) {
       Config().playerControllButtonType = PlayerControllButtonType.noButton;
+      updatePlayerControllButtons();
     }
 
     return false;

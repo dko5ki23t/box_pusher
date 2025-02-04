@@ -197,6 +197,10 @@ class Stage {
   /// Config().blockFloorMapおよびobjInBlockMapを元に計算したブロック破壊時出現オブジェクトの個数
   Map<PointRange, Distribution<StageObjTypeLevel>> objInBlockDistribution = {};
 
+  /// Config().floorInBlockMapを元に計算したブロック破壊時出現床の個数
+  Map<PointRange, Distribution<StageObjTypeLevel>> floorInBlockDistribution =
+      {};
+
   /// Config().blockFloorMapを元に計算したブロック/床の個数と、座標の集合
   Map<PointRange, Distribution<StageObjTypeLevel>> blockFloorDistribution = {};
 
@@ -362,6 +366,11 @@ class Stage {
       encodedCOIBM[entry.key.toString()] = entry.value.encode();
     }
     ret['calcedObjInBlockMap'] = encodedCOIBM;
+    final Map<String, dynamic> encodedCFIBM = {};
+    for (final entry in floorInBlockDistribution.entries) {
+      encodedCOIBM[entry.key.toString()] = entry.value.encode();
+    }
+    ret['calcedFloorInBlockMap'] = encodedCFIBM;
     final Map<String, dynamic> encodedCBFM = {};
     for (final entry in blockFloorDistribution.entries) {
       encodedCBFM[entry.key.toString()] = entry.value.encode();
@@ -567,7 +576,10 @@ class Stage {
           // 敵が生み出したブロック以外のみアイテム出現位置に含める
           breaked.add(p);
         }
-        setStaticType(p, StageObjType.none);
+        // ブロック破壊時に出現する床を決定する
+        final targetField = Config().getFloorInBlockMapEntry(p).key;
+        final floorType = floorInBlockDistribution[targetField]!.getOne()?.type;
+        setStaticType(p, floorType ?? StageObjType.none);
         if (gotTypeLevel.level < 100 &&
             Config().setObjInBlockWithDistributionAlgorithm) {
           // 分布に従ってブロック破壊時出現オブジェクトを決める場合、
@@ -1016,6 +1028,13 @@ class Stage {
       objInBlockDistribution[PointRange.fromStr(entry.key)] =
           Distribution.decode(entry.value, StageObjTypeLevel.fromStr);
     }
+    floorInBlockDistribution.clear();
+    for (final entry
+        in (stageData['calcedFloorInBlockMap'] as Map<String, dynamic>)
+            .entries) {
+      floorInBlockDistribution[PointRange.fromStr(entry.key)] =
+          Distribution.decode(entry.value, StageObjTypeLevel.fromStr);
+    }
 
     // 各種ステージオブジェクト設定
     _staticObjs.clear();
@@ -1373,6 +1392,12 @@ class Stage {
     objInBlockDistribution.clear();
     objInBlockDistribution.addAll(Config().objInBlockDistribution);
     for (final v in objInBlockDistribution.values) {
+      v.reset();
+    }
+    // 続いてブロック破壊時出現床の分布
+    floorInBlockDistribution.clear();
+    floorInBlockDistribution.addAll(Config().floorInBlockDistribution);
+    for (final v in floorInBlockDistribution.values) {
       v.reset();
     }
   }

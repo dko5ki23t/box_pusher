@@ -1,0 +1,9 @@
+ステージ上範囲->ブロック破壊時の出現床のマップ（範囲が重複する場合は先に存在するキーを優先）
+rangeType, point1X, point1Y, point2X, point2Y, distance, floorNone, floorWater, floorMagma
+distance, 0, 0, 0, 0, 8, 100, 0, 0
+distance, 0, 0, 0, 0, 10, 100, 0, 0
+distance, 0, 0, 0, 0, 15, 100, 0, 0
+distance, 0, 0, 0, 0, 20, 100, 0, 0
+distance, 0, 0, 0, 0, 25, 50, 50, 0
+distance, 0, 0, 0, 0, 30, 100, 0, 0
+distance, 0, 0, 0, 0, 100, 100, 0, 0

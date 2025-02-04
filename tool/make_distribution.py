@@ -5,6 +5,7 @@ from common import Point, PointRectRange, PointDistanceRange
 
 output_block_floor_default = 'config_block_floor_distribution.csv'
 output_obj_in_block_default = 'config_obj_in_block_distribution.csv'
+output_floor_in_block_default = 'config_floor_in_block_distribution.csv'
 
 class BlocksPoints:
     block_num = 0
@@ -18,6 +19,7 @@ def set_argparse():
     parser = argparse.ArgumentParser(description='config_block_floor_map.csvとconfig_obj_in_block_map.csvから分布情報を作成する')
     parser.add_argument('block_floor', help='ステージ上範囲->ブロックと床の割合を記述したCSVファイル(config_block_floor_map.csv)')
     parser.add_argument('obj_in_block', help='ステージ上範囲->ブロック破壊時出現アイテムを記述したCSVファイル(config_obj_in_block.csv)')
+    parser.add_argument('floor_in_block', help='ステージ上範囲->ブロック破壊時出現床を記述したCSVファイル(config_floor_in_block_map.csv)')
     args = parser.parse_args()
     return args
 
@@ -131,6 +133,56 @@ def main():
 
     # CSVファイルに書き込み
     with open(output_obj_in_block_default, mode='w', encoding="utf-8") as file:
+        for text in line_text:
+            file.write(text)
+
+    # ブロック破壊時出現床の割合CSVファイル読み込み
+    line_text = ["rangeType, point1X, point1Y, point2X, point2Y, distance, total, floorNone, floorWater, floorMagma\n"]
+    line_count = 0
+    calced_points = []
+    with open(args.floor_in_block, mode='r', encoding="utf-8") as file:
+        for line in file:
+            line_count += 1
+            # 1行目と2行目は無視する
+            if line_count <= 2:
+                continue
+            # 現在の行のカンマ区切りをリストに保存
+            elements = line.split(',')
+            # 範囲の種類
+            range_type = elements[0]
+            # その他パラメータ
+            point1 = Point(int(elements[1]), int(elements[2]))
+            point2 = Point(int(elements[3]), int(elements[4]))
+            distance = int(elements[5])
+
+            # 対象の範囲を定める
+            if range_type == "rect":
+                r = PointRectRange(point1, point2)
+            elif range_type == "distance":
+                r = PointDistanceRange(point1, distance)
+            else:
+                # エラー
+                continue
+            target_points = [p for p in r.get_list() if p not in calced_points]
+            calced_points += target_points
+
+            # 以下、出力する内容について
+            output = []
+            # 範囲
+            for i in range(0, 6):
+                output.append(elements[i])
+            total = 0
+            for e in blocks_info_list:
+                ratio = len([p for p in target_points if p in e.points]) / len(e.points)
+                total += round(e.block_num * ratio)
+            output.append(total)
+            output.append(round(total * int(elements[6]) * 0.01))       # 床
+            output.append(round(total * int(elements[7]) * 0.01))       # 水
+            output.append(round(total * int(elements[8]) * 0.01))       # マグマ
+            line_text.append(','.join(map(str, output)) + '\n')
+    
+    # CSVファイルに書き込み
+    with open(output_floor_in_block_default, mode='w', encoding="utf-8") as file:
         for text in line_text:
             file.write(text)
 

@@ -2,8 +2,8 @@ rangeType, point1X, point1Y, point2X, point2Y, distance, total, jewels, obj1, le
 distance, 0, 0, 0, 0, 4,41,27
 distance, 0, 0, 0, 0, 8,104,68, spike, 1,4, trap, 1,5
 distance, 0, 0, 0, 0, 10,74,48, spike, 1,6, trap, 1,4
-rect, 6, 6, 14, 14, 0,79,47, drill, 1,8, guardian, 1,5, swordsman, 1,8
-rect, -14, -14, -6, -6, 0,79,40, drill, 1,6, guardian, 1,5, swordsman, 1,6
+rect, 6, 6, 14, 14, 0,79,47, drill, 1,8, guardian, 1,2, swordsman, 1,8
+rect, -14, -14, -6, -6, 0,79,40, drill, 1,6, guardian, 1,2, swordsman, 1,6
 rect, 7, -13, 13, -7, 0,49,10, archer, 1,29, swordsman, 1,5
 rect, -13, 7, -7, 13, 0,49,15, ghost, 1,24, swordsman, 1,5
 distance, 0, 0, 0, 0, 20,465,232, swordsman, 1,33, guardian, 1,5, bomb, 1,2

@@ -38,8 +38,14 @@ class GameButton extends PositionComponent with TapCallbacks {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 3;
 
-  /// 無効なボタンのPaint
+  /// 無効なボタンの枠線のPaint
   final Paint _disabledButtonFramePaint = Paint()
+    ..color = Colors.grey
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3;
+
+  /// 無効なボタンのPaint
+  final Paint _disabledButtonPaint = Paint()
     ..color = Colors.grey
     ..style = PaintingStyle.fill;
 
@@ -74,6 +80,11 @@ class GameButton extends PositionComponent with TapCallbacks {
     _colorButtons();
   }
 
+  set disabledBgColor(Color color) {
+    _disabledButtonPaint.color = color;
+    _colorButtons();
+  }
+
   set enabledPressedBgColor(Color color) {
     _enabledPressedButtonPaint.color = color;
     _colorButtons();
@@ -86,7 +97,7 @@ class GameButton extends PositionComponent with TapCallbacks {
             : _enabledButtonFramePaint.color)
         : _disabledButtonFramePaint.color;
     button.color =
-        enabled ? _enabledButtonPaint.color : _transparentPaint.color;
+        enabled ? _enabledButtonPaint.color : _disabledButtonPaint.color;
   }
 
   GameButton({
@@ -320,6 +331,9 @@ class GameMenuButton extends GameButton {
         ) {
     super.enabledFrameColor = Colors.white;
     super.enabledBgColor = const Color(0xa0000000);
+    super.enabledPressedBgColor = const Color(0xc0000000);
+    super.disabledFrameColor = Colors.grey;
+    super.disabledBgColor = const Color(0xc0000000);
   }
 
   String? get text => _text;
