@@ -41,5 +41,8 @@
   "dialogNo": "いいえ",
   "confirmExit1": "ゲームをあきらめますか？",
   "confirmExit2": "（ここまでのスコアは記録され、",
-  "confirmExit3": "セーブデータは消えます。）"
+  "confirmExit3": "セーブデータは消えます。）",
+  "confirmDeleteStageData1": "前回プレイしたデータを削除して",
+  "confirmDeleteStageData2": "最初から始めます。",
+  "confirmDeleteStageData3": "よろしいですか？"
 }

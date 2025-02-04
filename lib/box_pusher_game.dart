@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:box_pusher/audio.dart';
-import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
 import 'package:box_pusher/components/debug_view_distributions_dialog.dart';
 import 'package:box_pusher/components/version_log_dialog.dart';
@@ -12,6 +11,7 @@ import 'package:box_pusher/custom_scale_detector.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
+import 'package:box_pusher/sequences/confirm_delete_stage_data_seq.dart';
 import 'package:box_pusher/sequences/confirm_exit_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
@@ -192,13 +192,6 @@ class BoxPusherGame extends FlameGame
           );
         },
       ),
-      'confirm_delete_stage_data_dialog': OverlayRoute(
-        (context, game) {
-          return ConfirmDeleteStageDataDialog(
-            game: this,
-          );
-        },
-      ),
       'debug_view_distributions_dialog': OverlayRoute(
         (context, game) {
           return DebugViewDistributionsDialog(
@@ -217,6 +210,8 @@ class BoxPusherGame extends FlameGame
           'gameover': Route(GameoverSeq.new, transparent: true),
           'clear': Route(ClearSeq.new, transparent: true),
           'confirm_exit': Route(ConfirmExitSeq.new, transparent: true),
+          'confirm_delete_stage_data':
+              Route(ConfirmDeleteStageDataSeq.new, transparent: true),
         }..addAll(_overlays),
         initialRoute: 'title',
       ),

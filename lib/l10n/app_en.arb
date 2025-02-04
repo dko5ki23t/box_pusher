@@ -41,5 +41,8 @@
   "dialogNo": "No",
   "confirmExit1": "Are you sure want to exit?",
   "confirmExit2": "(Scores up to this point will be recorded",
-  "confirmExit3": "and saved data will be deleted.)"
+  "confirmExit3": "and saved data will be deleted.)",
+  "confirmDeleteStageData1": "Delete the data from your last play",
+  "confirmDeleteStageData2": "and start from the beginning.",
+  "confirmDeleteStageData3": "Are you sure?"
 }

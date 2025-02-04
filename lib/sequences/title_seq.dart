@@ -51,7 +51,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       text: loc.newGame,
       onReleased: () {
         if (game.stageData.isNotEmpty) {
-          game.pushSeqOverlay('confirm_delete_stage_data_dialog');
+          game.pushSeqNamed('confirm_delete_stage_data');
         } else {
           game.pushAndInitGame();
         }
