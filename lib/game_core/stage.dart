@@ -322,7 +322,8 @@ class Stage {
   }
 
   /// ステージを生成する
-  void initialize(
+  /// 「つづきから」始める場合はtrueを返す
+  bool initialize(
     CameraComponent camera,
     Map<String, dynamic> stageData,
   ) {
@@ -337,7 +338,8 @@ class Stage {
     effectBase.first.animationComponent.opacity = 0.0;
     gameWorld.add(effectBase.first.animationComponent);
     // 前回のステージ情報が保存されているなら
-    if (stageData.containsKey('score')) {
+    bool ret = stageData.containsKey('score');
+    if (ret) {
       _setStageDataFromSaveData(camera, stageData);
     } else {
       _setStageDataFromInitialData(camera);
@@ -346,6 +348,7 @@ class Stage {
       // 【テストモード】各範囲の分布表示
       _createDistributionView();
     }
+    return ret;
   }
 
   Future<Map<String, dynamic>> encodeStageData() async {

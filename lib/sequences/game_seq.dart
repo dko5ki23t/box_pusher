@@ -526,67 +526,74 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           ..color = const Color(0x80000000)
           ..style = PaintingStyle.fill,
         children: [
-          // 次マージ時出現アイテム（左側に配置）
-          AlignComponent(
-            alignment: Anchor.bottomLeft,
-            child: PositionComponent(
-              size: nextItemAreaSize,
-              children: [
-                AlignComponent(
-                  alignment: Anchor.centerLeft,
-                  child: remainMergeCountText,
+          PositionComponent(
+            position: Vector2(10, 0),
+            size: topPaddingSize - Vector2(20, 0),
+            children: [
+              // 次マージ時出現アイテム（左側に配置）
+              AlignComponent(
+                alignment: Anchor.bottomLeft,
+                child: PositionComponent(
+                  size: nextItemAreaSize,
+                  children: [
+                    AlignComponent(
+                      alignment: Anchor.centerLeft,
+                      child: remainMergeCountText,
+                    ),
+                    AlignComponent(
+                      alignment: Anchor.centerRight,
+                      child: PositionComponent(
+                        size: Vector2(Stage.cellSize.x * 3, Stage.cellSize.y) *
+                            0.8,
+                        children: [
+                          AlignComponent(
+                            alignment: Anchor.centerLeft,
+                            child: nextMergeItem,
+                          ),
+                          AlignComponent(
+                            alignment: Anchor.center,
+                            child: nextMergeItem2,
+                          ),
+                          AlignComponent(
+                            alignment: Anchor.centerRight,
+                            child: nextMergeItem3,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                AlignComponent(
-                  alignment: Anchor.centerRight,
-                  child: PositionComponent(
-                    size: Vector2(Stage.cellSize.x * 3, Stage.cellSize.y) * 0.8,
-                    children: [
-                      AlignComponent(
+              ),
+              // スコア（中央に配置）
+              AlignComponent(
+                alignment: Anchor.bottomCenter,
+                child: PositionComponent(
+                  size: scoreAreaSize,
+                  children: [
+                    AlignComponent(
+                      alignment: Anchor.center,
+                      child: scoreText,
+                    )
+                  ],
+                ),
+              ),
+              // コイン（右側に配置）
+              AlignComponent(
+                alignment: Anchor.bottomRight,
+                child: PositionComponent(
+                  size: coinsAreaSize,
+                  children: [
+                    AlignComponent(
                         alignment: Anchor.centerLeft,
-                        child: nextMergeItem,
-                      ),
-                      AlignComponent(
-                        alignment: Anchor.center,
-                        child: nextMergeItem2,
-                      ),
-                      AlignComponent(
-                        alignment: Anchor.centerRight,
-                        child: nextMergeItem3,
-                      ),
-                    ],
-                  ),
+                        child: SpriteComponent.fromImage(coinImg)),
+                    AlignComponent(
+                      alignment: Anchor.centerRight,
+                      child: coinNumText,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          // スコア（中央に配置）
-          AlignComponent(
-            alignment: Anchor.bottomCenter,
-            child: PositionComponent(
-              size: scoreAreaSize,
-              children: [
-                AlignComponent(
-                  alignment: Anchor.center,
-                  child: scoreText,
-                )
-              ],
-            ),
-          ),
-          // コイン（右側に配置）
-          AlignComponent(
-            alignment: Anchor.bottomRight,
-            child: PositionComponent(
-              size: coinsAreaSize,
-              children: [
-                AlignComponent(
-                    alignment: Anchor.centerLeft,
-                    child: SpriteComponent.fromImage(coinImg)),
-                AlignComponent(
-                  alignment: Anchor.centerRight,
-                  child: coinNumText,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -790,7 +797,11 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // カメラズームをリセット
     game.camera.viewfinder.zoom = 1.0;
     // ステージ初期化
-    stage.initialize(game.camera, game.stageData);
+    bool isContinueGame = stage.initialize(game.camera, game.stageData);
+    // つづきからの場合/今回初めてプレイではない場合はチュートリアルスキップ
+    if (isContinueGame || !addComponents) {
+      tutorial.current = null;
+    }
 
     // セーブデータ削除
     game.clearAndSaveStageData();
@@ -1502,6 +1513,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       if (pocketAbilityButton.onReleased != null) {
         pocketAbilityButton.onReleased!();
       }
+    }
+
+    // 移動のチュートリアルだった場合、操作ボタンはなしにする
+    if (tutorial.current == TutorialState.move &&
+        pushingMoveButton != Move.none) {
+      Config().playerControllButtonType = PlayerControllButtonType.noButton;
     }
 
     return false;

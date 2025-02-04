@@ -629,9 +629,9 @@ class Tutorial {
                     size: BoxPusherGame.baseSize,
                     painter: TutorialMultiRRectHolePainter(
                       ltToWh: {
-                        Vector2.all(5): Vector2(120, 40),
+                        Vector2(10, 5): Vector2(110, 40),
                         Vector2(135, 5): Vector2(90, 40),
-                        Vector2(305, 5): Vector2(50, 40),
+                        Vector2(290, 5): Vector2(60, 40),
                       },
                       radius: 8,
                     )),
