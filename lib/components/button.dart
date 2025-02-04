@@ -332,6 +332,45 @@ class GameMenuButton extends GameButton {
   }
 }
 
+class GameDialogButton extends GameButton {
+  String? _text;
+
+  GameDialogButton({
+    super.keyName,
+    required super.size,
+    super.position,
+    super.anchor,
+    String? text,
+    super.enabled,
+    super.onPressed,
+    super.onReleased,
+    super.onCancelled,
+  })  : _text = text,
+        super(
+          child: TextComponent(
+            text: text,
+            textRenderer: TextPaint(
+              style: const TextStyle(
+                fontFamily: Config.gameTextFamily,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ) {
+    super.enabledFrameColor = const Color(0x00000000);
+    super.enabledBgColor = const Color(0x00000000);
+  }
+
+  String? get text => _text;
+
+  set text(String? t) {
+    _text = t;
+    if (t != null) {
+      (super.child as TextComponent).text = t;
+    }
+  }
+}
+
 class GameSpriteButton extends GameButton {
   GameSpriteButton({
     super.keyName,

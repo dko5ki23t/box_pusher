@@ -200,8 +200,11 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   void onFocus(String? before) {
     if (isReady) {
       if (before == 'menu') {
-        // BGM再開
-        Audio().resumeBGM();
+        if (!stage.isGameover) {
+          // メニューから「あきらめる」を選択したのでなければ
+          // BGM再開
+          Audio().resumeBGM();
+        }
       } else {
         // BGMを最初から再生
         Audio().playBGM(Bgm.game);

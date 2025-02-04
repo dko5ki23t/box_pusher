@@ -34,5 +34,12 @@
   "otherTutorial3": "appear after merging",
   "otherTutorial4": "Score",
   "otherTutorial5": "Coins",
-  "otherTutorial6": "You can move, zoom in and out the map"
+  "otherTutorial6": "You can move, zoom in and out the map",
+  "dialogOK": "OK",
+  "dialogCancel": "Cancel",
+  "dialogYes": "Yes",
+  "dialogNo": "No",
+  "confirmExit1": "Are you sure want to exit?",
+  "confirmExit2": "(Scores up to this point will be recorded",
+  "confirmExit3": "and saved data will be deleted.)"
 }

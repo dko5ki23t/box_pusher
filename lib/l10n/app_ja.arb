@@ -34,5 +34,12 @@
   "otherTutorial3": "出現するか",
   "otherTutorial4": "獲得スコア",
   "otherTutorial5": "獲得コイン",
-  "otherTutorial6": "マップは移動・拡大縮小できます"
+  "otherTutorial6": "マップは移動・拡大縮小できます",
+  "dialogOK": "OK",
+  "dialogCancel": "キャンセル",
+  "dialogYes": "はい",
+  "dialogNo": "いいえ",
+  "confirmExit1": "ゲームをあきらめますか？",
+  "confirmExit2": "（ここまでのスコアは記録され、",
+  "confirmExit3": "セーブデータは消えます。）"
 }

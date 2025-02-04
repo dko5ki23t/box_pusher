@@ -91,6 +91,13 @@ class AudioPlayerWithStatus {
   bool isBusy = false;
 
   AudioPlayerWithStatus(this.player);
+
+  Future<void> criticalProcess(Future<void> Function() func) async {
+    if (isBusy) return;
+    isBusy = true;
+    await func();
+    isBusy = false;
+  }
 }
 
 /// 音楽を扱うクラス
@@ -105,7 +112,7 @@ class Audio {
   /// 同時に再生できる効果音の数
   final int soundPlayerNum = 5;
 
-  late AudioPlayer _bgmPlayer;
+  late AudioPlayerWithStatus _bgmPlayer;
   late List<AudioPlayerWithStatus> _soundPlayers;
 
   final bgmPlayerIdStr = 'box_pusher_bgm_playerId';
@@ -138,9 +145,9 @@ class Audio {
 
     //AudioPlayer.global.setAudioContext(audioContext);
 
-    _bgmPlayer = AudioPlayer(playerId: bgmPlayerIdStr);
+    _bgmPlayer = AudioPlayerWithStatus(AudioPlayer(playerId: bgmPlayerIdStr));
     // BGMはループ再生するよう設定
-    await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+    await _bgmPlayer.player.setReleaseMode(ReleaseMode.loop);
     _soundPlayers = [
       for (int i = 0; i < soundPlayerNum; i++)
         AudioPlayerWithStatus(AudioPlayer()
@@ -174,31 +181,33 @@ class Audio {
   Future<void> playBGM(Bgm bgm) async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
     try {
-      await _bgmPlayer.stop();
-      await _bgmPlayer.play(AssetSource(bgm.fileName), volume: bgm.volume);
+      await _bgmPlayer.player.stop();
+      await _bgmPlayer.player
+          .play(AssetSource(bgm.fileName), volume: bgm.volume);
     } catch (e) {
       log('[Audio]playBGM() error : $e');
     }
+    _bgmPlayer.isBusy = false;
   }
 
   Future<void> stopBGM() async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    await _bgmPlayer.stop();
+    _bgmPlayer.criticalProcess(() async => await _bgmPlayer.player.stop());
   }
 
   Future<void> pauseBGM() async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    await _bgmPlayer.pause();
+    _bgmPlayer.criticalProcess(() async => await _bgmPlayer.player.pause());
   }
 
   Future<void> resumeBGM() async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    await _bgmPlayer.resume();
+    _bgmPlayer.criticalProcess(() async => await _bgmPlayer.player.resume());
   }
 
   Future<void> onRemove() async {
     assert(!isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    await _bgmPlayer.dispose();
+    await _bgmPlayer.player.dispose();
     for (final player in _soundPlayers) {
       await player.player.dispose();
     }

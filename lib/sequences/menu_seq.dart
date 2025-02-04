@@ -82,7 +82,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       anchor: Anchor.center,
       text: loc.exit,
       onReleased: () async {
-        game.pushSeqOverlay('confirm_exit_dialog');
+        game.pushSeqNamed('confirm_exit');
       },
     );
     menuButtonPos += menuButtonOffset;
@@ -186,7 +186,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
 
   @override
   void onFocus(String? before) {
-    if (before == "confirm_exit_dialog") {
+    if (before == "confirm_exit") {
       // あきらめるボタン押下後の確認ダイアログから遷移してきたなら
       if (game.isGameover() == true) {
         // ゲーム画面->ゲームオーバー画面に遷移
