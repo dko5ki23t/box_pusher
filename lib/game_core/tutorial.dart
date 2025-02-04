@@ -353,6 +353,7 @@ class Tutorial {
     Move playerMoving,
     BoxPusherGame game,
   ) {
+    final loc = game.localization;
     // チュートリアル変更時
     if (_prev != current) {
       tutorialArea.removeAll(tutorialArea.children);
@@ -731,23 +732,23 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 340),
                     anchor: Anchor.center,
-                    text: "一直線上にあるアイテムなら一度にいくつでも",
+                    text: loc.handAbilityTutorial1,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
                           fontFamily: Config.gameTextFamily,
-                          fontSize: 20),
+                          fontSize: 18),
                     ),
                   ),
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 370),
                     anchor: Anchor.center,
-                    text: "押せるようになりました",
+                    text: loc.handAbilityTutorial2,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
                           fontFamily: Config.gameTextFamily,
-                          fontSize: 20),
+                          fontSize: 18),
                     ),
                   ),
                 ]),
@@ -763,7 +764,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 340),
                     anchor: Anchor.center,
-                    text: "斜め4方向にも",
+                    text: loc.legAbilityTutorial1,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -774,7 +775,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 370),
                     anchor: Anchor.center,
-                    text: "移動できるようになりました",
+                    text: loc.legAbilityTutorial2,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -847,82 +848,173 @@ class Tutorial {
           );
           break;
         case TutorialState.pocketAbility:
-          tutorialArea.add(
-            gotAbilityScreen(
-                game: game,
-                ability: PlayerAbility.pocket,
-                animalImg: kangarooImg,
-                descriptions: [
-                  TextComponent(
-                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 330),
-                    anchor: Anchor.center,
-                    text: "目の前のアイテムをポケットに入れる/",
-                    textRenderer: TextPaint(
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: Config.gameTextFamily,
-                          fontSize: 15),
-                    ),
-                  ),
-                  TextComponent(
-                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 360),
-                    anchor: Anchor.center,
-                    text: "ポケットに入っているアイテムを目の前に出す",
-                    textRenderer: TextPaint(
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: Config.gameTextFamily,
-                          fontSize: 15),
-                    ),
-                  ),
-                  TextComponent(
-                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 390),
-                    anchor: Anchor.center,
-                    text: "ことができるようになりました",
-                    textRenderer: TextPaint(
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: Config.gameTextFamily,
-                          fontSize: 15),
-                    ),
-                  ),
-                  PositionComponent(
-                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 440),
-                    size: Vector2(300, 60),
-                    anchor: Anchor.center,
-                    children: [
-                      SpriteAnimationComponent.fromFrameData(
-                        pKeyImg,
-                        SpriteAnimationData.sequenced(
-                            amount: 2,
-                            stepTime: Stage.objectStepTime,
-                            textureSize: Vector2(21, 20)),
-                        size: Vector2(34, 34),
+          if (game.lang == Language.japanese) {
+            tutorialArea.add(
+              gotAbilityScreen(
+                  game: game,
+                  ability: PlayerAbility.pocket,
+                  animalImg: kangarooImg,
+                  descriptions: [
+                    TextComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 330),
+                      anchor: Anchor.center,
+                      text: loc.pocketAbilityTutorial1,
+                      textRenderer: TextPaint(
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: Config.gameTextFamily,
+                            fontSize: 15),
                       ),
-                      TextComponent(
-                        text: 'または下のポケットボタンをタップで',
-                        position: Vector2(40, 5),
-                        textRenderer: TextPaint(
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontFamily: Config.gameTextFamily,
-                              fontSize: 15),
+                    ),
+                    TextComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 360),
+                      anchor: Anchor.center,
+                      text: loc.pocketAbilityTutorial2,
+                      textRenderer: TextPaint(
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: Config.gameTextFamily,
+                            fontSize: 15),
+                      ),
+                    ),
+                    TextComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 390),
+                      anchor: Anchor.center,
+                      text: loc.pocketAbilityTutorial3,
+                      textRenderer: TextPaint(
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: Config.gameTextFamily,
+                            fontSize: 15),
+                      ),
+                    ),
+                    PositionComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 440),
+                      size: Vector2(300, 60),
+                      anchor: Anchor.center,
+                      children: [
+                        SpriteAnimationComponent.fromFrameData(
+                          pKeyImg,
+                          SpriteAnimationData.sequenced(
+                              amount: 2,
+                              stepTime: Stage.objectStepTime,
+                              textureSize: Vector2(21, 20)),
+                          size: Vector2(34, 34),
                         ),
-                      ),
-                      TextComponent(
-                        text: '能力を使用できます',
-                        position: Vector2(90, 35),
-                        textRenderer: TextPaint(
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontFamily: Config.gameTextFamily,
-                              fontSize: 15),
+                        TextComponent(
+                          text: loc.pocketAbilityTutorial4,
+                          position: Vector2(40, 5),
+                          textRenderer: TextPaint(
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: Config.gameTextFamily,
+                                fontSize: 15),
+                          ),
                         ),
+                        TextComponent(
+                          text: loc.pocketAbilityTutorial5,
+                          position: Vector2(90, 35),
+                          textRenderer: TextPaint(
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: Config.gameTextFamily,
+                                fontSize: 15),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ]),
+            );
+          } else if (game.lang == Language.english) {
+            tutorialArea.add(
+              gotAbilityScreen(
+                  game: game,
+                  ability: PlayerAbility.pocket,
+                  animalImg: kangarooImg,
+                  descriptions: [
+                    TextComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 330),
+                      anchor: Anchor.center,
+                      text: loc.pocketAbilityTutorial1,
+                      textRenderer: TextPaint(
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: Config.gameTextFamily,
+                            fontSize: 15),
                       ),
-                    ],
-                  ),
-                ]),
-          );
+                    ),
+                    TextComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 360),
+                      anchor: Anchor.center,
+                      text: loc.pocketAbilityTutorial2,
+                      textRenderer: TextPaint(
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: Config.gameTextFamily,
+                            fontSize: 15),
+                      ),
+                    ),
+                    TextComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 390),
+                      anchor: Anchor.center,
+                      text: loc.pocketAbilityTutorial3,
+                      textRenderer: TextPaint(
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: Config.gameTextFamily,
+                            fontSize: 15),
+                      ),
+                    ),
+                    PositionComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 440),
+                      size: Vector2(300, 60),
+                      anchor: Anchor.center,
+                      children: [
+                        SpriteAnimationComponent.fromFrameData(
+                          pKeyImg,
+                          SpriteAnimationData.sequenced(
+                              amount: 2,
+                              stepTime: Stage.objectStepTime,
+                              textureSize: Vector2(21, 20)),
+                          position: Vector2(210, 0),
+                          size: Vector2(34, 34),
+                        ),
+                        TextComponent(
+                          text: loc.pocketAbilityTutorial4,
+                          position: Vector2(28, 5),
+                          textRenderer: TextPaint(
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: Config.gameTextFamily,
+                                fontSize: 15),
+                          ),
+                        ),
+                        TextComponent(
+                          text: "or",
+                          position: Vector2(250, 5),
+                          textRenderer: TextPaint(
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: Config.gameTextFamily,
+                                fontSize: 15),
+                          ),
+                        ),
+                        TextComponent(
+                          text: loc.pocketAbilityTutorial5,
+                          position: Vector2(150, 45),
+                          anchor: Anchor.center,
+                          textRenderer: TextPaint(
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: Config.gameTextFamily,
+                                fontSize: 15),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ]),
+            );
+          }
           break;
         case TutorialState.armerAbility:
           tutorialArea.add(
@@ -934,7 +1026,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 340),
                     anchor: Anchor.center,
-                    text: "敵の攻撃を1度防ぐことができるようになりました",
+                    text: loc.armerAbilityTutorial1,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -945,7 +1037,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 370),
                     anchor: Anchor.center,
-                    text: "1度攻撃を受けると3ターンの間",
+                    text: loc.armerAbilityTutorial2,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -956,7 +1048,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 400),
                     anchor: Anchor.center,
-                    text: "この能力は使えません",
+                    text: loc.armerAbilityTutorial3,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -997,7 +1089,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 340),
                     anchor: Anchor.center,
-                    text: "マージした時ブロック破壊の",
+                    text: loc.mergeAbilityTutorial1,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -1008,7 +1100,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 370),
                     anchor: Anchor.center,
-                    text: "威力と範囲が上がり、",
+                    text: loc.mergeAbilityTutorial2,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -1019,7 +1111,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 400),
                     anchor: Anchor.center,
-                    text: "範囲内の敵にダメージを",
+                    text: loc.mergeAbilityTutorial3,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -1030,7 +1122,7 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 430),
                     anchor: Anchor.center,
-                    text: "与えるようになりました",
+                    text: loc.mergeAbilityTutorial4,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
