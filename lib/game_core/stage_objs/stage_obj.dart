@@ -891,6 +891,36 @@ abstract class StageObj {
     }
   }
 
+  bool _enemyAttackIfPlayersExist(
+    Map<String, dynamic> ret,
+    Stage stage,
+    Iterable<Point> attackables,
+  ) {
+    bool find = false;
+    for (final point in attackables) {
+      final target = stage.get(point, detectPlayer: true);
+      if (target.type == StageObjType.player) {
+        // プレイヤーがいれば攻撃
+        ret['attack'] = true;
+        find = true;
+        break;
+      } else if (target.isAlly) {
+        // プレイヤーの味方の場合、レベルに応じた確率で攻撃
+        int t = level < 2
+            ? 30
+            : level < 3
+                ? 60
+                : 90;
+        if (Config().random.nextInt(100) < t) {
+          ret['attack'] = true;
+          find = true;
+          break;
+        }
+      }
+    }
+    return find;
+  }
+
   /// 敵の動きを決定する
   Map<String, dynamic> enemyMove(
     EnemyMovePattern pattern,
@@ -937,7 +967,7 @@ abstract class StageObj {
             ret, pattern, vector, player, player, stage, prohibitedPoints);
         break;
       case EnemyMovePattern.followPlayerAttackForward3:
-        // 向いている方向の3マスにプレイヤーがいるなら攻撃
+        // 向いている方向の3マスにプレイヤー(/の味方)がいるなら攻撃
         final tmp = MoveExtent.straights;
         tmp.remove(vector);
         tmp.remove(vector.oppsite);
@@ -946,61 +976,61 @@ abstract class StageObj {
         for (final v in tmp) {
           attackables.add(attackable + v.point);
         }
-        if (attackables.contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackRound8:
-        // 周囲8マスにプレイヤーがいるなら攻撃
-        if (PointRectRange(
+        // 周囲8マスにプレイヤー/味方がいるなら攻撃
+        final attackables = PointRectRange(
                 Point(pos.x - 1, pos.y - 1), Point(pos.x + 1, pos.y + 1))
-            .contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+            .set;
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackStraight3:
-        // 前方直線状3マスにプレイヤーがいるなら攻撃
-        if (PointRectRange(pos, pos + vector.point * 3).contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+        // 前方直線状3マスにプレイヤー/味方がいるなら攻撃
+        final attackables = PointRectRange(pos, pos + vector.point * 3).set;
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackStraight5:
-        // 前方直線状5マスにプレイヤーがいるなら攻撃
-        if (PointRectRange(pos, pos + vector.point * 5).contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+        // 前方直線状5マスにプレイヤー/味方がいるなら攻撃
+        final attackables = PointRectRange(pos, pos + vector.point * 5).set;
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttack3Straight5:
-        // 前方3方向の直線5マスにプレイヤーがいるなら攻撃
+        // 前方3方向の直線5マスにプレイヤー/味方がいるなら攻撃
         final vec1 = vector.neighbors[0];
         final vec2 = vector.neighbors[1];
-        if ((PointLineRange(pos + vector.point, vector, 5)
-                .contains(player.pos)) ||
-            (PointLineRange(pos + vec1.point, vec1, 5).contains(player.pos)) ||
-            (PointLineRange(pos + vec2.point, vec2, 5).contains(player.pos))) {
-          ret['attack'] = true;
-        } else {
+        final attackables = {
+          ...PointLineRange(pos + vector.point, vector, 5).set,
+          ...PointLineRange(pos + vec1.point, vec1, 5).set,
+          ...PointLineRange(pos + vec2.point, vec2, 5).set,
+        };
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followWarpPlayerAttackStraight5:
-        // 前方直線状5マスにプレイヤーがいるなら攻撃
-        if (PointRectRange(pos, pos + vector.point * 5).contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+        // 前方直線状5マスにプレイヤー/味方がいるなら攻撃
+        final attackables = PointRectRange(pos, pos + vector.point * 5).set;
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollowWithWarp(
               ret, pattern, vector, player, player, stage, prohibitedPoints, 5);
         }

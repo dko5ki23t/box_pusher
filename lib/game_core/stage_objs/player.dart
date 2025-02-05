@@ -333,4 +333,7 @@ class Player extends StageObj {
 
   @override
   bool get hasVector => true;
+
+  @override
+  bool get isAlly => true;
 }
