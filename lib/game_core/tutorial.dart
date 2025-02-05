@@ -473,8 +473,8 @@ class Tutorial {
                   0.5 +
               Vector2(-4, 28);
 
-          final gorilaPos = original + Vector2(-5, -5) * Stage.cellSize.x;
-          final bunnyPos = original + Vector2(5, 5) * Stage.cellSize.x;
+          final gorilaPos = original + Vector2(-4, -4) * Stage.cellSize.x;
+          final bunnyPos = original + Vector2(4, 4) * Stage.cellSize.x;
           tutorialArea.addAll(
             [
               ButtonComponent(

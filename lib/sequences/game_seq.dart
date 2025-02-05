@@ -96,7 +96,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   static Vector2 get settingsButtonAreaSize => Vector2(40.0, 40.0);
 
   /// 【テストモード】現在位置表示領域
-  static Vector2 get currentPosAreaSize => Vector2(40.0, 40.0);
+  static Vector2 get currentPosAreaSize => Vector2(40.0, 20.0);
 
   /// 【テストモード】現在の表示モード
   DebugViewMode viewMode = DebugViewMode.gamePlay;
@@ -136,6 +136,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final Image settingsImg;
   late final Image diagonalMoveImg;
   late final TextComponent currentPosText;
+  late final TextComponent mergedCountText;
   late final TextComponent remainMergeCountText;
   late final SpriteAnimationComponent nextMergeItem;
   late final SpriteAnimationComponent nextMergeItem2;
@@ -754,6 +755,17 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           ),
         ),
       );
+      // 【テストモード時】累計マージ数表示領域
+      mergedCountText = TextComponent(
+        size: currentPosAreaSize,
+        position: Vector2(0, yPaddingSize.y + currentPosAreaSize.y),
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            fontFamily: Config.gameTextFamily,
+            color: Color(0xffffffff),
+          ),
+        ),
+      );
       // 【テストモード】現在の表示モード切り替えボタン
       viewModeButton = GameTextButton(
         size: viewModeButtonAreaSize,
@@ -816,6 +828,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       if (game.testMode) {
         // 【テストモード時】現在座標表示領域
         add(currentPosText);
+        // 【テストモード時】累計マージ数表示領域
+        add(mergedCountText);
         // 【テストモード】現在の表示モード切り替えボタン
         add(viewModeButton);
       }
@@ -1035,6 +1049,10 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // 【テストモード】現在座標表示
     if (game.testMode) {
       currentPosText.text = "pos:(${stage.player.pos.x},${stage.player.pos.y})";
+    }
+    // 【テストモード】累計マージ数表示
+    if (game.testMode) {
+      mergedCountText.text = "merge:${stage.mergedCount}";
     }
     // 【テストモード】表示モード切り替えボタン更新
     if (game.testMode) {
@@ -1335,26 +1353,26 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// 画面下部メニュー領域を更新（主に能力を獲得したときに呼び出す）
   void updateMenuArea() {
     Map<ButtonComponent, bool> abilityButtonMap = {};
-    if (game.testMode) {
-      abilityButtonMap = {
-        handAbilityButton: true,
-        legAbilityButton: true,
-        armerAbilityButton: true,
-        pocketAbilityButton: true,
-        mergeAbilityButton: true,
-      };
-    } else {
-      abilityButtonMap[handAbilityButton] =
-          stage.player.isAbilityAquired[PlayerAbility.hand]!;
-      abilityButtonMap[legAbilityButton] =
-          stage.player.isAbilityAquired[PlayerAbility.leg]!;
-      abilityButtonMap[armerAbilityButton] =
-          stage.player.isAbilityAquired[PlayerAbility.armer]!;
-      abilityButtonMap[pocketAbilityButton] =
-          stage.player.isAbilityAquired[PlayerAbility.pocket]!;
-      abilityButtonMap[mergeAbilityButton] =
-          stage.player.isAbilityAquired[PlayerAbility.merge]!;
-    }
+    //if (game.testMode) {
+    //  abilityButtonMap = {
+    //    handAbilityButton: true,
+    //    legAbilityButton: true,
+    //    armerAbilityButton: true,
+    //    pocketAbilityButton: true,
+    //    mergeAbilityButton: true,
+    //  };
+    //} else {
+    abilityButtonMap[handAbilityButton] =
+        stage.player.isAbilityAquired[PlayerAbility.hand]!;
+    abilityButtonMap[legAbilityButton] =
+        stage.player.isAbilityAquired[PlayerAbility.leg]!;
+    abilityButtonMap[armerAbilityButton] =
+        stage.player.isAbilityAquired[PlayerAbility.armer]!;
+    abilityButtonMap[pocketAbilityButton] =
+        stage.player.isAbilityAquired[PlayerAbility.pocket]!;
+    abilityButtonMap[mergeAbilityButton] =
+        stage.player.isAbilityAquired[PlayerAbility.merge]!;
+    //}
     // 位置・表示非表示を設定
     Vector2 abilityButtonPos = Vector2(xPaddingSize.x + 60, 5);
     for (final entry in abilityButtonMap.entries) {

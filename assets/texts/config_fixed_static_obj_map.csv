@@ -1,7 +1,7 @@
 固定位置オブジェクトのマップ
 pointX, pointY, obj, level
--5, -5, gorilla, 1
-5, 5, rabbit, 1
+-4, -4, gorilla, 1
+4, 4, rabbit, 1
 -10, 10, kangaroo, 1
 -11, 9, block, 2
 -10, 9, block, 2

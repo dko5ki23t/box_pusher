@@ -238,10 +238,10 @@ class Stage {
   Point stageRB = Point(0, 0);
 
   /// ステージの左上上限座標
-  Point stageMaxLT = Point(-100, -100);
+  Point stageMaxLT = Point(-50, -50);
 
   /// ステージの右下上限座標
-  Point stageMaxRB = Point(100, 100);
+  Point stageMaxRB = Point(50, 50);
 
   /// ステージの横幅
   int get stageWidth => stageRB.x - stageLT.x;
