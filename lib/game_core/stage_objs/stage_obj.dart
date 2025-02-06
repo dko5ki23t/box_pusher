@@ -30,7 +30,7 @@ import 'package:box_pusher/game_core/stage_objs/shop.dart';
 import 'package:box_pusher/game_core/stage_objs/smoke.dart';
 import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
-import 'package:box_pusher/game_core/stage_objs/spike_spawner.dart';
+import 'package:box_pusher/game_core/stage_objs/spawner.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
@@ -74,7 +74,7 @@ enum StageObjType {
   girl,
   shop,
   canon,
-  spikeSpawner, // とげの敵を生み出す場
+  spawner, // 敵を生み出す場
   boneman, // 骨の敵、倒すと押せるオブジェクト化、一定ターンで復活
   barrierman, // 範囲内の敵に一定以上ダメージを軽減させるバリアを展開する敵
 }
@@ -111,7 +111,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.girl: 'girl',
     StageObjType.shop: 'shop',
     StageObjType.canon: 'canon',
-    StageObjType.spikeSpawner: 'spikeSpawner',
+    StageObjType.spawner: 'spawner',
     StageObjType.boneman: 'boneman',
     StageObjType.barrierman: 'barrierman',
   };
@@ -180,8 +180,8 @@ extension StageObjTypeExtent on StageObjType {
         return Shop;
       case StageObjType.canon:
         return Canon;
-      case StageObjType.spikeSpawner:
-        return SpikeSpawner;
+      case StageObjType.spawner:
+        return Spawner;
       case StageObjType.boneman:
         return Boneman;
       case StageObjType.barrierman:
@@ -251,8 +251,8 @@ extension StageObjTypeExtent on StageObjType {
         return Shop.imageFileName;
       case StageObjType.canon:
         return Canon.imageFileName;
-      case StageObjType.spikeSpawner:
-        return SpikeSpawner.imageFileName;
+      case StageObjType.spawner:
+        return Spawner.imageFileName;
       case StageObjType.boneman:
         return Boneman.imageFileName;
       case StageObjType.barrierman:

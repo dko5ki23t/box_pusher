@@ -10,7 +10,7 @@ rect, -20, 1, -11, 17, 0,133,93, swordsman, 1,5, swordsman, 2,2, guardian, 1,7
 rect, 19, 15, 20, 16, 0,4,2, warp, 1,1
 rect, -23, -20, 24, -17, 0,173,86, wizard, 1,5, guardian, 1,2, archer, 2,2
 rect, -23, 20, 22, 20, 0,43,22, wizard, 1,5, guardian, 1,2, archer, 2,2
-rect, -3, -29, 4, -23, 0,56,28
+rect, -3, -29, 4, -23, 0,50,25, spawner, 1,1
 rect, -22, -26, -12, -22, 0,55,28
 rect, -13, -34, -4, -27, 0,80,40
 distance, 13, -29, 0, 0, 6,85,42

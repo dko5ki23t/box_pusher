@@ -1,14 +1,32 @@
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 
-class SpikeSpawner extends StageObj {
+class Spawner extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'spawner.png';
 
-  SpikeSpawner({
+  static StageObjTypeLevel tl(StageObjType type, int level) =>
+      StageObjTypeLevel(type: type, level: level);
+
+  /// 各レベルごとに出現する敵
+  static final Map<int, List<StageObjTypeLevel>> spawnEnemies = {
+    1: [
+      tl(StageObjType.spike, 1),
+      tl(StageObjType.archer, 1),
+      tl(StageObjType.wizard, 1),
+    ],
+  };
+
+  /// 敵を生み出すまでの間隔
+  static final spawnTurn = {
+    1: 5,
+  };
+
+  Spawner({
     required Image spawnerImg,
     required Image errorImg,
     required super.savedArg,
@@ -28,26 +46,25 @@ class SpikeSpawner extends StageObj {
               Move.none:
                   SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
             },
-            1: {
-              Move.none: SpriteAnimation.fromFrameData(
-                spawnerImg,
-                SpriteAnimationData.sequenced(
-                    amount: 2,
-                    stepTime: Stage.objectStepTime,
-                    textureSize: Stage.cellSize),
-              ),
-            },
+            for (int i = 1; i <= spawnEnemies.keys.length; i++)
+              i: {
+                Move.none: SpriteAnimation.fromFrameData(
+                  spawnerImg,
+                  SpriteAnimationData.sequenced(
+                      amount: 2,
+                      stepTime: Stage.objectStepTime,
+                      textureSize: Stage.cellSize),
+                ),
+              },
           },
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.spikeSpawner,
+            type: StageObjType.spawner,
             level: level,
           ),
         );
 
-  static int get spawnTurn => 5;
-
-  /// 敵を生み出すまでにあと何ターンあるか
-  int remainTurnToSpawn = spawnTurn;
+  /// 最後に敵を生み出してからの経過ターン数
+  int turns = 0;
 
   @override
   void update(
@@ -61,14 +78,13 @@ class SpikeSpawner extends StageObj {
     Map<Point, Move> prohibitedPoints,
   ) {
     if (playerEndMoving) {
-      if (--remainTurnToSpawn <= 0) {
+      if (++turns >= spawnTurn[level]!) {
         // この場所が空いているなら
         if (stage.get(pos) == this) {
           // 敵を生み出す
-          stage.enemies.add(stage.createObject(
-              typeLevel: StageObjTypeLevel(type: StageObjType.spike),
-              pos: pos));
-          remainTurnToSpawn = spawnTurn;
+          final spawnTL = spawnEnemies[level]!.sample(1).first;
+          stage.enemies.add(stage.createObject(typeLevel: spawnTL, pos: pos));
+          turns = 0;
         }
       }
     }
@@ -106,4 +122,13 @@ class SpikeSpawner extends StageObj {
 
   @override
   bool get hasVector => false;
+
+  // turnsの保存/読み込み
+  @override
+  int get arg => turns;
+
+  @override
+  void loadArg(int val) {
+    turns = val;
+  }
 }

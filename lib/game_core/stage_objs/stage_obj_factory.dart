@@ -24,7 +24,7 @@ import 'package:box_pusher/game_core/stage_objs/shop.dart';
 import 'package:box_pusher/game_core/stage_objs/smoke.dart';
 import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
-import 'package:box_pusher/game_core/stage_objs/spike_spawner.dart';
+import 'package:box_pusher/game_core/stage_objs/spawner.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
@@ -409,8 +409,8 @@ class StageObjFactory {
             pos: pos,
             level: typeLevel.level,
             vector: vector);
-      case StageObjType.spikeSpawner:
-        return SpikeSpawner(
+      case StageObjType.spawner:
+        return Spawner(
             spawnerImg: baseImages[type]!,
             errorImg: errorImg,
             savedArg: savedArg,

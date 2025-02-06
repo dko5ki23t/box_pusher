@@ -609,8 +609,8 @@ class Stage {
                   'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
               get(p).vector = MoveExtent.straights.sample(1).first;
               beltPoints.add(p);
-            } else if (item.type == StageObjType.spikeSpawner) {
-              setStaticType(p, StageObjType.spikeSpawner);
+            } else if (item.type == StageObjType.spawner) {
+              setStaticType(p, StageObjType.spawner);
               spawners.add(safeGetStaticObj(p));
             } else {
               final adding = createObject(typeLevel: item, pos: p);
@@ -969,14 +969,14 @@ class Stage {
     _staticObjs[p]!.onRemove(gameWorld);
     if (_staticObjs[p]!.isAnimals) {
       animals.remove(_staticObjs[p]!);
-    } else if (_staticObjs[p]!.type == StageObjType.spikeSpawner) {
+    } else if (_staticObjs[p]!.type == StageObjType.spawner) {
       spawners.remove(_staticObjs[p]!);
     }
     _staticObjs[p] = createObject(
         typeLevel: StageObjTypeLevel(type: type, level: level), pos: p);
     if (_staticObjs[p]!.isAnimals) {
       animals.add(_staticObjs[p]!);
-    } else if (_staticObjs[p]!.type == StageObjType.spikeSpawner) {
+    } else if (_staticObjs[p]!.type == StageObjType.spawner) {
       spawners.add(_staticObjs[p]!);
     }
   }
@@ -1043,7 +1043,7 @@ class Stage {
     for (final entry
         in (stageData['staticObjs'] as Map<String, dynamic>).entries) {
       final staticObj = createObjectFromMap(entry.value);
-      if (staticObj.type == StageObjType.spikeSpawner) {
+      if (staticObj.type == StageObjType.spawner) {
         spawners.add(staticObj);
       } else if (staticObj.isAnimals) {
         animals.add(staticObj);
@@ -1463,7 +1463,7 @@ class Stage {
           addToGameWorld: addToGameWorld);
       if (staticObj.isAnimals) {
         animals.add(staticObj);
-      } else if (staticObj.type == StageObjType.spikeSpawner) {
+      } else if (staticObj.type == StageObjType.spawner) {
         spawners.add(staticObj);
       }
       _staticObjs[pos] = staticObj;
