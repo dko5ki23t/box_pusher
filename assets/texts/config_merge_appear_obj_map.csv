@@ -9,24 +9,33 @@ num, obj1, level1, obj2, level2, obj3, level3
 50, spike, 2
 55, jewel, 3
 60, jewel, 3
-65, jewel, 4
+65, trap, 1
 70, jewel, 4
 75, guardian, 1
 80, swordsman, 2
 85, jewel, 5
 90, jewel, 5
-95, jewel, 5
+95, trap, 2
 100, archer, 2
 105, jewel, 6
 110, trap, 2
 115, jewel, 6
 120, jewel, 6
 125, builder, 1
-130, jewel, 7
-135, jewel, 7
+130, jewel, 6
+135, jewel, 6
 140, guardian, 2
-145, jewel, 7
-150, wizard, 1, builder, 1, ghost, 1
-150, jewel, 7, jewel, 7, pusher, 1
-150, wizard, 2, guardian, 2, ghost, 2
-150, wizard, 3, boneman, 3, smoker, 3
+145, jewel, 6
+150, jewel, 6, jewel, 7
+155, guardian, 1, trap, 1
+160, jewel, 6, jewel, 7
+165, ghost, 2, wizard, 1
+170, jewel, 6, jewel, 7
+175, trap, 2, ghost, 2
+180, spike, 3, jewel, 7
+185, jewel, 7, jewel, 7
+190, jewel, 7, jewel, 7
+195, jewel, 7, guardian, 2
+200, jewel, 7, jewel, 7, pusher, 1
+200, wizard, 2, guardian, 2, ghost, 2
+200, wizard, 3, boneman, 3, smoker, 3

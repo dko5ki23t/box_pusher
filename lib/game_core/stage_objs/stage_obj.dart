@@ -907,10 +907,10 @@ abstract class StageObj {
       } else if (target.isAlly) {
         // プレイヤーの味方の場合、レベルに応じた確率で攻撃
         int t = level < 2
-            ? 30
+            ? 10
             : level < 3
-                ? 60
-                : 90;
+                ? 40
+                : 70;
         if (Config().random.nextInt(100) < t) {
           ret['attack'] = true;
           find = true;

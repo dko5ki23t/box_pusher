@@ -368,7 +368,7 @@ class Stage {
     ret['calcedObjInBlockMap'] = encodedCOIBM;
     final Map<String, dynamic> encodedCFIBM = {};
     for (final entry in floorInBlockDistribution.entries) {
-      encodedCOIBM[entry.key.toString()] = entry.value.encode();
+      encodedCFIBM[entry.key.toString()] = entry.value.encode();
     }
     ret['calcedFloorInBlockMap'] = encodedCFIBM;
     final Map<String, dynamic> encodedCBFM = {};
@@ -1266,12 +1266,12 @@ class Stage {
           playerEndMoving, prohibitedPoints);
     }
 
-    // 敵涌きスポット更新
-    for (final spawner in spawners
-        .where((element) => updateTargetRange.contains(element.pos))) {
-      spawner.update(dt, player.moving, gameWorld, camera, this,
-          playerStartMoving, playerEndMoving, prohibitedPoints);
-    }
+    // 敵涌きスポット更新はしない。staticObjsを更新するから
+    //for (final spawner in spawners
+    //    .where((element) => updateTargetRange.contains(element.pos))) {
+    //  spawner.update(dt, player.moving, gameWorld, camera, this,
+    //      playerStartMoving, playerEndMoving, prohibitedPoints);
+    //}
 
     // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
     if (player.pocketItem != null && player.pocketItem!.updateInPocket) {
