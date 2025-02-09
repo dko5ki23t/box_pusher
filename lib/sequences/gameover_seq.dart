@@ -44,19 +44,23 @@ class GameoverSeq extends Sequence with KeyboardHandler {
       ),
     );
     restartButton = GameMenuButton(
-      size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 330.0),
-      anchor: Anchor.center,
-      text: loc.tryAgain,
-      onReleased: () => game.pushAndInitGame(),
-    );
+        size: Vector2(120.0, 30.0),
+        position: Vector2(180.0, 330.0),
+        anchor: Anchor.center,
+        text: loc.tryAgain,
+        onReleased: () async {
+          await game.clearAndSaveStageData();
+          game.pushAndInitGame();
+        });
     toTitleButton = GameMenuButton(
-      size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 380.0),
-      anchor: Anchor.center,
-      text: loc.toTitle,
-      onReleased: () => game.pushSeqNamed('title'),
-    );
+        size: Vector2(120.0, 30.0),
+        position: Vector2(180.0, 380.0),
+        anchor: Anchor.center,
+        text: loc.toTitle,
+        onReleased: () async {
+          await game.clearAndSaveStageData();
+          game.pushSeqNamed('title');
+        });
     buttonGroup = GameButtonGroup(buttons: [
       restartButton,
       toTitleButton,
