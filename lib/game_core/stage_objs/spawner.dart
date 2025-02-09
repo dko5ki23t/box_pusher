@@ -19,11 +19,106 @@ class Spawner extends StageObj {
       tl(StageObjType.archer, 1),
       tl(StageObjType.wizard, 1),
     ],
+    2: [
+      tl(StageObjType.ghost, 3),
+      tl(StageObjType.builder, 3),
+      tl(StageObjType.barrierman, 3),
+    ],
+    3: [
+      tl(StageObjType.wizard, 3),
+      tl(StageObjType.boneman, 3),
+      tl(StageObjType.barrierman, 3),
+    ],
+    4: [
+      tl(StageObjType.pusher, 3),
+      tl(StageObjType.builder, 3),
+      tl(StageObjType.smoker, 3),
+    ],
+    5: [
+      tl(StageObjType.ghost, 3),
+      tl(StageObjType.spike, 3),
+    ],
+    6: [
+      tl(StageObjType.spike, 2),
+      tl(StageObjType.swordsman, 2),
+      tl(StageObjType.archer, 2),
+      tl(StageObjType.wizard, 2),
+      tl(StageObjType.pusher, 2),
+      tl(StageObjType.builder, 2),
+      tl(StageObjType.ghost, 2),
+      tl(StageObjType.boneman, 2),
+      tl(StageObjType.smoker, 2),
+      tl(StageObjType.barrierman, 2),
+    ],
+    7: [
+      tl(StageObjType.smoker, 3),
+    ],
+    8: [
+      tl(StageObjType.boneman, 3),
+      tl(StageObjType.smoker, 3),
+      tl(StageObjType.barrierman, 3),
+    ],
+    9: [
+      tl(StageObjType.spike, 3),
+      tl(StageObjType.swordsman, 3),
+      tl(StageObjType.archer, 3),
+      tl(StageObjType.wizard, 3),
+      tl(StageObjType.pusher, 3),
+      tl(StageObjType.builder, 3),
+      tl(StageObjType.ghost, 3),
+      tl(StageObjType.boneman, 3),
+      tl(StageObjType.smoker, 3),
+      tl(StageObjType.barrierman, 3),
+    ],
+    10: [
+      tl(StageObjType.boneman, 3),
+      tl(StageObjType.smoker, 3),
+      tl(StageObjType.barrierman, 3),
+      tl(StageObjType.pusher, 3),
+    ],
+    11: [
+      tl(StageObjType.spike, 3),
+      tl(StageObjType.smoker, 3),
+      tl(StageObjType.barrierman, 3),
+    ],
+    12: [
+      tl(StageObjType.swordsman, 3),
+      tl(StageObjType.archer, 3),
+      tl(StageObjType.wizard, 3),
+      tl(StageObjType.builder, 3),
+      tl(StageObjType.ghost, 3),
+      tl(StageObjType.boneman, 3),
+      tl(StageObjType.smoker, 3),
+      tl(StageObjType.barrierman, 3),
+    ],
+    13: [
+      tl(StageObjType.wizard, 3),
+    ],
+    14: [
+      tl(StageObjType.archer, 3),
+      tl(StageObjType.wizard, 3),
+      tl(StageObjType.boneman, 3),
+      tl(StageObjType.smoker, 3),
+      tl(StageObjType.barrierman, 3),
+    ],
   };
 
   /// 敵を生み出すまでの間隔
   static final spawnTurn = {
     1: 5,
+    2: 5,
+    3: 3,
+    4: 5,
+    5: 3,
+    6: 5,
+    7: 4,
+    8: 5,
+    9: 5,
+    10: 3,
+    11: 4,
+    12: 3,
+    13: 5,
+    14: 4,
   };
 
   Spawner({

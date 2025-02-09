@@ -1,5 +1,10 @@
 ステージ上範囲->ブロック破壊時の出現宝石のレベル（範囲が重複する場合は先に存在するキーを優先）
 rangeType, point1X, point1Y, point2X, point2Y, distance, level
+rect, 14, -49, 32, -47, 0, 10
+rect, -5, 42, 4, 46, 0, 12
+rect, 31, -21, 35, -17, 0, 11
+rect, 20, 31, 28, 49, 0, 11
+rect, 36, 16, 49, 19, 0, 11
 distance, 0, 0, 0, 0, 4, 1
 distance, 0, 0, 0, 0, 9, 2
 distance, 0, 0, 0, 0, 16, 3

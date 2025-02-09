@@ -2,3 +2,6 @@
 pointX, pointY, payObjType, payObjLevel, getObjType, getObjLevel
 -10, -10, coin, 15, bomb, 1
 10, 10, coin, 20, canon, 1
+-30, 32, coin, 100, drill, 1
+47, -47, coin, 999, jewel, 13
+45, 25, coin, 50, guardian, 1

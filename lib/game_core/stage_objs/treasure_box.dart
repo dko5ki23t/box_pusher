@@ -8,6 +8,32 @@ class TreasureBox extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'treasure_box.png';
 
+  /// 各レベルごとで得られるコイン
+  static final Map<int, int> levelToCoins = {
+    1: 50,
+    2: 100,
+    3: 200,
+    4: 150,
+    5: 80,
+    6: 200,
+    7: 200,
+    8: 150,
+    9: 300,
+  };
+
+  /// 各レベルごとで得られるスコア
+  static final Map<int, int> levelToScore = {
+    1: 5000,
+    2: 50000,
+    3: 50000,
+    4: 100000,
+    5: 8000,
+    6: 100000,
+    7: 100000,
+    8: 75000,
+    9: 200000,
+  };
+
   TreasureBox({
     required Image treasureBoxImg,
     required Image errorImg,
@@ -85,4 +111,10 @@ class TreasureBox extends StageObj {
 
   @override
   bool get hasVector => false;
+
+  @override
+  int get coins => levelToCoins[level]!;
+
+  @override
+  int get score => levelToScore[level]!;
 }

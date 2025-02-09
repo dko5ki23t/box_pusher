@@ -500,6 +500,9 @@ abstract class StageObj {
   /// 持っているコイン
   int get coins => 0;
 
+  /// 獲得スコア(現状宝箱専用)
+  int get score => 0;
+
   /// ポケットに入れていてもupdate()するかどうか
   bool get updateInPocket => false;
 
@@ -1305,9 +1308,11 @@ abstract class StageObj {
       final obj = stage.get(pos);
       if (obj.type == StageObjType.treasureBox) {
         // 移動先が宝箱だった場合
-        // TODO:
-        // コイン増加
-        stage.coins.actual++;
+        // コイン獲得
+        stage.coins.actual += obj.coins;
+        stage.showGotCoinEffect(obj.coins, pos);
+        // スコア獲得
+        stage.score.actual += obj.score;
         // 宝箱消滅
         stage.setStaticType(pos, StageObjType.none);
       } else if (obj.type == StageObjType.gorilla) {

@@ -597,7 +597,7 @@ class Stage {
               item.level = Config().getJewelLevel(p);
             }
             if (item.type == StageObjType.treasureBox) {
-              setStaticType(p, StageObjType.treasureBox);
+              setStaticType(p, StageObjType.treasureBox, level: item.level);
             } else if (item.type == StageObjType.warp) {
               setStaticType(p, StageObjType.warp);
               warpPoints.add(p);
@@ -682,7 +682,8 @@ class Stage {
             final appear = breakedRemain.sample(1).first;
             if (canAppear) {
               if (item.type == StageObjType.treasureBox) {
-                setStaticType(appear, StageObjType.treasureBox);
+                setStaticType(appear, StageObjType.treasureBox,
+                    level: item.level);
               } else if (item.type == StageObjType.warp) {
                 setStaticType(appear, StageObjType.warp);
                 warpPoints.add(appear);
