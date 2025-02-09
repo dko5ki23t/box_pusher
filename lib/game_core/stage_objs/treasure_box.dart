@@ -3,6 +3,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class TreasureBox extends StageObj {
   /// 各レベルごとの画像のファイル名
@@ -34,9 +35,26 @@ class TreasureBox extends StageObj {
     9: 200000,
   };
 
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        Move.none:
+            SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      1: {
+        Move.none: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
+        ], stepTime: 1.0)
+      },
+    };
+  }
+
   TreasureBox({
-    required Image treasureBoxImg,
-    required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
@@ -49,18 +67,7 @@ class TreasureBox extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
-            1: {
-              Move.none: SpriteAnimation.spriteList([
-                Sprite(treasureBoxImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-              ], stepTime: 1.0)
-            },
-          },
+          levelToAnimations: levelToAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.treasureBox,
             level: level,

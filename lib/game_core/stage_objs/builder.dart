@@ -4,10 +4,11 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Builder extends StageObj {
   /// 各レベルに対応する動きのパターン
-  final Map<int, EnemyMovePattern> movePatterns = {
+  static final Map<int, EnemyMovePattern> movePatterns = {
     1: EnemyMovePattern.walkRandomOrStop,
     2: EnemyMovePattern.walkRandomOrStop,
     3: EnemyMovePattern.walkRandomOrStop,
@@ -16,9 +17,52 @@ class Builder extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'builder.png';
 
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        for (final move in MoveExtent.straights)
+          move: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      for (int i = 0; i < 3; i++)
+        i + 1: {
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 128, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 160, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 192, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 224, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 64, 0), srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 96, 0), srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 0, 0), srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 32, 0), srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+    };
+  }
+
   Builder({
-    required Image builderImg,
-    required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
@@ -31,48 +75,7 @@ class Builder extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              for (final move in MoveExtent.straights)
-                move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-            },
-            for (int i = 0; i < 3; i++)
-              i + 1: {
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(builderImg,
-                      srcPosition: Vector2(i * 256 + 128, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(builderImg,
-                      srcPosition: Vector2(i * 256 + 160, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(builderImg,
-                      srcPosition: Vector2(i * 256 + 192, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(builderImg,
-                      srcPosition: Vector2(i * 256 + 224, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(builderImg,
-                      srcPosition: Vector2(i * 256 + 64, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(builderImg,
-                      srcPosition: Vector2(i * 256 + 96, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(builderImg,
-                      srcPosition: Vector2(i * 256 + 0, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(builderImg,
-                      srcPosition: Vector2(i * 256 + 32, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-          },
+          levelToAnimations: levelToAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.builder,
             level: level,

@@ -3,6 +3,7 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 /// プレイヤーの能力
 enum PlayerAbility {
@@ -18,13 +19,80 @@ class Player extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'player.png';
 
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// チャンネル->オブジェクトのレベル->向き->攻撃時アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<int, Map<Move, SpriteAnimation>>>
+      levelToAttackAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        Move.none:
+            SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      1: {
+        Move.down: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: playerImgSize),
+          Sprite(baseImg, srcPosition: Vector2(40, 0), srcSize: playerImgSize),
+        ], stepTime: Stage.objectStepTime),
+        Move.up: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(80, 0), srcSize: playerImgSize),
+          Sprite(baseImg, srcPosition: Vector2(120, 0), srcSize: playerImgSize),
+        ], stepTime: Stage.objectStepTime),
+        Move.left: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(160, 0), srcSize: playerImgSize),
+          Sprite(baseImg, srcPosition: Vector2(200, 0), srcSize: playerImgSize),
+        ], stepTime: Stage.objectStepTime),
+        Move.right: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(240, 0), srcSize: playerImgSize),
+          Sprite(baseImg, srcPosition: Vector2(280, 0), srcSize: playerImgSize),
+        ], stepTime: Stage.objectStepTime),
+      },
+    };
+    levelToAttackAnimationsS = {
+      1: {
+        0: {
+          Move.none:
+              SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+        },
+        1: {
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: playerImgSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(40, 0), srcSize: playerImgSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(80, 0), srcSize: playerImgSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(120, 0), srcSize: playerImgSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(160, 0), srcSize: playerImgSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(200, 0), srcSize: playerImgSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(240, 0), srcSize: playerImgSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(280, 0), srcSize: playerImgSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+      },
+    };
+  }
+
   final Blink damagedBlink = Blink(showDuration: 0.2, hideDuration: 0.1);
 
   static Vector2 playerImgSize = Vector2(40, 40);
 
   Player({
-    required Image playerImg,
-    required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
@@ -37,73 +105,9 @@ class Player extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
-            1: {
-              Move.down: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(0, 0), srcSize: playerImgSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(40, 0), srcSize: playerImgSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.up: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(80, 0), srcSize: playerImgSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(120, 0), srcSize: playerImgSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.left: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(160, 0), srcSize: playerImgSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(200, 0), srcSize: playerImgSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.right: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(240, 0), srcSize: playerImgSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(280, 0), srcSize: playerImgSize),
-              ], stepTime: Stage.objectStepTime),
-            },
-          },
+          levelToAnimations: levelToAnimationsS,
           // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
-          levelToAttackAnimations: {
-            1: {
-              0: {
-                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-              },
-              1: {
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(playerImg,
-                      srcPosition: Vector2(0, 0), srcSize: playerImgSize),
-                  Sprite(playerImg,
-                      srcPosition: Vector2(40, 0), srcSize: playerImgSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(playerImg,
-                      srcPosition: Vector2(80, 0), srcSize: playerImgSize),
-                  Sprite(playerImg,
-                      srcPosition: Vector2(120, 0), srcSize: playerImgSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(playerImg,
-                      srcPosition: Vector2(160, 0), srcSize: playerImgSize),
-                  Sprite(playerImg,
-                      srcPosition: Vector2(200, 0), srcSize: playerImgSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(playerImg,
-                      srcPosition: Vector2(240, 0), srcSize: playerImgSize),
-                  Sprite(playerImg,
-                      srcPosition: Vector2(280, 0), srcSize: playerImgSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-            },
-          },
+          levelToAttackAnimations: levelToAttackAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.player,
             level: level,

@@ -7,10 +7,34 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Belt extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'belt.png';
+
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        for (final move in MoveExtent.straights)
+          move: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      1: {
+        Move.up: SpriteAnimation.fromFrameData(
+          baseImg,
+          SpriteAnimationData.sequenced(
+              amount: 4,
+              stepTime: Stage.objectStepTime,
+              textureSize: Stage.cellSize),
+        ),
+      },
+    };
+  }
 
   void _setAngle() {
     switch (vector) {
@@ -51,8 +75,6 @@ class Belt extends StageObj {
   Belt({
     required super.pos,
     required Move vector,
-    required Image levelToAnimationImg,
-    required Image errorImg,
     required super.savedArg,
     int level = 1,
   }) : super(
@@ -64,22 +86,7 @@ class Belt extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              for (final move in MoveExtent.straights)
-                move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-            },
-            1: {
-              Move.up: SpriteAnimation.fromFrameData(
-                levelToAnimationImg,
-                SpriteAnimationData.sequenced(
-                    amount: 4,
-                    stepTime: Stage.objectStepTime,
-                    textureSize: Stage.cellSize),
-              ),
-            },
-          },
+          levelToAnimations: levelToAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.belt,
             level: level,

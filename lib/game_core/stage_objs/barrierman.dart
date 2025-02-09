@@ -7,11 +7,12 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 import 'package:flutter/material.dart' hide Image;
 
 class Barrierman extends StageObj {
   /// 各レベルに対応する動きのパターン
-  final Map<int, EnemyMovePattern> movePatterns = {
+  static final Map<int, EnemyMovePattern> movePatterns = {
     1: EnemyMovePattern.followPlayer,
     2: EnemyMovePattern.followPlayer,
     3: EnemyMovePattern.followPlayer,
@@ -57,14 +58,61 @@ class Barrierman extends StageObj {
   /// バリアが残るターン数
   static int barrierTurns = 3;
 
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        Move.none:
+            SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      for (int i = 1; i <= 3; i++)
+        i: {
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1), 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 32, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 64, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 96, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 128, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 160, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 192, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 224, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+    };
+  }
+
   /// 経過ターン数
   int turns = 0;
 
   bool isFirstUpdate = true;
 
   Barrierman({
-    required Image barriermanImg,
-    required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
@@ -77,47 +125,7 @@ class Barrierman extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
-            for (int i = 1; i <= 3; i++)
-              i: {
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(barriermanImg,
-                      srcPosition: Vector2(256 * (i - 1), 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(barriermanImg,
-                      srcPosition: Vector2(256 * (i - 1) + 32, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(barriermanImg,
-                      srcPosition: Vector2(256 * (i - 1) + 64, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(barriermanImg,
-                      srcPosition: Vector2(256 * (i - 1) + 96, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(barriermanImg,
-                      srcPosition: Vector2(256 * (i - 1) + 128, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(barriermanImg,
-                      srcPosition: Vector2(256 * (i - 1) + 160, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(barriermanImg,
-                      srcPosition: Vector2(256 * (i - 1) + 192, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(barriermanImg,
-                      srcPosition: Vector2(256 * (i - 1) + 224, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-          },
+          levelToAnimations: levelToAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.barrierman,
             level: level,

@@ -6,6 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Guardian extends StageObj {
   /// 各レベルごとの画像のファイル名
@@ -33,14 +34,15 @@ class Guardian extends StageObj {
       };
 
   /// 前方3マスへの斬撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
-  final Map<Move, Vector2> attackAnimationOffset = {
+  static final Map<Move, Vector2> attackAnimationOffset = {
     Move.up: Vector2(0, -16.0),
     Move.down: Vector2(0, 16.0),
     Move.left: Vector2(-16.0, 0),
     Move.right: Vector2(16.0, 0)
   };
 
-  final Map<int, SpriteAnimation> arrowMagicAnimations;
+  /// 矢や魔法のアニメーション
+  static Map<int, SpriteAnimation> arrowMagicAnimations = {};
 
   /// 前方3マスへの斬撃の1コマの時間
   static const double attackStepTime = 32.0 / Stage.playerSpeed / 5;
@@ -52,7 +54,207 @@ class Guardian extends StageObj {
   static const double subAttackStepTime = 32.0 / Stage.playerSpeed / 4;
 
   /// 飛び道具の最大飛距離
-  final int maxReach = 5;
+  static const int maxReach = 5;
+
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// チャンネル->オブジェクトのレベル->向き->攻撃時アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<int, Map<Move, SpriteAnimation>>>
+      levelToAttackAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    final arrowMagicImgs = {
+      for (final entry in arrowMagicImageFileNames.entries)
+        entry.key: await Flame.images.load(entry.value)
+    };
+    final List<Map<Move, Image>> swordForwardAttackImgs = [
+      for (final names in swordFowardAttackImageFileNames)
+        {
+          for (final entry in names.entries)
+            entry.key: await Flame.images.load(entry.value)
+        }
+    ];
+    final Map<int, Image> swordRoundAttackImgs = {
+      for (final entry in swordRoundAttackImageFileNames.entries)
+        entry.key: await Flame.images.load(entry.value)
+    };
+    final Map<int, Image> subAttackImgs = {
+      for (final entry in Guardian.subAttackImageFileNames.entries)
+        entry.key: await Flame.images.load(entry.value)
+    };
+    levelToAnimationsS = {
+      0: {
+        for (final move in MoveExtent.straights)
+          move: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      for (int i = 0; i < 3; i++)
+        i + 1: {
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 128 + 64, 0), srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 128 + 96, 0), srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 128 + 32, 0), srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 128, 0), srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+    };
+    levelToAttackAnimationsS = {
+      // 剣で前方3マスを攻撃
+      1: {
+        for (int i in [0, 2, 3])
+          i: {
+            for (final move in MoveExtent.straights)
+              move:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
+          },
+        1: {
+          Move.down: SpriteAnimation.fromFrameData(
+            swordForwardAttackImgs[0][Move.down]!,
+            SpriteAnimationData.sequenced(
+                amount: 5,
+                stepTime: attackStepTime,
+                textureSize: Vector2(96.0, 64.0)),
+          ),
+          Move.up: SpriteAnimation.fromFrameData(
+            swordForwardAttackImgs[0][Move.up]!,
+            SpriteAnimationData.sequenced(
+                amount: 5,
+                stepTime: attackStepTime,
+                textureSize: Vector2(96.0, 64.0)),
+          ),
+          Move.left: SpriteAnimation.fromFrameData(
+            swordForwardAttackImgs[0][Move.left]!,
+            SpriteAnimationData.sequenced(
+                amount: 5,
+                stepTime: attackStepTime,
+                textureSize: Vector2(64.0, 96.0)),
+          ),
+          Move.right: SpriteAnimation.fromFrameData(
+            swordForwardAttackImgs[0][Move.right]!,
+            SpriteAnimationData.sequenced(
+                amount: 5,
+                stepTime: attackStepTime,
+                textureSize: Vector2(64.0, 96.0)),
+          ),
+        },
+      },
+      // 剣で周囲8マスを攻撃
+      2: {
+        for (int i = 0; i <= 1; i++)
+          i: {
+            for (final move in MoveExtent.straights)
+              move:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
+          },
+        for (int i = 2; i <= 3; i++)
+          i: {
+            Move.down: SpriteAnimation.fromFrameData(
+              swordRoundAttackImgs[i]!,
+              SpriteAnimationData.sequenced(
+                  amount: 20,
+                  stepTime: roundAttackStepTime,
+                  textureSize: Vector2.all(96.0)),
+            ),
+            Move.up: SpriteAnimation.spriteList(
+              [
+                for (int j = 10; j < 30; j++)
+                  Sprite(swordRoundAttackImgs[i]!,
+                      srcPosition: Vector2((j % 20) * 96, 0),
+                      srcSize: Vector2.all(96.0))
+              ],
+              stepTime: roundAttackStepTime,
+            ),
+            Move.left: SpriteAnimation.spriteList(
+              [
+                for (int j = 5; j < 25; j++)
+                  Sprite(swordRoundAttackImgs[i]!,
+                      srcPosition: Vector2((j % 20) * 96, 0),
+                      srcSize: Vector2.all(96.0))
+              ],
+              stepTime: roundAttackStepTime,
+            ),
+            Move.right: SpriteAnimation.spriteList(
+              [
+                for (int j = 15; j < 35; j++)
+                  Sprite(swordRoundAttackImgs[i]!,
+                      srcPosition: Vector2((j % 20) * 96, 0),
+                      srcSize: Vector2.all(96.0))
+              ],
+              stepTime: roundAttackStepTime,
+            ),
+          },
+      },
+      // 飛び道具で攻撃
+      3: {
+        for (int i = 0; i <= 1; i++)
+          i: {
+            for (final move in MoveExtent.straights)
+              move:
+                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
+          },
+        for (int i = 2; i <= 3; i++)
+          i: {
+            Move.down: SpriteAnimation.spriteList(
+              [
+                for (int j = 0; j < 4; j++)
+                  Sprite(subAttackImgs[i]!,
+                      srcPosition: Vector2(j * 32, 0), srcSize: Stage.cellSize)
+              ],
+              stepTime: subAttackStepTime,
+            ),
+            Move.up: SpriteAnimation.spriteList(
+              [
+                for (int j = 4; j < 8; j++)
+                  Sprite(subAttackImgs[i]!,
+                      srcPosition: Vector2(j * 32, 0), srcSize: Stage.cellSize)
+              ],
+              stepTime: subAttackStepTime,
+            ),
+            Move.left: SpriteAnimation.spriteList(
+              [
+                for (int j = 8; j < 12; j++)
+                  Sprite(subAttackImgs[i]!,
+                      srcPosition: Vector2(j * 32, 0), srcSize: Stage.cellSize)
+              ],
+              stepTime: subAttackStepTime,
+            ),
+            Move.right: SpriteAnimation.spriteList(
+              [
+                for (int j = 12; j < 16; j++)
+                  Sprite(subAttackImgs[i]!,
+                      srcPosition: Vector2(j * 32, 0), srcSize: Stage.cellSize)
+              ],
+              stepTime: subAttackStepTime,
+            ),
+          },
+      },
+    };
+    arrowMagicAnimations = {
+      for (int i = 0; i <= 1; i++)
+        i: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      2: SpriteAnimation.spriteList([
+        Sprite(arrowMagicImgs[2]!, srcSize: Stage.cellSize),
+      ], stepTime: 1.0),
+      3: SpriteAnimation.spriteList([
+        Sprite(arrowMagicImgs[3]!,
+            srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+        Sprite(arrowMagicImgs[3]!,
+            srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+      ], stepTime: 1.0)
+    };
+  }
 
   /// 飛び道具が飛ぶ時間
   double arrowMagicMoveTime(int dist) =>
@@ -60,30 +262,11 @@ class Guardian extends StageObj {
 
   Guardian({
     required super.pos,
-    required Image guardianImg,
-    required List<Map<Move, Image>> swordForwardAttackImgs,
-    required Map<int, Image> swordRoundAttackImgs,
-    required Map<int, Image> subAttackImgs,
-    required Map<int, Image> arrowMagicImgs,
-    required Image errorImg,
     required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
     int level = 1,
-  })  : arrowMagicAnimations = {
-          for (int i = 0; i <= 1; i++)
-            i: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-          2: SpriteAnimation.spriteList([
-            Sprite(arrowMagicImgs[2]!, srcSize: Stage.cellSize),
-          ], stepTime: 1.0),
-          3: SpriteAnimation.spriteList([
-            Sprite(arrowMagicImgs[3]!,
-                srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
-            Sprite(arrowMagicImgs[3]!,
-                srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
-          ], stepTime: 1.0)
-        },
-        super(
+  }) : super(
           animationComponent: SpriteAnimationComponent(
             priority: Stage.movingPriority,
             size: Stage.cellSize,
@@ -94,171 +277,8 @@ class Guardian extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              for (final move in MoveExtent.straights)
-                move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-            },
-            for (int i = 0; i < 3; i++)
-              i + 1: {
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(guardianImg,
-                      srcPosition: Vector2(i * 128 + 64, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(guardianImg,
-                      srcPosition: Vector2(i * 128 + 96, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(guardianImg,
-                      srcPosition: Vector2(i * 128 + 32, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(guardianImg,
-                      srcPosition: Vector2(i * 128, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-          },
-          levelToAttackAnimations: {
-            // 剣で前方3マスを攻撃
-            1: {
-              for (int i in [0, 2, 3])
-                i: {
-                  for (final move in MoveExtent.straights)
-                    move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                        stepTime: 1.0)
-                },
-              1: {
-                Move.down: SpriteAnimation.fromFrameData(
-                  swordForwardAttackImgs[0][Move.down]!,
-                  SpriteAnimationData.sequenced(
-                      amount: 5,
-                      stepTime: attackStepTime,
-                      textureSize: Vector2(96.0, 64.0)),
-                ),
-                Move.up: SpriteAnimation.fromFrameData(
-                  swordForwardAttackImgs[0][Move.up]!,
-                  SpriteAnimationData.sequenced(
-                      amount: 5,
-                      stepTime: attackStepTime,
-                      textureSize: Vector2(96.0, 64.0)),
-                ),
-                Move.left: SpriteAnimation.fromFrameData(
-                  swordForwardAttackImgs[0][Move.left]!,
-                  SpriteAnimationData.sequenced(
-                      amount: 5,
-                      stepTime: attackStepTime,
-                      textureSize: Vector2(64.0, 96.0)),
-                ),
-                Move.right: SpriteAnimation.fromFrameData(
-                  swordForwardAttackImgs[0][Move.right]!,
-                  SpriteAnimationData.sequenced(
-                      amount: 5,
-                      stepTime: attackStepTime,
-                      textureSize: Vector2(64.0, 96.0)),
-                ),
-              },
-            },
-            // 剣で周囲8マスを攻撃
-            2: {
-              for (int i = 0; i <= 1; i++)
-                i: {
-                  for (final move in MoveExtent.straights)
-                    move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                        stepTime: 1.0)
-                },
-              for (int i = 2; i <= 3; i++)
-                i: {
-                  Move.down: SpriteAnimation.fromFrameData(
-                    swordRoundAttackImgs[i]!,
-                    SpriteAnimationData.sequenced(
-                        amount: 20,
-                        stepTime: roundAttackStepTime,
-                        textureSize: Vector2.all(96.0)),
-                  ),
-                  Move.up: SpriteAnimation.spriteList(
-                    [
-                      for (int j = 10; j < 30; j++)
-                        Sprite(swordRoundAttackImgs[i]!,
-                            srcPosition: Vector2((j % 20) * 96, 0),
-                            srcSize: Vector2.all(96.0))
-                    ],
-                    stepTime: roundAttackStepTime,
-                  ),
-                  Move.left: SpriteAnimation.spriteList(
-                    [
-                      for (int j = 5; j < 25; j++)
-                        Sprite(swordRoundAttackImgs[i]!,
-                            srcPosition: Vector2((j % 20) * 96, 0),
-                            srcSize: Vector2.all(96.0))
-                    ],
-                    stepTime: roundAttackStepTime,
-                  ),
-                  Move.right: SpriteAnimation.spriteList(
-                    [
-                      for (int j = 15; j < 35; j++)
-                        Sprite(swordRoundAttackImgs[i]!,
-                            srcPosition: Vector2((j % 20) * 96, 0),
-                            srcSize: Vector2.all(96.0))
-                    ],
-                    stepTime: roundAttackStepTime,
-                  ),
-                },
-            },
-            // 飛び道具で攻撃
-            3: {
-              for (int i = 0; i <= 1; i++)
-                i: {
-                  for (final move in MoveExtent.straights)
-                    move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                        stepTime: 1.0)
-                },
-              for (int i = 2; i <= 3; i++)
-                i: {
-                  Move.down: SpriteAnimation.spriteList(
-                    [
-                      for (int j = 0; j < 4; j++)
-                        Sprite(subAttackImgs[i]!,
-                            srcPosition: Vector2(j * 32, 0),
-                            srcSize: Stage.cellSize)
-                    ],
-                    stepTime: subAttackStepTime,
-                  ),
-                  Move.up: SpriteAnimation.spriteList(
-                    [
-                      for (int j = 4; j < 8; j++)
-                        Sprite(subAttackImgs[i]!,
-                            srcPosition: Vector2(j * 32, 0),
-                            srcSize: Stage.cellSize)
-                    ],
-                    stepTime: subAttackStepTime,
-                  ),
-                  Move.left: SpriteAnimation.spriteList(
-                    [
-                      for (int j = 8; j < 12; j++)
-                        Sprite(subAttackImgs[i]!,
-                            srcPosition: Vector2(j * 32, 0),
-                            srcSize: Stage.cellSize)
-                    ],
-                    stepTime: subAttackStepTime,
-                  ),
-                  Move.right: SpriteAnimation.spriteList(
-                    [
-                      for (int j = 12; j < 16; j++)
-                        Sprite(subAttackImgs[i]!,
-                            srcPosition: Vector2(j * 32, 0),
-                            srcSize: Stage.cellSize)
-                    ],
-                    stepTime: subAttackStepTime,
-                  ),
-                },
-            },
-          },
+          levelToAnimations: levelToAnimationsS,
+          levelToAttackAnimations: levelToAttackAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.guardian,
             level: level,
