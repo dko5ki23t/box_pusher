@@ -1422,9 +1422,12 @@ abstract class StageObj {
               (stage.get(getItemPos) as Shop).isItemPlace) {
             // コインを支払ってオブジェクト出現
             stage.coins.actual -= obj.shopInfo.payCoins;
-            // TODO: 押せるオブジェクトだけとは限らない
-            stage.boxes.add(stage.createObject(
-                typeLevel: obj.shopInfo.getObj, pos: getItemPos));
+            if (obj.shopInfo.getObj.type == StageObjType.warp) {
+              stage.setStaticType(getItemPos, StageObjType.warp);
+            } else {
+              stage.boxes.add(stage.createObject(
+                  typeLevel: obj.shopInfo.getObj, pos: getItemPos));
+            }
             // オブジェクト出現エフェクトを表示
             stage.showSpawnEffect(getItemPos);
           }

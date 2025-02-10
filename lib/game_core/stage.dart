@@ -600,9 +600,6 @@ class Stage {
               setStaticType(p, StageObjType.treasureBox, level: item.level);
             } else if (item.type == StageObjType.warp) {
               setStaticType(p, StageObjType.warp);
-              warpPoints.add(p);
-              // ワープの番号を設定
-              (_staticObjs[p] as Warp).setWarpNo(warpPoints.length);
             } else if (item.type == StageObjType.belt) {
               setStaticType(p, StageObjType.belt);
               assert(get(p).runtimeType == Belt,
@@ -686,9 +683,6 @@ class Stage {
                     level: item.level);
               } else if (item.type == StageObjType.warp) {
                 setStaticType(appear, StageObjType.warp);
-                warpPoints.add(appear);
-                // ワープの番号を設定
-                (_staticObjs[appear] as Warp).setWarpNo(warpPoints.length);
               } else if (item.type == StageObjType.belt) {
                 setStaticType(appear, StageObjType.belt);
                 assert(get(appear).runtimeType == Belt,
@@ -979,6 +973,10 @@ class Stage {
       animals.add(_staticObjs[p]!);
     } else if (_staticObjs[p]!.type == StageObjType.spawner) {
       spawners.add(_staticObjs[p]!);
+    } else if (_staticObjs[p]!.type == StageObjType.warp) {
+      warpPoints.add(p);
+      // ワープの番号を設定
+      (_staticObjs[p] as Warp).setWarpNo(warpPoints.length);
     }
   }
 

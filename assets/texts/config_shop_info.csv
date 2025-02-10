@@ -5,3 +5,13 @@ pointX, pointY, payObjType, payObjLevel, getObjType, getObjLevel
 -30, 32, coin, 100, drill, 1
 47, -47, coin, 999, jewel, 13
 45, 25, coin, 50, guardian, 1
+-28, 8, coin, 50, warp, 1
+23, -8, coin, 50, warp, 1
+15, -40, coin, 30, trap, 1
+0, 15, coin, 50, warp, 1
+-20, 33, coin, 30, canon, 1
+-45, 30, coin, 100, guardian, 3
+-18, -30, coin, 100, trap, 3
+25, 45, coin, 100, bomb, 3
+38, 22, coin, 200, warp, 1
+20, -45, coin, 100, bomb, 3
