@@ -621,8 +621,10 @@ class Tutorial {
           tutorialArea.addAll(
             [
               ButtonComponent(
-                onReleased: () {
+                onReleased: () async {
                   current = null;
+                  Config().showTutorial = false;
+                  await game.saveUserConfigData();
                 },
                 size: BoxPusherGame.baseSize,
                 button: CustomPainterComponent(

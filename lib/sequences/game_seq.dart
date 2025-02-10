@@ -809,9 +809,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // カメラズームをリセット
     game.camera.viewfinder.zoom = 1.0;
     // ステージ初期化
-    bool isContinueGame = stage.initialize(game.camera, game.stageData);
-    // つづきからの場合/今回初めてプレイではない場合はチュートリアルスキップ
-    if (isContinueGame || !addComponents) {
+    stage.initialize(game.camera, game.stageData);
+    // 今回初めてプレイではない場合はチュートリアルスキップ
+    if (!Config().showTutorial) {
       tutorial.current = null;
     }
 
@@ -1518,10 +1518,13 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // スペースキー->メニューを開く/チュートリアルを進める
     if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
-      if (!tutorial.onNextKey()) {
-        if (menuButton.onReleased != null) {
-          menuButton.onReleased!();
-        }
+      bool isLastTutorial = tutorial.current == TutorialState.other;
+      if (tutorial.onNextKey() && isLastTutorial) {
+        // チュートリアルが終了した場合
+        Config().showTutorial = false;
+        game.saveUserConfigData();
+      } else if (menuButton.onReleased != null) {
+        menuButton.onReleased!();
       }
     }
 

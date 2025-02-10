@@ -227,6 +227,9 @@ class Config {
   /// ゲーム音量(0~100)
   int audioVolume = 100;
 
+  /// チュートリアル表示が必要か
+  bool showTutorial = true;
+
   late Random random;
 
   /// 分布表示に使用する色

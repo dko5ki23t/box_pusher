@@ -558,8 +558,9 @@ abstract class StageObj {
     bool containStop,
   ) {
     final List<Move> cand = [];
+    // 氷で滑っておらず、
     // 今プレイヤーの移動先にいるなら移動しない
-    if (pos == player.pos + player.moving.point) {
+    if (forceMoving == Move.none && pos == player.pos + player.moving.point) {
       cand.add(Move.none);
     } else {
       if (containStop) {
@@ -579,6 +580,12 @@ abstract class StageObj {
         }
         if (!_isEnemyMoveAllowed(eTo, move, player, prohibitedPoints)) {
           continue;
+        }
+        // 氷で滑る先に移動可能ならその方向に動くこと確定
+        if (move == forceMoving) {
+          cand.clear();
+          cand.add(move);
+          break;
         }
         cand.add(move);
       }
@@ -609,8 +616,9 @@ abstract class StageObj {
     int pushableNum,
   ) {
     final Map<Move, Map<String, dynamic>> cand = {};
+    // 氷で滑っておらず、
     // 今プレイヤーの移動先にいるなら移動しない
-    if (pos == player.pos + player.moving.point) {
+    if (forceMoving == Move.none && pos == player.pos + player.moving.point) {
       cand[Move.none] = {
         "prohibitedPoints": prohibitedPoints,
         "pushings": <StageObj>[],
@@ -654,6 +662,11 @@ abstract class StageObj {
             "executings": executingsList,
           };
         }
+        // 氷で滑る先に移動可能ならその方向に動くこと確定
+        if (move == forceMoving) {
+          cand.removeWhere((key, value) => key != move);
+          break;
+        }
       }
     }
     if (cand.isNotEmpty) {
@@ -685,15 +698,16 @@ abstract class StageObj {
     Stage stage,
     Map<Point, Move> prohibitedPoints,
   ) {
+    // 滑っておらず、
     // 今ターゲットの移動先にいるなら移動しない
-    if (pos == target.pos + target.moving.point) {
+    if (forceMoving == Move.none && pos == target.pos + target.moving.point) {
       ret['move'] = Move.none;
-    } else if (Config().random.nextInt(6) == 0) {
+    } else if (forceMoving == Move.none && Config().random.nextInt(6) == 0) {
       ret['move'] = Move.none;
     } else {
       // ターゲットの方へ移動する/向きを変える
       final delta = target.pos - pos;
-      final List<Move> tmpCand = [];
+      final Set<Move> tmpCand = {};
       if (delta.x > 0) {
         tmpCand.add(Move.right);
       } else if (delta.x < 0) {
@@ -703,6 +717,10 @@ abstract class StageObj {
         tmpCand.add(Move.down);
       } else if (delta.y < 0) {
         tmpCand.add(Move.up);
+      }
+      // 滑っている場合は、プレイヤーの方じゃなくても候補に入れる
+      if (forceMoving != Move.none) {
+        tmpCand.add(forceMoving);
       }
       final List<Move> cand = [];
       for (final move in tmpCand) {
@@ -719,6 +737,12 @@ abstract class StageObj {
         }
         if (!_isEnemyMoveAllowed(eTo, move, player, prohibitedPoints)) {
           continue;
+        }
+        // 氷で滑る先に移動可能ならその方向に動くこと確定
+        if (move == forceMoving) {
+          cand.clear();
+          cand.add(move);
+          break;
         }
         cand.add(move);
       }
@@ -1049,6 +1073,8 @@ abstract class StageObj {
         break;
     }
 
+    // 氷で滑っている場合は解除する
+    forceMoving = Move.none;
     return ret;
   }
 
@@ -1274,8 +1300,10 @@ abstract class StageObj {
         stage.coins.actual += pushing.coins;
         stage.showGotCoinEffect(pushing.coins, toTo);
         pushing.remove();
-      } else if (stage.safeGetStaticObj(toTo).type == StageObjType.water) {
+      } else if (stage.safeGetStaticObj(toTo).type == StageObjType.water &&
+          i != mergeIndex) {
         // 押した先が氷なら滑るように設定
+        // ただし、マージしたなら滑らない
         stage.safeGetStaticObj(toTo).moving = moving;
       } else if (pushing.type == StageObjType.drill && executings[i]) {
         // ドリル使用時
@@ -1384,13 +1412,11 @@ abstract class StageObj {
             stage.showSpawnEffect(getItemPos);
           }
         }
-      } else if (obj.type == StageObjType.water) {
-        // 氷の上に立ったとき
-        forceMoving = moving;
       }
     }
     // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している
-    if (stage.safeGetStaticObj(pos).type == StageObjType.warp) {
+    final staticObj = stage.safeGetStaticObj(pos);
+    if (staticObj.type == StageObjType.warp) {
       // 移動先がワープだった場合
       Point orgPos = pos.copy();
       pos = stage.getWarpedPoint(pos);
@@ -1399,6 +1425,9 @@ abstract class StageObj {
       if (orgPos != pos) {
         Audio().playSound(Sound.warp);
       }
+    } else if (staticObj.type == StageObjType.water) {
+      // 氷の上に立ったとき
+      forceMoving = moving;
     }
   }
 

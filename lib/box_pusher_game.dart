@@ -270,6 +270,13 @@ class BoxPusherGame extends FlameGame
       log(e.toString());
     }
     Config().audioVolume = volume;
+    bool showTutorial = true;
+    try {
+      showTutorial = _userConfigData['showTutorial'];
+    } catch (e) {
+      log(e.toString());
+    }
+    Config().showTutorial = showTutorial;
   }
 
   /// 【デバッグ】文字列からセーブデータをインポート->成功したかどうかを返す
@@ -338,6 +345,7 @@ class BoxPusherGame extends FlameGame
   Future<void> saveUserConfigData() async {
     _userConfigData['controller'] = Config().playerControllButtonType.index;
     _userConfigData['volume'] = Config().audioVolume;
+    _userConfigData['showTutorial'] = Config().showTutorial;
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
@@ -359,6 +367,7 @@ class BoxPusherGame extends FlameGame
     return {
       'controller': PlayerControllButtonType.joyStick.index,
       'volume': 100,
+      'showTutorial': true,
     };
   }
 

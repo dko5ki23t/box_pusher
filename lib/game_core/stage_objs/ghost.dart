@@ -132,12 +132,6 @@ class Ghost extends StageObj {
       } else if (ret.containsKey('move')) {
         moving = ret['move'] as Move;
       }
-      if (forceMoving != Move.none) {
-        if (!ghosting) {
-          moving = forceMoving;
-        }
-        forceMoving = Move.none;
-      }
       movingAmount = 0;
     }
 
