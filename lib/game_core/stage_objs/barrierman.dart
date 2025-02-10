@@ -24,9 +24,9 @@ class Barrierman extends StageObj {
       case 1:
         return const Color(0xff000000);
       case 2:
-        return const Color(0x307092BE);
+        return const Color(0xff7092BE);
       case 3:
-        return const Color(0x30A349A4);
+        return const Color(0xffA349A4);
       default:
         return Colors.black;
     }
@@ -38,9 +38,9 @@ class Barrierman extends StageObj {
       case 1:
         return const Color(0x307F7F7F);
       case 2:
-        return const Color(0x3089B2E8);
+        return const Color(0x6089B2E8);
       case 3:
-        return const Color(0x30C8BFE7);
+        return const Color(0x60C8BFE7);
       default:
         return Colors.black;
     }

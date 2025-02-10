@@ -1337,7 +1337,9 @@ abstract class StageObj {
     if (type == StageObjType.player) {
       // プレイヤー限定の処理
       final player = this as Player;
-      final obj = stage.get(pos);
+      //final obj = stage.get(pos);
+      // get()だと、アイテムを押してる場合はそのアイテムを取得してしまうので、staticObjをgetする
+      final obj = stage.safeGetStaticObj(pos);
       if (obj.type == StageObjType.treasureBox) {
         // 移動先が宝箱だった場合
         // コイン獲得

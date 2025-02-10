@@ -1519,11 +1519,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     if (event is KeyDownEvent &&
         keysPressed.contains(LogicalKeyboardKey.space)) {
       bool isLastTutorial = tutorial.current == TutorialState.other;
-      if (tutorial.onNextKey() && isLastTutorial) {
+      bool tutorialRet = tutorial.onNextKey();
+      if (tutorialRet && isLastTutorial) {
         // チュートリアルが終了した場合
         Config().showTutorial = false;
         game.saveUserConfigData();
-      } else if (menuButton.onReleased != null) {
+      } else if (!tutorialRet && menuButton.onReleased != null) {
         menuButton.onReleased!();
       }
     }
