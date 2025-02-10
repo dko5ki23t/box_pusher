@@ -1261,6 +1261,10 @@ abstract class StageObj {
       }
       toTo -= moving.point;
     }
+    // マージしたのなら、一旦氷による滑りは無くす
+    if (mergeIndex != -1) {
+      forceMoving = Move.none;
+    }
 
     // 押したオブジェクト位置更新
     toTo = pos + moving.point;
