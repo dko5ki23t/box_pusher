@@ -222,4 +222,7 @@ class Canon extends StageObj {
   // ポケットに入れていてもupdate()する
   @override
   bool get updateInPocket => true;
+
+  @override
+  int get weight => 1;
 }

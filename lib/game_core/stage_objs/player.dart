@@ -1,3 +1,4 @@
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -256,7 +257,7 @@ class Player extends StageObj {
     if (pocketItem == null) {
       // 目の前のオブジェクトをポケットに入れる
       final target = stage.get(pos + vector.point);
-      // 押せるものなら入れることができる
+      // 押せるものかつ重さが0なら入れることができる
       if (target.pushable) {
         pocketItem = target;
         pocketItem?.pos = pos;
@@ -285,6 +286,8 @@ class Player extends StageObj {
     // アーマー能力判定
     if (isAbilityAvailable(PlayerAbility.armer) && armerRecoveryTurns == 0) {
       armerRecoveryTurns = armerNeedRecoveryTurns;
+      // ダメージを負った音を鳴らす
+      Audio().playSound(Sound.playerDamaged);
       return false;
     } else {
       return true;

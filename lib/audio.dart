@@ -25,6 +25,9 @@ enum Sound {
 
   /// トラップレベル1、穴に落として敵を倒す
   trap1,
+
+  /// プレイヤーがダメージを負った
+  playerDamaged,
 }
 
 extension SoundExtent on Sound {
@@ -44,6 +47,8 @@ extension SoundExtent on Sound {
         return 'audio/warp.mp3';
       case Sound.trap1:
         return 'audio/trap1.mp3';
+      case Sound.playerDamaged:
+        return 'audio/player_damaged.mp3';
     }
   }
 
@@ -53,6 +58,7 @@ extension SoundExtent on Sound {
       case Sound.explode:
       case Sound.warp:
       case Sound.trap1:
+      case Sound.playerDamaged:
         return 0.8 * Config().audioVolume * 0.01;
       case Sound.decide:
       case Sound.getSkill:

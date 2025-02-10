@@ -518,6 +518,9 @@ abstract class StageObj {
   /// 他オブジェクトに重ねているか（trueの場合、Stage.get()で取得する対象にならない）
   bool get isOverlay => false;
 
+  /// 重さ(押すにはその分のアイテム個数＋重りを連ねて押さないといけない)
+  int get weight => 0;
+
   /// 攻撃を受ける
   /// やられたかどうかを返す
   bool hit(int damageLevel, Stage stage) {
@@ -1112,6 +1115,9 @@ abstract class StageObj {
     // マージするからここまでは押せるよ、なpushingsのリスト
     List<StageObj> pushingsSave = [];
     List<bool> executingsSave = [];
+
+    /// 同時に押しているアイテムの個数＋重り分の重さ
+    int pushingWeight = 0;
     int end = pushableNum;
     if (end < 0) {
       final range = stage.stageRB - stage.stageLT;
@@ -1137,7 +1143,10 @@ abstract class StageObj {
           }
           stopBecauseDrill = true;
         } else {
-          if (toToObj.stopping) {
+          if (toObj.weight > pushingWeight) {
+            // 押すための重さが足りない
+            breakPushing = true;
+          } else if (toToObj.stopping) {
             // 押した先が停止物
             breakPushing = true;
           } else if (prohibitedPoints.containsKey(toTo) &&
@@ -1180,6 +1189,8 @@ abstract class StageObj {
       // 押すオブジェクトリストに追加
       pushingsList.add(stage.boxes.firstWhere((element) => element.pos == to));
       executingsList.add(executing);
+      // 同時に押しているアイテムの重さ加算
+      ++pushingWeight;
       // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
       prohibitedPoints[toTo] = Move.none;
       if (stopBecauseDrill) {
