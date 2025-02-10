@@ -4,10 +4,11 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Ghost extends StageObj {
   /// 各レベルに対応する動きのパターン
-  final Map<int, EnemyMovePattern> movePatterns = {
+  static final Map<int, EnemyMovePattern> movePatterns = {
     1: EnemyMovePattern.followPlayerWithGhosting,
     2: EnemyMovePattern.followPlayerWithGhosting,
     3: EnemyMovePattern.followPlayerWithGhosting,
@@ -16,9 +17,58 @@ class Ghost extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'ghost.png';
 
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// チャンネル->オブジェクトのレベル->向き->攻撃時アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<int, Map<Move, SpriteAnimation>>>
+      levelToAttackAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        Move.none:
+            SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      for (int i = 1; i <= 3; i++)
+        i: {
+          Move.none: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(128 * (i - 1), 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(128 * (i - 1) + 32, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+    };
+    levelToAttackAnimationsS = {
+      1: {
+        0: {
+          Move.none:
+              SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+        },
+        for (int i = 1; i <= 3; i++)
+          i: {
+            Move.none: SpriteAnimation.spriteList([
+              Sprite(baseImg,
+                  srcPosition: Vector2(128 * (i - 1) + 64, 0),
+                  srcSize: Stage.cellSize),
+              Sprite(baseImg,
+                  srcPosition: Vector2(128 * (i - 1) + 96, 0),
+                  srcSize: Stage.cellSize),
+            ], stepTime: Stage.objectStepTime),
+          },
+      },
+    };
+  }
+
+  /// ゴースト状態になってからの経過ターン数
+  int ghostTurns = 0;
+
   Ghost({
-    required Image ghostImg,
-    required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
@@ -31,42 +81,8 @@ class Ghost extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
-            for (int i = 1; i <= 3; i++)
-              i: {
-                Move.none: SpriteAnimation.spriteList([
-                  Sprite(ghostImg,
-                      srcPosition: Vector2(128 * (i - 1), 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(ghostImg,
-                      srcPosition: Vector2(128 * (i - 1) + 32, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-          },
-          levelToAttackAnimations: {
-            1: {
-              0: {
-                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-              },
-              for (int i = 1; i <= 3; i++)
-                i: {
-                  Move.none: SpriteAnimation.spriteList([
-                    Sprite(ghostImg,
-                        srcPosition: Vector2(128 * (i - 1) + 64, 0),
-                        srcSize: Stage.cellSize),
-                    Sprite(ghostImg,
-                        srcPosition: Vector2(128 * (i - 1) + 96, 0),
-                        srcSize: Stage.cellSize),
-                  ], stepTime: Stage.objectStepTime),
-                },
-            },
-          },
+          levelToAnimations: levelToAnimationsS,
+          levelToAttackAnimations: levelToAttackAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.ghost,
             level: level,
@@ -92,6 +108,14 @@ class Ghost extends StageObj {
   ) {
     if (playerStartMoving) {
       playerStartMovingFlag = true;
+      if ((ghostTurns > 0 && (ghostTurns == 1 || ghostTurns % 3 == 0)) &&
+          level > 1) {
+        // 火の玉を設置
+        final fire = stage.createObject(
+            typeLevel: StageObjTypeLevel(type: StageObjType.fire, level: level),
+            pos: pos);
+        stage.enemies.add(fire);
+      }
       // 移動/ゴースト化/ゴースト解除を決定
       final ret = super.enemyMove(
           movePatterns[level]!, vector, stage.player, stage, prohibitedPoints,
@@ -102,6 +126,7 @@ class Ghost extends StageObj {
         vector = vector;
       } else if (ret.containsKey('ghost') && !ret['ghost']! && ghosting) {
         ghosting = false;
+        ghostTurns = 0;
         // 元のアニメーションに変更
         vector = vector;
       } else if (ret.containsKey('move')) {
@@ -135,6 +160,10 @@ class Ghost extends StageObj {
         if (stage.player.pos == pos && !ghosting) {
           // 同じマスにいる場合はアーマー関係なくゲームオーバー
           stage.isGameover = true;
+        }
+        // ゴースト継続ターン追加
+        if (ghosting) {
+          ghostTurns++;
         }
         moving = Move.none;
         movingAmount = 0;
@@ -179,4 +208,17 @@ class Ghost extends StageObj {
 
   @override
   int get coins => level * 2;
+
+  // Stage.get()の対象にならない(オブジェクトと重なってるのに敵の移動先にならないように)
+  @override
+  bool get isOverlay => ghosting;
+
+  // ghostTurnsの保存/読み込み
+  @override
+  int get arg => ghostTurns;
+
+  @override
+  void loadArg(int val) {
+    ghostTurns = val;
+  }
 }

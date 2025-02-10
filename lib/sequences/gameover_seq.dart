@@ -11,8 +11,8 @@ class GameoverSeq extends Sequence with KeyboardHandler {
   late final TextComponent gameoverText;
   late final TextComponent scoreText;
   late final GameButtonGroup buttonGroup;
-  late final GameTextButton restartButton;
-  late final GameTextButton toTitleButton;
+  late final GameMenuButton restartButton;
+  late final GameMenuButton toTitleButton;
 
   @override
   Future<void> onLoad() async {
@@ -43,20 +43,24 @@ class GameoverSeq extends Sequence with KeyboardHandler {
         ),
       ),
     );
-    restartButton = GameTextButton(
-      size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 300.0),
-      anchor: Anchor.center,
-      text: loc.tryAgain,
-      onReleased: () => game.pushAndInitGame(),
-    );
-    toTitleButton = GameTextButton(
-      size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 350.0),
-      anchor: Anchor.center,
-      text: loc.toTitle,
-      onReleased: () => game.pushSeqNamed('title'),
-    );
+    restartButton = GameMenuButton(
+        size: Vector2(120.0, 30.0),
+        position: Vector2(180.0, 330.0),
+        anchor: Anchor.center,
+        text: loc.tryAgain,
+        onReleased: () async {
+          await game.clearAndSaveStageData();
+          game.pushAndInitGame();
+        });
+    toTitleButton = GameMenuButton(
+        size: Vector2(120.0, 30.0),
+        position: Vector2(180.0, 380.0),
+        anchor: Anchor.center,
+        text: loc.toTitle,
+        onReleased: () async {
+          await game.clearAndSaveStageData();
+          game.pushSeqNamed('title');
+        });
     buttonGroup = GameButtonGroup(buttons: [
       restartButton,
       toTitleButton,

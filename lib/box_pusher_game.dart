@@ -3,8 +3,6 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:box_pusher/audio.dart';
-import 'package:box_pusher/components/confirm_delete_stage_data_dialog.dart';
-import 'package:box_pusher/components/confirm_exit_dialog.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
 import 'package:box_pusher/components/debug_view_distributions_dialog.dart';
 import 'package:box_pusher/components/version_log_dialog.dart';
@@ -13,6 +11,8 @@ import 'package:box_pusher/custom_scale_detector.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
+import 'package:box_pusher/sequences/confirm_delete_stage_data_seq.dart';
+import 'package:box_pusher/sequences/confirm_exit_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
 import 'package:box_pusher/sequences/loading_seq.dart';
@@ -192,20 +192,6 @@ class BoxPusherGame extends FlameGame
           );
         },
       ),
-      'confirm_delete_stage_data_dialog': OverlayRoute(
-        (context, game) {
-          return ConfirmDeleteStageDataDialog(
-            game: this,
-          );
-        },
-      ),
-      'confirm_exit_dialog': OverlayRoute(
-        (context, game) {
-          return ConfirmExitDialog(
-            game: this,
-          );
-        },
-      ),
       'debug_view_distributions_dialog': OverlayRoute(
         (context, game) {
           return DebugViewDistributionsDialog(
@@ -223,6 +209,9 @@ class BoxPusherGame extends FlameGame
           'menu': Route(MenuSeq.new, transparent: true),
           'gameover': Route(GameoverSeq.new, transparent: true),
           'clear': Route(ClearSeq.new, transparent: true),
+          'confirm_exit': Route(ConfirmExitSeq.new, transparent: true),
+          'confirm_delete_stage_data':
+              Route(ConfirmDeleteStageDataSeq.new, transparent: true),
         }..addAll(_overlays),
         initialRoute: 'title',
       ),
@@ -281,6 +270,13 @@ class BoxPusherGame extends FlameGame
       log(e.toString());
     }
     Config().audioVolume = volume;
+    bool showTutorial = true;
+    try {
+      showTutorial = _userConfigData['showTutorial'];
+    } catch (e) {
+      log(e.toString());
+    }
+    Config().showTutorial = showTutorial;
   }
 
   /// 【デバッグ】文字列からセーブデータをインポート->成功したかどうかを返す
@@ -349,6 +345,7 @@ class BoxPusherGame extends FlameGame
   Future<void> saveUserConfigData() async {
     _userConfigData['controller'] = Config().playerControllButtonType.index;
     _userConfigData['volume'] = Config().audioVolume;
+    _userConfigData['showTutorial'] = Config().showTutorial;
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
@@ -370,6 +367,7 @@ class BoxPusherGame extends FlameGame
     return {
       'controller': PlayerControllButtonType.joyStick.index,
       'volume': 100,
+      'showTutorial': true,
     };
   }
 
@@ -535,7 +533,7 @@ class BoxPusherGame extends FlameGame
         gameSeq.isReady = false;
         pushSeqNamed('game');
         pushSeqNamed('loading');
-        gameSeq.initialize();
+        gameSeq.initialize(addComponents: false);
         return;
       }
     }

@@ -4,10 +4,11 @@ import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Smoker extends StageObj {
   /// 各レベルに対応する動きのパターン
-  final Map<int, EnemyMovePattern> movePatterns = {
+  static final Map<int, EnemyMovePattern> movePatterns = {
     1: EnemyMovePattern.walkRandomOrStop,
     2: EnemyMovePattern.walkRandomOrStop,
     3: EnemyMovePattern.walkRandomOrStop,
@@ -17,17 +18,64 @@ class Smoker extends StageObj {
   static String get imageFileName => 'smoker.png';
 
   /// 煙を吐く間隔
-  static int smokeAttackPeriod = 5;
+  static const int smokeAttackPeriod = 5;
 
   /// 煙が残るターン数
-  static int smokeTurns = 3;
+  static const int smokeTurns = 3;
+
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        Move.none:
+            SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      for (int i = 1; i <= 3; i++)
+        i: {
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1), 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 32, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 64, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 96, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 128, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 160, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 192, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(256 * (i - 1) + 224, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+    };
+  }
 
   /// 経過ターン数
   int turns = 0;
 
   Smoker({
-    required Image smokerImg,
-    required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
@@ -40,47 +88,7 @@ class Smoker extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
-            for (int i = 1; i <= 3; i++)
-              i: {
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(smokerImg,
-                      srcPosition: Vector2(256 * (i - 1), 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(smokerImg,
-                      srcPosition: Vector2(256 * (i - 1) + 32, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(smokerImg,
-                      srcPosition: Vector2(256 * (i - 1) + 64, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(smokerImg,
-                      srcPosition: Vector2(256 * (i - 1) + 96, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(smokerImg,
-                      srcPosition: Vector2(256 * (i - 1) + 128, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(smokerImg,
-                      srcPosition: Vector2(256 * (i - 1) + 160, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(smokerImg,
-                      srcPosition: Vector2(256 * (i - 1) + 192, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(smokerImg,
-                      srcPosition: Vector2(256 * (i - 1) + 224, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-          },
+          levelToAnimations: levelToAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.smoker,
             level: level,
@@ -108,8 +116,7 @@ class Smoker extends StageObj {
         final smoke = stage.createObject(
             typeLevel:
                 StageObjTypeLevel(type: StageObjType.smoke, level: level),
-            pos: pos,
-            vector: Move.left);
+            pos: pos);
         stage.enemies.add(smoke);
       } else {
         final ret = super.enemyMove(

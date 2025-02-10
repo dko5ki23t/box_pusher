@@ -1,4 +1,5 @@
 import 'package:box_pusher/audio.dart';
+import 'package:box_pusher/components/rounded_component.dart';
 import 'package:box_pusher/config.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -16,8 +17,7 @@ class GameButton extends PositionComponent with TapCallbacks {
 
   final String? keyName;
 
-  late final RectangleComponent button;
-  late final RectangleComponent buttonTop;
+  late final RoundedComponent button;
 
   PositionComponent? child;
 
@@ -38,8 +38,14 @@ class GameButton extends PositionComponent with TapCallbacks {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 3;
 
-  /// 無効なボタンのPaint
+  /// 無効なボタンの枠線のPaint
   final Paint _disabledButtonFramePaint = Paint()
+    ..color = Colors.grey
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3;
+
+  /// 無効なボタンのPaint
+  final Paint _disabledButtonPaint = Paint()
     ..color = Colors.grey
     ..style = PaintingStyle.fill;
 
@@ -54,19 +60,44 @@ class GameButton extends PositionComponent with TapCallbacks {
     ..color = Colors.transparent
     ..style = PaintingStyle.fill;
 
-  set enabledBgColor(Color color) => _enabledButtonPaint.color = color;
-  set enabledFrameColor(Color color) => _enabledButtonFramePaint.color = color;
-  set focusedFrameColor(Color color) => _focusedButtonFramePaint.color = color;
-  set disabledFrameColor(Color color) =>
-      _disabledButtonFramePaint.color = color;
-  set enabledPressedBgColor(Color color) =>
-      _enabledPressedButtonPaint.color = color;
+  set enabledBgColor(Color color) {
+    _enabledButtonPaint.color = color;
+    _colorButtons();
+  }
 
-  void _paintButtons() {
-    button.paint = enabled
-        ? (focused ? _focusedButtonFramePaint : _enabledButtonFramePaint)
-        : _disabledButtonFramePaint;
-    buttonTop.paint = enabled ? _enabledButtonPaint : _transparentPaint;
+  set enabledFrameColor(Color color) {
+    _enabledButtonFramePaint.color = color;
+    _colorButtons();
+  }
+
+  set focusedFrameColor(Color color) {
+    _focusedButtonFramePaint.color = color;
+    _colorButtons();
+  }
+
+  set disabledFrameColor(Color color) {
+    _disabledButtonFramePaint.color = color;
+    _colorButtons();
+  }
+
+  set disabledBgColor(Color color) {
+    _disabledButtonPaint.color = color;
+    _colorButtons();
+  }
+
+  set enabledPressedBgColor(Color color) {
+    _enabledPressedButtonPaint.color = color;
+    _colorButtons();
+  }
+
+  void _colorButtons() {
+    button.borderColor = enabled
+        ? (focused
+            ? _focusedButtonFramePaint.color
+            : _enabledButtonFramePaint.color)
+        : _disabledButtonFramePaint.color;
+    button.color =
+        enabled ? _enabledButtonPaint.color : _disabledButtonPaint.color;
   }
 
   GameButton({
@@ -86,20 +117,18 @@ class GameButton extends PositionComponent with TapCallbacks {
   }) : super(size: size) {
     _enabled = enabled;
     _focused = enabled ? focused : false;
-    buttonTop = RectangleComponent(
+    button = RoundedComponent(
       size: size,
-    );
-    button = RectangleComponent(
-      size: size,
+      cornerRadius: 5,
+      strokeWidth: 2,
       children: [
-        buttonTop,
         AlignComponent(
           alignment: Anchor.center,
           child: child,
         ),
       ],
     );
-    _paintButtons();
+    _colorButtons();
     add(button);
   }
 
@@ -110,7 +139,7 @@ class GameButton extends PositionComponent with TapCallbacks {
     if (e == _enabled) return;
     _enabled = e;
     if (!e) _focused = false;
-    _paintButtons();
+    _colorButtons();
   }
 
   bool get focused => _focused;
@@ -121,7 +150,7 @@ class GameButton extends PositionComponent with TapCallbacks {
     // 無効なら何もしない
     if (!enabled) return;
     _focused = f;
-    _paintButtons();
+    _colorButtons();
   }
 
   @override
@@ -130,8 +159,8 @@ class GameButton extends PositionComponent with TapCallbacks {
     if (enabled) {
       // 決定音を鳴らす
       Audio().playSound(Sound.decide);
-      button.paint = _enabledPressedButtonPaint;
-      buttonTop.paint = _transparentPaint;
+      button.borderColor = _enabledPressedButtonPaint.color;
+      button.color = _transparentPaint.color;
       onPressed?.call();
     }
   }
@@ -140,8 +169,8 @@ class GameButton extends PositionComponent with TapCallbacks {
   @mustCallSuper
   void onTapUp(TapUpEvent event) {
     if (enabled) {
-      button.paint = _enabledButtonFramePaint;
-      buttonTop.paint = _enabledButtonPaint;
+      button.borderColor = _enabledButtonFramePaint.color;
+      button.color = _enabledButtonPaint.color;
       onReleased?.call();
     }
   }
@@ -150,8 +179,8 @@ class GameButton extends PositionComponent with TapCallbacks {
   @mustCallSuper
   void onTapCancel(TapCancelEvent event) {
     if (enabled) {
-      button.paint = _enabledButtonFramePaint;
-      buttonTop.paint = _enabledButtonPaint;
+      button.borderColor = _enabledButtonFramePaint.color;
+      button.color = _enabledButtonPaint.color;
       onCancelled?.call();
     }
   }
@@ -264,6 +293,87 @@ class GameTextButton extends GameButton {
             ),
           ),
         );
+
+  String? get text => _text;
+
+  set text(String? t) {
+    _text = t;
+    if (t != null) {
+      (super.child as TextComponent).text = t;
+    }
+  }
+}
+
+class GameMenuButton extends GameButton {
+  String? _text;
+
+  GameMenuButton({
+    super.keyName,
+    required super.size,
+    super.position,
+    super.anchor,
+    String? text,
+    super.enabled,
+    super.onPressed,
+    super.onReleased,
+    super.onCancelled,
+  })  : _text = text,
+        super(
+          child: TextComponent(
+            text: text,
+            textRenderer: TextPaint(
+              style: const TextStyle(
+                fontFamily: Config.gameTextFamily,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ) {
+    super.enabledFrameColor = Colors.white;
+    super.enabledBgColor = const Color(0xa0000000);
+    super.enabledPressedBgColor = const Color(0xc0000000);
+    super.disabledFrameColor = Colors.grey;
+    super.disabledBgColor = const Color(0xc0000000);
+  }
+
+  String? get text => _text;
+
+  set text(String? t) {
+    _text = t;
+    if (t != null) {
+      (super.child as TextComponent).text = t;
+    }
+  }
+}
+
+class GameDialogButton extends GameButton {
+  String? _text;
+
+  GameDialogButton({
+    super.keyName,
+    required super.size,
+    super.position,
+    super.anchor,
+    String? text,
+    super.enabled,
+    super.onPressed,
+    super.onReleased,
+    super.onCancelled,
+  })  : _text = text,
+        super(
+          child: TextComponent(
+            text: text,
+            textRenderer: TextPaint(
+              style: const TextStyle(
+                fontFamily: Config.gameTextFamily,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ) {
+    super.enabledFrameColor = const Color(0x00000000);
+    super.enabledBgColor = const Color(0x00000000);
+  }
 
   String? get text => _text;
 

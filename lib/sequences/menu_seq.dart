@@ -10,12 +10,12 @@ import 'package:flutter/services.dart';
 class MenuSeq extends Sequence with KeyboardHandler {
   late final TextComponent menuText;
   late final GameButtonGroup buttonGroup;
-  late final GameTextButton resumeButton;
-  late final GameTextButton saveButton;
-  late final GameTextButton saveAndToTitleButton;
-  late final GameTextButton giveUpButton;
-  late final GameTextButton controllSettingButton;
-  late final GameTextButton resetCameraButton;
+  late final GameMenuButton resumeButton;
+  late final GameMenuButton saveButton;
+  late final GameMenuButton saveAndToTitleButton;
+  late final GameMenuButton giveUpButton;
+  late final GameMenuButton controllSettingButton;
+  late final GameMenuButton resetCameraButton;
 
   bool isSaved = false;
 
@@ -40,7 +40,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       ),
     );
     Vector2 menuButtonPos = menuButtonBasePos.clone();
-    resumeButton = GameTextButton(
+    resumeButton = GameMenuButton(
       keyName: 'resume',
       size: menuButtonSize,
       position: menuButtonPos,
@@ -49,7 +49,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       onReleased: () => game.popSeq(),
     );
     menuButtonPos += menuButtonOffset;
-    saveButton = GameTextButton(
+    saveButton = GameMenuButton(
       keyName: 'save',
       size: menuButtonSize,
       position: menuButtonPos,
@@ -61,7 +61,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       },
     );
     menuButtonPos += menuButtonOffset;
-    saveAndToTitleButton = GameTextButton(
+    saveAndToTitleButton = GameMenuButton(
       keyName: 'saveAndToTitle',
       size: menuButtonSize,
       position: menuButtonPos,
@@ -75,18 +75,18 @@ class MenuSeq extends Sequence with KeyboardHandler {
       },
     );
     menuButtonPos += menuButtonOffset;
-    giveUpButton = GameTextButton(
+    giveUpButton = GameMenuButton(
       keyName: 'giveUp',
       size: menuButtonSize,
       position: menuButtonPos,
       anchor: Anchor.center,
       text: loc.exit,
       onReleased: () async {
-        game.pushSeqOverlay('confirm_exit_dialog');
+        game.pushSeqNamed('confirm_exit');
       },
     );
     menuButtonPos += menuButtonOffset;
-    controllSettingButton = GameTextButton(
+    controllSettingButton = GameMenuButton(
       keyName: 'controllSetting',
       size: menuButtonSize,
       position: menuButtonPos,
@@ -103,7 +103,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       },
     );
     menuButtonPos += menuButtonOffset;
-    resetCameraButton = GameTextButton(
+    resetCameraButton = GameMenuButton(
       keyName: 'resetCamer',
       size: menuButtonSize,
       position: menuButtonPos,
@@ -186,7 +186,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
 
   @override
   void onFocus(String? before) {
-    if (before == "confirm_exit_dialog") {
+    if (before == "confirm_exit") {
       // あきらめるボタン押下後の確認ダイアログから遷移してきたなら
       if (game.isGameover() == true) {
         // ゲーム画面->ゲームオーバー画面に遷移

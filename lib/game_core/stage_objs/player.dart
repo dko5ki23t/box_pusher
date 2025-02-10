@@ -1,8 +1,10 @@
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 /// プレイヤーの能力
 enum PlayerAbility {
@@ -18,11 +20,80 @@ class Player extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'player.png';
 
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// チャンネル->オブジェクトのレベル->向き->攻撃時アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<int, Map<Move, SpriteAnimation>>>
+      levelToAttackAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        Move.none:
+            SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      1: {
+        Move.down: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: playerImgSize),
+          Sprite(baseImg, srcPosition: Vector2(40, 0), srcSize: playerImgSize),
+        ], stepTime: Stage.objectStepTime),
+        Move.up: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(80, 0), srcSize: playerImgSize),
+          Sprite(baseImg, srcPosition: Vector2(120, 0), srcSize: playerImgSize),
+        ], stepTime: Stage.objectStepTime),
+        Move.left: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(160, 0), srcSize: playerImgSize),
+          Sprite(baseImg, srcPosition: Vector2(200, 0), srcSize: playerImgSize),
+        ], stepTime: Stage.objectStepTime),
+        Move.right: SpriteAnimation.spriteList([
+          Sprite(baseImg, srcPosition: Vector2(240, 0), srcSize: playerImgSize),
+          Sprite(baseImg, srcPosition: Vector2(280, 0), srcSize: playerImgSize),
+        ], stepTime: Stage.objectStepTime),
+      },
+    };
+    levelToAttackAnimationsS = {
+      1: {
+        0: {
+          Move.none:
+              SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+        },
+        1: {
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: playerImgSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(40, 0), srcSize: playerImgSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(80, 0), srcSize: playerImgSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(120, 0), srcSize: playerImgSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(160, 0), srcSize: playerImgSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(200, 0), srcSize: playerImgSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(240, 0), srcSize: playerImgSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(280, 0), srcSize: playerImgSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+      },
+    };
+  }
+
   final Blink damagedBlink = Blink(showDuration: 0.2, hideDuration: 0.1);
 
+  static Vector2 playerImgSize = Vector2(40, 40);
+
   Player({
-    required Image playerImg,
-    required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
@@ -35,73 +106,9 @@ class Player extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
-            1: {
-              Move.down: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.up: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.left: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-              Move.right: SpriteAnimation.spriteList([
-                Sprite(playerImg,
-                    srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
-                Sprite(playerImg,
-                    srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
-              ], stepTime: Stage.objectStepTime),
-            },
-          },
+          levelToAnimations: levelToAnimationsS,
           // ※※ ダメージを受けた時はattackのアニメーションに変更する ※※
-          levelToAttackAnimations: {
-            1: {
-              0: {
-                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-              },
-              1: {
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(playerImg,
-                      srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
-                  Sprite(playerImg,
-                      srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(playerImg,
-                      srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
-                  Sprite(playerImg,
-                      srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(playerImg,
-                      srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
-                  Sprite(playerImg,
-                      srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(playerImg,
-                      srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
-                  Sprite(playerImg,
-                      srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-            },
-          },
+          levelToAttackAnimations: levelToAttackAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.player,
             level: level,
@@ -158,25 +165,27 @@ class Player extends StageObj {
           vector = vector;
         }
       }
-      // ユーザの入力がなければ何もしない
-      if (moveInput == Move.none) {
+      Move actualMove = forceMoving != Move.none ? forceMoving : moveInput;
+      forceMoving = Move.none;
+      // ユーザの入力や氷で滑る移動がなければ何もしない
+      if (actualMove == Move.none) {
         return;
       }
       // ダメージを受けていた場合でもアニメーションを元に戻す
       attacking = false;
       // 動けないとしても、向きは変更
-      vector = moveInput.toStraightLR();
+      vector = actualMove.toStraightLR();
       // プレイヤーが壁などにぶつかるか
-      if (!stage.get(pos + moveInput.point).playerMovable) {
+      if (!stage.get(pos + actualMove.point).playerMovable) {
         return;
       }
       // 押し始める・押すオブジェクトを決定
-      if (!startPushing(moveInput, pushableNum, stage, gameWorld,
+      if (!startPushing(actualMove, pushableNum, stage, gameWorld,
           prohibitedPoints, pushings, executings)) {
         // 押せない等で移動できないならreturn
         return;
       }
-      moving = moveInput;
+      moving = actualMove;
       movingAmount = 0.0;
       // 移動先に他のオブジェクトが移動できないようにする
       prohibitedPoints[pos + moving.point] = Move.none;
@@ -248,7 +257,7 @@ class Player extends StageObj {
     if (pocketItem == null) {
       // 目の前のオブジェクトをポケットに入れる
       final target = stage.get(pos + vector.point);
-      // 押せるものなら入れることができる
+      // 押せるものかつ重さが0なら入れることができる
       if (target.pushable) {
         pocketItem = target;
         pocketItem?.pos = pos;
@@ -277,6 +286,8 @@ class Player extends StageObj {
     // アーマー能力判定
     if (isAbilityAvailable(PlayerAbility.armer) && armerRecoveryTurns == 0) {
       armerRecoveryTurns = armerNeedRecoveryTurns;
+      // ダメージを負った音を鳴らす
+      Audio().playSound(Sound.playerDamaged);
       return false;
     } else {
       return true;
@@ -329,4 +340,7 @@ class Player extends StageObj {
 
   @override
   bool get hasVector => true;
+
+  @override
+  bool get isAlly => true;
 }

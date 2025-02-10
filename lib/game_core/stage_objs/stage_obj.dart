@@ -6,12 +6,14 @@ import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/archer.dart';
+import 'package:box_pusher/game_core/stage_objs/barrierman.dart';
 import 'package:box_pusher/game_core/stage_objs/belt.dart';
 import 'package:box_pusher/game_core/stage_objs/bomb.dart';
 import 'package:box_pusher/game_core/stage_objs/boneman.dart';
 import 'package:box_pusher/game_core/stage_objs/builder.dart';
 import 'package:box_pusher/game_core/stage_objs/canon.dart';
 import 'package:box_pusher/game_core/stage_objs/drill.dart';
+import 'package:box_pusher/game_core/stage_objs/fire.dart';
 import 'package:box_pusher/game_core/stage_objs/floor.dart';
 import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/ghost.dart';
@@ -28,7 +30,7 @@ import 'package:box_pusher/game_core/stage_objs/shop.dart';
 import 'package:box_pusher/game_core/stage_objs/smoke.dart';
 import 'package:box_pusher/game_core/stage_objs/smoker.dart';
 import 'package:box_pusher/game_core/stage_objs/spike.dart';
-import 'package:box_pusher/game_core/stage_objs/spike_spawner.dart';
+import 'package:box_pusher/game_core/stage_objs/spawner.dart';
 import 'package:box_pusher/game_core/stage_objs/swordsman.dart';
 import 'package:box_pusher/game_core/stage_objs/trap.dart';
 import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
@@ -59,7 +61,8 @@ enum StageObjType {
   swordsman, // 剣を使う敵
   archer, // 弓を使う敵
   wizard, // 魔法を使う敵
-  ghost, // オブジェクトをすり抜けて移動できる敵
+  ghost, // オブジェクトをすり抜けて移動できる敵（ゴースト）
+  fire, // ゴーストが残す炎（設置型）
   builder, // 一定間隔でブロックを置く敵
   pusher, // オブジェクトを押す敵
   smoker, // 周囲を見えづらく、プレイヤーの能力を使用不能にする煙を出す敵
@@ -71,8 +74,9 @@ enum StageObjType {
   girl,
   shop,
   canon,
-  spikeSpawner, // とげの敵を生み出す場
+  spawner, // 敵を生み出す場
   boneman, // 骨の敵、倒すと押せるオブジェクト化、一定ターンで復活
+  barrierman, // 範囲内の敵に一定以上ダメージを軽減させるバリアを展開する敵
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -95,6 +99,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.archer: 'archer',
     StageObjType.wizard: 'wizard',
     StageObjType.ghost: 'ghost',
+    StageObjType.fire: 'fire',
     StageObjType.builder: 'builder',
     StageObjType.pusher: 'pusher',
     StageObjType.smoker: 'smoker',
@@ -106,8 +111,9 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.girl: 'girl',
     StageObjType.shop: 'shop',
     StageObjType.canon: 'canon',
-    StageObjType.spikeSpawner: 'spikeSpawner',
+    StageObjType.spawner: 'spawner',
     StageObjType.boneman: 'boneman',
+    StageObjType.barrierman: 'barrierman',
   };
 
   String get str => strMap[this]!;
@@ -150,6 +156,8 @@ extension StageObjTypeExtent on StageObjType {
         return Wizard;
       case StageObjType.ghost:
         return Ghost;
+      case StageObjType.fire:
+        return Fire;
       case StageObjType.builder:
         return Builder;
       case StageObjType.pusher:
@@ -172,10 +180,12 @@ extension StageObjTypeExtent on StageObjType {
         return Shop;
       case StageObjType.canon:
         return Canon;
-      case StageObjType.spikeSpawner:
-        return SpikeSpawner;
+      case StageObjType.spawner:
+        return Spawner;
       case StageObjType.boneman:
         return Boneman;
+      case StageObjType.barrierman:
+        return Barrierman;
     }
   }
 
@@ -217,6 +227,8 @@ extension StageObjTypeExtent on StageObjType {
         return Wizard.imageFileName;
       case StageObjType.ghost:
         return Ghost.imageFileName;
+      case StageObjType.fire:
+        return Fire.imageFileName;
       case StageObjType.builder:
         return Builder.imageFileName;
       case StageObjType.pusher:
@@ -239,10 +251,12 @@ extension StageObjTypeExtent on StageObjType {
         return Shop.imageFileName;
       case StageObjType.canon:
         return Canon.imageFileName;
-      case StageObjType.spikeSpawner:
-        return SpikeSpawner.imageFileName;
+      case StageObjType.spawner:
+        return Spawner.imageFileName;
       case StageObjType.boneman:
         return Boneman.imageFileName;
+      case StageObjType.barrierman:
+        return Barrierman.imageFileName;
     }
   }
 
@@ -349,6 +363,12 @@ abstract class StageObj {
   /// 攻撃のチャンネル
   int attackCh = 1;
 
+  /// 氷により、強制的に移動させられる方向
+  Move forceMoving = Move.none;
+
+  /// バリア範囲内にいることでカットするダメージ（敵用、Stage.update()で毎回0にリセットされる）
+  int cutDamage = 0;
+
   /// その他保存しておきたいint値(攻撃後ターン数等)
   /// 使用したい場合はoverrideすること
   int get arg => 0;
@@ -442,6 +462,8 @@ abstract class StageObj {
         prohibitedPoints, // 今は移動可能だが、他のオブジェクトが同時期に移動してくるため移動不可な座標と向きのMap（例えば、移動しているオブジェクトに対してその交差するように移動できないようにするためのMap）
   );
 
+  void onRemove(World gameWorld) {}
+
   /// このオブジェクトは押せるか
   bool get pushable;
 
@@ -478,6 +500,9 @@ abstract class StageObj {
   /// 持っているコイン
   int get coins => 0;
 
+  /// 獲得スコア(現状宝箱専用)
+  int get score => 0;
+
   /// ポケットに入れていてもupdate()するかどうか
   bool get updateInPocket => false;
 
@@ -487,11 +512,22 @@ abstract class StageObj {
   /// プレイヤーの味方か（敵の攻撃を受けるか）
   bool get isAlly => false;
 
+  /// 動物か
+  bool get isAnimals => false;
+
+  /// 他オブジェクトに重ねているか（trueの場合、Stage.get()で取得する対象にならない）
+  bool get isOverlay => false;
+
+  /// 重さ(押すにはその分のアイテム個数＋重りを連ねて押さないといけない)
+  int get weight => 0;
+
   /// 攻撃を受ける
   /// やられたかどうかを返す
   bool hit(int damageLevel, Stage stage) {
     if (!killable) return false;
-    level = (level - damageLevel).clamp(0, maxLevel);
+    int damageAfterCut = damageLevel - cutDamage;
+    if (damageAfterCut < 0) damageAfterCut = 0;
+    level = (level - damageAfterCut).clamp(0, maxLevel);
     return level <= 0;
   }
 
@@ -525,8 +561,9 @@ abstract class StageObj {
     bool containStop,
   ) {
     final List<Move> cand = [];
+    // 氷で滑っておらず、
     // 今プレイヤーの移動先にいるなら移動しない
-    if (pos == player.pos + player.moving.point) {
+    if (forceMoving == Move.none && pos == player.pos + player.moving.point) {
       cand.add(Move.none);
     } else {
       if (containStop) {
@@ -546,6 +583,12 @@ abstract class StageObj {
         }
         if (!_isEnemyMoveAllowed(eTo, move, player, prohibitedPoints)) {
           continue;
+        }
+        // 氷で滑る先に移動可能ならその方向に動くこと確定
+        if (move == forceMoving) {
+          cand.clear();
+          cand.add(move);
+          break;
         }
         cand.add(move);
       }
@@ -576,8 +619,9 @@ abstract class StageObj {
     int pushableNum,
   ) {
     final Map<Move, Map<String, dynamic>> cand = {};
+    // 氷で滑っておらず、
     // 今プレイヤーの移動先にいるなら移動しない
-    if (pos == player.pos + player.moving.point) {
+    if (forceMoving == Move.none && pos == player.pos + player.moving.point) {
       cand[Move.none] = {
         "prohibitedPoints": prohibitedPoints,
         "pushings": <StageObj>[],
@@ -621,6 +665,11 @@ abstract class StageObj {
             "executings": executingsList,
           };
         }
+        // 氷で滑る先に移動可能ならその方向に動くこと確定
+        if (move == forceMoving) {
+          cand.removeWhere((key, value) => key != move);
+          break;
+        }
       }
     }
     if (cand.isNotEmpty) {
@@ -652,15 +701,16 @@ abstract class StageObj {
     Stage stage,
     Map<Point, Move> prohibitedPoints,
   ) {
+    // 滑っておらず、
     // 今ターゲットの移動先にいるなら移動しない
-    if (pos == target.pos + target.moving.point) {
+    if (forceMoving == Move.none && pos == target.pos + target.moving.point) {
       ret['move'] = Move.none;
-    } else if (Config().random.nextInt(6) == 0) {
+    } else if (forceMoving == Move.none && Config().random.nextInt(6) == 0) {
       ret['move'] = Move.none;
     } else {
       // ターゲットの方へ移動する/向きを変える
       final delta = target.pos - pos;
-      final List<Move> tmpCand = [];
+      final Set<Move> tmpCand = {};
       if (delta.x > 0) {
         tmpCand.add(Move.right);
       } else if (delta.x < 0) {
@@ -670,6 +720,10 @@ abstract class StageObj {
         tmpCand.add(Move.down);
       } else if (delta.y < 0) {
         tmpCand.add(Move.up);
+      }
+      // 滑っている場合は、プレイヤーの方じゃなくても候補に入れる
+      if (forceMoving != Move.none) {
+        tmpCand.add(forceMoving);
       }
       final List<Move> cand = [];
       for (final move in tmpCand) {
@@ -686,6 +740,12 @@ abstract class StageObj {
         }
         if (!_isEnemyMoveAllowed(eTo, move, player, prohibitedPoints)) {
           continue;
+        }
+        // 氷で滑る先に移動可能ならその方向に動くこと確定
+        if (move == forceMoving) {
+          cand.clear();
+          cand.add(move);
+          break;
         }
         cand.add(move);
       }
@@ -861,6 +921,36 @@ abstract class StageObj {
     }
   }
 
+  bool _enemyAttackIfPlayersExist(
+    Map<String, dynamic> ret,
+    Stage stage,
+    Iterable<Point> attackables,
+  ) {
+    bool find = false;
+    for (final point in attackables) {
+      final target = stage.get(point, detectPlayer: true);
+      if (target.type == StageObjType.player) {
+        // プレイヤーがいれば攻撃
+        ret['attack'] = true;
+        find = true;
+        break;
+      } else if (target.isAlly) {
+        // プレイヤーの味方の場合、レベルに応じた確率で攻撃
+        int t = level < 2
+            ? 10
+            : level < 3
+                ? 40
+                : 70;
+        if (Config().random.nextInt(100) < t) {
+          ret['attack'] = true;
+          find = true;
+          break;
+        }
+      }
+    }
+    return find;
+  }
+
   /// 敵の動きを決定する
   Map<String, dynamic> enemyMove(
     EnemyMovePattern pattern,
@@ -907,7 +997,7 @@ abstract class StageObj {
             ret, pattern, vector, player, player, stage, prohibitedPoints);
         break;
       case EnemyMovePattern.followPlayerAttackForward3:
-        // 向いている方向の3マスにプレイヤーがいるなら攻撃
+        // 向いている方向の3マスにプレイヤー(/の味方)がいるなら攻撃
         final tmp = MoveExtent.straights;
         tmp.remove(vector);
         tmp.remove(vector.oppsite);
@@ -916,61 +1006,61 @@ abstract class StageObj {
         for (final v in tmp) {
           attackables.add(attackable + v.point);
         }
-        if (attackables.contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackRound8:
-        // 周囲8マスにプレイヤーがいるなら攻撃
-        if (PointRectRange(
+        // 周囲8マスにプレイヤー/味方がいるなら攻撃
+        final attackables = PointRectRange(
                 Point(pos.x - 1, pos.y - 1), Point(pos.x + 1, pos.y + 1))
-            .contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+            .set;
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackStraight3:
-        // 前方直線状3マスにプレイヤーがいるなら攻撃
-        if (PointRectRange(pos, pos + vector.point * 3).contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+        // 前方直線状3マスにプレイヤー/味方がいるなら攻撃
+        final attackables = PointRectRange(pos, pos + vector.point * 3).set;
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttackStraight5:
-        // 前方直線状5マスにプレイヤーがいるなら攻撃
-        if (PointRectRange(pos, pos + vector.point * 5).contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+        // 前方直線状5マスにプレイヤー/味方がいるなら攻撃
+        final attackables = PointRectRange(pos, pos + vector.point * 5).set;
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followPlayerAttack3Straight5:
-        // 前方3方向の直線5マスにプレイヤーがいるなら攻撃
+        // 前方3方向の直線5マスにプレイヤー/味方がいるなら攻撃
         final vec1 = vector.neighbors[0];
         final vec2 = vector.neighbors[1];
-        if ((PointLineRange(pos + vector.point, vector, 5)
-                .contains(player.pos)) ||
-            (PointLineRange(pos + vec1.point, vec1, 5).contains(player.pos)) ||
-            (PointLineRange(pos + vec2.point, vec2, 5).contains(player.pos))) {
-          ret['attack'] = true;
-        } else {
+        final attackables = {
+          ...PointLineRange(pos + vector.point, vector, 5).set,
+          ...PointLineRange(pos + vec1.point, vec1, 5).set,
+          ...PointLineRange(pos + vec2.point, vec2, 5).set,
+        };
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollow(
               ret, pattern, vector, player, player, stage, prohibitedPoints);
         }
         break;
       case EnemyMovePattern.followWarpPlayerAttackStraight5:
-        // 前方直線状5マスにプレイヤーがいるなら攻撃
-        if (PointRectRange(pos, pos + vector.point * 5).contains(player.pos)) {
-          ret['attack'] = true;
-        } else {
+        // 前方直線状5マスにプレイヤー/味方がいるなら攻撃
+        final attackables = PointRectRange(pos, pos + vector.point * 5).set;
+        // プレイヤー/味方がいるなら攻撃、いないなら動く
+        if (!_enemyAttackIfPlayersExist(ret, stage, attackables)) {
           _enemyMoveFollowWithWarp(
               ret, pattern, vector, player, player, stage, prohibitedPoints, 5);
         }
@@ -986,6 +1076,8 @@ abstract class StageObj {
         break;
     }
 
+    // 氷で滑っている場合は解除する
+    forceMoving = Move.none;
     return ret;
   }
 
@@ -1023,6 +1115,9 @@ abstract class StageObj {
     // マージするからここまでは押せるよ、なpushingsのリスト
     List<StageObj> pushingsSave = [];
     List<bool> executingsSave = [];
+
+    /// 同時に押しているアイテムの個数＋重り分の重さ
+    int pushingWeight = 0;
     int end = pushableNum;
     if (end < 0) {
       final range = stage.stageRB - stage.stageLT;
@@ -1048,7 +1143,10 @@ abstract class StageObj {
           }
           stopBecauseDrill = true;
         } else {
-          if (toToObj.stopping) {
+          if (toObj.weight > pushingWeight) {
+            // 押すための重さが足りない
+            breakPushing = true;
+          } else if (toToObj.stopping) {
             // 押した先が停止物
             breakPushing = true;
           } else if (prohibitedPoints.containsKey(toTo) &&
@@ -1091,6 +1189,8 @@ abstract class StageObj {
       // 押すオブジェクトリストに追加
       pushingsList.add(stage.boxes.firstWhere((element) => element.pos == to));
       executingsList.add(executing);
+      // 同時に押しているアイテムの重さ加算
+      ++pushingWeight;
       // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
       prohibitedPoints[toTo] = Move.none;
       if (stopBecauseDrill) {
@@ -1172,6 +1272,10 @@ abstract class StageObj {
       }
       toTo -= moving.point;
     }
+    // マージしたのなら、一旦氷による滑りは無くす
+    if (mergeIndex != -1) {
+      forceMoving = Move.none;
+    }
 
     // 押したオブジェクト位置更新
     toTo = pos + moving.point;
@@ -1211,6 +1315,11 @@ abstract class StageObj {
         stage.coins.actual += pushing.coins;
         stage.showGotCoinEffect(pushing.coins, toTo);
         pushing.remove();
+      } else if (stage.safeGetStaticObj(toTo).type == StageObjType.water &&
+          i != mergeIndex) {
+        // 押した先が氷なら滑るように設定
+        // ただし、マージしたなら滑らない
+        stage.safeGetStaticObj(toTo).moving = moving;
       } else if (pushing.type == StageObjType.drill && executings[i]) {
         // ドリル使用時
         // ドリルのオブジェクトレベルダウン、0になったら消す
@@ -1239,12 +1348,16 @@ abstract class StageObj {
     if (type == StageObjType.player) {
       // プレイヤー限定の処理
       final player = this as Player;
-      final obj = stage.get(pos);
+      //final obj = stage.get(pos);
+      // get()だと、アイテムを押してる場合はそのアイテムを取得してしまうので、staticObjをgetする
+      final obj = stage.safeGetStaticObj(pos);
       if (obj.type == StageObjType.treasureBox) {
         // 移動先が宝箱だった場合
-        // TODO:
-        // コイン増加
-        stage.coins.actual++;
+        // コイン獲得
+        stage.coins.actual += obj.coins;
+        stage.showGotCoinEffect(obj.coins, pos);
+        // スコア獲得
+        stage.score.actual += obj.score;
         // 宝箱消滅
         stage.setStaticType(pos, StageObjType.none);
       } else if (obj.type == StageObjType.gorilla) {
@@ -1309,9 +1422,12 @@ abstract class StageObj {
               (stage.get(getItemPos) as Shop).isItemPlace) {
             // コインを支払ってオブジェクト出現
             stage.coins.actual -= obj.shopInfo.payCoins;
-            // TODO: 押せるオブジェクトだけとは限らない
-            stage.boxes.add(stage.createObject(
-                typeLevel: obj.shopInfo.getObj, pos: getItemPos));
+            if (obj.shopInfo.getObj.type == StageObjType.warp) {
+              stage.setStaticType(getItemPos, StageObjType.warp);
+            } else {
+              stage.boxes.add(stage.createObject(
+                  typeLevel: obj.shopInfo.getObj, pos: getItemPos));
+            }
             // オブジェクト出現エフェクトを表示
             stage.showSpawnEffect(getItemPos);
           }
@@ -1319,12 +1435,19 @@ abstract class StageObj {
       }
     }
     // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している
-    if (stage.safeGetStaticObj(pos).type == StageObjType.warp) {
+    final staticObj = stage.safeGetStaticObj(pos);
+    if (staticObj.type == StageObjType.warp) {
       // 移動先がワープだった場合
+      Point orgPos = pos.copy();
       pos = stage.getWarpedPoint(pos);
       stage.setObjectPosition(this);
-      // 効果音を鳴らす
-      Audio().playSound(Sound.warp);
+      // 実際にワープしていたら効果音を鳴らす
+      if (orgPos != pos) {
+        Audio().playSound(Sound.warp);
+      }
+    } else if (staticObj.type == StageObjType.water) {
+      // 氷の上に立ったとき
+      forceMoving = moving;
     }
   }
 

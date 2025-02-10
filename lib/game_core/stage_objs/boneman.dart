@@ -5,10 +5,11 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Boneman extends StageObj {
   /// 各レベルに対応する動きのパターン
-  final Map<int, EnemyMovePattern> movePatterns = {
+  static final Map<int, EnemyMovePattern> movePatterns = {
     1: EnemyMovePattern.followPlayer,
     2: EnemyMovePattern.followPlayer,
     3: EnemyMovePattern.followPlayer,
@@ -16,6 +17,108 @@ class Boneman extends StageObj {
 
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'boneman.png';
+
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// チャンネル->オブジェクトのレベル->向き->攻撃時アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<int, Map<Move, SpriteAnimation>>>
+      levelToAttackAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        for (final move in MoveExtent.straights)
+          move: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0)
+      },
+      for (int i = 0; i < 3; i++)
+        i + 1: {
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 128, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 160, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 192, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 224, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 64, 0), srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 96, 0), srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 0, 0), srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 256 + 32, 0), srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+    };
+    levelToAttackAnimationsS = {
+      // 骨になったときのアニメーション
+      1: {
+        0: {
+          Move.none:
+              SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+        },
+        for (int i = 1; i <= 3; i++)
+          i: {
+            Move.none: SpriteAnimation.spriteList([
+              Sprite(baseImg,
+                  srcPosition: Vector2(64 * (i - 1) + 768, 0),
+                  srcSize: Stage.cellSize),
+            ], stepTime: 1.0),
+          },
+      },
+      // あと2ターンで復活アニメーション
+      2: {
+        0: {
+          Move.none:
+              SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+        },
+        for (int i = 1; i <= 3; i++)
+          i: {
+            Move.none: SpriteAnimation.spriteList([
+              Sprite(baseImg,
+                  srcPosition: Vector2(64 * (i - 1) + 768, 0),
+                  srcSize: Stage.cellSize),
+              Sprite(baseImg,
+                  srcPosition: Vector2(64 * (i - 1) + 800, 0),
+                  srcSize: Stage.cellSize),
+            ], stepTime: Stage.objectStepTime),
+          },
+      },
+      // あと1ターンで復活アニメーション
+      3: {
+        0: {
+          Move.none:
+              SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+        },
+        for (int i = 1; i <= 3; i++)
+          i: {
+            Move.none: SpriteAnimation.spriteList([
+              Sprite(baseImg,
+                  srcPosition: Vector2(64 * (i - 1) + 768, 0),
+                  srcSize: Stage.cellSize),
+              Sprite(baseImg,
+                  srcPosition: Vector2(64 * (i - 1) + 800, 0),
+                  srcSize: Stage.cellSize),
+            ], stepTime: Stage.objectStepTime / 2),
+          },
+      },
+    };
+  }
 
   /// 復活に要するターン数(死んでいる期間)
   int get deadPeriod {
@@ -33,8 +136,6 @@ class Boneman extends StageObj {
   int deadTurns = 0;
 
   Boneman({
-    required Image boneImg,
-    required Image errorImg,
     required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
@@ -49,101 +150,8 @@ class Boneman extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              for (final move in MoveExtent.straights)
-                move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0)
-            },
-            for (int i = 0; i < 3; i++)
-              i + 1: {
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(boneImg,
-                      srcPosition: Vector2(i * 256 + 128, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(boneImg,
-                      srcPosition: Vector2(i * 256 + 160, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(boneImg,
-                      srcPosition: Vector2(i * 256 + 192, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(boneImg,
-                      srcPosition: Vector2(i * 256 + 224, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(boneImg,
-                      srcPosition: Vector2(i * 256 + 64, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(boneImg,
-                      srcPosition: Vector2(i * 256 + 96, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(boneImg,
-                      srcPosition: Vector2(i * 256 + 0, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(boneImg,
-                      srcPosition: Vector2(i * 256 + 32, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-          },
-          levelToAttackAnimations: {
-            // 骨になったときのアニメーション
-            1: {
-              0: {
-                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-              },
-              for (int i = 1; i <= 3; i++)
-                i: {
-                  Move.none: SpriteAnimation.spriteList([
-                    Sprite(boneImg,
-                        srcPosition: Vector2(64 * (i - 1) + 768, 0),
-                        srcSize: Stage.cellSize),
-                  ], stepTime: 1.0),
-                },
-            },
-            // あと2ターンで復活アニメーション
-            2: {
-              0: {
-                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-              },
-              for (int i = 1; i <= 3; i++)
-                i: {
-                  Move.none: SpriteAnimation.spriteList([
-                    Sprite(boneImg,
-                        srcPosition: Vector2(64 * (i - 1) + 768, 0),
-                        srcSize: Stage.cellSize),
-                    Sprite(boneImg,
-                        srcPosition: Vector2(64 * (i - 1) + 800, 0),
-                        srcSize: Stage.cellSize),
-                  ], stepTime: Stage.objectStepTime),
-                },
-            },
-            // あと1ターンで復活アニメーション
-            3: {
-              0: {
-                Move.none: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-              },
-              for (int i = 1; i <= 3; i++)
-                i: {
-                  Move.none: SpriteAnimation.spriteList([
-                    Sprite(boneImg,
-                        srcPosition: Vector2(64 * (i - 1) + 768, 0),
-                        srcSize: Stage.cellSize),
-                    Sprite(boneImg,
-                        srcPosition: Vector2(64 * (i - 1) + 800, 0),
-                        srcSize: Stage.cellSize),
-                  ], stepTime: Stage.objectStepTime / 2),
-                },
-            },
-          },
+          levelToAnimations: levelToAnimationsS,
+          levelToAttackAnimations: levelToAttackAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.boneman,
             level: level,
@@ -261,7 +269,7 @@ class Boneman extends StageObj {
     if (!killable) return false;
     // レベルは下がらない
     // level = (level - damageLevel).clamp(0, maxLevel);
-    if (damageLevel >= level) {
+    if (damageLevel - cutDamage >= level) {
       deadTurns = 1;
       stage.enemies.forceRemove(this);
       stage.boxes.add(this);

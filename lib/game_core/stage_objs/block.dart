@@ -4,37 +4,63 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Block extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'block.png';
 
-  /// ブロック破壊時アニメーション
-  final Map<int, SpriteAnimation> breakingAnimations;
+  /// ブロック破壊時アニメーション（staticにして唯一つ保持、メモリ節約）
+  static Map<int, SpriteAnimation> breakingAnimations = {};
+
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        Move.none:
+            SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      for (int i = 0; i < 4; i++)
+        i + 1: {
+          Move.none: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(i * 32, 0), srcSize: Stage.cellSize)
+          ], stepTime: 1.0),
+        },
+      // ここからは敵が生み出すブロック
+      for (int i = 0; i < 3; i++)
+        i + 101: {
+          Move.none: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(256 + i * 32, 0), srcSize: Stage.cellSize)
+          ], stepTime: 1.0),
+        },
+    };
+    breakingAnimations = {
+      0: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      for (int i = 0; i < 4; i++)
+        i + 1: SpriteAnimation.spriteList([
+          Sprite(baseImg,
+              srcPosition: Vector2(128 + i * 32, 0), srcSize: Stage.cellSize),
+        ], stepTime: 1.0),
+      // ここからは敵が生み出すブロック
+      for (int i = 0; i < 3; i++)
+        i + 101: SpriteAnimation.spriteList([
+          Sprite(baseImg,
+              srcPosition: Vector2(352 + i * 32, 0), srcSize: Stage.cellSize),
+        ], stepTime: 1.0),
+    };
+  }
 
   Block({
-    required Image blockImg,
-    required Image errorImg,
     required super.savedArg,
     required super.pos,
     int level = 1,
-  })  : breakingAnimations = {
-          0: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-          for (int i = 0; i < 4; i++)
-            i + 1: SpriteAnimation.spriteList([
-              Sprite(blockImg,
-                  srcPosition: Vector2(128 + i * 32, 0),
-                  srcSize: Stage.cellSize),
-            ], stepTime: 1.0),
-          // ここからは敵が生み出すブロック
-          for (int i = 0; i < 3; i++)
-            i + 101: SpriteAnimation.spriteList([
-              Sprite(blockImg,
-                  srcPosition: Vector2(352 + i * 32, 0),
-                  srcSize: Stage.cellSize),
-            ], stepTime: 1.0),
-        },
-        super(
+  }) : super(
           animationComponent: SpriteAnimationComponent(
             priority: Stage.staticPriority,
             size: Stage.cellSize,
@@ -43,28 +69,7 @@ class Block extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
-            for (int i = 0; i < 4; i++)
-              i + 1: {
-                Move.none: SpriteAnimation.spriteList([
-                  Sprite(blockImg,
-                      srcPosition: Vector2(i * 32, 0), srcSize: Stage.cellSize)
-                ], stepTime: 1.0),
-              },
-            // ここからは敵が生み出すブロック
-            for (int i = 0; i < 3; i++)
-              i + 101: {
-                Move.none: SpriteAnimation.spriteList([
-                  Sprite(blockImg,
-                      srcPosition: Vector2(256 + i * 32, 0),
-                      srcSize: Stage.cellSize)
-                ], stepTime: 1.0),
-              },
-          },
+          levelToAnimations: levelToAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.block,
             level: level,

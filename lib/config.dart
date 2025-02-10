@@ -18,6 +18,8 @@ const String blockFloorDistributionConfigFileName =
     'assets/texts/config_block_floor_distribution.csv';
 const String objInBlockDistributionConfigFileName =
     'assets/texts/config_obj_in_block_distribution.csv';
+const String floorInBlockDistributionConfigFileName =
+    'assets/texts/config_floor_in_block_distribution.csv';
 const String maxObjNumFromBlockMapConfigFileName =
     'assets/texts/config_max_obj_num_from_block_map.csv';
 const String jewelLevelInBlockMapConfigFileName =
@@ -225,6 +227,9 @@ class Config {
   /// ゲーム音量(0~100)
   int audioVolume = 100;
 
+  /// チュートリアル表示が必要か
+  bool showTutorial = true;
+
   late Random random;
 
   /// 分布表示に使用する色
@@ -285,6 +290,8 @@ class Config {
         await _importCSV(blockFloorDistributionConfigFileName));
     objInBlockDistribution = loadObjInBlockDistribution(
         await _importCSV(objInBlockDistributionConfigFileName));
+    floorInBlockDistribution = loadFloorInBlockDistribution(
+        await _importCSV(floorInBlockDistributionConfigFileName));
     maxObjNumFromBlockMap = loadAndSumMaxObjectNumFromBlockMap(
         await _importCSV(maxObjNumFromBlockMapConfigFileName));
     jewelLevelInBlockMap = loadJewelLevelInBlockMap(
@@ -349,7 +356,7 @@ class Config {
   late bool consumeTrap;
 
   /// ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか
-  late bool hideGameToMenu;
+  late bool hideGameToMenu = true;
 
   /// マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))
   late bool spawnItemAroundPlayer = true;
@@ -472,6 +479,38 @@ class Config {
     }
     log('(${pos.x}, ${pos.y})に対応するobjInBlockが見つからなかった。');
     return objInBlockMap.entries.last;
+  }
+
+  /// ステージ上範囲->ブロック破壊時に出現する床の分布マップ（範囲が重複する場合は先に存在するキーを優先）
+  late Map<PointRange, Distribution<StageObjTypeLevel>>
+      floorInBlockDistribution;
+
+  Map<PointRange, Distribution<StageObjTypeLevel>> loadFloorInBlockDistribution(
+      List<List<String>> data) {
+    final Map<PointRange, Distribution<StageObjTypeLevel>> ret = {};
+    // 最初の1行は無視
+    for (int i = 1; i < data.length; i++) {
+      final vals = data[i];
+      ret[PointRange.createFromStrings([for (int j = 0; j < 6; j++) vals[j]])] =
+          Distribution({
+        StageObjTypeLevel(type: StageObjType.none): int.parse(vals[7]),
+        StageObjTypeLevel(type: StageObjType.water): int.parse(vals[8]),
+      }, int.parse(vals[6]));
+    }
+    return ret;
+  }
+
+  /// 引数で指定した座標に該当する「ブロック破壊時の出現床」のMapEntryを返す
+  /// 見つからない場合は最後のEntryを返す
+  MapEntry<PointRange, Distribution<StageObjTypeLevel>> getFloorInBlockMapEntry(
+      Point pos) {
+    for (final floorInBlock in floorInBlockDistribution.entries) {
+      if (floorInBlock.key.contains(pos)) {
+        return floorInBlock;
+      }
+    }
+    log('(${pos.x}, ${pos.y})に対応するfloorInBlockが見つからなかった。');
+    return floorInBlockDistribution.entries.last;
   }
 
   /// ステージ上範囲->ブロック破壊時に出現する特定オブジェクトの個数制限

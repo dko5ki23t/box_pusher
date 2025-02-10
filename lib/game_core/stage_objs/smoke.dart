@@ -8,10 +8,36 @@ import 'package:collection/collection.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Smoke extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'smoke.png';
+
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    levelToAnimationsS = {
+      0: {
+        Move.none:
+            SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      for (int i = 1; i <= 3; i++)
+        i: {
+          Move.none: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2(320 * (i - 1), 0),
+                srcSize: Vector2.all(160)),
+            Sprite(baseImg,
+                srcPosition: Vector2(320 * (i - 1) + 160, 0),
+                srcSize: Vector2.all(160)),
+          ], stepTime: Stage.objectStepTime),
+        },
+    };
+  }
 
   /// 経過ターン
   int turns = 0;
@@ -23,8 +49,6 @@ class Smoke extends StageObj {
   List<PlayerAbility> forbidedAbility = [];
 
   Smoke({
-    required Image smokeImg,
-    required Image errorImg,
     required super.savedArg,
     required this.lastingTurns,
     required super.pos,
@@ -38,23 +62,7 @@ class Smoke extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           )..add(OpacityEffect.to(0.9, EffectController(duration: 0))),
-          levelToAnimations: {
-            0: {
-              Move.none:
-                  SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
-            },
-            for (int i = 1; i <= 3; i++)
-              i: {
-                Move.none: SpriteAnimation.spriteList([
-                  Sprite(smokeImg,
-                      srcPosition: Vector2(320 * (i - 1), 0),
-                      srcSize: Vector2.all(160)),
-                  Sprite(smokeImg,
-                      srcPosition: Vector2(320 * (i - 1) + 160, 0),
-                      srcSize: Vector2.all(160)),
-                ], stepTime: Stage.objectStepTime),
-              },
-          },
+          levelToAnimations: levelToAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.smoke,
             level: level,
@@ -149,6 +157,10 @@ class Smoke extends StageObj {
 
   @override
   bool get hasVector => false;
+
+  // Stage.get()の対象にならない(オブジェクトと重なってるのに敵の移動先にならないように)
+  @override
+  bool get isOverlay => true;
 
   // turnsの保存/読み込み
   @override

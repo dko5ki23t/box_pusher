@@ -5,10 +5,11 @@ import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 
 class Archer extends StageObj {
   /// 各レベルに対応する動きのパターン
-  final Map<int, EnemyMovePattern> movePatterns = {
+  static final Map<int, EnemyMovePattern> movePatterns = {
     1: EnemyMovePattern.followPlayerAttackStraight3,
     2: EnemyMovePattern.followPlayerAttackStraight5,
     3: EnemyMovePattern.followPlayerAttack3Straight5,
@@ -24,8 +25,15 @@ class Archer extends StageObj {
   /// 各レベルごとの矢の画像のファイル名
   static String get arrowImageFileName => 'arrow.png';
 
+  /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
+
+  /// チャンネル->オブジェクトのレベル->向き->攻撃時アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
+  static Map<int, Map<int, Map<Move, SpriteAnimation>>>
+      levelToAttackAnimationsS = {};
+
   /// 攻撃時の向きに対応するアニメーションのオフセット。上下左右のkeyが必須
-  final Map<Move, Vector2> attackAnimationOffset = {
+  static final Map<Move, Vector2> attackAnimationOffset = {
     Move.up: Vector2.zero(),
     Move.down: Vector2.zero(),
     Move.left: Vector2.zero(),
@@ -33,31 +41,128 @@ class Archer extends StageObj {
   };
 
   /// 矢のアニメーション
-  final List<SpriteAnimation> arrowAnimations;
+  static List<SpriteAnimation> arrowAnimations = [];
+
+  /// 各アニメーション等初期化。インスタンス作成前に1度だけ呼ぶこと
+  static Future<void> onLoad({required Image errorImg}) async {
+    final baseImg = await Flame.images.load(imageFileName);
+    final arrowImg = await Flame.images.load(arrowImageFileName);
+    final List<Image> attackImgs = [
+      for (final name in attackImageFileNames) await Flame.images.load(name)
+    ];
+    levelToAnimationsS = {
+      0: {
+        for (final move in MoveExtent.straights)
+          move: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+      },
+      for (int i = 1; i <= 3; i++)
+        i: {
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 256 + 128, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 256 + 160, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 256 + 192, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 256 + 224, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 256 + 64, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 256 + 96, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 256 + 0, 0),
+                srcSize: Stage.cellSize),
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 256 + 32, 0),
+                srcSize: Stage.cellSize),
+          ], stepTime: Stage.objectStepTime),
+        },
+    };
+    levelToAttackAnimationsS = {
+      1: {
+        0: {
+          for (final move in MoveExtent.straights)
+            move: SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
+        },
+        for (int i = 1; i <= 3; i++)
+          i: {
+            Move.down: SpriteAnimation.spriteList([
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
+            ], stepTime: attackStepTime),
+            Move.up: SpriteAnimation.spriteList([
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
+            ], stepTime: attackStepTime),
+            Move.left: SpriteAnimation.spriteList([
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
+            ], stepTime: attackStepTime),
+            Move.right: SpriteAnimation.spriteList([
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
+              Sprite(attackImgs[i - 1],
+                  srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
+            ], stepTime: attackStepTime),
+          },
+      },
+    };
+    arrowAnimations = [
+      for (int i = 1; i <= 3; i++)
+        SpriteAnimation.spriteList([
+          Sprite(arrowImg,
+              srcPosition: Vector2((i - 1) * 32, 0), srcSize: Stage.cellSize),
+        ], stepTime: 1.0)
+    ];
+  }
 
   /// 攻撃時の1コマ時間
   static const double attackStepTime = 32.0 / Stage.playerSpeed / 4;
 
   /// 矢が飛ぶ時間
-  static final arrowMoveTime = Stage.cellSize.x / 2 / Stage.playerSpeed;
+  double arrowMoveTime(int dist) =>
+      Stage.cellSize.x / 2 / Stage.playerSpeed * (dist / arrowReach);
 
   Archer({
     required super.pos,
-    required Image levelToAnimationImg,
-    required List<Image> levelToAttackAnimationImgs,
-    required Image arrowImg,
-    required Image errorImg,
     required super.savedArg,
     int level = 1,
-  })  : arrowAnimations = [
-          for (int i = 1; i <= 3; i++)
-            SpriteAnimation.spriteList([
-              Sprite(arrowImg,
-                  srcPosition: Vector2((i - 1) * 32, 0),
-                  srcSize: Stage.cellSize),
-            ], stepTime: 1.0)
-        ],
-        super(
+  }) : super(
           animationComponent: SpriteAnimationComponent(
             priority: Stage.movingPriority,
             size: Stage.cellSize,
@@ -66,100 +171,8 @@ class Archer extends StageObj {
                 (Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                     Stage.cellSize / 2),
           ),
-          levelToAnimations: {
-            0: {
-              for (final move in MoveExtent.straights)
-                move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                    stepTime: 1.0),
-            },
-            for (int i = 1; i <= 3; i++)
-              i: {
-                Move.left: SpriteAnimation.spriteList([
-                  Sprite(levelToAnimationImg,
-                      srcPosition: Vector2((i - 1) * 256 + 128, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(levelToAnimationImg,
-                      srcPosition: Vector2((i - 1) * 256 + 160, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.right: SpriteAnimation.spriteList([
-                  Sprite(levelToAnimationImg,
-                      srcPosition: Vector2((i - 1) * 256 + 192, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(levelToAnimationImg,
-                      srcPosition: Vector2((i - 1) * 256 + 224, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.up: SpriteAnimation.spriteList([
-                  Sprite(levelToAnimationImg,
-                      srcPosition: Vector2((i - 1) * 256 + 64, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(levelToAnimationImg,
-                      srcPosition: Vector2((i - 1) * 256 + 96, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-                Move.down: SpriteAnimation.spriteList([
-                  Sprite(levelToAnimationImg,
-                      srcPosition: Vector2((i - 1) * 256 + 0, 0),
-                      srcSize: Stage.cellSize),
-                  Sprite(levelToAnimationImg,
-                      srcPosition: Vector2((i - 1) * 256 + 32, 0),
-                      srcSize: Stage.cellSize),
-                ], stepTime: Stage.objectStepTime),
-              },
-          },
-          levelToAttackAnimations: {
-            1: {
-              0: {
-                for (final move in MoveExtent.straights)
-                  move: SpriteAnimation.spriteList([Sprite(errorImg)],
-                      stepTime: 1.0),
-              },
-              for (int i = 1; i <= 3; i++)
-                i: {
-                  Move.down: SpriteAnimation.spriteList([
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(64, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(96, 0), srcSize: Stage.cellSize),
-                  ], stepTime: attackStepTime),
-                  Move.up: SpriteAnimation.spriteList([
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(128, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(160, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(192, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(224, 0), srcSize: Stage.cellSize),
-                  ], stepTime: attackStepTime),
-                  Move.left: SpriteAnimation.spriteList([
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(256, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(288, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(320, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(352, 0), srcSize: Stage.cellSize),
-                  ], stepTime: attackStepTime),
-                  Move.right: SpriteAnimation.spriteList([
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(384, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(416, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(448, 0), srcSize: Stage.cellSize),
-                    Sprite(levelToAttackAnimationImgs[i - 1],
-                        srcPosition: Vector2(480, 0), srcSize: Stage.cellSize),
-                  ], stepTime: attackStepTime),
-                },
-            },
-          },
+          levelToAnimations: levelToAnimationsS,
+          levelToAttackAnimations: levelToAttackAnimationsS,
           typeLevel: StageObjTypeLevel(
             type: StageObjType.archer,
             level: level,
@@ -243,34 +256,34 @@ class Archer extends StageObj {
           // 矢がオブジェクトに当たる場合、矢の飛距離はそこまでとなる
           int dist = arrowReach;
           if (!Config().isArrowPathThrough) {
-            for (dist = 0; dist < arrowReach; dist++) {
+            for (dist = 1; dist < arrowReach + 1; dist++) {
               final obj = stage.getAfterPush(pos + v.point * dist);
               if (!obj.isEnemy && !obj.enemyMovable) {
                 break;
               }
             }
-            if (0 < dist && dist < arrowReach) {
-              --dist;
-            }
+            --dist;
           }
-          gameWorld.add(SpriteAnimationComponent(
-            animation: arrowAnimations[level - 1],
-            priority: Stage.movingPriority,
-            children: [
-              MoveEffect.by(
-                Vector2(Stage.cellSize.x * v.vector.x * dist,
-                    Stage.cellSize.y * v.vector.y * dist),
-                EffectController(duration: arrowMoveTime),
-              ),
-              RemoveEffect(delay: arrowMoveTime),
-            ],
-            size: Stage.cellSize,
-            anchor: Anchor.center,
-            angle: angle,
-            position:
-                Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-                    Stage.cellSize / 2,
-          ));
+          if (dist > 0) {
+            gameWorld.add(SpriteAnimationComponent(
+              animation: arrowAnimations[level - 1],
+              priority: Stage.movingPriority,
+              children: [
+                MoveEffect.by(
+                  Vector2(Stage.cellSize.x * v.vector.x * dist,
+                      Stage.cellSize.y * v.vector.y * dist),
+                  EffectController(duration: arrowMoveTime(dist)),
+                ),
+                RemoveEffect(delay: arrowMoveTime(dist)),
+              ],
+              size: Stage.cellSize,
+              anchor: Anchor.center,
+              angle: angle,
+              position:
+                  Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                      Stage.cellSize / 2,
+            ));
+          }
         }
       }
 
