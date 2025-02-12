@@ -815,9 +815,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       tutorial.current = null;
     }
 
-    // セーブデータ削除
-    game.clearAndSaveStageData();
-
     if (addComponents) {
       // 画面上部ゲーム情報領域
       add(topGameInfoArea);
@@ -1068,6 +1065,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       if (stage.score.actual > game.highScore) {
         game.setAndSaveHighScore(stage.score.actual);
       }
+      // セーブデータ削除
+      game.clearAndSaveStageData();
       // ゲームオーバーシーケンスへ
       game.pushSeqNamed('gameover');
       // BGMストップ

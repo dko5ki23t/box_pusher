@@ -49,7 +49,6 @@ class GameoverSeq extends Sequence with KeyboardHandler {
         anchor: Anchor.center,
         text: loc.tryAgain,
         onReleased: () async {
-          await game.clearAndSaveStageData();
           game.pushAndInitGame();
         });
     toTitleButton = GameMenuButton(
@@ -58,7 +57,6 @@ class GameoverSeq extends Sequence with KeyboardHandler {
         anchor: Anchor.center,
         text: loc.toTitle,
         onReleased: () async {
-          await game.clearAndSaveStageData();
           game.pushSeqNamed('title');
         });
     buttonGroup = GameButtonGroup(buttons: [
