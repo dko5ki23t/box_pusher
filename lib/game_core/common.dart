@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:box_pusher/config.dart';
 import 'package:flame/components.dart';
+import 'package:flame/experimental.dart' as flame_geo;
 
 /// 整数座標
 class Point {
@@ -121,11 +123,12 @@ class PointRectRange extends PointRange {
 
   /// 左上と右下は逆で指定しても良い
   PointRectRange(this.lt, this.rb) {
-    if (lt.x > rb.x || lt.y > rb.y) {
-      Point tmp = lt.copy();
-      lt = rb.copy();
-      rb = tmp;
-    }
+    int left = min(lt.x, rb.x);
+    int right = max(lt.x, rb.x);
+    int top = min(lt.y, rb.y);
+    int bottom = max(lt.y, rb.y);
+    lt = Point(left, top);
+    rb = Point(right, bottom);
   }
 
   @override
@@ -163,6 +166,15 @@ class PointRectRange extends PointRange {
         rb.x.toString(),
         rb.y.toString()
       ];
+
+  flame_geo.Rectangle toFlameRectangle(Vector2 unitSize) {
+    return flame_geo.Rectangle.fromPoints(
+        Vector2(lt.x * unitSize.x, lt.y * unitSize.y),
+        Vector2(rb.x * unitSize.x, rb.y * unitSize.y));
+  }
+
+  int get width => rb.x - lt.x;
+  int get height => rb.y - lt.y;
 }
 
 /// 整数座標による直線表現(ただし、縦横斜め8方向のみ)
@@ -803,5 +815,24 @@ class ValueWithAddingTime {
       _visualValue = _value.toDouble();
       _addingSpeed = 0;
     }
+  }
+}
+
+/// 時間測定・ログ出力
+class StopWatchLog {
+  final Stopwatch _stopwatch;
+  int startMilliseconds = 0;
+
+  StopWatchLog() : _stopwatch = Stopwatch();
+
+  void start() {
+    startMilliseconds = _stopwatch.elapsedMilliseconds;
+    _stopwatch.start();
+  }
+
+  void stop(String logTitle) {
+    _stopwatch.stop();
+    int elapsed = _stopwatch.elapsedMilliseconds - startMilliseconds;
+    dev.log('[$logTitle]計測時間(ミリ秒)：$elapsed');
   }
 }

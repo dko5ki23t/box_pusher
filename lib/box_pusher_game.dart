@@ -464,7 +464,8 @@ class BoxPusherGame extends FlameGame
   }*/
 
   void clampZoom() {
-    camera.viewfinder.zoom = camera.viewfinder.zoom.clamp(0.5, 3.0);
+    gameZoom = gameZoom.clamp(0.8, 3.0);
+    camera.viewfinder.zoom = gameZoom;
   }
 
   @override
@@ -488,7 +489,7 @@ class BoxPusherGame extends FlameGame
     }
     final currentScale = info.scale.global;
     if (!currentScale.isIdentity()) {
-      camera.viewfinder.zoom = gameZoom * currentScale.y;
+      gameZoom *= currentScale.y;
       clampZoom();
     } else {
       // 実行されない（CostomScaleDetectorを使用した弊害？ https://github.com/flame-engine/flame/issues/2635）
@@ -522,8 +523,7 @@ class BoxPusherGame extends FlameGame
       return;
     }
     gameZoom += info.scrollDelta.global.y * -0.001;
-    gameZoom = gameZoom.clamp(0.5, 3.0);
-    camera.viewfinder.zoom = gameZoom;
+    clampZoom();
   }
 
   void pushAndInitGame({bool initialize = true}) {

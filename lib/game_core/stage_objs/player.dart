@@ -175,6 +175,10 @@ class Player extends StageObj {
       attacking = false;
       // 動けないとしても、向きは変更
       vector = actualMove.toStraightLR();
+      // ステージ範囲外への移動を試みているか
+      if (!stage.contains(pos + actualMove.point)) {
+        return;
+      }
       // プレイヤーが壁などにぶつかるか
       if (!stage.get(pos + actualMove.point).playerMovable) {
         return;
@@ -253,6 +257,8 @@ class Player extends StageObj {
     if (!isAbilityAvailable(PlayerAbility.pocket)) return;
     // 移動中ならreturn
     if (moving != Move.none) return;
+    // 目の前がステージ外ならreturn
+    if (!stage.contains(pos + vector.point)) return;
 
     if (pocketItem == null) {
       // 目の前のオブジェクトをポケットに入れる

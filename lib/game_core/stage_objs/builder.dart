@@ -146,14 +146,19 @@ class Builder extends StageObj {
         // ブロック設置
         if (--remainTurnToBuild <= 0) {
           remainTurnToBuild = 0;
-          final buildPosType = stage.get(pos + vector.point).type;
-          if (buildPosType == StageObjType.none &&
-              stage.player.pos != pos + vector.point) {
-            // ブロック設置
-            stage.setStaticType(pos + vector.point, StageObjType.block,
-                level: 100 + level);
-            // 次回ブロック設置までのターンをリセット
-            remainTurnToBuild = Config().builderBuildBlockTurn;
+          // ステージ範囲外には設置不可
+          if (stage.contains(pos + vector.point)) {
+            final buildPosType = stage.get(pos + vector.point).type;
+            if ((buildPosType == StageObjType.none ||
+                    buildPosType == StageObjType.water ||
+                    buildPosType == StageObjType.magma) &&
+                stage.player.pos != pos + vector.point) {
+              // ブロック設置
+              stage.setStaticType(pos + vector.point, StageObjType.block,
+                  level: 100 + level);
+              // 次回ブロック設置までのターンをリセット
+              remainTurnToBuild = Config().builderBuildBlockTurn;
+            }
           }
         }
         moving = Move.none;

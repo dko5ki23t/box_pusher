@@ -15,10 +15,10 @@ import 'package:box_pusher/game_core/tutorial.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/effects.dart';
-import 'package:flame/experimental.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/layout.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Image;
 
 /// 有効なオブジェクトのみを扱えるようにするリスト
@@ -243,6 +243,9 @@ class Stage {
   /// ステージの右下上限座標
   Point stageMaxRB = Point(50, 50);
 
+  /// ステージの範囲
+  PointRectRange get stageMaxRange => PointRectRange(stageMaxLT, stageMaxRB);
+
   /// ステージの横幅
   int get stageWidth => stageRB.x - stageLT.x;
 
@@ -270,6 +273,10 @@ class Stage {
   /// 【テストモード】ブロック破壊時出現オブジェクトの分布範囲表示
   List<Component> objInBlockMapView = [];
 
+  /// 【テストモード】時間計測
+  StopWatchLog? _stopWatchLog1;
+  //StopWatchLog? _stopWatchLog2;
+
   /// ゲームワールド
   final World gameWorld;
 
@@ -284,6 +291,10 @@ class Stage {
       required this.gameWorld,
       required this.tutorial}) {
     _objFactory = StageObjFactory();
+    if (kDebugMode) {
+      _stopWatchLog1 = StopWatchLog();
+      //_stopWatchLog2 = StopWatchLog();
+    }
   }
 
   Future<void> onLoad() async {
@@ -571,11 +582,11 @@ class Stage {
       if (!stageMaxRange.contains(p)) {
         continue;
       }
-      final gotTypeLevel =
-          StageObjTypeLevel(type: get(p).type, level: get(p).level);
+      final obj = get(p);
+      final gotTypeLevel = StageObjTypeLevel(type: obj.type, level: obj.level);
       if (gotTypeLevel.type == StageObjType.block &&
-          canBreakBlockFunc(get(p) as Block)) {
-        breakingAnimations.add((get(p) as Block).createBreakingBlock());
+          canBreakBlockFunc(obj as Block)) {
+        breakingAnimations.add(obj.createBreakingBlock());
         // TODO: 敵が生み出したブロック（に限らず）破壊したブロックの種類によって出現するアイテムを分けれるように設定できるようにすべし
         if (gotTypeLevel.level < 100) {
           // 敵が生み出したブロック以外のみアイテム出現位置に含める
@@ -607,9 +618,9 @@ class Stage {
               setStaticType(p, StageObjType.warp);
             } else if (item.type == StageObjType.belt) {
               setStaticType(p, StageObjType.belt);
-              assert(get(p).runtimeType == Belt,
-                  'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
-              get(p).vector = MoveExtent.straights.sample(1).first;
+              assert(
+                  obj.runtimeType == Belt, 'Beltじゃない(=Beltの上に何か載ってる)、ありえない！');
+              obj.vector = MoveExtent.straights.sample(1).first;
               beltPoints.add(p);
             } else if (item.type == StageObjType.spawner) {
               setStaticType(p, StageObjType.spawner);
@@ -842,6 +853,10 @@ class Stage {
       void moveAndSet(Move m, int c, int percent) {
         for (int i = 0; i < c; i++) {
           p += m.point;
+          if (!contains(p)) {
+            // ステージ範囲外は無視
+            continue;
+          }
           if (get(p, detectPlayer: true).type == StageObjType.none &&
               Config().random.nextInt(100) < percent) {
             decidedPoints.add(p.copy());
@@ -885,6 +900,11 @@ class Stage {
       // オブジェクト出現エフェクトを表示
       showSpawnEffect(decidedPoints[i]);
     }
+  }
+
+  /// 対象の座標がステージ範囲内か
+  bool contains(Point p) {
+    return stageMaxRange.contains(p);
   }
 
   StageObj get(Point p, {bool detectPlayer = false}) {
@@ -1040,6 +1060,16 @@ class Stage {
           Distribution.decode(entry.value, StageObjTypeLevel.fromStr);
     }
 
+    // プレイヤー作成（プレイヤー位置がgameWorldに追加するコンポーネントに関係するため先に作成）
+    player = _objFactory.createPlayerFromMap(stageData['player']);
+    gameWorld.add(player.animationComponent);
+    // カメラはプレイヤーに追従
+    camera.follow(
+      player.animationComponent,
+      maxSpeed: cameraMaxSpeed,
+    );
+    // カメラの可動域設定
+    _setCameraBounds(camera);
     // 各種ステージオブジェクト設定
     _staticObjs.clear();
     animals.clear();
@@ -1090,26 +1120,12 @@ class Stage {
     mergedCount = stageData['mergedCount'];
     // マージによる出現アイテム更新
     _updateNextMergeItem();
-    // プレイヤー作成
-    player = _objFactory.createPlayerFromMap(stageData['player']);
-    gameWorld.addAll([player.animationComponent]);
-    // カメラはプレイヤーに追従
-    camera.follow(
-      player.animationComponent,
-      maxSpeed: cameraMaxSpeed,
-    );
-    // カメラの可動域設定
-    camera.setBounds(
-      Rectangle.fromPoints(
-          Vector2(stageLT.x * cellSize.x, stageLT.y * cellSize.y),
-          Vector2(stageRB.x * cellSize.x, stageRB.y * cellSize.y)),
-    );
   }
 
   _setStageDataFromInitialData(CameraComponent camera) {
-    // ステージ範囲設定
-    stageLT = Point(-6, -20);
-    stageRB = Point(6, 20);
+    // ステージ範囲設定(update()で更新範囲となるステージ範囲とする)
+    stageLT = -Config().updateRange.copy();
+    stageRB = Config().updateRange.copy();
     // スコア初期化
     score = Score(0);
     // コイン数初期化
@@ -1124,6 +1140,18 @@ class Stage {
     if (Config().setObjInBlockWithDistributionAlgorithm) {
       prepareDistributions();
     }
+    // プレイヤー作成（プレイヤー位置がgameWorldに追加するコンポーネントに関係するため先に作成）
+    player = _objFactory.createPlayer(
+        pos: Point(0, 0), vector: Move.down, savedArg: 0);
+    gameWorld.add(player.animationComponent);
+    // カメラはプレイヤーに追従
+    camera.follow(
+      player.animationComponent,
+      maxSpeed: cameraMaxSpeed,
+    );
+    // カメラの可動域設定
+    _setCameraBounds(camera);
+    // 各種オブジェクト作成
     _staticObjs.clear();
     animals.clear();
     spawners.clear();
@@ -1157,22 +1185,6 @@ class Stage {
         }
       }
     }
-
-    // プレイヤー作成
-    player = _objFactory.createPlayer(
-        pos: Point(0, 0), vector: Move.down, savedArg: 0);
-    gameWorld.add(player.animationComponent);
-    // カメラはプレイヤーに追従
-    camera.follow(
-      player.animationComponent,
-      maxSpeed: cameraMaxSpeed,
-    );
-    // カメラの可動域設定
-    camera.setBounds(
-      Rectangle.fromPoints(
-          Vector2(stageLT.x * cellSize.x, stageLT.y * cellSize.y),
-          Vector2(stageRB.x * cellSize.x, stageRB.y * cellSize.y)),
-    );
   }
 
   void resetCameraPos(CameraComponent camera) {
@@ -1199,6 +1211,10 @@ class Stage {
     bool playerStartMoving =
         (before == Move.none && player.moving != Move.none);
     bool playerEndMoving = (before != Move.none && player.moving == Move.none);
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測開始
+      _stopWatchLog1?.start();
+    }
     // コンベア更新
     for (final belt in beltPoints) {
       _staticObjs[belt]!.update(dt, player.moving, gameWorld, camera, this,
@@ -1218,6 +1234,8 @@ class Stage {
     // ここから先更新対象となる範囲
     final updateTargetRange = PointRectRange(
         player.pos - Config().updateRange, player.pos + Config().updateRange);
+    // カメラの可動域設定
+    _setCameraBounds(camera);
 
     // 床類更新（氷でアイテムを滑らす等）
     for (final p in updateTargetRange.set) {
@@ -1269,13 +1287,6 @@ class Stage {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           playerEndMoving, prohibitedPoints);
     }
-
-    // 敵涌きスポット更新はしない。staticObjsを更新するから
-    //for (final spawner in spawners
-    //    .where((element) => updateTargetRange.contains(element.pos))) {
-    //  spawner.update(dt, player.moving, gameWorld, camera, this,
-    //      playerStartMoving, playerEndMoving, prohibitedPoints);
-    //}
 
     // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
     if (player.pocketItem != null && player.pocketItem!.updateInPocket) {
@@ -1359,34 +1370,29 @@ class Stage {
       Point newLT = stageLT.copy();
       Point newRB = stageRB.copy();
       // 左端
-      if (camera.canSee(
-          _staticObjs[Point(stageLT.x, player.pos.y)]!.animationComponent)) {
-        newLT.x--;
+      if (updateTargetRange.lt.x < stageLT.x) {
+        newLT.x = updateTargetRange.lt.x;
       }
       // 右端
-      if (camera.canSee(
-          _staticObjs[Point(stageRB.x, player.pos.y)]!.animationComponent)) {
-        newRB.x++;
+      if (updateTargetRange.rb.x > stageRB.x) {
+        newRB.x = updateTargetRange.rb.x;
       }
       // 上端
-      if (camera.canSee(
-          _staticObjs[Point(player.pos.x, stageLT.y)]!.animationComponent)) {
-        newLT.y--;
+      if (updateTargetRange.lt.y < stageLT.y) {
+        newLT.y = updateTargetRange.lt.y;
       }
       // 下端
-      if (camera.canSee(
-          _staticObjs[Point(player.pos.x, stageRB.y)]!.animationComponent)) {
-        newRB.y++;
+      if (updateTargetRange.rb.y > stageRB.y) {
+        newRB.y = updateTargetRange.rb.y;
       }
       if (newLT != stageLT || newRB != stageRB) {
         expandStageSize(newLT, newRB);
       }
-      // カメラの可動範囲更新
-      camera.setBounds(
-        Rectangle.fromPoints(
-            Vector2(stageLT.x * cellSize.x, stageLT.y * cellSize.y),
-            Vector2(stageRB.x * cellSize.x, stageRB.y * cellSize.y)),
-      );
+      //_setCameraBounds(camera);
+    }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測終了
+      _stopWatchLog1?.stop("Stage.update()");
     }
   }
 
@@ -1409,6 +1415,18 @@ class Stage {
     for (final v in floorInBlockDistribution.values) {
       v.reset();
     }
+  }
+
+  /// カメラの可動範囲更新
+  void _setCameraBounds(CameraComponent camera) {
+    // update()で更新対象となるステージ範囲
+    final updateTargetRange = PointRectRange(
+        player.pos - Config().updateRange, player.pos + Config().updateRange);
+    // カメラの可動域も更新対象範囲に収める
+    camera.setBounds(
+      updateTargetRange.toFlameRectangle(cellSize),
+      considerViewport: true,
+    );
   }
 
   // 【テストモード】範囲の表示を作成

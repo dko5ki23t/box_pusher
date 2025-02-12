@@ -142,6 +142,8 @@ class Canon extends StageObj {
     }
     if (playerEndMoving) {
       for (final p in attackingPoints) {
+        // ステージ範囲外
+        if (!stage.contains(p)) continue;
         final obj = stage.get(p);
         // hit()でレベルを下げる前にコイン数を取得
         int gettableCoins = obj.coins;

@@ -571,6 +571,8 @@ abstract class StageObj {
       }
       for (final move in MoveExtent.straights) {
         Point eTo = pos + move.point;
+        // ステージ範囲外に出る場合は候補に入れない
+        if (!stage.contains(eTo)) continue;
         final eToObj = stage.get(eTo);
         if (Config().allowEnemyMoveToPushingObjectPoint &&
             player.pushings.isNotEmpty &&
@@ -637,6 +639,8 @@ abstract class StageObj {
       }
       for (final move in MoveExtent.straights) {
         Point eTo = pos + move.point;
+        // ステージ範囲外に出る場合は候補に入れない
+        if (!stage.contains(eTo)) continue;
         final eToObj = stage.get(eTo);
         if (Config().allowEnemyMoveToPushingObjectPoint &&
             player.pushings.isNotEmpty &&
@@ -728,6 +732,8 @@ abstract class StageObj {
       final List<Move> cand = [];
       for (final move in tmpCand) {
         Point eTo = pos + move.point;
+        // ステージ範囲外に出る場合は候補に入れない
+        if (!stage.contains(eTo)) continue;
         final eToObj = stage.get(eTo);
         if (Config().allowEnemyMoveToPushingObjectPoint &&
             player.pushings.isNotEmpty &&
@@ -789,6 +795,8 @@ abstract class StageObj {
       // ターゲットの付近の座標から、移動可能な候補を選ぶ
       List<Point> cand = [];
       for (final p in nearTargetRange.set) {
+        // そもそもステージ範囲外なら除外する
+        if (!stage.contains(p)) continue;
         final obj = stage.get(p, detectPlayer: true);
         // ワープでいきなりプレイヤーと重ならないようにする
         if (obj.type == StageObjType.player ||
@@ -877,6 +885,8 @@ abstract class StageObj {
       for (final entry in candWithGhosting.entries) {
         final move = entry.key;
         Point eTo = pos + move.point;
+        // ステージ範囲外に出る場合は候補に入れない
+        if (!stage.contains(eTo)) continue;
 
         if (canUnGhost(eTo, move)) {
           candWithGhosting[move] = false;
@@ -928,6 +938,8 @@ abstract class StageObj {
   ) {
     bool find = false;
     for (final point in attackables) {
+      // ステージ範囲外は除外
+      if (!stage.contains(point)) continue;
       final target = stage.get(point, detectPlayer: true);
       if (target.type == StageObjType.player) {
         // プレイヤーがいれば攻撃
@@ -1096,6 +1108,10 @@ abstract class StageObj {
     executingsList.clear();
     // 移動先の座標、オブジェクト
     Point to = pos + moveInput.point;
+    // 範囲外に出る場合は、移動できないとする
+    if (!stage.contains(to)) {
+      return false;
+    }
     // 移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
     if (stage.get(to).type == StageObjType.warp) {
       to = stage.getWarpedPoint(to);
@@ -1103,6 +1119,10 @@ abstract class StageObj {
     StageObj toObj = stage.get(to);
     // 押すオブジェクトの移動先の座標、オブジェクト
     Point toTo = to + moveInput.point;
+    // 押す先が範囲外に出る場合は、プレイヤーが移動できるかどうかを返すのみ
+    if (!stage.contains(toTo)) {
+      return toObj.playerMovable && !toObj.pushable;
+    }
     // 押すオブジェクトの移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
     if (stage.get(toTo).type == StageObjType.warp) {
       toTo = stage.getWarpedPoint(toTo);
@@ -1205,16 +1225,23 @@ abstract class StageObj {
       // 1つ先へ
       to = toTo.copy();
       toTo = to + moveInput.point;
+      // 範囲外に出る場合は、そこに破壊不能なブロックがあるとする
+      // =>breakPushing = trueとなったとする
+      if (!stage.contains(toTo)) {
+        // これまでにpushingsに追加したものも含めて一切押せない
+        // ただし、途中でマージできるものがあるならそこまでは押せる
+        pushingsList.clear();
+        executingsList.clear();
+        if (pushingsSave.isNotEmpty) {
+          pushingsList.addAll(pushingsSave);
+          executingsList.addAll(executingsSave);
+          break;
+        }
+        return false;
+      }
       // 押すオブジェクトの移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
       if (stage.get(toTo).type == StageObjType.warp) {
         toTo = stage.getWarpedPoint(toTo);
-      }
-      // 範囲外に出る場合は押せないとする
-      if (toTo.x < stage.stageLT.x ||
-          toTo.y < stage.stageLT.y ||
-          toTo.x > stage.stageRB.x ||
-          toTo.y > stage.stageRB.y) {
-        return false;
       }
       toObj = stage.get(to);
       toToObj = stage.get(toTo);
@@ -1254,6 +1281,8 @@ abstract class StageObj {
     Point toTo = pos;
     for (int i = 0; i < pushings.length; i++) {
       toTo += moving.point;
+      // 範囲外に出る場合はbreak
+      if (!stage.contains(toTo)) break;
       if (stage.get(toTo).type == StageObjType.warp) {
         toTo = stage.getWarpedPoint(toTo);
       }
@@ -1261,13 +1290,14 @@ abstract class StageObj {
     // 押すオブジェクトのうち、なるべく遠くのオブジェクトをマージするために逆順でforループ
     for (int i = pushings.length - 1; i >= 0; i--) {
       final pushing = pushings[i];
+      final toToObj = stage.get(toTo);
       // 押した先のオブジェクトを調べる
-      if (pushing.mergable && pushing.isSameTypeLevel(stage.get(toTo))) {
+      if (pushing.mergable && pushing.isSameTypeLevel(toToObj)) {
         // マージするインデックスを保存
         mergeIndex = i;
         break; // 1回だけマージ
       }
-      if (stage.get(toTo).type == StageObjType.warp) {
+      if (toToObj.type == StageObjType.warp) {
         toTo = stage.getWarpedPoint(toTo, reverse: true);
       }
       toTo -= moving.point;
@@ -1279,6 +1309,11 @@ abstract class StageObj {
 
     // 押したオブジェクト位置更新
     toTo = pos + moving.point;
+    if (!stage.contains(toTo)) {
+      // この時点でステージ範囲外ということは、押すものは無いはず
+      assert(pushings.isEmpty);
+      return;
+    }
     if (stage.get(toTo).type == StageObjType.warp) {
       toTo = stage.getWarpedPoint(toTo);
     }
@@ -1329,6 +1364,10 @@ abstract class StageObj {
         }
       }
       toTo += moving.point;
+      // 範囲外に出る場合はループ終了
+      if (!stage.contains(toTo)) {
+        break;
+      }
       if (stage.get(toTo).type == StageObjType.warp) {
         toTo = stage.getWarpedPoint(toTo);
       }
@@ -1417,9 +1456,11 @@ abstract class StageObj {
         if (obj.shopInfo.payCoins > 0) {
           // コインを支払える、かつオブジェクト出現位置が空いてるなら
           final getItemPos = pos + Point(2, 0);
+          assert(stage.contains(getItemPos));
+          final getItemObj = stage.get(getItemPos);
           if (stage.coins.actual >= obj.shopInfo.payCoins &&
-              stage.get(getItemPos).type == StageObjType.shop &&
-              (stage.get(getItemPos) as Shop).isItemPlace) {
+              getItemObj.type == StageObjType.shop &&
+              (getItemObj as Shop).isItemPlace) {
             // コインを支払ってオブジェクト出現
             stage.coins.actual -= obj.shopInfo.payCoins;
             if (obj.shopInfo.getObj.type == StageObjType.warp) {

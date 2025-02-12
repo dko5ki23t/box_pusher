@@ -320,6 +320,8 @@ class Guardian extends StageObj {
           for (final move in vector.neighbors) pos + move.point,
         ];
         for (final attackPoint in attackPoints) {
+          // ステージ範囲外
+          if (!stage.contains(attackPoint)) continue;
           final obj = stage.get(attackPoint);
           if (obj.isEnemy && obj.killable) {
             attacking = true;
@@ -336,8 +338,11 @@ class Guardian extends StageObj {
         }
       } else if (level > 1) {
         // 周囲8マスへの回転斬り
-        for (final attackPoint
-            in PointRectRange(pos + Point(-1, -1), pos + Point(1, 1)).set) {
+        final attackPoints =
+            PointRectRange(pos + Point(-1, -1), pos + Point(1, 1)).set;
+        for (final attackPoint in attackPoints) {
+          // ステージ範囲外
+          if (!stage.contains(attackPoint)) continue;
           final obj = stage.get(attackPoint);
           if (obj.isEnemy && obj.killable) {
             attacking = true;
@@ -354,9 +359,11 @@ class Guardian extends StageObj {
         if (!attacking) {
           // 前方直線5マスへの飛び道具
           attackingReach = maxReach;
-          for (final attackPoint
-              in PointLineRange(pos + vector.point, vector, attackingReach)
-                  .set) {
+          final attackPoints =
+              PointLineRange(pos + vector.point, vector, attackingReach);
+          for (final attackPoint in attackPoints.set) {
+            // ステージ範囲外
+            if (!stage.contains(attackPoint)) continue;
             final obj = stage.get(attackPoint);
             if (obj.isEnemy && obj.killable) {
               attacking = true;
@@ -403,6 +410,8 @@ class Guardian extends StageObj {
                 PointLineRange(pos + move.point, move, attackingReach).set);
           }
           for (final attackPoint in attackPoints) {
+            // ステージ範囲外
+            if (!stage.contains(attackPoint)) continue;
             final obj = stage.get(attackPoint);
             if (obj.isEnemy && obj.killable) {
               enemyCounts[move] = enemyCounts[move]! + 1;
@@ -473,6 +482,8 @@ class Guardian extends StageObj {
       // レベルが0以下になった敵は消す
       if (attacking) {
         for (final p in attackingPoints) {
+          // ステージ範囲外
+          if (!stage.contains(p)) continue;
           final obj = stage.get(p);
           // hit()でレベルを下げる前にコイン数を取得
           int gettableCoins = obj.coins;

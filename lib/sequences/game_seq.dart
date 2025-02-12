@@ -19,6 +19,7 @@ import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';
 import 'package:flame/layout.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
 
@@ -104,6 +105,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   /// 【テストモード】現在の表示モード切り替えボタン領域
   static Vector2 get viewModeButtonAreaSize => Vector2(60.0, 30.0);
 
+  /// 【テストモード】時間計測ストップウォッチ
+  StopWatchLog? _stopWatchLog;
+
   /// ステージ領域
   static Vector2 get stageViewSize => Vector2(360.0 - xPaddingSize.x * 2,
       640.0 - menuButtonAreaSize.y - topPaddingSize.y - yPaddingSize.y * 2);
@@ -173,6 +177,10 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
 
   @override
   Future<void> onLoad() async {
+    if (kDebugMode) {
+      _stopWatchLog = StopWatchLog();
+    }
+    _stopWatchLog?.start();
     coinImg = await Flame.images.load('coin.png');
     playerControllArrowImg =
         await Flame.images.load('player_controll_arrow.png');
@@ -185,16 +193,23 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     forbiddenImg = await Flame.images.load('forbidden_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     diagonalMoveImg = await Flame.images.load('arrows_output.png');
+    _stopWatchLog?.stop("GameSeq.onLoad()画像読み込み");
     // チュートリアルの画像読み込み
+    _stopWatchLog?.start();
     await tutorial.onLoad();
+    _stopWatchLog?.stop("GameSeq.onLoad()チュートリアルonLoad()");
     // ステージ作成
+    _stopWatchLog?.start();
     stage = Stage(
         testMode: game.testMode, gameWorld: game.world, tutorial: tutorial);
     await stage.onLoad();
+    _stopWatchLog?.stop("GameSeq.onLoad()ステージ準備");
     // 画面コンポーネント作成
+    _stopWatchLog?.start();
     _createComponents();
     // 画面コンポーネント初期化
     initialize(addComponents: true);
+    _stopWatchLog?.stop("GameSeq.onLoad()コンポーネント類初期化");
   }
 
   @override
@@ -1421,6 +1436,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       switch (viewMode) {
         case DebugViewMode.gamePlay:
           // テストモード時のみ、ブロックをタップで破壊
+          if (!stage.contains(stagePos)) break;
           final tapObject = stage.get(stagePos);
           if (tapObject.type == StageObjType.block) {
             stage.breakBlocks(
