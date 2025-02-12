@@ -563,9 +563,14 @@ class Stage {
     /// 破壊されたブロックの位置のリスト
     final List<Point> breaked = [];
     final List<Component> breakingAnimations = [];
+    final stageMaxRange = PointRectRange(stageMaxLT, stageMaxRB);
 
     for (final p in range.set) {
       //if (p == basePoint) continue;
+      // ステージ範囲内チェック
+      if (!stageMaxRange.contains(p)) {
+        continue;
+      }
       final gotTypeLevel =
           StageObjTypeLevel(type: get(p).type, level: get(p).level);
       if (gotTypeLevel.type == StageObjType.block &&
@@ -1303,9 +1308,14 @@ class Stage {
     enemyAttackPoints.clear();
 
     // マージによる敵へのダメージ処理
+    final stageMaxRange = PointRectRange(stageMaxLT, stageMaxRB);
     for (final mergeAffect in mergeAffects) {
       if (mergeAffect.enemyDamage > 0) {
         for (final p in mergeAffect.range.set) {
+          // ステージ範囲外チェック
+          if (!stageMaxRange.contains(p)) {
+            continue;
+          }
           final obj = get(p);
           // hit()でレベルを下げる前にコイン数を取得
           int gettableCoins = obj.coins;
