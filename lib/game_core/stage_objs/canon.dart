@@ -111,6 +111,8 @@ class Canon extends StageObj {
       if (!Config().isArrowPathThrough) {
         // 砲弾がオブジェクトに当たる場合は飛距離はそこまで
         for (dist = 1; dist < attackingReach + 1; dist++) {
+          // ステージ範囲外
+          if (!stage.contains(pos + vector.point * dist)) break;
           final obj = stage.getAfterPush(pos + vector.point * dist);
           if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
             break;

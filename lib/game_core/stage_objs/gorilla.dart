@@ -102,9 +102,7 @@ class Gorilla extends StageObj {
 
   @override
   void onRemove(World gameWorld) {
-    if (gameWorld.contains(talkBubble)) {
-      gameWorld.remove(talkBubble);
-    }
+    gameWorldRemove(gameWorld, talkBubble);
   }
 
   @override

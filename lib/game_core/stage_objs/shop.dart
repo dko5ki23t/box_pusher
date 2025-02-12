@@ -190,8 +190,8 @@ class Shop extends StageObj {
 
   @override
   void onRemove(World gameWorld) {
-    if (infoBubble != null && gameWorld.contains(infoBubble!)) {
-      gameWorld.remove(infoBubble!);
+    if (infoBubble != null) {
+      gameWorldRemove(gameWorld, infoBubble!);
     }
   }
 

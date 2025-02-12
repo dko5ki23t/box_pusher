@@ -257,6 +257,8 @@ class Archer extends StageObj {
           int dist = arrowReach;
           if (!Config().isArrowPathThrough) {
             for (dist = 1; dist < arrowReach + 1; dist++) {
+              // ステージ範囲外
+              if (!stage.contains(pos + v.point * dist)) break;
               final obj = stage.getAfterPush(pos + v.point * dist);
               if (!obj.isEnemy && !obj.enemyMovable) {
                 break;

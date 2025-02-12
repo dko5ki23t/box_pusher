@@ -228,9 +228,7 @@ class Barrierman extends StageObj {
         ++turns;
         if (turns == barrierTurns) {
           // バリアを削除
-          if (gameWorld.contains(barrierComponent)) {
-            gameWorld.remove(barrierComponent);
-          }
+          gameWorldRemove(gameWorld, barrierComponent);
         }
         if (turns >= barrierPeriod) {
           turns = 0;
@@ -261,9 +259,7 @@ class Barrierman extends StageObj {
 
   @override
   void onRemove(World gameWorld) {
-    if (gameWorld.contains(barrierComponent)) {
-      gameWorld.remove(barrierComponent);
-    }
+    gameWorldRemove(gameWorld, barrierComponent);
   }
 
   @override

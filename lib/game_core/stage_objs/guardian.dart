@@ -376,6 +376,10 @@ class Guardian extends StageObj {
                 for (attackingReach = 1;
                     attackingReach < maxReach + 1;
                     attackingReach++) {
+                  // ステージ範囲外
+                  if (!stage.contains(pos + vector.point * attackingReach)) {
+                    break;
+                  }
                   final obj =
                       stage.getAfterPush(pos + vector.point * attackingReach);
                   if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {

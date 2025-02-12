@@ -49,7 +49,9 @@ class StageObjList {
   /// すべての要素をWorldから削除してリストもクリアする
   void clean(World gameWorld) {
     for (final obj in _objs) {
-      gameWorld.remove(obj.animationComponent);
+      if (gameWorld.contains(obj.animationComponent)) {
+        gameWorldRemove(gameWorld, obj.animationComponent);
+      }
     }
     _objs.clear();
   }
@@ -59,7 +61,7 @@ class StageObjList {
     for (final obj in _objs
         .where((element) => !element.valid || !element.validAfterFrame)) {
       obj.onRemove(gameWorld);
-      gameWorld.remove(obj.animationComponent);
+      gameWorldRemove(gameWorld, obj.animationComponent);
     }
     _objs.removeWhere((element) => !element.valid || !element.validAfterFrame);
   }
@@ -243,7 +245,7 @@ class Stage {
   /// ステージの右下上限座標
   Point stageMaxRB = Point(50, 50);
 
-  /// ステージの範囲
+  /// ステージの最大範囲
   PointRectRange get stageMaxRange => PointRectRange(stageMaxLT, stageMaxRB);
 
   /// ステージの横幅
@@ -251,6 +253,14 @@ class Stage {
 
   /// ステージの縦幅
   int get stageHeight => stageRB.y - stageLT.y;
+
+  /// update()する範囲
+  PointRectRange get updateRange => PointRectRange(
+      player.pos - Config().updateRange, player.pos + Config().updateRange);
+
+  /// プレイヤーが移動するごとに更新する、以前までのupdate()対象範囲
+  /// gameWorldに追加しておくコンポーネントを管理する際に差分を求めるために使う
+  PointRectRange? _prevUpdateRange;
 
   /// スコアの最大値
   static int maxScore = 99999999;
@@ -315,8 +325,8 @@ class Stage {
   }) {
     final ret = _objFactory.create(
         typeLevel: typeLevel, pos: pos, vector: vector, savedArg: 0);
-    // ComponentをWorldに追加
-    if (addToGameWorld) {
+    // ComponentをWorldに追加(ただし、update()対象範囲のみ)
+    if (addToGameWorld && updateRange.contains(ret.pos)) {
       gameWorld.add(ret.animationComponent);
     }
     return ret;
@@ -329,8 +339,8 @@ class Stage {
     bool addToGameWorld = true,
   }) {
     final ret = _objFactory.createFromMap(src);
-    // ComponentをWorldに追加
-    if (addToGameWorld) {
+    // ComponentをWorldに追加(ただし、update()対象範囲のみ)
+    if (addToGameWorld && updateRange.contains(ret.pos)) {
       gameWorld.add(ret.animationComponent);
     }
     return ret;
@@ -907,6 +917,9 @@ class Stage {
     return stageMaxRange.contains(p);
   }
 
+  /// 対象座標位置にあるオブジェクトを取得する
+  /// 複数重なっている場合、優先順位は敵>押せるもの等>床類
+  /// ただし、ゴースト化した敵や煙などは対象から除外する
   StageObj get(Point p, {bool detectPlayer = false}) {
     if (detectPlayer && player.pos == p) {
       return player;
@@ -922,6 +935,21 @@ class Stage {
     } else {
       return safeGetStaticObj(p);
     }
+  }
+
+  /// 対象座標位置にあるオブジェクトをすべて取得する
+  /// ゴースト化した敵や煙なども取得する
+  List<StageObj> getList(Point p, {bool detectPlayer = false}) {
+    List<StageObj> ret = [];
+    if (detectPlayer && player.pos == p) {
+      ret.add(player);
+    }
+    ret.addAll(
+        boxes.where((element) => element.pos == p && !element.isOverlay));
+    ret.addAll(
+        enemies.where((element) => element.pos == p && !element.isOverlay));
+    ret.add(safeGetStaticObj(p));
+    return ret;
   }
 
   /// 静的オブジェクトを取得する。まだ用意されていない場合は用意する
@@ -985,7 +1013,7 @@ class Stage {
   }
 
   void setStaticType(Point p, StageObjType type, {int level = 1}) {
-    gameWorld.remove(_staticObjs[p]!.animationComponent);
+    gameWorldRemove(gameWorld, _staticObjs[p]!.animationComponent);
     _staticObjs[p]!.onRemove(gameWorld);
     if (_staticObjs[p]!.isAnimals) {
       animals.remove(_staticObjs[p]!);
@@ -1232,8 +1260,7 @@ class Stage {
     }
 
     // ここから先更新対象となる範囲
-    final updateTargetRange = PointRectRange(
-        player.pos - Config().updateRange, player.pos + Config().updateRange);
+    final updateTargetRange = updateRange;
     // カメラの可動域設定
     _setCameraBounds(camera);
 
@@ -1388,12 +1415,44 @@ class Stage {
       if (newLT != stageLT || newRB != stageRB) {
         expandStageSize(newLT, newRB);
       }
-      //_setCameraBounds(camera);
+      // gameWorldに追加しているcomponentの状態を更新
+      _updateGameWorldAdding();
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
       _stopWatchLog1?.stop("Stage.update()");
     }
+  }
+
+  /// gameWorld配下に追加しているコンポーネントを更新する
+  /// (update()対象範囲のコンポーネントのみがgameWorldに追加されている状態にする)
+  void _updateGameWorldAdding() {
+    final currentUpdateRange = updateRange;
+    if (_prevUpdateRange != null) {
+      // removeすべきcomponentを持つオブジェクトの位置
+      final removePosSet =
+          _prevUpdateRange!.set.difference(currentUpdateRange.set);
+      for (final p in removePosSet) {
+        if (!contains(p)) continue;
+        // 対象位置オブジェクトが持つcomponentを削除
+        final list = getList(p);
+        for (final o in list) {
+          gameWorldRemove(gameWorld, o.animationComponent);
+        }
+      }
+      // addすべきcomponentを持つオブジェクトの位置
+      final addPosSet =
+          currentUpdateRange.set.difference(_prevUpdateRange!.set);
+      for (final p in addPosSet) {
+        if (!contains(p)) continue;
+        // 対象位置オブジェクトが持つcomponentを追加
+        final list = getList(p);
+        for (final o in list) {
+          gameWorldAdd(gameWorld, o.animationComponent);
+        }
+      }
+    }
+    _prevUpdateRange = currentUpdateRange;
   }
 
   void prepareDistributions() {
@@ -1419,12 +1478,9 @@ class Stage {
 
   /// カメラの可動範囲更新
   void _setCameraBounds(CameraComponent camera) {
-    // update()で更新対象となるステージ範囲
-    final updateTargetRange = PointRectRange(
-        player.pos - Config().updateRange, player.pos + Config().updateRange);
     // カメラの可動域も更新対象範囲に収める
     camera.setBounds(
-      updateTargetRange.toFlameRectangle(cellSize),
+      updateRange.toFlameRectangle(cellSize),
       considerViewport: true,
     );
   }
