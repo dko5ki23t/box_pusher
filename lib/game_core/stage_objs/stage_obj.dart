@@ -41,6 +41,7 @@ import 'package:box_pusher/game_core/stage_objs/wizard.dart';
 import 'package:box_pusher/game_core/tutorial.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart' hide Block;
+import 'package:flutter/foundation.dart';
 
 /// ステージ上オブジェクトの種類
 enum StageObjType {
@@ -400,6 +401,14 @@ abstract class StageObj {
   /// レベル
   int get level => _typeLevel.level;
   set level(int l) {
+    if (kDebugMode) {
+      assert(l >= 0);
+    }
+    if (level < 0) {
+      // 例外起こして止まるのを避けてる
+      // TODO:骨の敵が-1になることある、原因究明
+      remove();
+    }
     // 攻撃中かどうか、レベル、向きでアニメーションを変更する
     if (attacking) {
       if (!levelToAttackAnimations[attackCh]!.containsKey(l)) {

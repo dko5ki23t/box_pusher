@@ -116,7 +116,7 @@ class Audio {
   Audio._internal();
 
   /// 同時に再生できる効果音の数
-  final int soundPlayerNum = 5;
+  final int soundPlayerNum = 10;
 
   late AudioPlayerWithStatus _bgmPlayer;
   late List<AudioPlayerWithStatus> _soundPlayers;
