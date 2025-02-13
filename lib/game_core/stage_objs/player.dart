@@ -279,6 +279,13 @@ class Player extends StageObj {
         pocketItem!.pos = pos + vector.point;
         stage.setObjectPosition(pocketItem!);
         gameWorld.add(pocketItem!.animationComponent);
+        // 置いた場所がマグマならオブジェクト蒸発
+        if (target.type == StageObjType.magma) {
+          // コイン獲得
+          stage.coins.actual += pocketItem!.coins;
+          stage.showGotCoinEffect(pocketItem!.coins, pos + vector.point);
+          pocketItem!.remove();
+        }
         pocketItem = null;
       }
     }
