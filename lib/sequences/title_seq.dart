@@ -3,21 +3,25 @@ import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
+import 'package:flame/extensions.dart';
+import 'package:flame/flame.dart';
 import 'package:flame/layout.dart';
 //import 'package:flame/events.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
 //import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
-  late final TextComponent titleText;
+  //late final TextComponent titleText;
+  late final SpriteComponent titleLogo;
   late final TextComponent highScreText;
   late final GameButtonGroup buttonGroup;
   late final GameTextButton newGameButton;
   late final GameTextButton continueButton;
   late final GameTextButton languageButton;
   late final GameTextButton versionLogButton;
+  late final Image titleLogoImage;
   late final Image bugImage;
   //late final GameButton debugOnOffButton;
   late final GameTextButton debugButton;
@@ -25,18 +29,25 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   @override
   Future<void> onLoad() async {
     final loc = game.localization;
-    titleText = TextComponent(
-      text: loc.gameTitle,
-      size: Vector2(150.0, 45.0),
-      position: Vector2(180.0, 260.0),
+    //titleText = TextComponent(
+    //  text: loc.gameTitle,
+    //  size: Vector2(150.0, 45.0),
+    //  position: Vector2(180.0, 260.0),
+    //  anchor: Anchor.center,
+    //  textRenderer: TextPaint(
+    //    style: const TextStyle(
+    //      fontFamily: Config.gameTextFamily,
+    //      color: Color(0xff000000),
+    //      fontSize: 40,
+    //    ),
+    //  ),
+    //);
+    titleLogoImage = await Flame.images.load('title_logo.png');
+    titleLogo = SpriteComponent.fromImage(
+      titleLogoImage,
+      size: Vector2(280.0, 110.0),
+      position: Vector2(180.0, 220.0),
       anchor: Anchor.center,
-      textRenderer: TextPaint(
-        style: const TextStyle(
-          fontFamily: Config.gameTextFamily,
-          color: Color(0xff000000),
-          fontSize: 40,
-        ),
-      ),
     );
     highScreText = TextComponent(
       text: "${loc.highScore} : ${game.highScore}",
@@ -65,10 +76,6 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       enabled: game.stageData.isNotEmpty,
       onReleased: () => game.pushAndInitGame(),
     );
-    buttonGroup = GameButtonGroup(buttons: [
-      newGameButton,
-      continueButton,
-    ]);
     languageButton = GameTextButton(
       size: Vector2(80.0, 20.0),
       position: Vector2(300.0, 40.0),
@@ -76,6 +83,11 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       text: loc.language,
       onReleased: () => game.changeLocale(),
     );
+    buttonGroup = GameButtonGroup(buttons: [
+      languageButton,
+      newGameButton,
+      continueButton,
+    ], focusIdx: 1);
     versionLogButton = GameTextButton(
       size: Vector2(120.0, 30.0),
       position: Vector2(180.0, 410.0),
@@ -106,7 +118,8 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
           ..color = Colors.white
           ..style = PaintingStyle.fill,
       ),
-      titleText,
+      //titleText,
+      titleLogo,
       newGameButton,
       continueButton,
       languageButton,
@@ -197,7 +210,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   @override
   void onLangChanged() {
     final loc = game.localization;
-    titleText.text = loc.gameTitle;
+    //titleText.text = loc.gameTitle;
     newGameButton.text = loc.newGame;
     continueButton.text = loc.loadGame;
     languageButton.text = loc.language;
