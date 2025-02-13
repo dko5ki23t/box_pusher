@@ -1,3 +1,7 @@
+import 'dart:math';
+import 'dart:ui';
+
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -5,12 +9,14 @@ import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
+import 'package:flame/layout.dart';
+import 'package:flutter/widgets.dart' hide Image;
 
-class Jewel extends StageObj {
-  static const int jewelMaxLevel = 14;
-
+class Weight extends StageObj {
   /// 各レベルごとの画像のファイル名
-  static String get imageFileName => 'jewels.png';
+  static String get imageFileName => 'weight.png';
+
+  static const int weightMaxLevel = 5;
 
   /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
   static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
@@ -23,17 +29,29 @@ class Jewel extends StageObj {
         Move.none:
             SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
       },
-      for (int i = 1; i <= jewelMaxLevel; i++)
-        i: {
+      for (int i = 1; i <= weightMaxLevel; i++)
+        1: {
           Move.none: SpriteAnimation.spriteList([
-            Sprite(baseImg,
-                srcPosition: Vector2((i - 1) * 32, 0), srcSize: Stage.cellSize)
+            Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
           ], stepTime: 1.0)
         },
     };
   }
 
-  Jewel({
+  final AlignComponent _weightViewComponent = AlignComponent(
+    alignment: Anchor.center,
+    child: TextComponent(
+      priority: Stage.frontPriority,
+      text: '',
+      textRenderer: TextPaint(
+          style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontFamily: Config.gameTextFamily,
+              color: Color(0xff000000))),
+    ),
+  );
+
+  Weight({
     required super.savedArg,
     required Vector2? scale,
     required ScaleEffect scaleEffect,
@@ -52,10 +70,12 @@ class Jewel extends StageObj {
           ),
           levelToAnimations: levelToAnimationsS,
           typeLevel: StageObjTypeLevel(
-            type: StageObjType.jewel,
+            type: StageObjType.weight,
             level: level,
           ),
-        );
+        ) {
+    super.animationComponent.add(_weightViewComponent);
+  }
 
   @override
   void update(
@@ -68,6 +88,14 @@ class Jewel extends StageObj {
     bool playerEndMoving,
     Map<Point, Move> prohibitedPoints,
   ) {}
+
+  int getWeight() => pow(2, (level - 1)).toInt();
+
+  @override
+  set level(int l) {
+    super.level = l;
+    (_weightViewComponent.child as TextComponent).text = '${getWeight()}';
+  }
 
   @override
   bool get pushable => true;
@@ -88,7 +116,7 @@ class Jewel extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => jewelMaxLevel;
+  int get maxLevel => weightMaxLevel;
 
   @override
   bool get isEnemy => false;

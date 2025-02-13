@@ -37,6 +37,7 @@ import 'package:box_pusher/game_core/stage_objs/treasure_box.dart';
 import 'package:box_pusher/game_core/stage_objs/turtle.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:box_pusher/game_core/stage_objs/water.dart';
+import 'package:box_pusher/game_core/stage_objs/weight.dart';
 import 'package:box_pusher/game_core/stage_objs/wizard.dart';
 import 'package:box_pusher/game_core/tutorial.dart';
 import 'package:collection/collection.dart';
@@ -78,6 +79,7 @@ enum StageObjType {
   spawner, // 敵を生み出す場
   boneman, // 骨の敵、倒すと押せるオブジェクト化、一定ターンで復活
   barrierman, // 範囲内の敵に一定以上ダメージを軽減させるバリアを展開する敵
+  weight,
 }
 
 extension StageObjTypeExtent on StageObjType {
@@ -115,6 +117,7 @@ extension StageObjTypeExtent on StageObjType {
     StageObjType.spawner: 'spawner',
     StageObjType.boneman: 'boneman',
     StageObjType.barrierman: 'barrierman',
+    StageObjType.weight: 'weight',
   };
 
   String get str => strMap[this]!;
@@ -187,6 +190,8 @@ extension StageObjTypeExtent on StageObjType {
         return Boneman;
       case StageObjType.barrierman:
         return Barrierman;
+      case StageObjType.weight:
+        return Weight;
     }
   }
 
@@ -258,6 +263,8 @@ extension StageObjTypeExtent on StageObjType {
         return Boneman.imageFileName;
       case StageObjType.barrierman:
         return Barrierman.imageFileName;
+      case StageObjType.weight:
+        return Weight.imageFileName;
     }
   }
 
@@ -1221,7 +1228,11 @@ abstract class StageObj {
       pushingsList.add(stage.boxes.firstWhere((element) => element.pos == to));
       executingsList.add(executing);
       // 同時に押しているアイテムの重さ加算
-      ++pushingWeight;
+      if (pushingsList.last.type == StageObjType.weight) {
+        pushingWeight += (pushingsList.last as Weight).getWeight();
+      } else {
+        ++pushingWeight;
+      }
       // オブジェクトの移動先は、他のオブジェクトの移動先にならないようにする
       prohibitedPoints[toTo] = Move.none;
       if (stopBecauseDrill) {

@@ -33,6 +33,7 @@ import 'package:box_pusher/game_core/stage_objs/block.dart';
 import 'package:box_pusher/game_core/stage_objs/turtle.dart';
 import 'package:box_pusher/game_core/stage_objs/warp.dart';
 import 'package:box_pusher/game_core/stage_objs/water.dart';
+import 'package:box_pusher/game_core/stage_objs/weight.dart';
 import 'package:box_pusher/game_core/stage_objs/wizard.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
@@ -97,6 +98,7 @@ class StageObjFactory {
     await Warp.onLoad(errorImg: errorImg);
     await Water.onLoad(errorImg: errorImg);
     await Wizard.onLoad(errorImg: errorImg);
+    await Weight.onLoad(errorImg: errorImg);
     coinImg = await Flame.images.load('coin.png');
     isReady = true;
   }
@@ -295,6 +297,14 @@ class StageObjFactory {
       case StageObjType.barrierman:
         return Barrierman(savedArg: savedArg, pos: pos, level: typeLevel.level)
           ..vector = vector;
+      case StageObjType.weight:
+        return Weight(
+          savedArg: savedArg,
+          scale: scale,
+          scaleEffect: scaleEffect,
+          pos: pos,
+          level: typeLevel.level,
+        );
     }
   }
 
