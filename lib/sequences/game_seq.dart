@@ -82,7 +82,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   static Vector2 get abilityButtonAreaSize => Vector2(30.0, 30.0);
 
   /// 次マージ時出現アイテム領域
-  static Vector2 get nextItemAreaSize => Vector2(150.0, 35.0);
+  static Vector2 get nextItemAreaSize => Vector2(133.0, 35.0);
 
   /// スコア領域
   static Vector2 get scoreAreaSize => Vector2(70.0, 35.0);
