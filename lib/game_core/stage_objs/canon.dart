@@ -16,11 +16,21 @@ class Canon extends StageObj {
   /// 砲弾の画像のファイル名
   static String get canonballFileName => 'canonball.png';
 
+  /// 魔法弾の画像のファイル名
+  static String get magicFileName => 'guardian_magic.png';
+
   /// 砲弾のアニメーション
   static late final List<SpriteAnimation> canonballAnimations;
 
-  /// 砲弾の飛距離
-  static const int attackingReach = 3;
+  /// 砲弾/魔法弾の飛距離
+  int get attackingReach => level == 1 ? 3 : 5;
+
+  /// 各レベルごとの重さ
+  static final levelToWeight = {
+    1: 4,
+    2: 10,
+    3: 20,
+  };
 
   /// オブジェクトのレベル->向き->アニメーションのマップ（staticにして唯一つ保持、メモリ節約）
   static Map<int, Map<Move, SpriteAnimation>> levelToAnimationsS = {};
@@ -29,31 +39,47 @@ class Canon extends StageObj {
   static Future<void> onLoad({required Image errorImg}) async {
     final baseImg = await Flame.images.load(imageFileName);
     final canonballImg = await Flame.images.load(canonballFileName);
+    final magicImg = await Flame.images.load(magicFileName);
     levelToAnimationsS = {
       0: {
         Move.none:
             SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
       },
-      1: {
-        Move.down: SpriteAnimation.spriteList([
-          Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-        ], stepTime: 1.0),
-        Move.up: SpriteAnimation.spriteList([
-          Sprite(baseImg, srcPosition: Vector2(32, 0), srcSize: Stage.cellSize)
-        ], stepTime: 1.0),
-        Move.left: SpriteAnimation.spriteList([
-          Sprite(baseImg, srcPosition: Vector2(64, 0), srcSize: Stage.cellSize)
-        ], stepTime: 1.0),
-        Move.right: SpriteAnimation.spriteList([
-          Sprite(baseImg, srcPosition: Vector2(96, 0), srcSize: Stage.cellSize)
-        ], stepTime: 1.0),
-      },
+      for (int i = 1; i <= 3; i++)
+        i: {
+          Move.down: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 128 + 0, 0),
+                srcSize: Stage.cellSize)
+          ], stepTime: 1.0),
+          Move.up: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 128 + 32, 0),
+                srcSize: Stage.cellSize)
+          ], stepTime: 1.0),
+          Move.left: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 128 + 64, 0),
+                srcSize: Stage.cellSize)
+          ], stepTime: 1.0),
+          Move.right: SpriteAnimation.spriteList([
+            Sprite(baseImg,
+                srcPosition: Vector2((i - 1) * 128 + 96, 0),
+                srcSize: Stage.cellSize)
+          ], stepTime: 1.0),
+        },
     };
     canonballAnimations = [
       SpriteAnimation.spriteList([
         Sprite(canonballImg,
             srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
-      ], stepTime: 1.0)
+      ], stepTime: 1.0),
+      for (int i = 0; i < 2; i++)
+        SpriteAnimation.spriteList([
+          Sprite(magicImg, srcPosition: Vector2(0, 0), srcSize: Stage.cellSize),
+          Sprite(magicImg,
+              srcPosition: Vector2(32, 0), srcSize: Stage.cellSize),
+        ], stepTime: 1.0)
     ];
   }
 
@@ -118,38 +144,45 @@ class Canon extends StageObj {
     if (playerStartMoving) {
       // 飛距離
       int dist = attackingReach;
-      if (!Config().isArrowPathThrough) {
-        // 砲弾がオブジェクトに当たる場合は飛距離はそこまで
-        for (dist = 1; dist < attackingReach + 1; dist++) {
-          // ステージ範囲外
-          if (!stage.contains(pos + vector.point * dist)) break;
-          final obj = stage.getAfterPush(pos + vector.point * dist);
-          if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
-            break;
-          }
-        }
-        --dist;
+      // 撃つ砲弾/魔法弾の方向
+      List<Move> ballVectors = [vector];
+      // レベル3の時は斜めを追加
+      if (level == 3) {
+        ballVectors.addAll(vector.neighbors);
       }
-      if (dist > 0) {
-        gameWorld.add(SpriteAnimationComponent(
-          animation: canonballAnimations[level - 1],
-          priority: Stage.movingPriority,
-          children: [
-            MoveEffect.by(
-              Vector2(Stage.cellSize.x * vector.point.x * dist,
-                  Stage.cellSize.y * vector.point.y * dist),
-              EffectController(duration: canonballMoveTime(dist)),
-            ),
-            RemoveEffect(delay: canonballMoveTime(dist)),
-          ],
-          size: Stage.cellSize,
-          anchor: Anchor.center,
-          position:
-              Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-                  Stage.cellSize / 2,
-        ));
-        attackingPoints
-            .addAll(PointLineRange(pos + vector.point, vector, dist).set);
+      for (final v in ballVectors) {
+        if (level == 1 && !Config().isArrowPathThrough) {
+          // 砲弾がオブジェクトに当たる場合は飛距離はそこまで
+          for (dist = 1; dist < attackingReach + 1; dist++) {
+            // ステージ範囲外
+            if (!stage.contains(pos + v.point * dist)) break;
+            final obj = stage.getAfterPush(pos + v.point * dist);
+            if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
+              break;
+            }
+          }
+          --dist;
+        }
+        if (dist > 0) {
+          gameWorld.add(SpriteAnimationComponent(
+            animation: canonballAnimations[level - 1],
+            priority: Stage.movingPriority,
+            children: [
+              MoveEffect.by(
+                Vector2(Stage.cellSize.x * v.point.x * dist,
+                    Stage.cellSize.y * v.point.y * dist),
+                EffectController(duration: canonballMoveTime(dist)),
+              ),
+              RemoveEffect(delay: canonballMoveTime(dist)),
+            ],
+            size: Stage.cellSize,
+            anchor: Anchor.center,
+            position:
+                Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                    Stage.cellSize / 2,
+          ));
+          attackingPoints.addAll(PointLineRange(pos + v.point, v, dist).set);
+        }
       }
     }
     if (playerEndMoving) {
@@ -201,6 +234,12 @@ class Canon extends StageObj {
   }
 
   @override
+  set level(int l) {
+    super.level = l;
+    (_weightViewComponent.child as WeightComponent).weight = weight;
+  }
+
+  @override
   bool get pushable => true;
 
   @override
@@ -219,7 +258,7 @@ class Canon extends StageObj {
   bool get mergable => level < maxLevel;
 
   @override
-  int get maxLevel => 1;
+  int get maxLevel => 3;
 
   @override
   bool get isEnemy => false;
@@ -238,5 +277,5 @@ class Canon extends StageObj {
   bool get updateInPocket => true;
 
   @override
-  int get weight => 1;
+  int get weight => levelToWeight[level]!;
 }
