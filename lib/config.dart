@@ -609,6 +609,7 @@ class Config {
         return mergePower >= 3;
       case 103:
         return mergePower >= 4;
+      case Block.unbreakableLevel:
       default:
         return false;
     }

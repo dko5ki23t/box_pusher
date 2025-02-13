@@ -10,6 +10,9 @@ class Block extends StageObj {
   /// 各レベルごとの画像のファイル名
   static String get imageFileName => 'block.png';
 
+  /// 破壊不能ブロックのレベル
+  static const int unbreakableLevel = 50;
+
   /// ブロック破壊時アニメーション（staticにして唯一つ保持、メモリ節約）
   static Map<int, SpriteAnimation> breakingAnimations = {};
 

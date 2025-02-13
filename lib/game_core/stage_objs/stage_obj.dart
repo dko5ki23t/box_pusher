@@ -1235,25 +1235,17 @@ abstract class StageObj {
       to = toTo.copy();
       toTo = to + moveInput.point;
       // 範囲外に出る場合は、そこに破壊不能なブロックがあるとする
-      // =>breakPushing = trueとなったとする
       if (!stage.contains(toTo)) {
-        // これまでにpushingsに追加したものも含めて一切押せない
-        // ただし、途中でマージできるものがあるならそこまでは押せる
-        pushingsList.clear();
-        executingsList.clear();
-        if (pushingsSave.isNotEmpty) {
-          pushingsList.addAll(pushingsSave);
-          executingsList.addAll(executingsSave);
-          break;
+        toObj = stage.get(to);
+        toToObj = stage.mienaikabe!;
+      } else {
+        // 押すオブジェクトの移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
+        if (stage.get(toTo).type == StageObjType.warp) {
+          toTo = stage.getWarpedPoint(toTo);
         }
-        return false;
+        toObj = stage.get(to);
+        toToObj = stage.get(toTo);
       }
-      // 押すオブジェクトの移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
-      if (stage.get(toTo).type == StageObjType.warp) {
-        toTo = stage.getWarpedPoint(toTo);
-      }
-      toObj = stage.get(to);
-      toToObj = stage.get(toTo);
     }
     // 押せる可能範囲全て押せるとしても、途中でマージするならそこまでしか押せない
     if (pushingsSave.isNotEmpty) {

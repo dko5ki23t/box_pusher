@@ -189,6 +189,9 @@ class Stage {
   /// effectを追加する際、動きを合わせる基となるエフェクトを持つStageObj（不可視）
   List<StageObj> effectBase = [];
 
+  /// ステージ外にある架空のブロック（破壊不可）
+  StageObj? mienaikabe;
+
   /// 箱
   StageObjList boxes = StageObjList();
 
@@ -382,6 +385,12 @@ class Stage {
     ];
     effectBase.first.animationComponent.opacity = 0.0;
     gameWorld.add(effectBase.first.animationComponent);
+    // 見えない壁を準備
+    mienaikabe ??= _objFactory.create(
+        typeLevel: StageObjTypeLevel(
+            type: StageObjType.block, level: Block.unbreakableLevel),
+        pos: Point(1000, 1000),
+        savedArg: 0);
     // 前回のステージ情報が保存されているなら
     bool ret = stageData.containsKey('score');
     if (ret) {
