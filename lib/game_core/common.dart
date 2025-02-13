@@ -576,7 +576,7 @@ class Distribution<T> {
   final bool overdoseException;
 
   Distribution(Map<T, int> nums, this.totalTotal,
-      {this.overdoseException = true})
+      {this.overdoseException = false})
       : remainTotal = totalTotal {
     _total.addAll(nums);
     _remain.addAll(nums);
@@ -584,7 +584,7 @@ class Distribution<T> {
 
   Distribution.fromPercent(
       Map<T, int> percents, this.totalTotal, RoundMode roundMode,
-      {this.overdoseException = true})
+      {this.overdoseException = false})
       : remainTotal = totalTotal {
     for (final e in percents.entries) {
       double n = totalTotal * e.value * 0.01;
@@ -608,7 +608,7 @@ class Distribution<T> {
 
   Distribution.fromPercentWithMinMax(
       Map<T, NumsAndPercent> percents, this.totalTotal, RoundMode roundMode,
-      {this.overdoseException = true})
+      {this.overdoseException = false})
       : remainTotal = totalTotal {
     for (final e in percents.entries) {
       double n = totalTotal * e.value.percent * 0.01;
@@ -651,6 +651,7 @@ class Distribution<T> {
       if (overdoseException) {
         throw ('総数が0の分布に対してget操作が行われた。');
       } else {
+        dev.log('総数が0の分布に対してget操作が行われた。');
         return null;
       }
     }
@@ -681,7 +682,7 @@ class Distribution<T> {
   int getTotalNum(T key) => _total[key]!;
 
   Distribution.decode(Map<String, dynamic> json, T Function(String) strToKey,
-      {this.overdoseException = true})
+      {this.overdoseException = false})
       : totalTotal = json['totalTotal'],
         remainTotal = json['remainTotal'] {
     final Map<String, dynamic> jsonDecodedT = jsonDecode(json['total']);
