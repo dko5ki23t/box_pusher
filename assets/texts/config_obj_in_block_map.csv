@@ -14,55 +14,55 @@ rect, -23, 20, 22, 20, 0, 50, 1, wizard, 1, -1, 5, 20, guardian, 1, -1, 2, 10, t
 rect, -3, -29, 4, -23, 0, 50, 1, spawner, 1, 1, 1, 10
 rect, -22, -26, -12, -22, 0, 70, 1, warp, 1, 1, 1, 2, wizard, 2, -1, 5, 10, smoker, 1, -1, 5, 10
 rect, -13, -34, -4, -27, 0, 80, 1, swordsman, 2, -1, -1, 5, spike, 3, -1, -1, 5, guardian, 2, -1, -1, 5
-distance, 13, -29, 0, 0, 6, 65, 0, barrierman, 1, -1, 3, 5, spike, 3, -1, 3, 5, archer, 2, -1, 3, 5, swordsman, 2, -1, 3, 5, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5
-rect, -4, -42, 7, -35, 0, 55, 1, spawner, 2, 1, 1, 1, ghost, 3, 2, 2, 10, builder, 3, 2, 2, 10, barrierman, 3, 2, 2, 10, trap, 3, 5, 5, 10
+distance, 13, -29, 0, 0, 6, 65, 0, barrierman, 1, -1, 3, 5, spike, 3, -1, 3, 5, archer, 2, -1, 3, 5, swordsman, 2, -1, 3, 5, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5, weight, 2, 1, 1, 1
+rect, -4, -42, 7, -35, 0, 55, 1, spawner, 2, 1, 1, 1, ghost, 3, 2, 2, 10, builder, 3, 2, 2, 10, barrierman, 3, 2, 2, 10, trap, 3, 5, 5, 10, weight, 2, 1, 1, 1
 rect, -3, -48, 11, -43, 0, 54, 1, warp, 1, 1, 1, 1, smoker, 2, -1, 5, 10, boneman, 2, -1, 5, 5, ghost, 3, -1, -1, 10, archer, 3, -1, 5, 5, barrierman, 3, -1, -1, 5, guardian, 3, -1, -1, 10
 rect, -11, -48, -6, -43, 0, 90, 1, trap, 3, -1, 2, 5
-rect, -20, -48, -13, -36, 0, 80, 1, pusher, 3, -1, -1, 10, treasure, 1, 1, 1, 1
+rect, -20, -48, -13, -36, 0, 80, 1, pusher, 3, -1, -1, 10, treasure, 1, 1, 1, 1, weight, 2, 1, 1, 1
 rect, 14, -49, 32, -47, 0, 90, 1, spawner, 3, 1, 1, 1, canon, 1, 1, 2, 5
 rect, -14, 24, -10, 34, 0, 70, 1, trap, 2, 3, 10, 10, canon, 1, 1, 1, 5
-rect, -7, 24, 7, 33, 0, 55, 1, warp, 1, 1, 1, 1, drill, 2, 2, 2, 5, bomb, 2, 2, 2, 5, swordsman, 2, 3, 5, 10, archer, 2, 3, 5, 10, wizard, 2, 3, 5, 10
-distance, 12, 38, 0, 0, 6, 80, 0, spawner, 4, 1, 1, 1
+rect, -7, 24, 7, 33, 0, 55, 1, warp, 1, 1, 1, 1, drill, 2, 2, 2, 5, bomb, 2, 2, 2, 5, swordsman, 2, 3, 5, 10, archer, 2, 3, 5, 10, wizard, 2, 3, 5, 10, weight, 2, 1, 1, 1
+distance, 12, 38, 0, 0, 6, 80, 0, spawner, 4, 1, 1, 1, weight, 2, 1, 1, 1
 rect, -21, 42, -17, 45, 0, 90, 1, treasure, 2, 1, 1, 1
-rect, -34, 37, -16, 46, 0, 70, 1, canon, 1, 1, 1, 1, pusher, 3, -1, -1, 8, boneman, 3, -1, -1, 8, barrierman, 3, -1, -1, 8
+rect, -34, 37, -16, 46, 0, 70, 1, canon, 1, 1, 1, 1, pusher, 3, -1, -1, 8, boneman, 3, -1, -1, 8, barrierman, 3, -1, -1, 8, weight, 3, 1, 1, 1
 rect, -14, 37, -6, 45, 0, 55, 1, wizard, 3, -1, -1, 10, barrierman, 3, -1, -1, 10, ghost, 3, -1, -1, 10, trap, 3, -1, -1, 5, guardian, 3, -1, -1, 5
 rect, -5, 42, 4, 46, 0, 50, 1
 rect, -14, 47, 10, 49, 0, 75, 1, spawner, 5, 1, 1, 1
 rect, -42, 47, -16, 49, 0, 55, 1, builder, 3, -1, -1, 15, pusher, 3, -1, -1, 15, barrierman, 3, -1, -1, 5, trap, 3, -1, -1, 5
-rect, -39, 4, -21, 14, 0, 70, 1, spike, 2, 2, 2, 2, swordsman, 2, 2, 2, 2, archer, 2, 2, 2, 2, wizard, 2, 2, 2, 2, pusher, 2, 2, 2, 2, builder, 2, 2, 2, 2, ghost, 2, 2, 2, 2, smoker, 2, 2, 2, 2, boneman, 2, 2, 2, 2, barrierman, 2, 2, 2, 2, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5
-rect, -28, -4, -21, 3, 0, 80, 1, spike, 1, -1, -1, 3, swordsman, 1, -1, -1, 3, archer, 1, -1, -1, 3, wizard, 1, -1, -1, 3, barrierman, 1, -1, -1, 3, trap, 1, -1, -1, 3
-rect, -39, -4, -29, 3, 0, 80, 1, spike, 2, -1, -1, 3, swordsman, 2, -1, -1, 3, archer, 2, -1, -1, 3, wizard, 2, -1, -1, 3, barrierman, 2, -1, -1, 3, trap, 2, -1, -1, 3
-rect, -39, -16, -21, -5, 0, 60, 1, spawner, 6, 1, 1, 1, spike, 2, 2, 2, 2, swordsman, 2, 2, 2, 2, archer, 2, 2, 2, 2, wizard, 2, 2, 2, 2, pusher, 2, 2, 2, 2, builder, 2, 2, 2, 2, ghost, 2, 2, 2, 2, smoker, 2, 2, 2, 2, boneman, 2, 2, 2, 2, barrierman, 2, 2, 2, 2, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5, bomb, 2, 2, 2, 4
-rect, 21, -5, 28, 2, 0, 75, 1, spike, 1, -1, -1, 3, swordsman, 1, -1, -1, 3, archer, 1, -1, -1, 3, wizard, 1, -1, -1, 3, barrierman, 1, -1, -1, 3, trap, 1, -1, -1, 5
-rect, 29, -5, 37, 2, 0, 75, 1, spike, 2, -1, -1, 3, swordsman, 2, -1, -1, 3, archer, 2, -1, -1, 3, wizard, 2, -1, -1, 3, barrierman, 2, -1, -1, 3, trap, 2, -1, -1, 5
-rect, 21, 3, 37, 14, 0, 60, 1, spawner, 6, 1, 1, 1, spike, 2, 2, 2, 2, swordsman, 2, 2, 2, 2, archer, 2, 2, 2, 2, wizard, 2, 2, 2, 2, pusher, 2, 2, 2, 2, builder, 2, 2, 2, 2, ghost, 2, 2, 2, 2, smoker, 2, 2, 2, 2, boneman, 2, 2, 2, 2, barrierman, 2, 2, 2, 2, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5, bomb, 2, 2, 2, 4
-rect, 21, -16, 37, -6, 0, 65, 1, spike, 2, 2, 2, 2, swordsman, 2, 2, 2, 2, archer, 2, 2, 2, 2, wizard, 2, 2, 2, 2, pusher, 2, 2, 2, 2, builder, 2, 2, 2, 2, ghost, 2, 2, 2, 2, smoker, 2, 2, 2, 2, boneman, 2, 2, 2, 2, barrierman, 2, 2, 2, 2, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5
-rect, -35, 15, -24, 25, 0, 80, 1, archer, 3, -1, 8, 10, barrierman, 3, -1, -1, 3, smoker, 3, -1, -1, 3, guardian, 2, -1, -1, 3
+rect, -39, 4, -21, 14, 0, 70, 1, spike, 2, 2, 2, 2, swordsman, 2, 2, 2, 2, archer, 2, 2, 2, 2, wizard, 2, 2, 2, 2, pusher, 2, 2, 2, 2, builder, 2, 2, 2, 2, ghost, 2, 2, 2, 2, smoker, 2, 2, 2, 2, boneman, 2, 2, 2, 2, barrierman, 2, 2, 2, 2, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5, weight, 1, 1, 1, 1
+rect, -28, -4, -21, 3, 0, 80, 1, spike, 1, -1, -1, 3, swordsman, 1, -1, -1, 3, archer, 1, -1, -1, 3, wizard, 1, -1, -1, 3, barrierman, 1, -1, -1, 3, trap, 1, -1, -1, 3, weight, 1, 1, 1, 1
+rect, -39, -4, -29, 3, 0, 80, 1, spike, 2, -1, -1, 3, swordsman, 2, -1, -1, 3, archer, 2, -1, -1, 3, wizard, 2, -1, -1, 3, barrierman, 2, -1, -1, 3, trap, 2, -1, -1, 3, weight, 1, 1, 1, 1
+rect, -39, -16, -21, -5, 0, 60, 1, spawner, 6, 1, 1, 1, spike, 2, 2, 2, 2, swordsman, 2, 2, 2, 2, archer, 2, 2, 2, 2, wizard, 2, 2, 2, 2, pusher, 2, 2, 2, 2, builder, 2, 2, 2, 2, ghost, 2, 2, 2, 2, smoker, 2, 2, 2, 2, boneman, 2, 2, 2, 2, barrierman, 2, 2, 2, 2, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5, bomb, 2, 2, 2, 4, weight, 1, 1, 1, 1
+rect, 21, -5, 28, 2, 0, 75, 1, spike, 1, -1, -1, 3, swordsman, 1, -1, -1, 3, archer, 1, -1, -1, 3, wizard, 1, -1, -1, 3, barrierman, 1, -1, -1, 3, trap, 1, -1, -1, 5, weight, 1, 1, 1, 1
+rect, 29, -5, 37, 2, 0, 75, 1, spike, 2, -1, -1, 3, swordsman, 2, -1, -1, 3, archer, 2, -1, -1, 3, wizard, 2, -1, -1, 3, barrierman, 2, -1, -1, 3, trap, 2, -1, -1, 5, weight, 1, 1, 1, 1
+rect, 21, 3, 37, 14, 0, 60, 1, spawner, 6, 1, 1, 1, spike, 2, 2, 2, 2, swordsman, 2, 2, 2, 2, archer, 2, 2, 2, 2, wizard, 2, 2, 2, 2, pusher, 2, 2, 2, 2, builder, 2, 2, 2, 2, ghost, 2, 2, 2, 2, smoker, 2, 2, 2, 2, boneman, 2, 2, 2, 2, barrierman, 2, 2, 2, 2, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5, bomb, 2, 2, 2, 4, weight, 1, 1, 1, 1
+rect, 21, -16, 37, -6, 0, 65, 1, spike, 2, 2, 2, 2, swordsman, 2, 2, 2, 2, archer, 2, 2, 2, 2, wizard, 2, 2, 2, 2, pusher, 2, 2, 2, 2, builder, 2, 2, 2, 2, ghost, 2, 2, 2, 2, smoker, 2, 2, 2, 2, boneman, 2, 2, 2, 2, barrierman, 2, 2, 2, 2, trap, 2, -1, -1, 5, guardian, 2, -1, -1, 5, weight, 1, 1, 1, 1
+rect, -35, 15, -24, 25, 0, 80, 1, archer, 3, -1, 8, 10, barrierman, 3, -1, -1, 3, smoker, 3, -1, -1, 3, guardian, 2, -1, -1, 3, weight, 3, 1, 1, 1
 rect, -49, -17, -40, -11, 0, 75, 1, wizard, 3, -1, 5, 7, boneman, 3, -1, 5, 7, barrierman, 3, -1, -1, 3, smoker, 3, -1, -1, 3, guardian, 3, -1, -1, 3
-rect, -49, -9, -42, 6, 0, 75, 1, spawner, 7, 1, 1, 1, wizard, 3, -1, 5, 7, boneman, 3, -1, 5, 7, barrierman, 3, -1, -1, 3, smoker, 3, -1, -1, 3, guardian, 3, -1, -1, 2, trap, 3, -1, -1, 3
-rect, -49, 7, -42, 24, 0, 90, 1, spawner, 8, 3, 3, 5
+rect, -49, -9, -42, 6, 0, 75, 1, spawner, 7, 1, 1, 1, wizard, 3, -1, 5, 7, boneman, 3, -1, 5, 7, barrierman, 3, -1, -1, 3, smoker, 3, -1, -1, 3, guardian, 3, -1, -1, 2, trap, 3, -1, -1, 3, weight, 3, 1, 1, 1
+rect, -49, 7, -42, 24, 0, 90, 1, spawner, 8, 3, 3, 5, weight, 3, 1, 1, 1
 rect, -41, 26, -15, 29, 0, 90, 1, treasure, 3, 1, 1, 1
 rect, -33, 30, -26, 36, 0, 60, 1, spike, 3, 3, 3, 5, swordsman, 3, 4, 4, 5, archer, 3, 3, 3, 5, wizard, 3, 4, 4, 5, barrierman, 3, 2, 2, 5
 rect, -43, 34, -36, 39, 0, 90, 1, warp, 1, 1, 1, 3
 rect, -49, 42, -43, 49, 0, 80, 1, spawner, 9, 3, 3, 5
-rect, -32, -35, -24, -21, 0, 65, 1, boneman, 2, -1, -1, 5, smoker, 2, -1, -1, 8, pusher, 2, -1, -1, 5, trap, 2, -1, 4, 5, guardian, 2, -1, 4, 5, canon, 1, 1, 1, 2
+rect, -32, -35, -24, -21, 0, 65, 1, boneman, 2, -1, -1, 5, smoker, 2, -1, -1, 8, pusher, 2, -1, -1, 5, trap, 2, -1, 4, 5, guardian, 2, -1, 4, 5, canon, 1, 1, 1, 2, weight, 2, 1, 1, 1
 rect, -45, -28, -36, -21, 0, 65, 1, boneman, 3, -1, -1, 8, smoker, 3, -1, -1, 8, pusher, 3, -1, -1, 5, barrierman, 3, -1, -1, 2, trap, 3, 7, 7, 7
 rect, -43, -35, -38, -31, 0, 95, 1, warp, 1, 1, 1, 1
 rect, -38, -48, -27, -39, 0, 90, 1, spawner, 10, 1, 1, 1
-rect, -49, -49, -40, -39, 0, 90, 1, spawner, 10, 1, 1, 1, treasure, 4, 1, 1, 1
+rect, -49, -49, -40, -39, 0, 90, 1, spawner, 10, 1, 1, 1, treasure, 4, 1, 1, 1, weight, 3, 1, 1, 1
 rect, 31, -21, 35, -17, 0, 50, 1, treasure, 5, 1, 1, 1
 rect, 23, -41, 27, -19, 0, 70, 1, pusher, 2, -1, 6, 8, builder, 2, -1, 4, 5, boneman, 2, 5, 8, 10, drill, 1, 3, 3, 5 
-rect, 29, -46, 40, -39, 0, 75, 1, spawner, 11, 1, 1, 1, spike, 3, 3, 3, 5, barrierman, 3, 2, 2, 4, trap, 3, 3, 3, 5, guardian, 3, 3, 3, 5
+rect, 29, -46, 40, -39, 0, 75, 1, spawner, 11, 1, 1, 1, spike, 3, 3, 3, 5, barrierman, 3, 2, 2, 4, trap, 3, 3, 3, 5, guardian, 3, 3, 3, 5, weight, 3, 1, 1, 1
 rect, 39, -18, 46, -13, 0, 63, 1, swordsman, 3, -1, -1, 10, ghost, 3, -1, -1, 10, smoker, 3, -1, -1, 10, pusher, 3, -1, -1, 5
 distance, 35, -28, 0, 0, 4, 70, 0, archer, 3, 4, 4, 5, wizard, 3, 4, 4, 5, smoker, 3, 2, 2, 5, barrierman, 3, 2, 2, 5, trap, 3, 2, 2, 5
 rect, 42, -32, 45, -19, 0, 60, 1, spawner, 9, 1, 1, 1, spike, 3, 2, 2, 2, swordsman, 3, 2, 2, 2, archer, 3, 2, 2, 2, wizard, 3, 2, 2, 2, pusher, 3, 2, 2, 2, builder, 3, 2, 2, 2, ghost, 3, 2, 2, 2, smoker, 3, 2, 2, 2, boneman, 3, 2, 2, 2, barrierman, 3, 2, 2, 2, trap, 3, -1, -1, 5, guardian, 3, -1, -1, 5, bomb, 3, 2, 2, 4 
 rect, 36, -37, 44, -34, 0, 50, 1, warp, 1, 1, 1, 1, builder, 3, -1, -1, 10
 rect, 47, -40, 49, -37, 0, 90, 1, treasure, 6, 1, 1, 1
 rect, 46, -48, 49, -41, 0, 90, 1
-rect, 42, -10, 49, 6, 0, 80, 1, spawner, 12, 4, 4, 8, treasure, 7, 1, 1, 1, canon, 1, 1, 1, 1
+rect, 42, -10, 49, 6, 0, 80, 1, spawner, 12, 4, 4, 8, treasure, 7, 1, 1, 1, canon, 1, 1, 1, 1, weight, 3, 1, 1, 1
 rect, 39, 7, 49, 12, 0, 70, 1, wizard, 3, -1, -1, 5, barrierman, 3, -1, -1, 5, boneman, 3, -1, -1, 5, trap, 3, 3, 3, 5, bomb, 3, 1, 1, 1
 rect, 24, 18, 33, 27, 0, 75, 1, barrierman, 2, -1, -1, 5, boneman, 2, -1, -1, 10
-rect, 20, 31, 28, 49, 0, 50, 1, bomb, 3, 10, 10, 10, ghost, 3, -1, -1, 8, smoker, 3, -1, -1, 8, boneman, 3, -1, -1, 8
+rect, 20, 31, 28, 49, 0, 50, 1, bomb, 3, 10, 10, 10, ghost, 3, -1, -1, 8, smoker, 3, -1, -1, 8, boneman, 3, -1, -1, 8, weight, 3, 1, 1, 1
 rect, 29, 31, 34, 35, 0, 65, 1, canon, 1, 1, 1, 2, spike, 3, -1, -1, 10, barrierman, 3, -1, -1, 10, builder, 3, -1, -1, 10
 rect, 36, 16, 49, 19, 0, 60, 1, pusher, 3, -1, 7, 10
 distance, 45, 26, 0, 0, 3, 90, 0, treasure, 8, 1, 1, 1
