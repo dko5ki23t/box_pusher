@@ -275,7 +275,9 @@ class StageObjTypeLevel {
   StageObjType type;
   int level;
 
-  StageObjTypeLevel({required this.type, this.level = 1});
+  StageObjTypeLevel({required this.type, this.level = 1}) {
+    assert(level >= 0);
+  }
 
   Map<String, dynamic> encode() {
     return {'type': type.str, 'level': level};
