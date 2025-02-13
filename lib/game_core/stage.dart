@@ -1484,10 +1484,12 @@ class Stage {
   /// (update()対象範囲のコンポーネントのみがgameWorldに追加されている状態にする)
   void _updateGameWorldAdding() {
     final currentUpdateRange = updateRange;
+    final currentSet = currentUpdateRange.set;
+    final Set<Point> prevSet =
+        _prevUpdateRange == null ? {} : _prevUpdateRange!.set;
     if (_prevUpdateRange != null) {
       // removeすべきcomponentを持つオブジェクトの位置
-      final removePosSet =
-          _prevUpdateRange!.set.difference(currentUpdateRange.set);
+      final removePosSet = prevSet.difference(currentSet);
       for (final p in removePosSet) {
         if (!contains(p)) continue;
         // 対象位置オブジェクトが持つcomponentを削除
@@ -1497,8 +1499,7 @@ class Stage {
         }
       }
       // addすべきcomponentを持つオブジェクトの位置
-      final addPosSet =
-          currentUpdateRange.set.difference(_prevUpdateRange!.set);
+      final addPosSet = currentSet.difference(prevSet);
       for (final p in addPosSet) {
         if (!contains(p)) continue;
         // 対象位置オブジェクトが持つcomponentを追加
