@@ -157,7 +157,10 @@ class Canon extends StageObj {
             // ステージ範囲外
             if (!stage.contains(pos + v.point * dist)) break;
             final obj = stage.getAfterPush(pos + v.point * dist);
-            if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
+            if (obj.type != StageObjType.magma &&
+                !obj.isAlly &&
+                !obj.isEnemy &&
+                !obj.enemyMovable) {
               break;
             }
           }

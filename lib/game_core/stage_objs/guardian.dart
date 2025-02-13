@@ -382,7 +382,10 @@ class Guardian extends StageObj {
                   }
                   final obj =
                       stage.getAfterPush(pos + vector.point * attackingReach);
-                  if (!obj.isAlly && !obj.isEnemy && !obj.enemyMovable) {
+                  if (obj.type != StageObjType.magma &&
+                      !obj.isAlly &&
+                      !obj.isEnemy &&
+                      !obj.enemyMovable) {
                     break;
                   }
                 }
