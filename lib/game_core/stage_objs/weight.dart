@@ -30,7 +30,7 @@ class Weight extends StageObj {
             SpriteAnimation.spriteList([Sprite(errorImg)], stepTime: 1.0),
       },
       for (int i = 1; i <= weightMaxLevel; i++)
-        1: {
+        i: {
           Move.none: SpriteAnimation.spriteList([
             Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
           ], stepTime: 1.0)

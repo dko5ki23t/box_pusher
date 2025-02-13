@@ -2,10 +2,12 @@ import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:box_pusher/game_core/stage_objs/weight_component.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
+import 'package:flame/layout.dart';
 
 class Canon extends StageObj {
   /// 各レベルごとの画像のファイル名
@@ -59,6 +61,13 @@ class Canon extends StageObj {
   double canonballMoveTime(int dist) =>
       Stage.cellSize.x / 2 / Stage.playerSpeed * (dist / attackingReach);
 
+  final AlignComponent _weightViewComponent = AlignComponent(
+    alignment: Anchor.center,
+    child: WeightComponent(
+      weight: 1,
+    ),
+  );
+
   Canon({
     required super.savedArg,
     required Vector2? scale,
@@ -83,6 +92,7 @@ class Canon extends StageObj {
             level: level,
           ),
         ) {
+    animationComponent.add(_weightViewComponent);
     nextVector = vector;
     _setNextVector();
   }
