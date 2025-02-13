@@ -116,6 +116,20 @@ class Coin extends ValueWithAddingTime {
           completeAddingTime: 0.3,
           maxValue: Stage.maxCoin,
         );
+
+  int totalGotCoins = 0;
+  int totalConsumedCoins = 0;
+
+  @override
+  set actual(int v) {
+    int delta = v - super.actual;
+    if (delta > 0) {
+      totalGotCoins += delta;
+    } else {
+      totalConsumedCoins += (-delta);
+    }
+    super.actual = v;
+  }
 }
 
 class Stage {
@@ -211,6 +225,12 @@ class Stage {
 
   /// 次オブジェクトが出現するまでのマージ回数
   int remainMergeCount = 0;
+
+  /// 【実績用】総移動回数（斜め移動や氷での移動も1カウント）
+  int totalMoveCount = 0;
+
+  /// 【実績用】見つけた宝箱の数
+  int foundTreasureCount = 0;
 
   /// 次マージ時に出現するオブジェクト
   final List<StageObj> nextMergeItems = [];
@@ -427,6 +447,15 @@ class Stage {
     ret['appearedItemsCounts'] = appearedItemsCountList;
     ret['remainMergeCount'] = remainMergeCount;
     ret['mergedCount'] = mergedCount;
+    final List<Map<String, dynamic>> nextMergeItemsList = [
+      for (final e in nextMergeItems) e.encode()
+    ];
+    ret['nextMergeItems'] = nextMergeItemsList;
+    // ここから実績用
+    ret['totalGotCoins'] = coins.totalGotCoins;
+    ret['totalConsumedCoins'] = coins.totalConsumedCoins;
+    ret['totalMoveCount'] = totalMoveCount;
+    ret['foundTreasureCount'] = foundTreasureCount;
     return ret;
   }
 
@@ -1144,10 +1173,23 @@ class Stage {
     }
     // マージした回数
     mergedCount = stageData['mergedCount'];
-    // マージした回数
-    mergedCount = stageData['mergedCount'];
-    // マージによる出現アイテム更新
-    _updateNextMergeItem();
+    try {
+      // 次アイテム出現までの残りマージ回数
+      remainMergeCount = stageData['remainMergeCount'];
+      // 次マージで出現するアイテム
+      nextMergeItems.clear();
+      for (final e in stageData['nextMergeItems'] as List<dynamic>) {
+        nextMergeItems.add(createObjectFromMap(e));
+      }
+    } catch (e) {
+      // マージによる出現アイテム更新
+      _updateNextMergeItem();
+    }
+    // ここから実績用
+    coins.totalGotCoins = stageData['totalGotCoins'] ?? 0;
+    coins.totalConsumedCoins = stageData['totalConsumedCoins'] ?? 0;
+    totalMoveCount = stageData['totalMoveCount'] ?? 0;
+    foundTreasureCount = stageData['foundTreasureCount'] ?? 0;
   }
 
   _setStageDataFromInitialData(CameraComponent camera) {
@@ -1213,6 +1255,9 @@ class Stage {
         }
       }
     }
+    // ここから実績用
+    totalMoveCount = 0;
+    foundTreasureCount = 0;
   }
 
   void resetCameraPos(CameraComponent camera) {
@@ -1393,6 +1438,8 @@ class Stage {
 
     // 移動完了時
     if (playerEndMoving) {
+      // 【実績用】総移動数を加算
+      totalMoveCount++;
       // 移動によって新たな座標が見えそうなら追加する
       Point newLT = stageLT.copy();
       Point newRB = stageRB.copy();

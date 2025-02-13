@@ -1408,6 +1408,8 @@ abstract class StageObj {
         stage.score.actual += obj.score;
         // 宝箱消滅
         stage.setStaticType(pos, StageObjType.none);
+        // 【実績用】見つけた宝箱の数を加算
+        stage.foundTreasureCount++;
       } else if (obj.type == StageObjType.gorilla) {
         // 移動先がゴリラだった場合
         // 手の能力を習得
