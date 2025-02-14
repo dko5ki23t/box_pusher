@@ -67,13 +67,17 @@ class Water extends StageObj {
   ) {
     if (playerStartMoving) {
       playerStartMovingFlag = true;
-      // 一旦位置を変える
-      pos += moving.oppsite.point;
-      // 押すのを試みる。押せない場合はmovingをnoneに
-      bool canPush = startPushing(
-          moving, 1, stage, gameWorld, prohibitedPoints, pushings, executings);
-      // 位置を元に戻す
-      pos += moving.point;
+      // この氷の上にあるものが押せるか
+      bool canPush = false;
+      if (stage.get(pos).pushable) {
+        // 一旦位置を変える
+        pos += moving.oppsite.point;
+        // 押すのを試みる。押せない場合はmovingをnoneに
+        canPush = startPushing(moving, 1, stage, gameWorld, prohibitedPoints,
+            pushings, executings);
+        // 位置を元に戻す
+        pos += moving.point;
+      }
       if (!canPush) {
         moving = Move.none;
       }

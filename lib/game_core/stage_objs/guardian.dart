@@ -338,8 +338,9 @@ class Guardian extends StageObj {
         }
       } else if (level > 1) {
         // 周囲8マスへの回転斬り
-        final attackPoints =
-            PointRectRange(pos + Point(-1, -1), pos + Point(1, 1)).set;
+        //final attackPoints =
+        //    PointRectRange(pos + Point(-1, -1), pos + Point(1, 1)).set;
+        final attackPoints = [for (final move in Move.values) pos + move.point];
         for (final attackPoint in attackPoints) {
           // ステージ範囲外
           if (!stage.contains(attackPoint)) continue;
@@ -351,8 +352,7 @@ class Guardian extends StageObj {
             vector = vector;
             animationComponent.size =
                 animationComponent.animation!.frames.first.sprite.srcSize;
-            attackingPoints.addAll(
-                PointRectRange(pos + Point(-1, -1), pos + Point(1, 1)).set);
+            attackingPoints.addAll(attackPoints);
             break;
           }
         }
