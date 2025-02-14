@@ -279,6 +279,7 @@ class Config {
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     vectorData = jsonData['updateRange']['value'];
     updateRange = Point(vectorData['x'], vectorData['y']);
+    updateNearWarpDistance = jsonData['updateNearWarpDistance']['value'];
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
     bombExplodingAreaWidth = jsonData['bombExplodingAreaWidth']['value'];
     builderBuildBlockTurn = jsonData['builderBuildBlockTurn']['value'];
@@ -366,6 +367,9 @@ class Config {
 
   /// update()で更新する範囲（プレイヤー位置を起点としてこの分だけ左上、右下に移動した点で四角形を作る）
   late Point updateRange;
+
+  /// update()で更新する各ワープからの距離
+  late int updateNearWarpDistance;
 
   /// ボムが起爆しない正方形範囲の辺の長さ(必ず奇数で)
   late int bombNotStartAreaWidth;

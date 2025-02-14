@@ -241,6 +241,9 @@ class Stage {
   /// 各update()で更新する、マージによる効果(範囲と敵へのダメージ)
   final List<MergeAffect> mergeAffects = [];
 
+  /// 本ターンでワープしたオブジェクトのリスト(gameWorldに追加/削除の処理を行う)
+  final List<StageObj> warpingObjs = [];
+
   /// プレイヤー
   late Player player;
 
@@ -1313,20 +1316,25 @@ class Stage {
       }
     }
 
-    // ここから先更新対象となる範囲
-    final updateTargetRange = updateRange;
+    // ここから先更新対象となる範囲の座標セット
+    final updateTargetRangeSet = updateRange.set; // プレイヤーを中心とした長方形
+    // ワープ付近も対象
+    for (final p in warpPoints) {
+      updateTargetRangeSet
+          .addAll(PointDistanceRange(p, Config().updateNearWarpDistance).set);
+    }
     // カメラの可動域設定
     _setCameraBounds(camera);
 
     // 床類更新（氷でアイテムを滑らす等）
-    for (final p in updateTargetRange.set) {
+    for (final p in updateTargetRangeSet) {
       _staticObjs[p]?.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
 
     // 敵更新
     final currentEnemies = [...enemies.iterable]
-        .where((element) => updateTargetRange.contains(element.pos));
+        .where((element) => updateTargetRangeSet.contains(element.pos));
     for (final enemy in currentEnemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
@@ -1363,14 +1371,16 @@ class Stage {
     }
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
     final currentBoxes = [...boxes.iterable]
-        .where((element) => updateTargetRange.contains(element.pos));
+        .where((element) => updateTargetRangeSet.contains(element.pos));
     for (final box in currentBoxes) {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           playerEndMoving, prohibitedPoints);
     }
 
     // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
-    if (player.pocketItem != null && player.pocketItem!.updateInPocket) {
+    if (player.pocketItem != null &&
+        player.isAbilityAvailable(PlayerAbility.pocket) &&
+        player.pocketItem!.updateInPocket) {
       player.pocketItem!.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
@@ -1452,6 +1462,7 @@ class Stage {
       // 移動によって新たな座標が見えそうなら追加する
       Point newLT = stageLT.copy();
       Point newRB = stageRB.copy();
+      final updateTargetRange = updateRange;
       // 左端
       if (updateTargetRange.lt.x < stageLT.x) {
         newLT.x = updateTargetRange.lt.x;
@@ -1482,6 +1493,7 @@ class Stage {
 
   /// gameWorld配下に追加しているコンポーネントを更新する
   /// (update()対象範囲のコンポーネントのみがgameWorldに追加されている状態にする)
+  /// (warpingObjsリストに入っている、ワープ移動したオブジェクトのコンポーネントについても更新)
   void _updateGameWorldAdding() {
     final currentUpdateRange = updateRange;
     final currentSet = currentUpdateRange.set;
@@ -1508,6 +1520,16 @@ class Stage {
       }
     }
     _prevUpdateRange = currentUpdateRange;
+
+    // ワープしたオブジェクトのcomponentについても追加/削除
+    for (final o in warpingObjs) {
+      if (currentSet.contains(o.pos)) {
+        gameWorldAdd(gameWorld, o.animationComponent);
+      } else {
+        gameWorldRemove(gameWorld, o.animationComponent);
+      }
+    }
+    warpingObjs.clear();
   }
 
   void prepareDistributions() {

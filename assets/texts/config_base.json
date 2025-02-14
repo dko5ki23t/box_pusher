@@ -69,6 +69,10 @@
             "y": 25
         }
     },
+    "updateNearWarpDistance": {
+        "desc": "update()で更新する各ワープからの距離",
+        "value": 6
+    },
     "bombNotStartAreaWidth": {
         "desc": "ボムが起爆しない正方形範囲の辺の長さ(必ず奇数で)",
         "value": 7
