@@ -1487,26 +1487,24 @@ class Stage {
     final currentSet = currentUpdateRange.set;
     final Set<Point> prevSet =
         _prevUpdateRange == null ? {} : _prevUpdateRange!.set;
-    if (_prevUpdateRange != null) {
-      // removeすべきcomponentを持つオブジェクトの位置
-      final removePosSet = prevSet.difference(currentSet);
-      for (final p in removePosSet) {
-        if (!contains(p)) continue;
-        // 対象位置オブジェクトが持つcomponentを削除
-        final list = getList(p);
-        for (final o in list) {
-          gameWorldRemove(gameWorld, o.animationComponent);
-        }
+    // removeすべきcomponentを持つオブジェクトの位置
+    final removePosSet = prevSet.difference(currentSet);
+    for (final p in removePosSet) {
+      if (!contains(p)) continue;
+      // 対象位置オブジェクトが持つcomponentを削除
+      final list = getList(p);
+      for (final o in list) {
+        gameWorldRemove(gameWorld, o.animationComponent);
       }
-      // addすべきcomponentを持つオブジェクトの位置
-      final addPosSet = currentSet.difference(prevSet);
-      for (final p in addPosSet) {
-        if (!contains(p)) continue;
-        // 対象位置オブジェクトが持つcomponentを追加
-        final list = getList(p);
-        for (final o in list) {
-          gameWorldAdd(gameWorld, o.animationComponent);
-        }
+    }
+    // addすべきcomponentを持つオブジェクトの位置
+    final addPosSet = currentSet.difference(prevSet);
+    for (final p in addPosSet) {
+      if (!contains(p)) continue;
+      // 対象位置オブジェクトが持つcomponentを追加
+      final list = getList(p);
+      for (final o in list) {
+        gameWorldAdd(gameWorld, o.animationComponent);
       }
     }
     _prevUpdateRange = currentUpdateRange;
