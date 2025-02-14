@@ -1286,6 +1286,8 @@ class Stage {
     score.update(dt);
     // 表示上のコイン数更新
     coins.update(dt);
+    // Audioクラスに通知
+    Audio().notifyStartUpdate();
     // クリア済みなら何もしない
     if (isClear()) return;
     Move before = player.moving;

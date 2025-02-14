@@ -1366,6 +1366,8 @@ abstract class StageObj {
         stage.coins.actual += pushing.coins;
         stage.showGotCoinEffect(pushing.coins, toTo);
         pushing.remove();
+        // 効果音を鳴らす
+        Audio().playSound(Sound.magmaEvaporate);
       } else if (stage.safeGetStaticObj(toTo).type == StageObjType.water &&
           i != mergeIndex) {
         // 押した先が氷なら滑るように設定
@@ -1419,6 +1421,8 @@ abstract class StageObj {
         stage.score.actual += obj.score;
         // 宝箱消滅
         stage.setStaticType(pos, StageObjType.none);
+        // 効果音を鳴らす
+        Audio().playSound(Sound.getTreasure);
         // 【実績用】見つけた宝箱の数を加算
         stage.foundTreasureCount++;
       } else if (obj.type == StageObjType.gorilla) {

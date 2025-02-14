@@ -28,6 +28,15 @@ enum Sound {
 
   /// プレイヤーがダメージを負った
   playerDamaged,
+
+  /// マグマでオブジェクトが蒸発
+  magmaEvaporate,
+
+  /// 宝箱のアイテムゲット
+  getTreasure,
+
+  /// 魔法使いがワープ
+  wizardWarp,
 }
 
 extension SoundExtent on Sound {
@@ -49,6 +58,12 @@ extension SoundExtent on Sound {
         return 'audio/trap1.mp3';
       case Sound.playerDamaged:
         return 'audio/player_damaged.mp3';
+      case Sound.magmaEvaporate:
+        return 'audio/juu.mp3';
+      case Sound.getTreasure:
+        return 'audio/treasure_get.mp3';
+      case Sound.wizardWarp:
+        return 'audio/wizard_warp.mp3';
     }
   }
 
@@ -59,10 +74,13 @@ extension SoundExtent on Sound {
       case Sound.warp:
       case Sound.trap1:
       case Sound.playerDamaged:
+      case Sound.magmaEvaporate:
+      case Sound.wizardWarp:
         return 0.8 * Config().audioVolume * 0.01;
       case Sound.decide:
       case Sound.getSkill:
       case Sound.spawn:
+      case Sound.getTreasure:
         return 1.0 * Config().audioVolume * 0.01;
     }
   }
@@ -118,6 +136,11 @@ class Audio {
   /// 同時に再生できる効果音の数
   final int soundPlayerNum = 10;
 
+  /// 同一update()内で再生された効果音の記録(同一update()内で同じ効果音を複数鳴らさないためのもの)
+  final Map<Sound, bool> hasSoundedInUpdate = {
+    for (final sound in Sound.values) sound: false,
+  };
+
   late AudioPlayerWithStatus _bgmPlayer;
   late List<AudioPlayerWithStatus> _soundPlayers;
 
@@ -166,22 +189,25 @@ class Audio {
 
   Future<void> playSound(Sound sound) async {
     assert(isLoaded, '[Audioクラス]まだonLoad()が呼ばれてない');
-    for (final player in _soundPlayers) {
-      if (!player.isBusy) {
-        player.isBusy = true;
-        try {
-          await player.player.play(
-            AssetSource(sound.fileName),
-            volume: sound.volume,
-          );
-        } catch (e) {
-          log('[Audio]playSound() error : $e');
-          player.isBusy = false;
+    if (sound == Sound.decide || !hasSoundedInUpdate[sound]!) {
+      for (final player in _soundPlayers) {
+        if (!player.isBusy) {
+          player.isBusy = true;
+          try {
+            await player.player.play(
+              AssetSource(sound.fileName),
+              volume: sound.volume,
+            );
+          } catch (e) {
+            log('[Audio]playSound() error : $e');
+            player.isBusy = false;
+          }
+          hasSoundedInUpdate[sound] = true;
+          return;
         }
-        return;
       }
+      log('[Audio.playSound()] 全てのプレイヤーが使用中のため再生できなかった：${sound.name}');
     }
-    log('[Audio.playSound()] 全てのプレイヤーが使用中のため再生できなかった：${sound.name}');
   }
 
   Future<void> playBGM(Bgm bgm) async {
@@ -216,6 +242,14 @@ class Audio {
     await _bgmPlayer.player.dispose();
     for (final player in _soundPlayers) {
       await player.player.dispose();
+    }
+  }
+
+  /// update()の始まりをAudioクラスに通知する。
+  /// この関数を再度呼び出すまでは、各効果音はただ1回のみ鳴らせる。(決定音は例外)
+  void notifyStartUpdate() {
+    for (final sound in Sound.values) {
+      hasSoundedInUpdate[sound] = false;
     }
   }
 }

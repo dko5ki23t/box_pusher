@@ -285,6 +285,8 @@ class Player extends StageObj {
           stage.coins.actual += pocketItem!.coins;
           stage.showGotCoinEffect(pocketItem!.coins, pos + vector.point);
           pocketItem!.remove();
+          // 効果音を鳴らす
+          Audio().playSound(Sound.magmaEvaporate);
         }
         pocketItem = null;
       }

@@ -1,3 +1,4 @@
+import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
@@ -289,6 +290,8 @@ class Wizard extends StageObj {
           // ワープ完了までのエフェクト追加
           animationComponent.add(SizeEffect.to(
               Stage.cellSize, EffectController(duration: warpTime)));
+          // 効果音を鳴らす
+          Audio().playSound(Sound.wizardWarp);
         }
       }
 
