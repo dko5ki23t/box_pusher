@@ -1080,6 +1080,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       if (stage.score.actual > game.highScore) {
         game.setAndSaveHighScore(stage.score.actual);
       }
+      // 実績データ更新
+      game.saveAchievementData();
       // セーブデータ削除
       game.clearAndSaveStageData();
       // ゲームオーバーシーケンスへ

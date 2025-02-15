@@ -57,6 +57,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       text: loc.save,
       onReleased: () async {
         await game.setAndSaveStageData();
+        await game.saveAchievementData();
         isSaved = true;
       },
     );
@@ -70,6 +71,7 @@ class MenuSeq extends Sequence with KeyboardHandler {
       onReleased: () async {
         if (!isSaved) {
           await game.setAndSaveStageData();
+          await game.saveAchievementData();
         }
         game.pushSeqNamed('title');
       },

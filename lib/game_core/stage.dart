@@ -235,6 +235,9 @@ class Stage {
   /// 【実績用】見つけた宝箱の数
   int foundTreasureCount = 0;
 
+  /// 【実績用】破壊したブロック(敵が作ったもの除く)の数
+  int brokeBlockCount = 0;
+
   /// 次マージ時に出現するオブジェクト
   final List<StageObj> nextMergeItems = [];
 
@@ -311,7 +314,7 @@ class Stage {
 
   /// 【テストモード】時間計測
   StopWatchLog? _stopWatchLog1;
-  //StopWatchLog? _stopWatchLog2;
+  StopWatchLog? _stopWatchLog2;
 
   /// ゲームワールド
   final World gameWorld;
@@ -329,7 +332,7 @@ class Stage {
     _objFactory = StageObjFactory();
     if (kDebugMode) {
       _stopWatchLog1 = StopWatchLog();
-      //_stopWatchLog2 = StopWatchLog();
+      _stopWatchLog2 = StopWatchLog();
     }
   }
 
@@ -468,6 +471,36 @@ class Stage {
     ret['totalConsumedCoins'] = coins.totalConsumedCoins;
     ret['totalMoveCount'] = totalMoveCount;
     ret['foundTreasureCount'] = foundTreasureCount;
+    ret['brokeBlockCount'] = brokeBlockCount;
+    return ret;
+  }
+
+  Future<Map<String, dynamic>> encodeAchievementData() async {
+    final Map<String, dynamic> ret = {};
+    ret['hasHelpedGirl'] =
+        player.isAbilityAquired[PlayerAbility.merge] ?? false;
+    int maxJewelLevel = 1;
+    for (final box in boxes.iterable
+        .where((element) => element.type == StageObjType.jewel)) {
+      maxJewelLevel = max(maxJewelLevel, box.level);
+    }
+    ret['maxJewelLevel'] = maxJewelLevel;
+    ret['maxFoundTreasureNum'] = foundTreasureCount;
+    int total = 0;
+    for (final entry in blockFloorDistribution.entries) {
+      total += entry.value.getTotalNum(
+              StageObjTypeLevel(type: StageObjType.block, level: 1)) +
+          entry.value.getTotalNum(
+              StageObjTypeLevel(type: StageObjType.block, level: 2)) +
+          entry.value.getTotalNum(
+              StageObjTypeLevel(type: StageObjType.block, level: 3)) +
+          entry.value.getTotalNum(
+              StageObjTypeLevel(type: StageObjType.block, level: 4));
+    }
+    int rate = brokeBlockCount == total
+        ? 100
+        : ((brokeBlockCount / total) * 100).floor();
+    ret['maxBreakBlockRate'] = rate;
     return ret;
   }
 
@@ -642,6 +675,8 @@ class Stage {
         if (gotTypeLevel.level < 100) {
           // 敵が生み出したブロック以外のみアイテム出現位置に含める
           breaked.add(p);
+          // 【実績用】破壊したブロックの総数加算
+          brokeBlockCount++;
         }
         // ブロック破壊時に出現する床を決定する
         final targetField = Config().getFloorInBlockMapEntry(p).key;
@@ -1202,6 +1237,7 @@ class Stage {
     coins.totalConsumedCoins = stageData['totalConsumedCoins'] ?? 0;
     totalMoveCount = stageData['totalMoveCount'] ?? 0;
     foundTreasureCount = stageData['foundTreasureCount'] ?? 0;
+    brokeBlockCount = stageData['brokeBlockCount'] ?? 0;
   }
 
   _setStageDataFromInitialData(CameraComponent camera) {
@@ -1270,6 +1306,7 @@ class Stage {
     // ここから実績用
     totalMoveCount = 0;
     foundTreasureCount = 0;
+    brokeBlockCount = 0;
   }
 
   void resetCameraPos(CameraComponent camera) {
@@ -1328,12 +1365,24 @@ class Stage {
     // カメラの可動域設定
     _setCameraBounds(camera);
 
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測開始
+      _stopWatchLog2?.start();
+    }
     // 床類更新（氷でアイテムを滑らす等）
     for (final p in updateTargetRangeSet) {
       _staticObjs[p]?.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
     }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測終了
+      _stopWatchLog2?.stop("Stage.update() sec1");
+    }
 
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測開始
+      _stopWatchLog2?.start();
+    }
     // 敵更新
     final currentEnemies = [...enemies.iterable]
         .where((element) => updateTargetRangeSet.contains(element.pos));
@@ -1347,6 +1396,14 @@ class Stage {
         player.animationComponent,
         maxSpeed: cameraMaxSpeed,
       );
+    }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測終了
+      _stopWatchLog2?.stop("Stage.update() sec2");
+    }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測開始
+      _stopWatchLog2?.start();
     }
     {
       // 同じレベルの敵同士が同じ位置になったらマージしてレベルアップ
@@ -1371,12 +1428,28 @@ class Stage {
         }
       }
     }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測終了
+      _stopWatchLog2?.stop("Stage.update() sec3");
+    }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測開始
+      _stopWatchLog2?.start();
+    }
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
     final currentBoxes = [...boxes.iterable]
         .where((element) => updateTargetRangeSet.contains(element.pos));
     for (final box in currentBoxes) {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           playerEndMoving, prohibitedPoints);
+    }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測終了
+      _stopWatchLog2?.stop("Stage.update() sec4");
+    }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測開始
+      _stopWatchLog2?.start();
     }
 
     // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
@@ -1391,6 +1464,10 @@ class Stage {
     for (final animal in animals) {
       animal.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
+    }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測終了
+      _stopWatchLog2?.stop("Stage.update() sec5");
     }
 
     // 敵の攻撃について処理
@@ -1442,6 +1519,10 @@ class Stage {
         mergeAffect.range,
       );
     }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測開始
+      _stopWatchLog2?.start();
+    }
 
     // マージによる影響をクリア
     mergeAffects.clear();
@@ -1486,6 +1567,10 @@ class Stage {
       }
       // gameWorldに追加しているcomponentの状態を更新
       _updateGameWorldAdding();
+    }
+    if (playerStartMoving || playerEndMoving) {
+      // 時間計測終了
+      _stopWatchLog2?.stop("Stage.update() sec5");
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了

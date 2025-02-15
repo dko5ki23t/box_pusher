@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'dart:developer';
+import 'dart:developer' as dev;
 import 'dart:io';
+import 'dart:math';
 
 import 'package:box_pusher/audio.dart';
 import 'package:box_pusher/components/debug_dialog.dart';
@@ -269,7 +270,7 @@ class BoxPusherGame extends FlameGame
     try {
       index = _userConfigData['controller'];
     } catch (e) {
-      log(e.toString());
+      dev.log(e.toString());
     }
     if (index < PlayerControllButtonType.values.length) {
       Config().playerControllButtonType =
@@ -279,14 +280,14 @@ class BoxPusherGame extends FlameGame
     try {
       volume = _userConfigData['volume'];
     } catch (e) {
-      log(e.toString());
+      dev.log(e.toString());
     }
     Config().audioVolume = volume;
     bool showTutorial = true;
     try {
       showTutorial = _userConfigData['showTutorial'];
     } catch (e) {
-      log(e.toString());
+      dev.log(e.toString());
     }
     Config().showTutorial = showTutorial;
   }
@@ -392,7 +393,19 @@ class BoxPusherGame extends FlameGame
 
   /// 操作方法や音量等のコンフィグ情報をセーブデータに保存
   Future<void> saveAchievementData() async {
-    // TODO:各種実績の情報を取得
+    final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+    final tmp = await gameSeq.stage.encodeAchievementData();
+    if (!_achievementData['hasHelpedGirl']! && tmp['hasHelpedGirl']!) {
+      _achievementData['hasHelpedGirl'] = true;
+    }
+    _achievementData['maxJewelLevel'] = max(
+        _achievementData['maxJewelLevel'] as int, tmp['maxJewelLevel'] as int);
+    _achievementData['maxFoundTreasureNum'] = max(
+        _achievementData['maxFoundTreasureNum'] as int,
+        tmp['maxFoundTreasureNum'] as int);
+    _achievementData['maxBreakBlockRate'] = max(
+        _achievementData['maxBreakBlockRate'] as int,
+        tmp['maxBreakBlockRate'] as int);
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
@@ -415,7 +428,7 @@ class BoxPusherGame extends FlameGame
   Map<String, dynamic> getDefaultAchievement() {
     return {
       'hasHelpedGirl': false,
-      'createDia': false,
+      'maxJewelLevel': 1,
       'maxFoundTreasureNum': 0,
       'maxBreakBlockRate': 0,
     };
