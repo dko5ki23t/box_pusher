@@ -289,7 +289,7 @@ class Stage {
 
   /// プレイヤーが移動するごとに更新する、以前までのupdate()対象範囲
   /// gameWorldに追加しておくコンポーネントを管理する際に差分を求めるために使う
-  PointRectRange? _prevUpdateRange;
+  //PointRectRange? _prevUpdateRange;
 
   /// スコアの最大値
   static int maxScore = 99999999;
@@ -355,7 +355,9 @@ class Stage {
     final ret = _objFactory.create(
         typeLevel: typeLevel, pos: pos, vector: vector, savedArg: 0);
     // ComponentをWorldに追加(ただし、update()対象範囲のみ)
-    if (addToGameWorld && updateRange.contains(ret.pos)) {
+    // TODO
+    //if (addToGameWorld && updateRange.contains(ret.pos)) {
+    if (addToGameWorld) {
       gameWorld.add(ret.animationComponent);
     }
     return ret;
@@ -369,7 +371,9 @@ class Stage {
   }) {
     final ret = _objFactory.createFromMap(src);
     // ComponentをWorldに追加(ただし、update()対象範囲のみ)
-    if (addToGameWorld && updateRange.contains(ret.pos)) {
+    // TODO
+    //if (addToGameWorld && updateRange.contains(ret.pos)) {
+    if (addToGameWorld) {
       gameWorld.add(ret.animationComponent);
     }
     return ret;
@@ -1566,7 +1570,8 @@ class Stage {
         expandStageSize(newLT, newRB);
       }
       // gameWorldに追加しているcomponentの状態を更新
-      _updateGameWorldAdding();
+      // TODO
+      //_updateGameWorldAdding();
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
@@ -1581,6 +1586,7 @@ class Stage {
   /// gameWorld配下に追加しているコンポーネントを更新する
   /// (update()対象範囲のコンポーネントのみがgameWorldに追加されている状態にする)
   /// (warpingObjsリストに入っている、ワープ移動したオブジェクトのコンポーネントについても更新)
+  /*
   void _updateGameWorldAdding() {
     final currentUpdateRange = updateRange;
     final currentSet = currentUpdateRange.set;
@@ -1593,6 +1599,9 @@ class Stage {
       // 対象位置オブジェクトが持つcomponentを削除
       final list = getList(p);
       for (final o in list) {
+        if (o.isEnemy) {
+          log(o.type.toString());
+        }
         gameWorldRemove(gameWorld, o.animationComponent);
       }
     }
@@ -1603,6 +1612,9 @@ class Stage {
       // 対象位置オブジェクトが持つcomponentを追加
       final list = getList(p);
       for (final o in list) {
+        if (o.isEnemy) {
+          log(o.type.toString());
+        }
         gameWorldAdd(gameWorld, o.animationComponent);
       }
     }
@@ -1618,6 +1630,7 @@ class Stage {
     }
     warpingObjs.clear();
   }
+  */
 
   void prepareDistributions() {
     // 先に床/ブロックの分布

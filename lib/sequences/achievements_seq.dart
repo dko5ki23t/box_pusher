@@ -1,41 +1,154 @@
 import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
-import 'package:box_pusher/components/rounded_component.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
+import 'package:flame/input.dart';
+import 'package:flame/layout.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
+
+enum TrophyRarity {
+  copper,
+  silver,
+  gold,
+  rainbow,
+}
 
 class AchieveComponents {
   final SpriteComponent trophyComponent;
   final TextComponent textComponent;
+  late final ButtonComponent levelDownButton;
+  late final ButtonComponent levelUpButton;
 
-  AchieveComponents(this.trophyComponent, this.textComponent);
+  AchieveComponents(this.trophyComponent, this.textComponent) {
+    levelDownButton = ButtonComponent(
+        size: Vector2(10, 50),
+        button: AlignComponent(
+            alignment: Anchor.center,
+            child: PolygonComponent(
+                [Vector2(0, 0), Vector2(10, -5), Vector2(10, 5)],
+                paint: Paint()..color = Colors.transparent)),
+        position: Vector2(0, 25),
+        anchor: Anchor.center);
+    levelUpButton = ButtonComponent(
+        size: Vector2(10, 50),
+        button: AlignComponent(
+          alignment: Anchor.center,
+          child: PolygonComponent(
+              [Vector2(10, 0), Vector2(0, -5), Vector2(0, 5)],
+              paint: Paint()..color = Colors.transparent),
+        ),
+        position: Vector2(220, 25),
+        anchor: Anchor.center);
+  }
+}
+
+class AchieveState {
+  int achievedLevel = 0;
+  int viewLevel = 1;
+  final int maxLevel;
+  final Map<int, TrophyRarity> levelToRarityMap;
+  Map<int, String> levelToTextMap;
+  final Map<int, double?> levelToFontSizeMap;
+
+  AchieveState(this.maxLevel, this.levelToRarityMap, this.levelToTextMap,
+      this.levelToFontSizeMap);
 }
 
 class AchievementsSeq extends Sequence with KeyboardHandler {
   late final TextComponent achievementsText;
   late final GameButtonGroup buttonGroup;
   late final GameTextButton backButton;
-  final List<RoundedComponent> achievementTiles = [];
+  final List<GameButton> achievementTiles = [];
   late final Image trophyImage;
-  late final List<Sprite> trophySprites;
+  late final Image checkImage;
+  late final Map<TrophyRarity, Sprite> trophySprites;
   final List<AchieveComponents> achieveComponents = [];
+  final List<AchieveState> achieveStates = [];
+
+  SpriteComponent _trophyComponent(TrophyRarity rarity) {
+    return SpriteComponent(
+        sprite: trophySprites[rarity]!,
+        position: Vector2(10, 0),
+        size: Vector2(40, 50),
+        children: [
+          AlignComponent(
+            alignment: Anchor.bottomRight,
+            child: SpriteComponent.fromImage(checkImage, size: Vector2(15, 15)),
+          ),
+        ]);
+  }
+
+  void _trophyConfig(SpriteComponent trophy, TrophyRarity rarity, bool isOn) {
+    trophy.sprite = trophySprites[rarity];
+    trophy
+        .add(OpacityEffect.to(isOn ? 1.0 : 0.5, EffectController(duration: 0)));
+    ((trophy.children.first as AlignComponent).child as SpriteComponent)
+        .add(OpacityEffect.to(isOn ? 1.0 : 0.0, EffectController(duration: 0)));
+  }
 
   @override
   Future<void> onLoad() async {
     final loc = game.localization;
     trophyImage = await Flame.images.load('trophy.png');
+    checkImage = await Flame.images.load('check.png');
     // 銅・銀・金・虹色のトロフィーのスプライト
-    trophySprites = [
-      for (int i = 1; i <= 4; i++)
-        Sprite(trophyImage,
-            srcPosition: Vector2(i * 128, 0), srcSize: Vector2(128, 180))
-    ];
+    trophySprites = {
+      for (final rarity in TrophyRarity.values)
+        rarity: Sprite(trophyImage,
+            srcPosition: Vector2((rarity.index + 1) * 128, 0),
+            srcSize: Vector2(128, 180))
+    };
+    achieveStates.addAll([
+      AchieveState(
+          1,
+          {1: TrophyRarity.copper},
+          {0: loc.achievement1level0, 1: loc.achievement1level1},
+          {0: null, 1: null}),
+      AchieveState(
+          1,
+          {1: TrophyRarity.gold},
+          {0: loc.achievement2level0, 1: loc.achievement2level1},
+          {0: null, 1: null}),
+      AchieveState(4, {
+        1: TrophyRarity.copper,
+        2: TrophyRarity.silver,
+        3: TrophyRarity.gold,
+        4: TrophyRarity.rainbow
+      }, {
+        0: loc.achievement3level0,
+        1: loc.achievement3level1,
+        2: loc.achievement3level2,
+        3: loc.achievement3level3,
+        4: loc.achievement3level4,
+      }, {
+        0: null,
+        1: 12,
+        2: 12,
+        3: 12,
+        4: 12
+      }),
+      AchieveState(4, {
+        1: TrophyRarity.copper,
+        2: TrophyRarity.silver,
+        3: TrophyRarity.gold,
+        4: TrophyRarity.rainbow
+      }, {
+        0: loc.achievement4level0,
+        1: loc.achievement4level1,
+        2: loc.achievement4level2,
+        3: loc.achievement4level3,
+        4: loc.achievement4level4,
+      }, {
+        for (int i = 0; i <= 4; i++) i: 10,
+      }),
+    ]);
+    _updateAchieveState();
+
     achievementsText = TextComponent(
       text: loc.achievements,
       size: Vector2(150.0, 45.0),
@@ -55,17 +168,10 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
       text: loc.back,
       onReleased: () => game.pushSeqNamed('title'),
     );
-    buttonGroup = GameButtonGroup(buttons: [
-      backButton,
-    ]);
     achieveComponents.addAll([
       // 【実績】女の子を助ける
       AchieveComponents(
-        SpriteComponent(
-          sprite: trophySprites[0], // 銅
-          position: Vector2(10, 0),
-          size: Vector2(40, 50),
-        ),
+        _trophyComponent(TrophyRarity.copper),
         TextComponent(
           text: '女の子を助ける',
           position: Vector2(70, 25),
@@ -77,11 +183,7 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
       ),
       // 【実績】ダイヤを作る
       AchieveComponents(
-        SpriteComponent(
-          sprite: trophySprites[2], // 金
-          position: Vector2(10, 0),
-          size: Vector2(40, 50),
-        ),
+        _trophyComponent(TrophyRarity.gold), // 金
         TextComponent(
           text: '？？？（宝石）を作る',
           position: Vector2(70, 25),
@@ -93,11 +195,7 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
       ),
       // 【実績】宝箱を見つける
       AchieveComponents(
-        SpriteComponent(
-          sprite: trophySprites[1], // 銀
-          position: Vector2(10, 0),
-          size: Vector2(40, 50),
-        ),
+        _trophyComponent(TrophyRarity.silver), // 銀
         TextComponent(
           text: '？？？を見つける',
           position: Vector2(70, 25),
@@ -109,11 +207,7 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
       ),
       // 【実績】1ゲームでブロック破壊率を20%にする
       AchieveComponents(
-        SpriteComponent(
-          sprite: trophySprites[0], // 銅
-          position: Vector2(10, 0),
-          size: Vector2(40, 50),
-        ),
+        _trophyComponent(TrophyRarity.copper), // 銅
         TextComponent(
           text: '1ゲームでブロック破壊率を20%にする',
           position: Vector2(70, 25),
@@ -122,32 +216,35 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
               style: const TextStyle(
                   fontFamily: Config.gameTextFamily,
                   color: Color(0xff000000),
-                  fontSize: 12)),
+                  fontSize: 10)),
         ),
       ),
     ]);
     Vector2 tilePos = Vector2(180, 205);
     for (final a in achieveComponents) {
-      achievementTiles.add(RoundedComponent(
+      final adding = GameButton(
         position: tilePos.clone(),
         anchor: Anchor.center,
-        borderColor: Colors.grey,
         size: Vector2(240, 70),
-        cornerRadius: 5,
-        strokeWidth: 1,
-        children: [
-          PositionComponent(
-            position: Vector2(10, 10),
-            size: Vector2(220, 50),
-            children: [
-              a.trophyComponent,
-              a.textComponent,
-            ],
-          ),
-        ],
-      ));
+        child: PositionComponent(
+          size: Vector2(220, 50),
+          children: [
+            a.trophyComponent,
+            a.textComponent,
+            a.levelDownButton,
+            a.levelUpButton,
+          ],
+        ),
+      );
+      adding.enabledFrameColor = Colors.grey;
+      adding.button.strokeWidth = 1;
+      achievementTiles.add(adding);
       tilePos += Vector2(0, 90);
     }
+    buttonGroup = GameButtonGroup(buttons: [
+      backButton,
+      ...achievementTiles,
+    ]);
 
     _updateAchievementTile();
 
@@ -165,116 +262,95 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
     ]);
   }
 
+  void _updateAchieveState() {
+    // 達成状況を反映
+    achieveStates[0].achievedLevel =
+        game.achievementData['hasHelpedGirl']! ? 1 : 0;
+    achieveStates[1].achievedLevel =
+        game.achievementData['maxJewelLevel']! >= 14 ? 1 : 0;
+    achieveStates[2].achievedLevel =
+        game.achievementData['maxFoundTreasureNum']! >= 9
+            ? 4
+            : game.achievementData['maxFoundTreasureNum']! >= 6
+                ? 3
+                : game.achievementData['maxFoundTreasureNum']! >= 3
+                    ? 2
+                    : game.achievementData['maxFoundTreasureNum']! >= 1
+                        ? 1
+                        : 0;
+    achieveStates[3].achievedLevel =
+        game.achievementData['maxBreakBlockRate']! >= 100
+            ? 4
+            : game.achievementData['maxBreakBlockRate']! >= 80
+                ? 3
+                : game.achievementData['maxBreakBlockRate']! >= 40
+                    ? 2
+                    : game.achievementData['maxBreakBlockRate']! >= 20
+                        ? 1
+                        : 0;
+    // 現在の表示レベルを、達成済み+1に設定
+    for (final state in achieveStates) {
+      state.viewLevel = state.achievedLevel + 1 > state.maxLevel
+          ? state.maxLevel
+          : state.achievedLevel + 1;
+    }
+  }
+
   void _updateAchievementTile() {
     // 達成状況を画面に反映
-    if (game.achievementData['hasHelpedGirl']!) {
-      achieveComponents[0]
-          .trophyComponent
-          .add(OpacityEffect.to(1.0, EffectController(duration: 0)));
-    } else {
-      achieveComponents[0]
-          .trophyComponent
-          .add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-    }
-    if (game.achievementData['maxJewelLevel']! >= 14) {
-      achieveComponents[1]
-          .trophyComponent
-          .add(OpacityEffect.to(1.0, EffectController(duration: 0)));
-      achieveComponents[1].textComponent.text = 'ダイヤモンドを作る';
-    } else {
-      achieveComponents[1]
-          .trophyComponent
-          .add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[1].textComponent.text = '？？？（宝石）を作る';
-    }
-    if (game.achievementData['maxFoundTreasureNum']! >= 9) {
-      achieveComponents[2].trophyComponent
-        ..sprite = trophySprites[3] // 虹
-        ..add(OpacityEffect.to(1.0, EffectController(duration: 0)));
-      achieveComponents[2].textComponent
-        ..text =
-            '1ゲームで宝箱を\n9個見つける(${game.achievementData["maxFoundTreasureNum"]!})'
+    for (int i = 0; i < 4; i++) {
+      int view = achieveStates[i].viewLevel;
+      int achieve = achieveStates[i].achievedLevel;
+      // 表示中のレベルに応じてトロフィー画像、テキスト、ボタンを変更する
+      _trophyConfig(achieveComponents[i].trophyComponent,
+          achieveStates[i].levelToRarityMap[view]!, achieve >= view);
+      String desc = achieveStates[i].levelToTextMap[achieve]!;
+      if (i == 2 && achieve != 0) {
+        desc += '(${game.achievementData["maxFoundTreasureNum"]})';
+      } else if (i == 3) {
+        desc += '(${game.achievementData["maxBreakBlockRate"]}%)';
+      }
+      achieveComponents[i].textComponent
+        ..text = desc
         ..textRenderer = TextPaint(
-            style: const TextStyle(
+            style: TextStyle(
                 fontFamily: Config.gameTextFamily,
-                color: Color(0xff000000),
-                fontSize: 12));
-    } else if (game.achievementData['maxFoundTreasureNum']! >= 6) {
-      achieveComponents[2].trophyComponent
-        ..sprite = trophySprites[3] // 虹
-        ..add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[2].textComponent
-        ..text =
-            '1ゲームで宝箱を\n9個見つける(${game.achievementData["maxFoundTreasureNum"]!})'
-        ..textRenderer = TextPaint(
-            style: const TextStyle(
-                fontFamily: Config.gameTextFamily,
-                color: Color(0xff000000),
-                fontSize: 12));
-    } else if (game.achievementData['maxFoundTreasureNum']! >= 3) {
-      achieveComponents[2].trophyComponent
-        ..sprite = trophySprites[2] // 金
-        ..add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[2].textComponent
-        ..text =
-            '1ゲームで宝箱を\n6個見つける(${game.achievementData["maxFoundTreasureNum"]!})'
-        ..textRenderer = TextPaint(
-            style: const TextStyle(
-                fontFamily: Config.gameTextFamily,
-                color: Color(0xff000000),
-                fontSize: 12));
-    } else if (game.achievementData['maxFoundTreasureNum']! >= 1) {
-      achieveComponents[2].trophyComponent
-        ..sprite = trophySprites[1] // 銀
-        ..add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[2].textComponent
-        ..text =
-            '1ゲームで宝箱を\n3個見つける(${game.achievementData["maxFoundTreasureNum"]!})'
-        ..textRenderer = TextPaint(
-            style: const TextStyle(
-                fontFamily: Config.gameTextFamily,
-                color: Color(0xff000000),
-                fontSize: 12));
-    } else {
-      achieveComponents[2].trophyComponent
-        ..sprite = trophySprites[0] // 銅
-        ..add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[2].textComponent
-        ..text = '？？？を見つける'
-        ..textRenderer = TextPaint(
-          style: Config.gameTextStyle,
-        );
-    }
-    if (game.achievementData['maxBreakBlockRate']! >= 100) {
-      achieveComponents[3].trophyComponent
-        ..sprite = trophySprites[3] // 虹
-        ..add(OpacityEffect.to(1.0, EffectController(duration: 0)));
-      achieveComponents[3].textComponent.text =
-          '1ゲームでブロック破壊率を\n100%にする(${game.achievementData["maxBreakBlockRate"]!}%)';
-    } else if (game.achievementData['maxBreakBlockRate']! >= 80) {
-      achieveComponents[3].trophyComponent
-        ..sprite = trophySprites[3] // 虹
-        ..add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[3].textComponent.text =
-          '1ゲームでブロック破壊率を\n100%にする(${game.achievementData["maxBreakBlockRate"]!}%)';
-    } else if (game.achievementData['maxBreakBlockRate']! >= 40) {
-      achieveComponents[3].trophyComponent
-        ..sprite = trophySprites[2] // 金
-        ..add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[3].textComponent.text =
-          '1ゲームでブロック破壊率を\n80%にする(${game.achievementData["maxBreakBlockRate"]!}%)';
-    } else if (game.achievementData['maxBreakBlockRate']! >= 20) {
-      achieveComponents[3].trophyComponent
-        ..sprite = trophySprites[1] // 銀
-        ..add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[3].textComponent.text =
-          '1ゲームでブロック破壊率を\n40%にする(${game.achievementData["maxBreakBlockRate"]!}%)';
-    } else {
-      achieveComponents[3].trophyComponent
-        ..sprite = trophySprites[0] // 銅
-        ..add(OpacityEffect.to(0.5, EffectController(duration: 0)));
-      achieveComponents[3].textComponent.text =
-          '1ゲームでブロック破壊率を\n20%にする(${game.achievementData["maxBreakBlockRate"]!}%)';
+                color: Colors.black,
+                fontSize: achieveStates[i].levelToFontSizeMap[achieve]));
+      // 右向きボタンについて
+      if (view >= achieveStates[i].maxLevel || view > achieve) {
+        ((achieveComponents[i].levelUpButton.button as AlignComponent).child
+                as PolygonComponent)
+            .paint
+            .color = Colors.transparent;
+        achieveComponents[i].levelUpButton.onPressed = null;
+      } else {
+        ((achieveComponents[i].levelUpButton.button as AlignComponent).child
+                as PolygonComponent)
+            .paint
+            .color = Colors.grey;
+        achieveComponents[i].levelUpButton.onPressed = () {
+          achieveStates[i].viewLevel++;
+          _updateAchievementTile();
+        };
+      }
+      // 左向きボタンについて
+      if (view <= 1) {
+        ((achieveComponents[i].levelDownButton.button as AlignComponent).child
+                as PolygonComponent)
+            .paint
+            .color = Colors.transparent;
+        achieveComponents[i].levelDownButton.onPressed = null;
+      } else {
+        ((achieveComponents[i].levelDownButton.button as AlignComponent).child
+                as PolygonComponent)
+            .paint
+            .color = Colors.grey;
+        achieveComponents[i].levelDownButton.onPressed = () {
+          achieveStates[i].viewLevel--;
+          _updateAchievementTile();
+        };
+      }
     }
   }
 
@@ -294,6 +370,19 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
         keysPressed.contains(LogicalKeyboardKey.keyS)) {
       buttonGroup.focusNext();
     }
+    int? focusIdx = buttonGroup.focusIdx;
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowLeft)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyA)) {
+      if (focusIdx != null && focusIdx > 0) {
+        achieveComponents[focusIdx - 1].levelDownButton.onPressed?.call();
+      }
+    }
+    if ((keysPressed.contains(LogicalKeyboardKey.arrowRight)) ||
+        keysPressed.contains(LogicalKeyboardKey.keyD)) {
+      if (focusIdx != null && focusIdx > 0) {
+        achieveComponents[focusIdx - 1].levelUpButton.onPressed?.call();
+      }
+    }
 
     // スペースキー->フォーカスしているボタンを押す
     if (event is KeyDownEvent &&
@@ -307,6 +396,7 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
   @override
   void onFocus(String? before) {
     if (achieveComponents.isNotEmpty) {
+      _updateAchieveState();
       _updateAchievementTile();
     }
   }
@@ -321,5 +411,28 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
   void onLangChanged() {
     final loc = game.localization;
     backButton.text = loc.back;
+    achieveStates[0].levelToTextMap = {
+      0: loc.achievement1level0,
+      1: loc.achievement1level1
+    };
+    achieveStates[1].levelToTextMap = {
+      0: loc.achievement2level0,
+      1: loc.achievement2level1
+    };
+    achieveStates[2].levelToTextMap = {
+      0: loc.achievement3level0,
+      1: loc.achievement3level1,
+      2: loc.achievement3level2,
+      3: loc.achievement3level3,
+      4: loc.achievement3level4,
+    };
+    achieveStates[3].levelToTextMap = {
+      0: loc.achievement4level0,
+      1: loc.achievement4level1,
+      2: loc.achievement4level2,
+      3: loc.achievement4level3,
+      4: loc.achievement4level4,
+    };
+    _updateAchievementTile();
   }
 }

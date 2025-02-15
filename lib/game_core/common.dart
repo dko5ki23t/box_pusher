@@ -173,8 +173,8 @@ class PointRectRange extends PointRange {
         Vector2(rb.x * unitSize.x, rb.y * unitSize.y));
   }
 
-  int get width => rb.x - lt.x;
-  int get height => rb.y - lt.y;
+  int get width => rb.x - lt.x + 1;
+  int get height => rb.y - lt.y + 1;
 }
 
 /// 整数座標による直線表現(ただし、縦横斜め8方向のみ)
