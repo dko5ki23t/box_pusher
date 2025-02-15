@@ -10,6 +10,7 @@ import 'package:box_pusher/config.dart';
 import 'package:box_pusher/custom_scale_detector.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:box_pusher/sequences/achievements_seq.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/confirm_delete_stage_data_seq.dart';
 import 'package:box_pusher/sequences/confirm_exit_seq.dart';
@@ -88,6 +89,10 @@ class BoxPusherGame extends FlameGame
   /// プレイ中のステージ情報
   Map<String, dynamic> _stageData = {};
   Map<String, dynamic> get stageData => _stageData;
+
+  /// 実績情報
+  Map<String, dynamic> _achievementData = {};
+  Map<String, dynamic> get achievementData => _achievementData;
 
   /// 操作方法や音量等のコンフィグ情報
   Map<String, dynamic> _userConfigData = {};
@@ -204,6 +209,7 @@ class BoxPusherGame extends FlameGame
       _router = RouterComponent(
         routes: {
           'title': Route(TitleSeq.new),
+          'achievements': Route(AchievementsSeq.new),
           'game': Route(GameSeq.new),
           'loading': Route(LoadingSeq.new, transparent: true),
           'menu': Route(MenuSeq.new, transparent: true),
@@ -227,10 +233,13 @@ class BoxPusherGame extends FlameGame
         _stageData = jsonDecode(prefs.getString('stageData') ?? '');
         _userConfigData = jsonDecode(prefs.getString('userConfigData') ??
             jsonEncode(getDefaultUserConfig()));
+        _achievementData = jsonDecode(prefs.getString('achievementData') ??
+            jsonEncode(getDefaultAchievement()));
         _saveDataVersion = Version.parse(prefs.getString('version')!);
       } catch (e) {
         _stageData = {};
         _userConfigData = getDefaultUserConfig();
+        _achievementData = getDefaultAchievement();
         setAndSaveHighScore(0);
         _saveDataVersion = Version.parse(packageInfo.version);
       }
@@ -244,10 +253,13 @@ class BoxPusherGame extends FlameGame
         _highScore = jsonMap['highScore'];
         _stageData = jsonMap['stageData'] ?? {};
         _userConfigData = jsonMap['userConfigData'] ?? getDefaultUserConfig();
+        _achievementData =
+            jsonMap['achievementData'] ?? getDefaultAchievement();
         _saveDataVersion = Version.parse(jsonMap['version']);
       } catch (e) {
         _stageData = {};
         _userConfigData = getDefaultUserConfig();
+        _achievementData = getDefaultAchievement();
         setAndSaveHighScore(0);
         _saveDataVersion = Version.parse(packageInfo.version);
       }
@@ -296,6 +308,7 @@ class BoxPusherGame extends FlameGame
       'highScore': _highScore,
       'stageData': _stageData,
       'userConfigData': _userConfigData,
+      'achievementData': _achievementData,
       'version': _saveDataVersion.toString(),
     });
   }
@@ -308,12 +321,14 @@ class BoxPusherGame extends FlameGame
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
       await prefs.setString('userConfigData', jsonEncode(_userConfigData));
+      await prefs.setString('achievementData', jsonEncode(_achievementData));
       await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
         'userConfigData': _userConfigData,
+        'achievementData': _achievementData,
         'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
@@ -329,12 +344,14 @@ class BoxPusherGame extends FlameGame
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
       await prefs.setString('userConfigData', jsonEncode(_userConfigData));
+      await prefs.setString('achievementData', jsonEncode(_achievementData));
       await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
         'userConfigData': _userConfigData,
+        'achievementData': _achievementData,
         'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
@@ -351,12 +368,14 @@ class BoxPusherGame extends FlameGame
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
       await prefs.setString('userConfigData', jsonEncode(_userConfigData));
+      await prefs.setString('achievementData', jsonEncode(_achievementData));
       await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
         'userConfigData': _userConfigData,
+        'achievementData': _achievementData,
         'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);
@@ -371,17 +390,52 @@ class BoxPusherGame extends FlameGame
     };
   }
 
+  /// 操作方法や音量等のコンフィグ情報をセーブデータに保存
+  Future<void> saveAchievementData() async {
+    // TODO:各種実績の情報を取得
+    if (kIsWeb) {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('highScore', _highScore);
+      await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
+      await prefs.setString('achievementData', jsonEncode(_achievementData));
+      await prefs.setString('version', _saveDataVersion.toString());
+    } else {
+      String jsonText = jsonEncode({
+        'highScore': _highScore,
+        'stageData': _stageData,
+        'userConfigData': _userConfigData,
+        'achievementData': _achievementData,
+        'version': _saveDataVersion.toString(),
+      });
+      await saveDataFile.writeAsString(jsonText);
+    }
+  }
+
+  Map<String, dynamic> getDefaultAchievement() {
+    return {
+      'hasHelpedGirl': false,
+      'createDia': false,
+      'maxFoundTreasureNum': 0,
+      'maxBreakBlockRate': 0,
+    };
+  }
+
   Future<void> clearAndSaveStageData() async {
     _stageData = {};
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
+      await prefs.setString('achievementData', jsonEncode(_achievementData));
       await prefs.setString('version', _saveDataVersion.toString());
     } else {
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'userConfigData': _userConfigData,
+        'achievementData': _achievementData,
         'version': _saveDataVersion.toString(),
       });
       await saveDataFile.writeAsString(jsonText);

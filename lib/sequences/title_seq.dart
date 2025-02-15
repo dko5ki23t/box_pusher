@@ -21,6 +21,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   late final GameTextButton continueButton;
   late final GameTextButton languageButton;
   late final GameTextButton versionLogButton;
+  late final GameTextButton achievementsButton;
   late final Image titleLogoImage;
   late final Image bugImage;
   //late final GameButton debugOnOffButton;
@@ -83,20 +84,30 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       text: loc.language,
       onReleased: () => game.changeLocale(),
     );
+    achievementsButton = GameTextButton(
+      size: Vector2(120.0, 30.0),
+      position: Vector2(180.0, 410.0),
+      anchor: Anchor.center,
+      text: loc.achievements,
+      onReleased: () async {
+        game.pushSeqNamed('achievements');
+      },
+    );
     buttonGroup = GameButtonGroup(buttons: [
       languageButton,
       newGameButton,
       continueButton,
-    ], focusIdx: 1);
-    versionLogButton = GameTextButton(
-      size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 410.0),
-      anchor: Anchor.center,
-      text: loc.versionLog,
-      onReleased: () async {
-        game.pushSeqOverlay('version_log_dialog');
-      },
-    );
+      achievementsButton,
+    ]);
+    //versionLogButton = GameTextButton(
+    //  size: Vector2(120.0, 30.0),
+    //  position: Vector2(180.0, 410.0),
+    //  anchor: Anchor.center,
+    //  text: loc.versionLog,
+    //  onReleased: () async {
+    //    game.pushSeqOverlay('version_log_dialog');
+    //  },
+    //);
     debugButton = GameTextButton(
       size: Vector2(80.0, 30.0),
       position: Vector2(160.0, 460.0),
@@ -123,7 +134,8 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       newGameButton,
       continueButton,
       languageButton,
-      versionLogButton,
+      //versionLogButton,
+      achievementsButton,
       GameSpriteOnOffButton(
         size: Vector2.all(30),
         position: Vector2(120.0, 460.0),
@@ -185,11 +197,11 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     if (game.getCurrentSeqName() != 'title') return true;
     if ((keysPressed.contains(LogicalKeyboardKey.arrowUp)) ||
         keysPressed.contains(LogicalKeyboardKey.keyW)) {
-      buttonGroup.focusPrev();
+      buttonGroup.focusPrev(focusIdIfNull: 1);
     }
     if ((keysPressed.contains(LogicalKeyboardKey.arrowDown)) ||
         keysPressed.contains(LogicalKeyboardKey.keyS)) {
-      buttonGroup.focusNext();
+      buttonGroup.focusNext(focusIdIfNull: 1);
     }
 
     // スペースキー->フォーカスしているボタンを押す
@@ -214,7 +226,8 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     newGameButton.text = loc.newGame;
     continueButton.text = loc.loadGame;
     languageButton.text = loc.language;
-    versionLogButton.text = loc.versionLog;
+    //versionLogButton.text = loc.versionLog;
+    achievementsButton.text = loc.achievements;
     debugButton.text = loc.debug;
   }
 }

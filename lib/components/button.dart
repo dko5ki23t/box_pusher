@@ -207,11 +207,18 @@ class GameButtonGroup {
     assert(buttons.isNotEmpty);
   }
 
-  void focusNext() {
-    if (focusIdx != null) {
-      // 一旦今のフォーカスを外す
-      buttons[focusIdx!].focused = false;
+  void focusCurrent({int? focusIdIfNull}) {
+    focusIdx ??= focusIdIfNull ?? 0;
+    buttons[focusIdx!].focused = true;
+  }
+
+  void focusNext({int? focusIdIfNull}) {
+    if (focusIdx == null) {
+      focusCurrent(focusIdIfNull: focusIdIfNull);
+      return;
     }
+    // 一旦今のフォーカスを外す
+    buttons[focusIdx!].focused = false;
     for (int i = 0; i < buttons.length; i++) {
       int index = (focusIdx ?? -1) + i + 1;
       if (loopFocus) {
@@ -231,11 +238,13 @@ class GameButtonGroup {
     }
   }
 
-  void focusPrev() {
-    if (focusIdx != null) {
-      // 一旦今のフォーカスを外す
-      buttons[focusIdx!].focused = false;
+  void focusPrev({int? focusIdIfNull}) {
+    if (focusIdx == null) {
+      focusCurrent(focusIdIfNull: focusIdIfNull);
+      return;
     }
+    // 一旦今のフォーカスを外す
+    buttons[focusIdx!].focused = false;
     for (int i = 0; i < buttons.length; i++) {
       int index = (focusIdx ?? 1) - i - 1;
       if (loopFocus) {
