@@ -120,6 +120,9 @@ class Boneman extends StageObj {
     };
   }
 
+  /// 骨になった時のスケールエフェクト
+  final ScaleEffect scaleEffect;
+
   /// 復活に要するターン数(死んでいる期間)
   int get deadPeriod {
     switch (level) {
@@ -138,7 +141,7 @@ class Boneman extends StageObj {
   Boneman({
     required super.savedArg,
     required Vector2? scale,
-    required ScaleEffect scaleEffect,
+    required this.scaleEffect,
     required super.pos,
     int level = 1,
   }) : super(
@@ -235,7 +238,9 @@ class Boneman extends StageObj {
             deadTurns = 0;
             attacking = false;
             // スケールエフェクト削除
-            animationComponent.removeAll(animationComponent.children);
+            if (isAddedToGameWorld) {
+              animationComponent.remove(scaleEffect);
+            }
             vector = Move.down;
             stage.boxes.forceRemove(this);
             stage.enemies.add(this);
@@ -276,7 +281,7 @@ class Boneman extends StageObj {
       // 倒されたアニメーションに切り替える
       attacking = true;
       _setAttackCh();
-      stage.setScaleEffects(this);
+      animationComponent.add(scaleEffect);
       vector = vector;
     }
     return false;

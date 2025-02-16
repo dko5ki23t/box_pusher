@@ -469,21 +469,21 @@ abstract class StageObj {
 
   /// animationComponentがgameWorldに追加されているかどうか
   /// (この判定をせずにremoveすると例外起きるし、毎回World.contain()すると遅くなるのでメンバとして持つ)
-  bool _isAddedToGameWorld = false;
+  bool isAddedToGameWorld = false;
 
   /// animationComponentをgameWorldに追加(既に追加されていれば何もしない)
   void addToGameWorld(World gameWorld) {
-    if (!_isAddedToGameWorld) {
+    if (!isAddedToGameWorld) {
       gameWorld.add(animationComponent);
-      _isAddedToGameWorld = true;
+      isAddedToGameWorld = true;
     }
   }
 
   /// animationComponentをgameWorldから削除(既に削除されていれば何もしない)
   void removeFromGameWorld(World gameWorld) {
-    if (_isAddedToGameWorld) {
+    if (isAddedToGameWorld) {
       gameWorld.remove(animationComponent);
-      _isAddedToGameWorld = false;
+      isAddedToGameWorld = false;
     }
   }
 
