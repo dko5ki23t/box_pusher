@@ -1020,7 +1020,9 @@ class Stage {
 
   /// 対象座標位置にあるオブジェクトをすべて取得する
   /// ゴースト化した敵や煙なども取得する
+  /// ステージ範囲外の座標が指定された場合は空のリストが返る
   List<StageObj> getList(Point p, {bool detectPlayer = false}) {
+    if (!contains(p)) return [];
     List<StageObj> ret = [];
     if (detectPlayer && player.pos == p) {
       ret.add(player);
@@ -1231,7 +1233,7 @@ class Stage {
       // 次マージで出現するアイテム
       nextMergeItems.clear();
       for (final e in stageData['nextMergeItems'] as List<dynamic>) {
-        nextMergeItems.add(createObjectFromMap(e));
+        nextMergeItems.add(createObjectFromMap(e, addToGameWorld: false));
       }
     } catch (e) {
       // マージによる出現アイテム更新

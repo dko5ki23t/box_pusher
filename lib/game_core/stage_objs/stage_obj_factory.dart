@@ -238,6 +238,7 @@ class StageObjFactory {
         return Builder(
           savedArg: savedArg,
           pos: pos,
+          level: typeLevel.level,
         )..vector = vector;
       case StageObjType.pusher:
         return Pusher(
