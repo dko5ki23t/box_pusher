@@ -304,7 +304,7 @@ class AchievementsSeq extends Sequence with KeyboardHandler {
       // 表示中のレベルに応じてトロフィー画像、テキスト、ボタンを変更する
       _trophyConfig(achieveComponents[i].trophyComponent,
           achieveStates[i].levelToRarityMap[view]!, achieve >= view);
-      String desc = achieveStates[i].levelToTextMap[achieve]!;
+      String desc = achieveStates[i].levelToTextMap[view]!;
       if (i == 2 && achieve != 0) {
         desc += '(${game.achievementData["maxFoundTreasureNum"]})';
       } else if (i == 3) {

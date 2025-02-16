@@ -244,6 +244,7 @@ class StageObjFactory {
         return Pusher(
           savedArg: savedArg,
           pos: pos,
+          level: typeLevel.level,
         )..vector = vector;
       case StageObjType.smoker:
         return Smoker(savedArg: savedArg, pos: pos, level: typeLevel.level)
