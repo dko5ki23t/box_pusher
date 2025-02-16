@@ -35,6 +35,7 @@ class StageObjList {
       iterable.firstWhere(test);
   StageObj? firstWhereOrNull(bool Function(StageObj) test) =>
       iterable.firstWhereOrNull(test);
+  StageObj get last => _objs.last;
 
   /// 基本的には使用禁止。代わりに対象StageObjのremove()を呼び出す。
   bool forceRemove(Object? e) => _objs.remove(e);
@@ -235,6 +236,9 @@ class Stage {
 
   /// 【実績用】破壊したブロック(敵が作ったもの除く)の数
   int brokeBlockCount = 0;
+
+  /// 【実績用】作成したことがある宝石の最大レベル
+  int maxJewelLevel = 1;
 
   /// 次マージ時に出現するオブジェクト
   final List<StageObj> nextMergeItems = [];
@@ -478,11 +482,6 @@ class Stage {
     final Map<String, dynamic> ret = {};
     ret['hasHelpedGirl'] =
         player.isAbilityAquired[PlayerAbility.merge] ?? false;
-    int maxJewelLevel = 1;
-    for (final box in boxes.iterable
-        .where((element) => element.type == StageObjType.jewel)) {
-      maxJewelLevel = max(maxJewelLevel, box.level);
-    }
     ret['maxJewelLevel'] = maxJewelLevel;
     ret['maxFoundTreasureNum'] = foundTreasureCount;
     int total = 0;
@@ -889,6 +888,10 @@ class Stage {
       merged.remove();
       // 移動したオブジェクトのレベルを上げる
       merging.level++;
+      // 宝石の最大レベル更新
+      if (merging.type == StageObjType.jewel) {
+        maxJewelLevel = max(maxJewelLevel, merging.level);
+      }
     }
 
     if (!onlyDelete) {
@@ -1193,6 +1196,12 @@ class Stage {
     boxes.forceClear();
     for (final e in stageData['boxes'] as List<dynamic>) {
       boxes.add(createObjectFromMap(e));
+      // 宝石の最大レベルを調査
+      maxJewelLevel = max(maxJewelLevel, boxes.last.level);
+    }
+    // ポケットに入っている宝石も最大レベルの調査対象
+    if (player.pocketItem?.type == StageObjType.jewel) {
+      maxJewelLevel = max(maxJewelLevel, player.pocketItem!.level);
     }
     enemies.forceClear();
     for (final e in stageData['enemies'] as List<dynamic>) {
