@@ -5,7 +5,6 @@ import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/joy_stick_component.dart';
 import 'package:box_pusher/components/opacity_effect_text_component.dart';
 import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/player.dart';
@@ -171,7 +170,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final ButtonComponent eyeAbilityButton;
   late final ButtonComponent mergeAbilityButton;
   late final ButtonComponent menuButton;
-  late final GameTextButton viewModeButton;
+  //late final GameTextButton viewModeButton;
 
   final Blink nextMergeItemBlink = Blink(showDuration: 0.4, hideDuration: 0.1);
 
@@ -781,6 +780,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           ),
         ),
       );
+      /*
       // 【テストモード】現在の表示モード切り替えボタン
       viewModeButton = GameTextButton(
         size: viewModeButtonAreaSize,
@@ -806,6 +806,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           }
         },
       );
+      */
     }
   }
 
@@ -843,7 +844,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         // 【テストモード時】累計マージ数表示領域
         add(mergedCountText);
         // 【テストモード】現在の表示モード切り替えボタン
-        add(viewModeButton);
+        //add(viewModeButton);
       }
       // チュートリアル表示領域
       add(tutorial.tutorialArea);
@@ -1067,9 +1068,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       mergedCountText.text = "merge:${stage.mergedCount}";
     }
     // 【テストモード】表示モード切り替えボタン更新
-    if (game.testMode) {
-      viewModeButton.text = viewMode.name;
-    }
+    //if (game.testMode) {
+    //  viewModeButton.text = viewMode.name;
+    //}
     // 今回のupdateでクリアしたらクリア画面に移行
     if (stage.isClear()) {
       game.pushSeqNamed('clear');

@@ -307,10 +307,10 @@ class Stage {
   final bool testMode;
 
   /// 【テストモード】出現床/ブロックの分布範囲表示
-  List<Component> blockFloorMapView = [];
+  //List<Component> blockFloorMapView = [];
 
   /// 【テストモード】ブロック破壊時出現オブジェクトの分布範囲表示
-  List<Component> objInBlockMapView = [];
+  //List<Component> objInBlockMapView = [];
 
   /// 【テストモード】時間計測
   StopWatchLog? _stopWatchLog1;
@@ -330,6 +330,7 @@ class Stage {
       required this.gameWorld,
       required this.tutorial}) {
     _objFactory = StageObjFactory();
+    // TODO
     if (kDebugMode) {
       _stopWatchLog1 = StopWatchLog();
       _stopWatchLog2 = StopWatchLog();
@@ -356,8 +357,8 @@ class Stage {
         typeLevel: typeLevel, pos: pos, vector: vector, savedArg: 0);
     // ComponentをWorldに追加(ただし、update()対象範囲のみ)
     // TODO
-    //if (addToGameWorld && updateRange.contains(ret.pos)) {
-    if (addToGameWorld) {
+    if (addToGameWorld && updateRange.contains(ret.pos)) {
+      //if (addToGameWorld) {
       gameWorld.add(ret.animationComponent);
     }
     return ret;
@@ -372,8 +373,8 @@ class Stage {
     final ret = _objFactory.createFromMap(src);
     // ComponentをWorldに追加(ただし、update()対象範囲のみ)
     // TODO
-    //if (addToGameWorld && updateRange.contains(ret.pos)) {
-    if (addToGameWorld) {
+    if (addToGameWorld && updateRange.contains(ret.pos)) {
+      //if (addToGameWorld) {
       gameWorld.add(ret.animationComponent);
     }
     return ret;
@@ -408,10 +409,10 @@ class Stage {
     } else {
       _setStageDataFromInitialData(camera);
     }
-    if (testMode) {
-      // 【テストモード】各範囲の分布表示
-      _createDistributionView();
-    }
+    //if (testMode) {
+    //  // 【テストモード】各範囲の分布表示
+    //  _createDistributionView();
+    //}
     return ret;
   }
 
@@ -1377,6 +1378,9 @@ class Stage {
     for (final p in updateTargetRangeSet) {
       _staticObjs[p]?.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
+      //if (playerEndMoving && _staticObjs[p] != null) {
+      //  gameWorldAdd(gameWorld, _staticObjs[p]!.animationComponent);
+      //}
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
@@ -1393,6 +1397,9 @@ class Stage {
     for (final enemy in currentEnemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
+      //if (playerEndMoving) {
+      //  gameWorldAdd(gameWorld, enemy.animationComponent);
+      //}
     }
     if (playerStartMoving) {
       // 動き始めたらプレイヤーに再フォーカス
@@ -1446,6 +1453,9 @@ class Stage {
     for (final box in currentBoxes) {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           playerEndMoving, prohibitedPoints);
+      //if (playerEndMoving) {
+      //  gameWorldAdd(gameWorld, box.animationComponent);
+      //}
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
@@ -1468,6 +1478,9 @@ class Stage {
     for (final animal in animals) {
       animal.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
+      //if (playerEndMoving) {
+      //  gameWorldAdd(gameWorld, animal.animationComponent);
+      //}
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
@@ -1571,7 +1584,7 @@ class Stage {
       }
       // gameWorldに追加しているcomponentの状態を更新
       // TODO
-      //_updateGameWorldAdding();
+      _updateGameWorldAdding();
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
@@ -1586,43 +1599,125 @@ class Stage {
   /// gameWorld配下に追加しているコンポーネントを更新する
   /// (update()対象範囲のコンポーネントのみがgameWorldに追加されている状態にする)
   /// (warpingObjsリストに入っている、ワープ移動したオブジェクトのコンポーネントについても更新)
-  /*
   void _updateGameWorldAdding() {
-    final currentUpdateRange = updateRange;
-    final currentSet = currentUpdateRange.set;
-    final Set<Point> prevSet =
-        _prevUpdateRange == null ? {} : _prevUpdateRange!.set;
-    // removeすべきcomponentを持つオブジェクトの位置
-    final removePosSet = prevSet.difference(currentSet);
-    for (final p in removePosSet) {
-      if (!contains(p)) continue;
-      // 対象位置オブジェクトが持つcomponentを削除
-      final list = getList(p);
+    //final currentUpdateRange = updateRange;
+    //final currentSet = currentUpdateRange.set;
+    //final Set<Point> prevSet =
+    //    _prevUpdateRange == null ? {} : _prevUpdateRange!.set;
+    //// removeすべきcomponentを持つオブジェクトの位置
+    //final removePosSet = prevSet.difference(currentSet);
+    //for (final p in removePosSet) {
+    //  if (!contains(p)) continue;
+    //  // 対象位置オブジェクトが持つcomponentを削除
+    //  final list = getList(p);
+    //  for (final o in list) {
+    //    if (o.isEnemy) {
+    //      log(o.type.toString());
+    //    }
+    //    gameWorldRemove(gameWorld, o.animationComponent);
+    //  }
+    //}
+    //// addすべきcomponentを持つオブジェクトの位置
+    //final addPosSet = currentSet.difference(prevSet);
+    //for (final p in addPosSet) {
+    //  if (!contains(p)) continue;
+    //  // 対象位置オブジェクトが持つcomponentを追加
+    //  final list = getList(p);
+    //  for (final o in list) {
+    //    if (o.isEnemy) {
+    //      log(o.type.toString());
+    //    }
+    //    gameWorldAdd(gameWorld, o.animationComponent);
+    //  }
+    //}
+    //_prevUpdateRange = currentUpdateRange;
+
+    // update()範囲内端は追加
+    // update()範囲外端は追加
+    Point addPoint = player.pos - Config().updateRange;
+    int width = Config().updateRange.x * 2 + 1;
+    int height = Config().updateRange.y * 2 + 1;
+    // 左上端+1から右上端へ
+    for (int i = 1; i < width; i++) {
+      addPoint += Point(1, 0);
+      final list = getList(addPoint);
       for (final o in list) {
-        if (o.isEnemy) {
-          log(o.type.toString());
-        }
+        gameWorldAdd(gameWorld, o.animationComponent);
+      }
+      final list2 = getList(addPoint + Point(0, -1));
+      for (final o in list2) {
         gameWorldRemove(gameWorld, o.animationComponent);
       }
     }
-    // addすべきcomponentを持つオブジェクトの位置
-    final addPosSet = currentSet.difference(prevSet);
-    for (final p in addPosSet) {
-      if (!contains(p)) continue;
-      // 対象位置オブジェクトが持つcomponentを追加
-      final list = getList(p);
+    final additional1 = [
+      ...getList(addPoint + Point(1, -1)),
+      ...getList(addPoint + Point(1, 0))
+    ];
+    for (final o in additional1) {
+      gameWorldRemove(gameWorld, o.animationComponent);
+    }
+    // 右上端+1から右下端へ
+    for (int i = 1; i < height; i++) {
+      addPoint += Point(0, 1);
+      final list = getList(addPoint);
       for (final o in list) {
-        if (o.isEnemy) {
-          log(o.type.toString());
-        }
         gameWorldAdd(gameWorld, o.animationComponent);
       }
+      final list2 = getList(addPoint + Point(1, 0));
+      for (final o in list2) {
+        gameWorldRemove(gameWorld, o.animationComponent);
+      }
     }
-    _prevUpdateRange = currentUpdateRange;
+    final additional2 = [
+      ...getList(addPoint + Point(1, 1)),
+      ...getList(addPoint + Point(0, 1))
+    ];
+    for (final o in additional2) {
+      gameWorldRemove(gameWorld, o.animationComponent);
+    }
+    // 右下端+1から左下端へ
+    for (int i = 1; i < width; i++) {
+      addPoint += Point(-1, 0);
+      final list = getList(addPoint);
+      for (final o in list) {
+        gameWorldAdd(gameWorld, o.animationComponent);
+      }
+      final list2 = getList(addPoint + Point(0, 1));
+      for (final o in list2) {
+        gameWorldRemove(gameWorld, o.animationComponent);
+      }
+    }
+    final additional3 = [
+      ...getList(addPoint + Point(-1, 1)),
+      ...getList(addPoint + Point(-1, 0))
+    ];
+    for (final o in additional3) {
+      gameWorldRemove(gameWorld, o.animationComponent);
+    }
+    // 左下端+1から左上端へ
+    for (int i = 1; i < height; i++) {
+      addPoint += Point(0, -1);
+      final list = getList(addPoint);
+      for (final o in list) {
+        gameWorldAdd(gameWorld, o.animationComponent);
+      }
+      final list2 = getList(addPoint + Point(-1, 0));
+      for (final o in list2) {
+        gameWorldRemove(gameWorld, o.animationComponent);
+      }
+    }
+    final additional4 = [
+      ...getList(addPoint + Point(-1, -1)),
+      ...getList(addPoint + Point(0, -1))
+    ];
+    for (final o in additional4) {
+      gameWorldRemove(gameWorld, o.animationComponent);
+    }
+    assert(addPoint == player.pos - Config().updateRange);
 
     // ワープしたオブジェクトのcomponentについても追加/削除
     for (final o in warpingObjs) {
-      if (currentSet.contains(o.pos)) {
+      if (updateRange.contains(o.pos)) {
         gameWorldAdd(gameWorld, o.animationComponent);
       } else {
         gameWorldRemove(gameWorld, o.animationComponent);
@@ -1630,7 +1725,6 @@ class Stage {
     }
     warpingObjs.clear();
   }
-  */
 
   void prepareDistributions() {
     // 先に床/ブロックの分布
@@ -1663,6 +1757,7 @@ class Stage {
   }
 
   // 【テストモード】範囲の表示を作成
+  /*
   void _createDistributionView() {
     int colorIdx = -1;
     blockFloorMapView.clear();
@@ -1711,6 +1806,7 @@ class Stage {
       ]);
     }
   }
+  */
 
   /// 引数で指定した位置に、パターンに従った静止物を生成する
   void createAndSetStaticObjWithPattern(Point pos,

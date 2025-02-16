@@ -2,6 +2,7 @@ import 'package:box_pusher/box_pusher_game.dart';
 import 'package:box_pusher/components/button.dart';
 import 'package:box_pusher/config.dart';
 import 'package:box_pusher/sequences/sequence.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flame/components.dart';
 import 'package:flame/extensions.dart';
 import 'package:flame/flame.dart';
@@ -25,7 +26,13 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   late final Image titleLogoImage;
   late final Image bugImage;
   //late final GameButton debugOnOffButton;
-  late final GameTextButton debugButton;
+  //late final GameTextButton debugButton;
+
+  /// 有効なデバッグコマンド入力中か
+  bool isDebugCommandValid = false;
+
+  /// 入力中のデバッグコマンド
+  String debugCommand = '';
 
   @override
   Future<void> onLoad() async {
@@ -58,7 +65,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     );
     newGameButton = GameTextButton(
       size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 310.0),
+      position: Vector2(180.0, 360.0),
       anchor: Anchor.center,
       text: loc.newGame,
       onReleased: () {
@@ -71,7 +78,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     );
     continueButton = GameTextButton(
       size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 360.0),
+      position: Vector2(180.0, 410.0),
       anchor: Anchor.center,
       text: loc.loadGame,
       enabled: game.stageData.isNotEmpty,
@@ -86,7 +93,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     );
     achievementsButton = GameTextButton(
       size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 410.0),
+      position: Vector2(180.0, 460.0),
       anchor: Anchor.center,
       text: loc.achievements,
       onReleased: () async {
@@ -108,16 +115,16 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     //    game.pushSeqOverlay('version_log_dialog');
     //  },
     //);
-    debugButton = GameTextButton(
-      size: Vector2(80.0, 30.0),
-      position: Vector2(160.0, 460.0),
-      anchor: Anchor.centerLeft,
-      enabled: game.testMode,
-      text: loc.debug,
-      onReleased: () async {
-        game.pushSeqOverlay('debug_dialog');
-      },
-    );
+    //debugButton = GameTextButton(
+    //  size: Vector2(80.0, 30.0),
+    //  position: Vector2(160.0, 460.0),
+    //  anchor: Anchor.centerLeft,
+    //  enabled: game.testMode,
+    //  text: loc.debug,
+    //  onReleased: () async {
+    //    game.pushSeqOverlay('debug_dialog');
+    //  },
+    //);
     // アプリバージョン等取得
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
 
@@ -136,17 +143,16 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       languageButton,
       //versionLogButton,
       achievementsButton,
-      GameSpriteOnOffButton(
-        size: Vector2.all(30),
-        position: Vector2(120.0, 460.0),
-        anchor: Anchor.centerLeft,
-        isOn: game.testMode,
-        onChanged: (isOn) => game.testMode = !game.testMode,
-        sprite: await Sprite.load('bug_report.png'),
-      ),
-      // TODO:コメント外す
+      //GameSpriteOnOffButton(
+      //  size: Vector2.all(30),
+      //  position: Vector2(120.0, 460.0),
+      //  anchor: Anchor.centerLeft,
+      //  isOn: game.testMode,
+      //  onChanged: (isOn) => game.testMode = !game.testMode,
+      //  sprite: await Sprite.load('bug_report.png'),
+      //),
       //if (game.testMode)
-      debugButton,
+      //debugButton,
       RectangleComponent(
         size: Vector2(120.0, 30.0),
         position: Vector2(180.0, 510.0),
@@ -184,7 +190,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     super.update(dt);
     highScreText.text = "${game.localization.highScore} : ${game.highScore}";
     continueButton.enabled = game.stageData.isNotEmpty;
-    debugButton.enabled = game.testMode;
+    //debugButton.enabled = game.testMode;
   }
 
   // PCのキーボード入力
@@ -210,7 +216,74 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       buttonGroup.getCurrentFocusButton()?.fire();
     }
 
+    // デバッグコマンド
+    if (event is KeyDownEvent) {
+      if (keysPressed.contains(LogicalKeyboardKey.slash)) {
+        isDebugCommandValid = true;
+        debugCommand = '';
+      } else if (isDebugCommandValid) {
+        if (debugCommand == '' &&
+            keysPressed.contains(LogicalKeyboardKey.keyI)) {
+          debugCommand = 'i';
+        } else if (debugCommand == 'i' &&
+            keysPressed.contains(LogicalKeyboardKey.keyM)) {
+          debugCommand = 'im';
+        } else if (debugCommand == 'im' &&
+            keysPressed.contains(LogicalKeyboardKey.keyP)) {
+          // セーブデータインポート
+          importSaveData();
+          isDebugCommandValid = false;
+          debugCommand = '';
+        } else if (debugCommand == '' &&
+            keysPressed.contains(LogicalKeyboardKey.keyE)) {
+          debugCommand = 'e';
+        } else if (debugCommand == 'e' &&
+            keysPressed.contains(LogicalKeyboardKey.keyX)) {
+          debugCommand = 'ex';
+        } else if (debugCommand == 'ex' &&
+            keysPressed.contains(LogicalKeyboardKey.keyP)) {
+          // セーブデータエクスポート
+          exportSaveData();
+          isDebugCommandValid = false;
+          debugCommand = '';
+        } else {
+          isDebugCommandValid = false;
+          debugCommand = '';
+        }
+      }
+    }
+
     return false;
+  }
+
+  Future<void> importSaveData() async {
+    // ファイル選択ダイアログ
+    const XTypeGroup typeGroup = XTypeGroup(
+      label: 'json',
+      extensions: ['json'],
+    );
+    final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+    if (file != null) {
+      final String fileContent = await file.readAsString();
+      game.importSaveDataFromString(fileContent);
+    }
+  }
+
+  Future<void> exportSaveData() async {
+    const String fileName = 'save_data.json';
+    final FileSaveLocation? result =
+        await getSaveLocation(suggestedName: fileName);
+    if (result == null) {
+      // Operation was canceled by the user.
+      return;
+    }
+
+    final Uint8List fileData =
+        Uint8List.fromList(game.exportSaveDataToString().codeUnits);
+    const String mimeType = 'application/json';
+    final XFile textFile =
+        XFile.fromData(fileData, mimeType: mimeType, name: fileName);
+    await textFile.saveTo(result.path);
   }
 
   @override
@@ -228,6 +301,6 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     languageButton.text = loc.language;
     //versionLogButton.text = loc.versionLog;
     achievementsButton.text = loc.achievements;
-    debugButton.text = loc.debug;
+    //debugButton.text = loc.debug;
   }
 }
