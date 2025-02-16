@@ -192,10 +192,10 @@ class Config {
 
   // デバッグモードで編集できるパラメータ
   /// ステージの最大横幅
-  int debugStageWidth = 200;
+  int debugStageWidth = 100;
 
   /// ステージの最大高さ
-  int debugStageHeight = 200;
+  int debugStageHeight = 100;
 
   /// ステージの最大横幅の設定可能範囲
   List<int> debugStageWidthClamps = [12, 200];

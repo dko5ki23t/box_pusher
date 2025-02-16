@@ -289,9 +289,11 @@ class Stage {
   PointRectRange get updateRange => PointRectRange(
       player.pos - Config().updateRange, player.pos + Config().updateRange);
 
-  /// プレイヤーが移動するごとに更新する、以前までのupdate()対象範囲
-  /// gameWorldに追加しておくコンポーネントを管理する際に差分を求めるために使う
-  //PointRectRange? _prevUpdateRange;
+  /// 移動前のupdate()範囲(プレイヤーがワープしてWorldにadd/removeするのものが一気に変わるときに使う)
+  PointRectRange _prevUpdateRange = PointRectRange(Point(0, 0), Point(0, 0));
+
+  /// このupdate()でプレイヤーがワープしたか
+  bool isPlayerWarp = false;
 
   /// スコアの最大値
   static int maxScore = 99999999;
@@ -1171,6 +1173,7 @@ class Stage {
     // プレイヤー作成（プレイヤー位置がgameWorldに追加するコンポーネントに関係するため先に作成）
     player = _objFactory.createPlayerFromMap(stageData['player']);
     player.addToGameWorld(gameWorld);
+    _prevUpdateRange = updateRange;
     // カメラはプレイヤーに追従
     camera.follow(
       player.animationComponent,
@@ -1272,6 +1275,7 @@ class Stage {
     player = _objFactory.createPlayer(
         pos: Point(0, 0), vector: Move.down, savedArg: 0);
     player.addToGameWorld(gameWorld);
+    _prevUpdateRange = updateRange;
     // カメラはプレイヤーに追従
     camera.follow(
       player.animationComponent,
@@ -1574,19 +1578,19 @@ class Stage {
       final updateTargetRange = updateRange;
       // 左端
       if (updateTargetRange.lt.x < stageLT.x) {
-        newLT.x = updateTargetRange.lt.x;
+        newLT.x = max(updateTargetRange.lt.x, stageMaxLT.x);
       }
       // 右端
       if (updateTargetRange.rb.x > stageRB.x) {
-        newRB.x = updateTargetRange.rb.x;
+        newRB.x = min(updateTargetRange.rb.x, stageMaxRB.x);
       }
       // 上端
       if (updateTargetRange.lt.y < stageLT.y) {
-        newLT.y = updateTargetRange.lt.y;
+        newLT.y = max(updateTargetRange.lt.y, stageMaxLT.y);
       }
       // 下端
       if (updateTargetRange.rb.y > stageRB.y) {
-        newRB.y = updateTargetRange.rb.y;
+        newRB.y = min(updateTargetRange.rb.y, stageMaxRB.y);
       }
       if (newLT != stageLT || newRB != stageRB) {
         expandStageSize(newLT, newRB);
@@ -1608,88 +1612,110 @@ class Stage {
   /// (update()対象範囲のコンポーネントのみがgameWorldに追加されている状態にする)
   /// (warpingObjsリストに入っている、ワープ移動したオブジェクトのコンポーネントについても更新)
   void _updateGameWorldAdding() {
-    // update()範囲内端は追加
-    // update()範囲外端は削除
-    Point addPoint = player.pos - Config().updateRange;
-    int width = Config().updateRange.x * 2 + 1;
-    int height = Config().updateRange.y * 2 + 1;
-    // 左上端+1から右上端へ
-    for (int i = 1; i < width; i++) {
-      addPoint += Point(1, 0);
-      final list = getList(addPoint);
-      for (final o in list) {
-        o.addToGameWorld(gameWorld);
+    // プレイヤーがワープした場合は広範囲をadd/remove
+    if (isPlayerWarp) {
+      // 前update()範囲は削除
+      final prevPoints = _prevUpdateRange.set;
+      final currentPoints = updateRange.set;
+      final removePoints = prevPoints.difference(currentPoints);
+      for (final p in removePoints) {
+        final list = getList(p);
+        for (final o in list) {
+          o.removeFromGameWorld(gameWorld);
+        }
       }
-      final list2 = getList(addPoint + Point(0, -1));
-      for (final o in list2) {
+      final addPoints = currentPoints.difference(prevPoints);
+      for (final p in addPoints) {
+        final list = getList(p);
+        for (final o in list) {
+          o.addToGameWorld(gameWorld);
+        }
+      }
+      isPlayerWarp = false;
+    } else {
+      // update()範囲内端は追加
+      // update()範囲外端は削除
+      Point addPoint = player.pos - Config().updateRange;
+      int width = Config().updateRange.x * 2 + 1;
+      int height = Config().updateRange.y * 2 + 1;
+      // 左上端+1から右上端へ
+      for (int i = 1; i < width; i++) {
+        addPoint += Point(1, 0);
+        final list = getList(addPoint);
+        for (final o in list) {
+          o.addToGameWorld(gameWorld);
+        }
+        final list2 = getList(addPoint + Point(0, -1));
+        for (final o in list2) {
+          o.removeFromGameWorld(gameWorld);
+        }
+      }
+      final additional1 = [
+        ...getList(addPoint + Point(1, -1)),
+        ...getList(addPoint + Point(1, 0))
+      ];
+      for (final o in additional1) {
         o.removeFromGameWorld(gameWorld);
       }
-    }
-    final additional1 = [
-      ...getList(addPoint + Point(1, -1)),
-      ...getList(addPoint + Point(1, 0))
-    ];
-    for (final o in additional1) {
-      o.removeFromGameWorld(gameWorld);
-    }
-    // 右上端+1から右下端へ
-    for (int i = 1; i < height; i++) {
-      addPoint += Point(0, 1);
-      final list = getList(addPoint);
-      for (final o in list) {
-        o.addToGameWorld(gameWorld);
+      // 右上端+1から右下端へ
+      for (int i = 1; i < height; i++) {
+        addPoint += Point(0, 1);
+        final list = getList(addPoint);
+        for (final o in list) {
+          o.addToGameWorld(gameWorld);
+        }
+        final list2 = getList(addPoint + Point(1, 0));
+        for (final o in list2) {
+          o.removeFromGameWorld(gameWorld);
+        }
       }
-      final list2 = getList(addPoint + Point(1, 0));
-      for (final o in list2) {
+      final additional2 = [
+        ...getList(addPoint + Point(1, 1)),
+        ...getList(addPoint + Point(0, 1))
+      ];
+      for (final o in additional2) {
         o.removeFromGameWorld(gameWorld);
       }
-    }
-    final additional2 = [
-      ...getList(addPoint + Point(1, 1)),
-      ...getList(addPoint + Point(0, 1))
-    ];
-    for (final o in additional2) {
-      o.removeFromGameWorld(gameWorld);
-    }
-    // 右下端+1から左下端へ
-    for (int i = 1; i < width; i++) {
-      addPoint += Point(-1, 0);
-      final list = getList(addPoint);
-      for (final o in list) {
-        o.addToGameWorld(gameWorld);
+      // 右下端+1から左下端へ
+      for (int i = 1; i < width; i++) {
+        addPoint += Point(-1, 0);
+        final list = getList(addPoint);
+        for (final o in list) {
+          o.addToGameWorld(gameWorld);
+        }
+        final list2 = getList(addPoint + Point(0, 1));
+        for (final o in list2) {
+          o.removeFromGameWorld(gameWorld);
+        }
       }
-      final list2 = getList(addPoint + Point(0, 1));
-      for (final o in list2) {
+      final additional3 = [
+        ...getList(addPoint + Point(-1, 1)),
+        ...getList(addPoint + Point(-1, 0))
+      ];
+      for (final o in additional3) {
         o.removeFromGameWorld(gameWorld);
       }
-    }
-    final additional3 = [
-      ...getList(addPoint + Point(-1, 1)),
-      ...getList(addPoint + Point(-1, 0))
-    ];
-    for (final o in additional3) {
-      o.removeFromGameWorld(gameWorld);
-    }
-    // 左下端+1から左上端へ
-    for (int i = 1; i < height; i++) {
-      addPoint += Point(0, -1);
-      final list = getList(addPoint);
-      for (final o in list) {
-        o.addToGameWorld(gameWorld);
+      // 左下端+1から左上端へ
+      for (int i = 1; i < height; i++) {
+        addPoint += Point(0, -1);
+        final list = getList(addPoint);
+        for (final o in list) {
+          o.addToGameWorld(gameWorld);
+        }
+        final list2 = getList(addPoint + Point(-1, 0));
+        for (final o in list2) {
+          o.removeFromGameWorld(gameWorld);
+        }
       }
-      final list2 = getList(addPoint + Point(-1, 0));
-      for (final o in list2) {
+      final additional4 = [
+        ...getList(addPoint + Point(-1, -1)),
+        ...getList(addPoint + Point(0, -1))
+      ];
+      for (final o in additional4) {
         o.removeFromGameWorld(gameWorld);
       }
+      assert(addPoint == player.pos - Config().updateRange);
     }
-    final additional4 = [
-      ...getList(addPoint + Point(-1, -1)),
-      ...getList(addPoint + Point(0, -1))
-    ];
-    for (final o in additional4) {
-      o.removeFromGameWorld(gameWorld);
-    }
-    assert(addPoint == player.pos - Config().updateRange);
 
     // ワープしたオブジェクトのcomponentについても追加/削除
     for (final o in warpingObjs) {
@@ -1700,6 +1726,8 @@ class Stage {
       }
     }
     warpingObjs.clear();
+
+    _prevUpdateRange = updateRange;
   }
 
   void prepareDistributions() {

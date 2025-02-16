@@ -1353,7 +1353,9 @@ abstract class StageObj {
     if (stage.get(toTo).type == StageObjType.warp) {
       toTo = stage.getWarpedPoint(toTo);
       // ワープするオブジェクトに登録
-      stage.warpingObjs.add(pushings[0]);
+      if (pushings.isNotEmpty) {
+        stage.warpingObjs.add(pushings[0]);
+      }
     }
     for (int i = 0; i < pushings.length; i++) {
       final pushing = pushings[i];
@@ -1530,8 +1532,13 @@ abstract class StageObj {
       Point orgPos = pos.copy();
       pos = stage.getWarpedPoint(pos);
       stage.setObjectPosition(this);
-      // ワープするオブジェクトに登録
-      stage.warpingObjs.add(this);
+      // プレイヤーがワープしていたら
+      if (type == StageObjType.player) {
+        stage.isPlayerWarp = true;
+      } else {
+        // ワープするオブジェクトに登録
+        stage.warpingObjs.add(this);
+      }
       // 実際にワープしていたら効果音を鳴らす
       if (orgPos != pos) {
         Audio().playSound(Sound.warp);

@@ -69,7 +69,7 @@ class Water extends StageObj {
       playerStartMovingFlag = true;
       // この氷の上にあるものが押せるか
       bool canPush = false;
-      if (stage.get(pos).pushable) {
+      if (moving != Move.none && stage.get(pos).pushable) {
         // 一旦位置を変える
         pos += moving.oppsite.point;
         // 押すのを試みる。押せない場合はmovingをnoneに
