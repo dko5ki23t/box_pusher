@@ -38,6 +38,9 @@ class Gorilla extends StageObj {
   /// 「Help」の吹き出し
   late final RoundedComponent talkBubble;
 
+  /// 吹き出しを表示しているか(world.contains()は時間かかるから自前で持っておく)
+  bool _isShowBubble = false;
+
   final Blink bubbleBlink = Blink(showDuration: 1.5, hideDuration: 1.5);
 
   Gorilla({
@@ -92,17 +95,31 @@ class Gorilla extends StageObj {
     Map<Point, Move> prohibitedPoints,
   ) {
     bubbleBlink.update(dt);
-    bool alreadyContains = gameWorld.contains(talkBubble);
-    if (!alreadyContains && bubbleBlink.isShowTime) {
+    if (bubbleBlink.isShowTime) {
+      _showBubble(gameWorld);
+    } else {
+      _hideBubble(gameWorld);
+    }
+  }
+
+  void _showBubble(World gameWorld) {
+    if (!_isShowBubble) {
       gameWorld.add(talkBubble);
-    } else if (alreadyContains && !bubbleBlink.isShowTime) {
+      _isShowBubble = true;
+    }
+  }
+
+  void _hideBubble(World gameWorld) {
+    if (_isShowBubble) {
       gameWorld.remove(talkBubble);
+      _isShowBubble = false;
     }
   }
 
   @override
   void onRemove(World gameWorld) {
-    gameWorldRemove(gameWorld, talkBubble);
+    _hideBubble(gameWorld);
+    super.onRemove(gameWorld);
   }
 
   @override

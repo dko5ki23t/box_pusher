@@ -467,6 +467,26 @@ abstract class StageObj {
     return o._typeLevel == _typeLevel;
   }
 
+  /// animationComponentがgameWorldに追加されているかどうか
+  /// (この判定をせずにremoveすると例外起きるし、毎回World.contain()すると遅くなるのでメンバとして持つ)
+  bool _isAddedToGameWorld = false;
+
+  /// animationComponentをgameWorldに追加(既に追加されていれば何もしない)
+  void addToGameWorld(World gameWorld) {
+    if (!_isAddedToGameWorld) {
+      gameWorld.add(animationComponent);
+      _isAddedToGameWorld = true;
+    }
+  }
+
+  /// animationComponentをgameWorldから削除(既に削除されていれば何もしない)
+  void removeFromGameWorld(World gameWorld) {
+    if (_isAddedToGameWorld) {
+      gameWorld.remove(animationComponent);
+      _isAddedToGameWorld = false;
+    }
+  }
+
   void update(
     double dt,
     Move moveInput,
@@ -479,7 +499,10 @@ abstract class StageObj {
         prohibitedPoints, // 今は移動可能だが、他のオブジェクトが同時期に移動してくるため移動不可な座標と向きのMap（例えば、移動しているオブジェクトに対してその交差するように移動できないようにするためのMap）
   );
 
-  void onRemove(World gameWorld) {}
+  @mustCallSuper
+  void onRemove(World gameWorld) {
+    removeFromGameWorld(gameWorld);
+  }
 
   /// このオブジェクトは押せるか
   bool get pushable;

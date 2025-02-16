@@ -837,17 +837,3 @@ class StopWatchLog {
     dev.log('[$logTitle]計測時間(ミリ秒)：$elapsed');
   }
 }
-
-/// 重複がないようにWorldに追加
-void gameWorldAdd(World gameWorld, Component component) {
-  if (!gameWorld.contains(component)) {
-    gameWorld.add(component);
-  }
-}
-
-/// 安全にWorldから削除
-void gameWorldRemove(World gameWorld, Component component) {
-  if (gameWorld.contains(component)) {
-    gameWorld.remove(component);
-  }
-}

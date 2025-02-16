@@ -58,6 +58,9 @@ class Shop extends StageObj {
   /// ショップ情報の吹き出し
   RoundedComponent? infoBubble;
 
+  /// 吹き出しを表示しているか(world.contains()は時間かかるから自前で持っておく)
+  bool _isShowBubble = false;
+
   /// レベル1:たぬき,レベル2:葉っぱマーク,レベル3:矢印,レベル4:星マーク
   Shop({
     required super.savedArg,
@@ -174,15 +177,16 @@ class Shop extends StageObj {
     if (playerEndMoving) {
       // 吹き出しに関して
       if (infoBubble != null) {
-        bool alreadyContains = gameWorld.contains(infoBubble!);
         bool isNear = PointRectRange(pos + Point(-2, -1), pos + Point(2, 2))
             .contains(stage.player.pos);
-        if (!alreadyContains && isNear) {
+        if (!_isShowBubble && isNear) {
           // 周囲8マスにプレイヤーが来たら吹き出し表示
           gameWorld.add(infoBubble!);
-        } else if (alreadyContains && !isNear) {
+          _isShowBubble = true;
+        } else if (_isShowBubble && !isNear) {
           // 周囲8マスにいないなら吹き出し非表示
           gameWorld.remove(infoBubble!);
+          _isShowBubble = false;
         }
       }
     }
@@ -190,9 +194,11 @@ class Shop extends StageObj {
 
   @override
   void onRemove(World gameWorld) {
-    if (infoBubble != null) {
-      gameWorldRemove(gameWorld, infoBubble!);
+    if (infoBubble != null && _isShowBubble) {
+      gameWorld.remove(infoBubble!);
+      _isShowBubble = false;
     }
+    super.onRemove(gameWorld);
   }
 
   @override

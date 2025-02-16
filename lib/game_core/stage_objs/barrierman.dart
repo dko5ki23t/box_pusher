@@ -52,6 +52,9 @@ class Barrierman extends StageObj {
   /// バリア
   late final RoundedComponent barrierComponent;
 
+  /// バリアをWorldに追加しているか
+  bool _isAddedBarrierComponent = false;
+
   /// バリアを張る間隔
   static int barrierPeriod = 5;
 
@@ -159,13 +162,11 @@ class Barrierman extends StageObj {
   ) {
     if (isFirstUpdate) {
       // バリア展開中なら
-      if (0 < turns &&
-          turns < barrierTurns &&
-          !gameWorld.contains(barrierComponent)) {
+      if (0 < turns && turns < barrierTurns) {
         barrierComponent.position =
             Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
                 Stage.cellSize * 0.5;
-        gameWorld.add(barrierComponent);
+        _showBarrier(gameWorld);
       }
       isFirstUpdate = false;
     }
@@ -178,12 +179,10 @@ class Barrierman extends StageObj {
       // 移動/バリア展開を決定
       if (turns == 0) {
         // バリアを表示
-        if (!gameWorld.contains(barrierComponent)) {
-          barrierComponent.position =
-              Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
-                  Stage.cellSize * 0.5;
-          gameWorld.add(barrierComponent);
-        }
+        barrierComponent.position =
+            Vector2(pos.x * Stage.cellSize.x, pos.y * Stage.cellSize.y) +
+                Stage.cellSize * 0.5;
+        _showBarrier(gameWorld);
       } else {
         final ret = super.enemyMove(
           movePatterns[level]!,
@@ -228,7 +227,7 @@ class Barrierman extends StageObj {
         ++turns;
         if (turns == barrierTurns) {
           // バリアを削除
-          gameWorldRemove(gameWorld, barrierComponent);
+          _hideBarrier(gameWorld);
         }
         if (turns >= barrierPeriod) {
           turns = 0;
@@ -257,9 +256,24 @@ class Barrierman extends StageObj {
     }
   }
 
+  void _showBarrier(World gameWorld) {
+    if (!_isAddedBarrierComponent) {
+      gameWorld.add(barrierComponent);
+      _isAddedBarrierComponent = true;
+    }
+  }
+
+  void _hideBarrier(World gameWorld) {
+    if (_isAddedBarrierComponent) {
+      gameWorld.remove(barrierComponent);
+      _isAddedBarrierComponent = false;
+    }
+  }
+
   @override
   void onRemove(World gameWorld) {
-    gameWorldRemove(gameWorld, barrierComponent);
+    _hideBarrier(gameWorld);
+    super.onRemove(gameWorld);
   }
 
   @override

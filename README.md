@@ -45,3 +45,4 @@ Play with
 - マージ力アップ能力のアイコン：[Up 2](https://icons8.com/icon/XdZw2eW3vEVS/up-2) アイコン by [Icons8](https://icons8.com)
 - マージ力アップ能力のアイコン：[Combine](https://icons8.com/icon/ZKMlZLbgN6Tn/combine) アイコン by [Icons8](https://icons8.com)
 - トロフィーのアイコン：[優勝トロフィーのシルエット | 無料の Ai・PNG 白黒シルエットイラスト](https://www.silhouette-illust.com/illust/49259)
+- チェックマークのアイコン：[チェックマークのシルエット | 無料の Ai・PNG 白黒シルエットイラスト](https://www.silhouette-illust.com/illust/1712)
