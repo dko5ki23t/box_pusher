@@ -8,7 +8,7 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class ConfirmDeleteStageDataSeq extends Sequence with KeyboardHandler {
+class ConfirmStartFromLastTreasureSeq extends Sequence with KeyboardHandler {
   late final RoundedComponent dialogComponent;
   late final PositionComponent contentComponent;
   late final TextComponent confirmText;
@@ -36,7 +36,7 @@ class ConfirmDeleteStageDataSeq extends Sequence with KeyboardHandler {
     );
     dialogComponent.add(contentComponent);
     confirmText = TextComponent(
-      text: loc.confirmDeleteStageData1,
+      text: loc.confirmStartFromLastTreasure1,
       textRenderer: TextPaint(
         style: const TextStyle(
           fontFamily: Config.gameTextFamily,
@@ -45,7 +45,7 @@ class ConfirmDeleteStageDataSeq extends Sequence with KeyboardHandler {
       ),
     );
     confirmText2 = TextComponent(
-      text: loc.confirmDeleteStageData2,
+      text: loc.confirmStartFromLastTreasure2,
       position: Vector2(0, 30),
       textRenderer: TextPaint(
         style: const TextStyle(
@@ -55,7 +55,7 @@ class ConfirmDeleteStageDataSeq extends Sequence with KeyboardHandler {
       ),
     );
     confirmText3 = TextComponent(
-      text: loc.confirmDeleteStageData3,
+      text: loc.confirmStartFromLastTreasure3,
       position: Vector2(0, 60),
       textRenderer: TextPaint(
         style: const TextStyle(
@@ -69,9 +69,8 @@ class ConfirmDeleteStageDataSeq extends Sequence with KeyboardHandler {
       position: Vector2(0.0, 130.0),
       text: loc.dialogOK,
       onReleased: () {
-        game.clearAndSaveStageData();
         game.popSeq();
-        game.pushAndInitGame(useLastTreasureData: false);
+        game.pushAndInitGame(useLastTreasureData: true);
       },
     );
     cancelButton = GameDialogButton(
@@ -112,7 +111,9 @@ class ConfirmDeleteStageDataSeq extends Sequence with KeyboardHandler {
     Set<LogicalKeyboardKey> keysPressed,
   ) {
     // 終了確認シーケンスでない場合は何もせず、キー処理を他に渡す
-    if (game.getCurrentSeqName() != 'confirm_delete_stage_data') return true;
+    if (game.getCurrentSeqName() != 'confirm_start_from_last_treasure') {
+      return true;
+    }
     if ((keysPressed.contains(LogicalKeyboardKey.arrowLeft)) ||
         keysPressed.contains(LogicalKeyboardKey.keyA)) {
       buttonGroup.focusPrev();
@@ -140,9 +141,9 @@ class ConfirmDeleteStageDataSeq extends Sequence with KeyboardHandler {
   @override
   void onLangChanged() {
     final loc = game.localization;
-    confirmText.text = loc.confirmDeleteStageData1;
-    confirmText2.text = loc.confirmDeleteStageData2;
-    confirmText3.text = loc.confirmDeleteStageData3;
+    confirmText.text = loc.confirmStartFromLastTreasure1;
+    confirmText2.text = loc.confirmStartFromLastTreasure2;
+    confirmText3.text = loc.confirmStartFromLastTreasure3;
     okButton.text = loc.dialogOK;
     cancelButton.text = loc.dialogCancel;
   }

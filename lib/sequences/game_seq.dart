@@ -901,7 +901,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // カメラズームをリセット
     game.camera.viewfinder.zoom = 1.0;
     // ステージ初期化
-    stage.initialize(game.camera, game.stageData);
+    stage.initialize(game.camera,
+        game.useLastTreasureData ? game.lastTreasureStageData : game.stageData);
     // 今回初めてプレイではない場合はチュートリアルスキップ
     if (!Config().showTutorial) {
       tutorial.current = null;
@@ -1165,6 +1166,10 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       game.pushSeqNamed('gameover');
       // BGMストップ
       Audio().stopBGM();
+    } else if (stage.openTreasureBoxInUpdate) {
+      // 今回のupdateで宝箱を開けたならセーブデータに保存
+      game.setAndSaveLastTreasureStageData();
+      stage.openTreasureBoxInUpdate = false;
     }
   }
 

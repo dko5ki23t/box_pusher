@@ -1453,6 +1453,8 @@ abstract class StageObj {
         Audio().playSound(Sound.getTreasure);
         // 【実績用】見つけた宝箱の数を加算
         stage.foundTreasureCount++;
+        // 最後に宝箱を開けた状況として保存（スコアは0で保存される）
+        stage.openTreasureBoxInUpdate = true;
       } else if (obj.type == StageObjType.gorilla) {
         // 移動先がゴリラだった場合
         // 手の能力を習得

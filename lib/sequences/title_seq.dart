@@ -20,19 +20,28 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   late final GameButtonGroup buttonGroup;
   late final GameTextButton newGameButton;
   late final GameTextButton continueButton;
+  late final GameTextButton continueFromTreasureButton;
   late final GameTextButton languageButton;
   late final GameTextButton versionLogButton;
   late final GameTextButton achievementsButton;
+  late final RectangleComponent highScoreRectangle;
+  late final TextComponent versionText;
   late final Image titleLogoImage;
   late final Image bugImage;
   //late final GameButton debugOnOffButton;
   //late final GameTextButton debugButton;
+
+  final spaceBetweenButtons = Vector2(0, 50.0);
+  final buttonSize = Vector2(120.0, 30.0);
 
   /// 有効なデバッグコマンド入力中か
   bool isDebugCommandValid = false;
 
   /// 入力中のデバッグコマンド
   String debugCommand = '';
+
+  /// 最後に宝箱を開けたときの有効なステージデータがあるか
+  bool _existLastTreasureStageData = false;
 
   @override
   Future<void> onLoad() async {
@@ -63,26 +72,50 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
         style: Config.gameTextStyle,
       ),
     );
+    Vector2 buttonPos = Vector2(180.0, 360.0);
     newGameButton = GameTextButton(
-      size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 360.0),
+      size: buttonSize,
+      position: buttonPos.clone(),
       anchor: Anchor.center,
       text: loc.newGame,
       onReleased: () {
         if (game.stageData.isNotEmpty) {
           game.pushSeqNamed('confirm_delete_stage_data');
         } else {
-          game.pushAndInitGame();
+          game.pushAndInitGame(useLastTreasureData: false);
         }
       },
     );
+    buttonPos += spaceBetweenButtons;
     continueButton = GameTextButton(
-      size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 410.0),
+      size: buttonSize,
+      position: buttonPos.clone(),
       anchor: Anchor.center,
       text: loc.loadGame,
       enabled: game.stageData.isNotEmpty,
-      onReleased: () => game.pushAndInitGame(),
+      onReleased: () => game.pushAndInitGame(useLastTreasureData: false),
+    );
+    _existLastTreasureStageData =
+        game.lastTreasureStageData.containsKey('score');
+    if (_existLastTreasureStageData) {
+      buttonPos += spaceBetweenButtons;
+    }
+    continueFromTreasureButton = GameTextButton(
+      size: buttonSize,
+      position: buttonPos,
+      anchor: Anchor.center,
+      text: "${loc.loadGame} +",
+      onReleased: () => game.pushSeqNamed('confirm_start_from_last_treasure'),
+    );
+    buttonPos += spaceBetweenButtons;
+    achievementsButton = GameTextButton(
+      size: buttonSize,
+      position: buttonPos,
+      anchor: Anchor.center,
+      text: loc.achievements,
+      onReleased: () async {
+        game.pushSeqNamed('achievements');
+      },
     );
     languageButton = GameTextButton(
       size: Vector2(80.0, 20.0),
@@ -91,21 +124,35 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       text: loc.language,
       onReleased: () => game.changeLocale(),
     );
-    achievementsButton = GameTextButton(
-      size: Vector2(120.0, 30.0),
-      position: Vector2(180.0, 460.0),
-      anchor: Anchor.center,
-      text: loc.achievements,
-      onReleased: () async {
-        game.pushSeqNamed('achievements');
-      },
-    );
     buttonGroup = GameButtonGroup(buttons: [
       languageButton,
       newGameButton,
       continueButton,
+      if (_existLastTreasureStageData) continueFromTreasureButton,
       achievementsButton,
     ]);
+    highScoreRectangle = RectangleComponent(
+      size: Vector2(120.0, 30.0),
+      position: buttonPos + Vector2(0, 50.0),
+      anchor: Anchor.center,
+      children: [
+        AlignComponent(
+          alignment: Anchor.center,
+          child: highScreText,
+        ),
+      ],
+    );
+    // アプリバージョン等取得
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    versionText = TextComponent(
+      text: 'Ver.${packageInfo.version}',
+      size: Vector2(120.0, 30.0),
+      position: buttonPos + Vector2(0, 90.0),
+      anchor: Anchor.center,
+      textRenderer: TextPaint(
+        style: Config.gameTextStyle,
+      ),
+    );
     //versionLogButton = GameTextButton(
     //  size: Vector2(120.0, 30.0),
     //  position: Vector2(180.0, 410.0),
@@ -125,8 +172,6 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     //    game.pushSeqOverlay('debug_dialog');
     //  },
     //);
-    // アプリバージョン等取得
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
 
     addAll([
       // 背景
@@ -140,6 +185,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       titleLogo,
       newGameButton,
       continueButton,
+      if (_existLastTreasureStageData) continueFromTreasureButton,
       languageButton,
       //versionLogButton,
       achievementsButton,
@@ -153,26 +199,8 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       //),
       //if (game.testMode)
       //debugButton,
-      RectangleComponent(
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 510.0),
-        anchor: Anchor.center,
-        children: [
-          AlignComponent(
-            alignment: Anchor.center,
-            child: highScreText,
-          ),
-        ],
-      ),
-      TextComponent(
-        text: 'Ver.${packageInfo.version}',
-        size: Vector2(120.0, 30.0),
-        position: Vector2(180.0, 550.0),
-        anchor: Anchor.center,
-        textRenderer: TextPaint(
-          style: Config.gameTextStyle,
-        ),
-      ),
+      highScoreRectangle,
+      versionText,
       // TODO: 例外発生 -> MissingPluginException (MissingPluginException(No implementation found for method share on channel dev.fluttercommunity.plus/share))
       // 当面必要ないと思うのでコメントアウト
       /*GameTextButton(
@@ -191,6 +219,39 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     highScreText.text = "${game.localization.highScore} : ${game.highScore}";
     continueButton.enabled = game.stageData.isNotEmpty;
     //debugButton.enabled = game.testMode;
+    final prev = _existLastTreasureStageData;
+    _existLastTreasureStageData =
+        game.lastTreasureStageData.containsKey('score');
+    if (_existLastTreasureStageData != prev) {
+      // ボタン位置更新
+      Vector2 buttonPos = Vector2(180.0, 360.0);
+      newGameButton.position = buttonPos.clone();
+      buttonPos += spaceBetweenButtons;
+      continueButton.position = buttonPos.clone();
+      if (_existLastTreasureStageData) {
+        buttonPos += spaceBetweenButtons;
+      }
+      continueFromTreasureButton.position = buttonPos.clone();
+      buttonPos += spaceBetweenButtons;
+      achievementsButton.position = buttonPos.clone();
+      buttonGroup.buttons.clear();
+      buttonGroup.buttons.addAll([
+        languageButton,
+        newGameButton,
+        continueButton,
+        if (_existLastTreasureStageData) continueFromTreasureButton,
+        achievementsButton,
+      ]);
+      highScoreRectangle.position = buttonPos + Vector2(0, 50.0);
+      versionText.position = buttonPos + Vector2(0, 90.0);
+      if (_existLastTreasureStageData &&
+          !contains(continueFromTreasureButton)) {
+        add(continueFromTreasureButton);
+      } else if (!_existLastTreasureStageData &&
+          contains(continueFromTreasureButton)) {
+        remove(continueFromTreasureButton);
+      }
+    }
   }
 
   // PCのキーボード入力
@@ -298,6 +359,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     //titleText.text = loc.gameTitle;
     newGameButton.text = loc.newGame;
     continueButton.text = loc.loadGame;
+    continueFromTreasureButton.text = "${loc.loadGame} +";
     languageButton.text = loc.language;
     //versionLogButton.text = loc.versionLog;
     achievementsButton.text = loc.achievements;

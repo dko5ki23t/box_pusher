@@ -264,6 +264,9 @@ class Stage {
     }
   }
 
+  /// 今回のupdate()内で宝箱を開けたかどうか
+  bool openTreasureBoxInUpdate = false;
+
   /// ステージの左上座標(プレイヤーの動きにつれて拡張されていく)
   Point stageLT = Point(0, 0);
 
@@ -385,6 +388,7 @@ class Stage {
   ) {
     assert(isReady, 'Stage.onLoad() is not called!');
     isGameover = false;
+    openTreasureBoxInUpdate = false;
     effectBase = [
       _objFactory.create(
           typeLevel: StageObjTypeLevel(type: StageObjType.jewel, level: 1),

@@ -49,7 +49,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
         anchor: Anchor.center,
         text: loc.tryAgain,
         onReleased: () async {
-          game.pushAndInitGame();
+          game.pushAndInitGame(useLastTreasureData: false);
         });
     toTitleButton = GameMenuButton(
         size: Vector2(120.0, 30.0),

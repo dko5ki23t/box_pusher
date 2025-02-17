@@ -15,6 +15,7 @@ import 'package:box_pusher/sequences/achievements_seq.dart';
 import 'package:box_pusher/sequences/clear_seq.dart';
 import 'package:box_pusher/sequences/confirm_delete_stage_data_seq.dart';
 import 'package:box_pusher/sequences/confirm_exit_seq.dart';
+import 'package:box_pusher/sequences/confirm_start_from_last_treasure_seq.dart';
 import 'package:box_pusher/sequences/game_seq.dart';
 import 'package:box_pusher/sequences/gameover_seq.dart';
 import 'package:box_pusher/sequences/loading_seq.dart';
@@ -90,6 +91,13 @@ class BoxPusherGame extends FlameGame
   /// プレイ中のステージ情報
   Map<String, dynamic> _stageData = {};
   Map<String, dynamic> get stageData => _stageData;
+
+  /// 最後に宝箱を開けたときのステージ情報
+  Map<String, dynamic> _lastTreasureStageData = {};
+  Map<String, dynamic> get lastTreasureStageData => _lastTreasureStageData;
+
+  /// ゲームシーケンスで初期化する際、lastTreasureStageDataを使うかどうかを通知するために使う
+  bool useLastTreasureData = false;
 
   /// 実績情報
   Map<String, dynamic> _achievementData = {};
@@ -219,6 +227,8 @@ class BoxPusherGame extends FlameGame
           'confirm_exit': Route(ConfirmExitSeq.new, transparent: true),
           'confirm_delete_stage_data':
               Route(ConfirmDeleteStageDataSeq.new, transparent: true),
+          'confirm_start_from_last_treasure':
+              Route(ConfirmStartFromLastTreasureSeq.new, transparent: true),
         }..addAll(_overlays),
         initialRoute: 'title',
       ),
@@ -232,6 +242,8 @@ class BoxPusherGame extends FlameGame
       try {
         _highScore = prefs.getInt('highScore') ?? 0;
         _stageData = jsonDecode(prefs.getString('stageData') ?? '');
+        _lastTreasureStageData =
+            jsonDecode(prefs.getString('lastTreasureStageData') ?? '');
         _userConfigData = jsonDecode(prefs.getString('userConfigData') ??
             jsonEncode(getDefaultUserConfig()));
         _achievementData = jsonDecode(prefs.getString('achievementData') ??
@@ -239,6 +251,7 @@ class BoxPusherGame extends FlameGame
         _saveDataVersion = Version.parse(prefs.getString('version')!);
       } catch (e) {
         _stageData = {};
+        _lastTreasureStageData = {};
         _userConfigData = getDefaultUserConfig();
         _achievementData = getDefaultAchievement();
         setAndSaveHighScore(0);
@@ -253,12 +266,14 @@ class BoxPusherGame extends FlameGame
         final jsonMap = jsonDecode(saveData);
         _highScore = jsonMap['highScore'];
         _stageData = jsonMap['stageData'] ?? {};
+        _lastTreasureStageData = jsonMap['lastTreasureStageData'] ?? {};
         _userConfigData = jsonMap['userConfigData'] ?? getDefaultUserConfig();
         _achievementData =
             jsonMap['achievementData'] ?? getDefaultAchievement();
         _saveDataVersion = Version.parse(jsonMap['version']);
       } catch (e) {
         _stageData = {};
+        _lastTreasureStageData = {};
         _userConfigData = getDefaultUserConfig();
         _achievementData = getDefaultAchievement();
         setAndSaveHighScore(0);
@@ -308,19 +323,21 @@ class BoxPusherGame extends FlameGame
     return jsonEncode({
       'highScore': _highScore,
       'stageData': _stageData,
+      'lastTreasureStageData': _lastTreasureStageData,
       'userConfigData': _userConfigData,
       'achievementData': _achievementData,
       'version': _saveDataVersion.toString(),
     });
   }
 
-  /// ハイスコアの更新・セーブデータに保存
-  Future<void> setAndSaveHighScore(int score) async {
-    _highScore = score;
+  /// セーブデータ保存
+  Future<void> _saveSaveData() async {
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setInt('highScore', _highScore);
       await prefs.setString('stageData', jsonEncode(_stageData));
+      await prefs.setString(
+          'lastTreasureStageData', jsonEncode(_lastTreasureStageData));
       await prefs.setString('userConfigData', jsonEncode(_userConfigData));
       await prefs.setString('achievementData', jsonEncode(_achievementData));
       await prefs.setString('version', _saveDataVersion.toString());
@@ -328,6 +345,7 @@ class BoxPusherGame extends FlameGame
       String jsonText = jsonEncode({
         'highScore': _highScore,
         'stageData': _stageData,
+        'lastTreasureStageData': _lastTreasureStageData,
         'userConfigData': _userConfigData,
         'achievementData': _achievementData,
         'version': _saveDataVersion.toString(),
@@ -336,27 +354,25 @@ class BoxPusherGame extends FlameGame
     }
   }
 
+  /// ハイスコアの更新・セーブデータに保存
+  Future<void> setAndSaveHighScore(int score) async {
+    _highScore = score;
+    await _saveSaveData();
+  }
+
   /// プレイ中ステージの更新・セーブデータに保存
   Future<void> setAndSaveStageData() async {
     final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
     _stageData = await gameSeq.stage.encodeStageData();
-    if (kIsWeb) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('highScore', _highScore);
-      await prefs.setString('stageData', jsonEncode(_stageData));
-      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
-      await prefs.setString('achievementData', jsonEncode(_achievementData));
-      await prefs.setString('version', _saveDataVersion.toString());
-    } else {
-      String jsonText = jsonEncode({
-        'highScore': _highScore,
-        'stageData': _stageData,
-        'userConfigData': _userConfigData,
-        'achievementData': _achievementData,
-        'version': _saveDataVersion.toString(),
-      });
-      await saveDataFile.writeAsString(jsonText);
-    }
+    await _saveSaveData();
+  }
+
+  /// 最後に宝箱を開けた状況の更新・セーブデータに保存
+  Future<void> setAndSaveLastTreasureStageData() async {
+    final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+    _lastTreasureStageData = await gameSeq.stage.encodeStageData();
+    _lastTreasureStageData['score'] = 0;
+    await _saveSaveData();
   }
 
   /// 操作方法や音量等のコンフィグ情報をセーブデータに保存
@@ -364,23 +380,7 @@ class BoxPusherGame extends FlameGame
     _userConfigData['controller'] = Config().playerControllButtonType.index;
     _userConfigData['volume'] = Config().audioVolume;
     _userConfigData['showTutorial'] = Config().showTutorial;
-    if (kIsWeb) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('highScore', _highScore);
-      await prefs.setString('stageData', jsonEncode(_stageData));
-      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
-      await prefs.setString('achievementData', jsonEncode(_achievementData));
-      await prefs.setString('version', _saveDataVersion.toString());
-    } else {
-      String jsonText = jsonEncode({
-        'highScore': _highScore,
-        'stageData': _stageData,
-        'userConfigData': _userConfigData,
-        'achievementData': _achievementData,
-        'version': _saveDataVersion.toString(),
-      });
-      await saveDataFile.writeAsString(jsonText);
-    }
+    await _saveSaveData();
   }
 
   Map<String, dynamic> getDefaultUserConfig() {
@@ -406,23 +406,7 @@ class BoxPusherGame extends FlameGame
     _achievementData['maxBreakBlockRate'] = max(
         _achievementData['maxBreakBlockRate'] as int,
         tmp['maxBreakBlockRate'] as int);
-    if (kIsWeb) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('highScore', _highScore);
-      await prefs.setString('stageData', jsonEncode(_stageData));
-      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
-      await prefs.setString('achievementData', jsonEncode(_achievementData));
-      await prefs.setString('version', _saveDataVersion.toString());
-    } else {
-      String jsonText = jsonEncode({
-        'highScore': _highScore,
-        'stageData': _stageData,
-        'userConfigData': _userConfigData,
-        'achievementData': _achievementData,
-        'version': _saveDataVersion.toString(),
-      });
-      await saveDataFile.writeAsString(jsonText);
-    }
+    await _saveSaveData();
   }
 
   Map<String, dynamic> getDefaultAchievement() {
@@ -436,23 +420,7 @@ class BoxPusherGame extends FlameGame
 
   Future<void> clearAndSaveStageData() async {
     _stageData = {};
-    if (kIsWeb) {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('highScore', _highScore);
-      await prefs.setString('stageData', jsonEncode(_stageData));
-      await prefs.setString('userConfigData', jsonEncode(_userConfigData));
-      await prefs.setString('achievementData', jsonEncode(_achievementData));
-      await prefs.setString('version', _saveDataVersion.toString());
-    } else {
-      String jsonText = jsonEncode({
-        'highScore': _highScore,
-        'stageData': _stageData,
-        'userConfigData': _userConfigData,
-        'achievementData': _achievementData,
-        'version': _saveDataVersion.toString(),
-      });
-      await saveDataFile.writeAsString(jsonText);
-    }
+    await _saveSaveData();
   }
 
   int getCurrentScore() {
@@ -595,7 +563,9 @@ class BoxPusherGame extends FlameGame
     clampZoom();
   }
 
-  void pushAndInitGame({bool initialize = true}) {
+  void pushAndInitGame(
+      {required bool useLastTreasureData, bool initialize = true}) {
+    this.useLastTreasureData = useLastTreasureData;
     if (_router.routes['game']!.firstChild() != null) {
       final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       if (gameSeq.isLoaded && initialize) {
