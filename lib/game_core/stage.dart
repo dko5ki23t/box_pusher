@@ -1017,24 +1017,28 @@ class Stage {
   /// 対象座標位置にあるオブジェクトをすべて取得する
   /// ゴースト化した敵や煙なども取得する
   /// ステージ範囲外の座標が指定された場合は空のリストが返る
-  List<StageObj> getList(Point p, {bool detectPlayer = false}) {
-    if (!contains(p)) return [];
+  List<StageObj> getList(PointRange pRange, {bool detectPlayer = false}) {
     List<StageObj> ret = [];
-    if (detectPlayer && player.pos == p) {
+    if (detectPlayer && pRange.contains(player.pos)) {
       ret.add(player);
     }
-    ret.addAll(
-        boxes.where((element) => element.pos == p && !element.isOverlay));
-    ret.addAll(
-        enemies.where((element) => element.pos == p && !element.isOverlay));
-    ret.add(safeGetStaticObj(p));
+    ret.addAll(boxes.where(
+        (element) => pRange.contains(element.pos) && !element.isOverlay));
+    ret.addAll(enemies.where(
+        (element) => pRange.contains(element.pos) && !element.isOverlay));
+    for (final p in pRange.set) {
+      if (!contains(p)) {
+        continue;
+      }
+      ret.add(safeGetStaticObj(p));
+    }
     return ret;
   }
 
   /// 静的オブジェクトを取得する。まだ用意されていない場合は用意する
   StageObj safeGetStaticObj(Point pos) {
     assert(PointRectRange(stageMaxLT, stageMaxRB).contains(pos),
-        '[getStaticObj()]ステージの範囲外の取得が試みられた');
+        '[getStaticObj()]ステージの範囲外の取得が試みられた($pos)');
     if (!PointRectRange(stageLT, stageRB).contains(pos)) {
       // 対象の座標が存在できるようにステージを拡大
       expandStageSize(
@@ -1609,97 +1613,92 @@ class Stage {
   void _updateGameWorldAdding() {
     // プレイヤーがワープした場合はワープ先をadd(removeはしない)
     if (isPlayerWarp) {
-      final addPoints = updateRange.set;
-      for (final p in addPoints) {
-        final list = getList(p);
-        for (final o in list) {
-          o.addToGameWorld(gameWorld);
-        }
+      final list = getList(updateRange);
+      for (final o in list) {
+        o.addToGameWorld(gameWorld);
       }
       isPlayerWarp = false;
     }
     // update()範囲内端は追加
     // update()範囲外端は削除
-    Point addPoint = player.pos - Config().updateRange;
-    int width = Config().updateRange.x * 2 + 1;
-    int height = Config().updateRange.y * 2 + 1;
+    int width = Config().updateRange.x * 2;
+    int height = Config().updateRange.y * 2;
     // 左上端+1から右上端へ
-    for (int i = 1; i < width; i++) {
-      addPoint += Point(1, 0);
-      final list = getList(addPoint);
+    {
+      final addRange = PointLineRange(
+          player.pos - Config().updateRange + Point(1, 0), Move.right, width);
+      final list = getList(addRange);
       for (final o in list) {
         o.addToGameWorld(gameWorld);
       }
-      final list2 = getList(addPoint + Point(0, -1));
+      final removeRange = PointLineRange(
+          player.pos - Config().updateRange + Point(0, -1),
+          Move.right,
+          width + 2);
+      final list2 = getList(removeRange);
       for (final o in list2) {
         o.removeFromGameWorld(gameWorld);
       }
-    }
-    final additional1 = [
-      ...getList(addPoint + Point(1, -1)),
-      ...getList(addPoint + Point(1, 0))
-    ];
-    for (final o in additional1) {
-      o.removeFromGameWorld(gameWorld);
     }
     // 右上端+1から右下端へ
-    for (int i = 1; i < height; i++) {
-      addPoint += Point(0, 1);
-      final list = getList(addPoint);
+    {
+      final addRange = PointLineRange(
+          player.pos +
+              Point(Config().updateRange.x, -Config().updateRange.y + 1),
+          Move.down,
+          height);
+      final list = getList(addRange);
       for (final o in list) {
         o.addToGameWorld(gameWorld);
       }
-      final list2 = getList(addPoint + Point(1, 0));
+      final removeRange = PointLineRange(
+          player.pos +
+              Point(Config().updateRange.x + 1, -Config().updateRange.y),
+          Move.down,
+          height + 2);
+      final list2 = getList(removeRange);
       for (final o in list2) {
         o.removeFromGameWorld(gameWorld);
       }
-    }
-    final additional2 = [
-      ...getList(addPoint + Point(1, 1)),
-      ...getList(addPoint + Point(0, 1))
-    ];
-    for (final o in additional2) {
-      o.removeFromGameWorld(gameWorld);
     }
     // 右下端+1から左下端へ
-    for (int i = 1; i < width; i++) {
-      addPoint += Point(-1, 0);
-      final list = getList(addPoint);
+    {
+      final addRange = PointLineRange(
+          player.pos + Config().updateRange + Point(-1, 0), Move.left, width);
+      final list = getList(addRange);
       for (final o in list) {
         o.addToGameWorld(gameWorld);
       }
-      final list2 = getList(addPoint + Point(0, 1));
+      final removeRange = PointLineRange(
+          player.pos + Config().updateRange + Point(0, 1),
+          Move.left,
+          width + 2);
+      final list2 = getList(removeRange);
       for (final o in list2) {
         o.removeFromGameWorld(gameWorld);
       }
-    }
-    final additional3 = [
-      ...getList(addPoint + Point(-1, 1)),
-      ...getList(addPoint + Point(-1, 0))
-    ];
-    for (final o in additional3) {
-      o.removeFromGameWorld(gameWorld);
     }
     // 左下端+1から左上端へ
-    for (int i = 1; i < height; i++) {
-      addPoint += Point(0, -1);
-      final list = getList(addPoint);
+    {
+      final addRange = PointLineRange(
+          player.pos +
+              Point(-Config().updateRange.x, Config().updateRange.y - 1),
+          Move.up,
+          height);
+      final list = getList(addRange);
       for (final o in list) {
         o.addToGameWorld(gameWorld);
       }
-      final list2 = getList(addPoint + Point(-1, 0));
+      final removeRange = PointLineRange(
+          player.pos +
+              Point(-Config().updateRange.x - 1, -Config().updateRange.y),
+          Move.up,
+          height + 2);
+      final list2 = getList(removeRange);
       for (final o in list2) {
         o.removeFromGameWorld(gameWorld);
       }
     }
-    final additional4 = [
-      ...getList(addPoint + Point(-1, -1)),
-      ...getList(addPoint + Point(0, -1))
-    ];
-    for (final o in additional4) {
-      o.removeFromGameWorld(gameWorld);
-    }
-    assert(addPoint == player.pos - Config().updateRange);
 
     // ワープしたオブジェクトのcomponentについても追加/削除
     for (final o in warpingObjs) {

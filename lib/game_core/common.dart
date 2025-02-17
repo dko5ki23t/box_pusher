@@ -77,6 +77,9 @@ class Point {
     final xy = str.split(',');
     return Point(int.parse(xy[0]), int.parse(xy[1]));
   }
+
+  @override
+  String toString() => "($x,$y)";
 }
 
 /// 整数座標による範囲表現
