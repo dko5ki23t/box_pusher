@@ -71,6 +71,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     PlayerControllButtonType.onScreenBottom: {
       for (final move in Move.values) move: xButtonAreaSize2,
     },
+    PlayerControllButtonType.onScreenBottom2: {
+      for (final move in Move.values) move: xButtonAreaSize2,
+    },
   };
 
   /// 各ボタンタイプ、向きごとの移動ボタンの位置
@@ -88,46 +91,60 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       Move.downRight: Vector2(360.0 - xButtonAreaSize.x,
           640.0 - topPaddingSize.y - menuButtonAreaSize.y - yButtonAreaSize.y),
     },
-    PlayerControllButtonType.onScreenBottom: {
-      Move.up: Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 3),
-      Move.down: Vector2((360.0 - xButtonAreaSize2.x) / 2,
-          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y),
-      Move.left: Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 2),
-      Move.right: Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 2),
-      Move.upLeft: Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 3),
-      Move.upRight: Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
-          640.0 -
-              topPaddingSize.y -
-              menuButtonAreaSize.y -
-              xButtonAreaSize2.y * 3),
-      Move.downLeft: Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
-          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y),
-      Move.downRight: Vector2(
-          (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
-          640.0 - topPaddingSize.y - menuButtonAreaSize.y - xButtonAreaSize2.y),
-    },
+    for (final type in [
+      PlayerControllButtonType.onScreenBottom,
+      PlayerControllButtonType.onScreenBottom2
+    ])
+      type: {
+        Move.up: Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 3),
+        Move.down: Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y),
+        Move.left: Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 2),
+        Move.right: Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 2),
+        Move.upLeft: Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 3),
+        Move.upRight: Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y * 3),
+        Move.downLeft: Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2 - xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y),
+        Move.downRight: Vector2(
+            (360.0 - xButtonAreaSize2.x) / 2 + xButtonAreaSize2.x,
+            640.0 -
+                topPaddingSize.y -
+                menuButtonAreaSize.y -
+                xButtonAreaSize2.y),
+      },
   };
 
   /// プレイヤー操作ジョイスティック位置
@@ -1281,6 +1298,26 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         }
         break;
       case PlayerControllButtonType.onScreenBottom:
+        for (final move in MoveExtent.straights) {
+          playerStraightMoveButtons![move]!
+            ..size = moveButtonSizeMap[type]![move]!
+            ..button?.size = moveButtonSizeMap[type]![move]!
+            ..buttonDown?.size = moveButtonSizeMap[type]![move]!
+            ..position = moveButtonPosMap[type]![move]!;
+        }
+        for (final move in MoveExtent.diagonals) {
+          (playerDiagonalMoveButtons![move]! as ButtonComponent)
+            ..size = moveButtonSizeMap[type]![move]!
+            ..button?.size = moveButtonSizeMap[type]![move]!
+            ..buttonDown?.size = moveButtonSizeMap[type]![move]!
+            ..position = moveButtonPosMap[type]![move]!;
+        }
+        playerControllButtonsArea!.addAll(playerStraightMoveButtons!.values);
+        if (stage.getLegAbility()) {
+          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!.values);
+        }
+        break;
+      case PlayerControllButtonType.onScreenBottom2:
         for (final move in MoveExtent.straights) {
           playerStraightMoveButtons![move]!
             ..size = moveButtonSizeMap[type]![move]!

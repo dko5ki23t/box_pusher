@@ -79,6 +79,9 @@ enum PlayerControllButtonType {
   /// 画面下部にまとめて配置
   onScreenBottom,
 
+  /// 画面下部にまとめて配置(上下左右と斜めは切り替えボタンで表示を切り替える)
+  onScreenBottom2,
+
   /// ボタンなし
   noButton,
 }
@@ -222,7 +225,7 @@ class Config {
 
   /// プレイヤー操作ボタンのタイプ
   PlayerControllButtonType playerControllButtonType =
-      PlayerControllButtonType.onScreenEdge;
+      PlayerControllButtonType.onScreenBottom;
 
   /// ゲーム音量(0~100)
   int audioVolume = 100;

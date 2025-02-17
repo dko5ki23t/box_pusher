@@ -385,7 +385,7 @@ class BoxPusherGame extends FlameGame
 
   Map<String, dynamic> getDefaultUserConfig() {
     return {
-      'controller': PlayerControllButtonType.joyStick.index,
+      'controller': PlayerControllButtonType.onScreenBottom.index,
       'volume': 100,
       'showTutorial': true,
     };
