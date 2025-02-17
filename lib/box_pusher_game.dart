@@ -477,6 +477,8 @@ class BoxPusherGame extends FlameGame
     if (_router.routes['game']!.firstChild() != null) {
       final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
       gameSeq.updatePlayerControllButtons();
+      // 移動チュートリアル中ならその画面も変更
+      gameSeq.tutorial.updateMoveTutorial();
     }
   }
 

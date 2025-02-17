@@ -57,7 +57,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   static Vector2 get xButtonAreaSize2 => Vector2(50.0, 50.0);
 
   /// 各ボタンタイプ、向きごとの移動ボタンのサイズ
-  final Map<PlayerControllButtonType, Map<Move, Vector2>> moveButtonSizeMap = {
+  static final Map<PlayerControllButtonType, Map<Move, Vector2>>
+      moveButtonSizeMap = {
     PlayerControllButtonType.onScreenEdge: {
       Move.up: yButtonAreaSize,
       Move.down: yButtonAreaSize,
@@ -77,7 +78,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   };
 
   /// 各ボタンタイプ、向きごとの移動ボタンの位置
-  final Map<PlayerControllButtonType, Map<Move, Vector2>> moveButtonPosMap = {
+  static final Map<PlayerControllButtonType, Map<Move, Vector2>>
+      moveButtonPosMap = {
     PlayerControllButtonType.onScreenEdge: {
       Move.up: Vector2.zero(),
       Move.down: Vector2(0,

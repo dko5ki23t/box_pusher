@@ -312,6 +312,11 @@ class Tutorial {
   late final Image leftKeyImg;
   late final Image rightKeyImg;
   late final Image pKeyImg;
+  late final SpriteAnimation tutorial1KeyboardAnimation;
+  late final Sprite tutorial1OrSprite;
+  late final Sprite tutorial1OrAndArrowSprite;
+  late final Sprite tutorial1ToMoveSprite;
+  late final Sprite tutorial1TapToMoveSprite;
 
   late final PositionComponent tutorialArea;
 
@@ -339,6 +344,34 @@ class Tutorial {
     leftKeyImg = await Flame.images.load('left_key_icon.png');
     rightKeyImg = await Flame.images.load('right_key_icon.png');
     pKeyImg = await Flame.images.load('p_key_icon.png');
+    tutorial1KeyboardAnimation = SpriteAnimation.fromFrameData(
+        tutorial1Img,
+        SpriteAnimationData.sequenced(
+          amount: 2,
+          stepTime: Stage.objectStepTime,
+          texturePosition: Vector2.zero(),
+          textureSize: Vector2(203, 40),
+        ));
+    tutorial1OrSprite = Sprite(
+      tutorial1Img,
+      srcPosition: Vector2(285, 50),
+      srcSize: Vector2(32, 16),
+    );
+    tutorial1OrAndArrowSprite = Sprite(
+      tutorial1Img,
+      srcPosition: Vector2(75, 50),
+      srcSize: Vector2(50, 65),
+    );
+    tutorial1ToMoveSprite = Sprite(
+      tutorial1Img,
+      srcPosition: Vector2(75, 120),
+      srcSize: Vector2(110, 20),
+    );
+    tutorial1TapToMoveSprite = Sprite(
+      tutorial1Img,
+      srcPosition: Vector2(75, 150),
+      srcSize: Vector2(150, 22),
+    );
 
     // チュートリアル表示領域
     tutorialArea = PositionComponent(
@@ -359,98 +392,7 @@ class Tutorial {
       tutorialArea.removeAll(tutorialArea.children);
       switch (current) {
         case TutorialState.move:
-          tutorialArea.addAll(
-            [
-              ButtonComponent(
-                size: BoxPusherGame.baseSize,
-                button: CustomPainterComponent(
-                    size: BoxPusherGame.baseSize,
-                    painter: TutorialCircleHolePainter(
-                      radius: GameSeq.joyStickFieldRadius * 1.2,
-                      center: Vector2(0, GameSeq.topPaddingSize.y) +
-                          GameSeq.joyStickPosition,
-                    )),
-              ),
-              SpriteAnimationComponent.fromFrameData(
-                tutorial1Img,
-                SpriteAnimationData.sequenced(
-                    amount: 2,
-                    stepTime: Stage.objectStepTime,
-                    textureSize: BoxPusherGame.baseSize),
-              ),
-              CircleComponent(
-                radius: GameSeq.joyStickRadius,
-                anchor: Anchor.center,
-                position: Vector2(0, GameSeq.topPaddingSize.y) +
-                    GameSeq.joyStickPosition,
-                paint: Paint()..color = const Color(0x80ffffff),
-                children: [
-                  SequenceEffect(
-                    [
-                      for (final move in MoveExtent.straights) ...[
-                        OpacityEffect.fadeIn(
-                          EffectController(duration: 0.5),
-                        ),
-                        MoveEffect.by(
-                          move.vector * GameSeq.joyStickFieldRadius,
-                          EffectController(
-                            duration: 1.0,
-                            curve: Curves.decelerate,
-                          ),
-                        ),
-                        OpacityEffect.fadeOut(
-                          EffectController(duration: 0.5),
-                        ),
-                        MoveEffect.to(
-                          Vector2(0, GameSeq.topPaddingSize.y) +
-                              GameSeq.joyStickPosition,
-                          EffectController(
-                            duration: 0.1,
-                          ),
-                        ),
-                      ]
-                    ],
-                    infinite: true,
-                  ),
-                ],
-              ),
-              SpriteComponent.fromImage(
-                longTapImg,
-                size: Vector2(35, 50),
-                position: Vector2(-15, GameSeq.topPaddingSize.y - 10) +
-                    GameSeq.joyStickPosition,
-                children: [
-                  SequenceEffect(
-                    [
-                      for (final move in MoveExtent.straights) ...[
-                        OpacityEffect.fadeIn(
-                          EffectController(duration: 0.5),
-                        ),
-                        MoveEffect.by(
-                          move.vector * GameSeq.joyStickFieldRadius,
-                          EffectController(
-                            duration: 1.0,
-                            curve: Curves.decelerate,
-                          ),
-                        ),
-                        OpacityEffect.fadeOut(
-                          EffectController(duration: 0.5),
-                        ),
-                        MoveEffect.to(
-                          Vector2(-15, GameSeq.topPaddingSize.y - 10) +
-                              GameSeq.joyStickPosition,
-                          EffectController(
-                            duration: 0.1,
-                          ),
-                        ),
-                      ]
-                    ],
-                    infinite: true,
-                  ),
-                ],
-              ),
-            ],
-          );
+          updateMoveTutorial();
           _countForTutorial = 0.0;
           break;
         case TutorialState.push:
@@ -1306,6 +1248,226 @@ class Tutorial {
         break;
     }
     return false;
+  }
+
+  /// 操作ボタン変更時、操作ボタンに合わせて移動チュートリアル変更
+  void updateMoveTutorial() {
+    if (current == TutorialState.move) {
+      tutorialArea.removeAll(tutorialArea.children);
+      CustomPainter? painter;
+      List<Component> components = [
+        SpriteAnimationComponent(
+            animation: tutorial1KeyboardAnimation,
+            position: Vector2(180, 345),
+            anchor: Anchor.topCenter)
+      ];
+      switch (Config().playerControllButtonType) {
+        case PlayerControllButtonType.joyStick:
+          painter = TutorialCircleHolePainter(
+            radius: GameSeq.joyStickFieldRadius * 1.2,
+            center:
+                Vector2(0, GameSeq.topPaddingSize.y) + GameSeq.joyStickPosition,
+          );
+          components.addAll([
+            SpriteComponent(
+                sprite: tutorial1OrAndArrowSprite,
+                position: Vector2(180, 395),
+                anchor: Anchor.topCenter),
+            CircleComponent(
+              radius: GameSeq.joyStickRadius,
+              anchor: Anchor.center,
+              position: Vector2(0, GameSeq.topPaddingSize.y) +
+                  GameSeq.joyStickPosition,
+              paint: Paint()..color = const Color(0x80ffffff),
+              children: [
+                SequenceEffect(
+                  [
+                    for (final move in MoveExtent.straights) ...[
+                      OpacityEffect.fadeIn(
+                        EffectController(duration: 0.5),
+                      ),
+                      MoveEffect.by(
+                        move.vector * GameSeq.joyStickFieldRadius,
+                        EffectController(
+                          duration: 1.0,
+                          curve: Curves.decelerate,
+                        ),
+                      ),
+                      OpacityEffect.fadeOut(
+                        EffectController(duration: 0.5),
+                      ),
+                      MoveEffect.to(
+                        Vector2(0, GameSeq.topPaddingSize.y) +
+                            GameSeq.joyStickPosition,
+                        EffectController(
+                          duration: 0.1,
+                        ),
+                      ),
+                    ]
+                  ],
+                  infinite: true,
+                ),
+              ],
+            ),
+            SpriteComponent.fromImage(
+              longTapImg,
+              size: Vector2(35, 50),
+              position: Vector2(-15, GameSeq.topPaddingSize.y - 10) +
+                  GameSeq.joyStickPosition,
+              children: [
+                SequenceEffect(
+                  [
+                    for (final move in MoveExtent.straights) ...[
+                      OpacityEffect.fadeIn(
+                        EffectController(duration: 0.5),
+                      ),
+                      MoveEffect.by(
+                        move.vector * GameSeq.joyStickFieldRadius,
+                        EffectController(
+                          duration: 1.0,
+                          curve: Curves.decelerate,
+                        ),
+                      ),
+                      OpacityEffect.fadeOut(
+                        EffectController(duration: 0.5),
+                      ),
+                      MoveEffect.to(
+                        Vector2(-15, GameSeq.topPaddingSize.y - 10) +
+                            GameSeq.joyStickPosition,
+                        EffectController(
+                          duration: 0.1,
+                        ),
+                      ),
+                    ]
+                  ],
+                  infinite: true,
+                ),
+              ],
+            ),
+            SpriteComponent(
+                sprite: tutorial1ToMoveSprite,
+                position: Vector2(180, 570),
+                anchor: Anchor.topCenter),
+          ]);
+          break;
+        case PlayerControllButtonType.onScreenBottom:
+        case PlayerControllButtonType.onScreenBottom2:
+          painter = TutorialRRectHolePainter(
+            lt: Vector2(0, GameSeq.topPaddingSize.y) +
+                GameSeq.moveButtonPosMap[
+                    PlayerControllButtonType.onScreenBottom]![Move.upLeft]! -
+                Vector2.all(10),
+            w: GameSeq
+                        .moveButtonSizeMap[PlayerControllButtonType
+                            .onScreenBottom]![Move.upLeft]!
+                        .x *
+                    3 +
+                20,
+            h: GameSeq
+                        .moveButtonSizeMap[PlayerControllButtonType
+                            .onScreenBottom]![Move.upLeft]!
+                        .y *
+                    3 +
+                20,
+            radius: 3,
+          );
+          components.addAll([
+            SpriteComponent(
+                sprite: tutorial1OrSprite,
+                position: Vector2(180, 405),
+                anchor: Anchor.topCenter),
+            SpriteComponent(
+                sprite: tutorial1TapToMoveSprite,
+                position: Vector2(180, 600),
+                anchor: Anchor.topCenter),
+          ]);
+          break;
+        case PlayerControllButtonType.onScreenEdge:
+          painter = TutorialMultiRRectHolePainter(
+            ltToWh: {
+              Vector2(0, GameSeq.topPaddingSize.y) +
+                  GameSeq.moveButtonPosMap[PlayerControllButtonType
+                      .onScreenEdge]![Move.up]!: GameSeq.moveButtonSizeMap[
+                  PlayerControllButtonType.onScreenEdge]![Move.up]!,
+              Vector2(0, GameSeq.topPaddingSize.y) +
+                  GameSeq.moveButtonPosMap[PlayerControllButtonType
+                      .onScreenEdge]![Move.left]!: GameSeq.moveButtonSizeMap[
+                  PlayerControllButtonType.onScreenEdge]![Move.left]!,
+              Vector2(0, GameSeq.topPaddingSize.y) +
+                  GameSeq.moveButtonPosMap[PlayerControllButtonType
+                      .onScreenEdge]![Move.right]!: GameSeq.moveButtonSizeMap[
+                  PlayerControllButtonType.onScreenEdge]![Move.right]!,
+              Vector2(0, GameSeq.topPaddingSize.y) +
+                  GameSeq.moveButtonPosMap[PlayerControllButtonType
+                      .onScreenEdge]![Move.down]!: GameSeq.moveButtonSizeMap[
+                  PlayerControllButtonType.onScreenEdge]![Move.down]!,
+            },
+            radius: 3,
+          );
+          components.addAll([
+            SpriteComponent(
+                sprite: tutorial1OrSprite,
+                position: Vector2(180, 405),
+                anchor: Anchor.topCenter),
+            SpriteComponent(
+                sprite: tutorial1TapToMoveSprite,
+                position: Vector2(180, 440),
+                anchor: Anchor.topCenter),
+            SpriteComponent.fromImage(
+              longTapImg,
+              size: Vector2(35, 50),
+              position: Vector2(0, GameSeq.topPaddingSize.y) +
+                  GameSeq.moveButtonPosMap[
+                      PlayerControllButtonType.onScreenEdge]![Move.up]! +
+                  GameSeq.moveButtonSizeMap[
+                          PlayerControllButtonType.onScreenEdge]![Move.up]! /
+                      2,
+              anchor: Anchor.topCenter,
+              children: [
+                SequenceEffect(
+                  [
+                    for (final move in MoveExtent.straights) ...[
+                      MoveToEffect(
+                          Vector2(0, GameSeq.topPaddingSize.y) +
+                              GameSeq.moveButtonPosMap[PlayerControllButtonType
+                                  .onScreenEdge]![move]! +
+                              GameSeq.moveButtonSizeMap[PlayerControllButtonType
+                                      .onScreenEdge]![move]! /
+                                  2,
+                          EffectController(duration: 0)),
+                      OpacityEffect.fadeIn(
+                        EffectController(duration: 0.5, startDelay: 0.5),
+                      ),
+                      OpacityEffect.fadeOut(
+                        EffectController(duration: 0.5, startDelay: 0.5),
+                      ),
+                    ],
+                  ],
+                  infinite: true,
+                ),
+              ],
+            ),
+          ]);
+          break;
+        case PlayerControllButtonType.noButton:
+          painter = TutorialRRectHolePainter(
+              lt: Vector2.zero(), w: 0, h: 0, radius: 0);
+          components.addAll([
+            SpriteComponent(
+                sprite: tutorial1ToMoveSprite,
+                position: Vector2(180, 405),
+                anchor: Anchor.topCenter),
+          ]);
+          break;
+      }
+      tutorialArea.addAll(
+        [
+          CustomPainterComponent(
+              size: BoxPusherGame.baseSize, painter: painter),
+          ...components,
+        ],
+      );
+    }
   }
 }
 
