@@ -55,6 +55,10 @@
         "desc": "マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))",
         "value": true
     },
+    "mergeDamageBasedMergePower": {
+        "desc": "マージ能力で与える敵へのダメージを、マージしたレベルに応じた値にするかどうか",
+        "value": true
+    },
     "addedScoreEffectMove": {
         "desc": "スコア加算表示(+100とか)エフェクトの移動量",
         "value": {
@@ -83,6 +87,10 @@
     },
     "builderBuildBlockTurn": {
         "desc": "ブロックを置く敵がブロックを置く間隔（ターン数）",
+        "value": 7
+    },
+    "mergeCountForFinalLoop": {
+        "desc": "マージ回数で出現するアイテムが最終的に無限ループする際、アイテムが出現するまでのマージ回数",
         "value": 7
     }
 }

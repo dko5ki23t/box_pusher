@@ -518,7 +518,7 @@ class Stage {
     }
     // コンフィグで設定した最後のエントリーなら、5回マージごとに出現するようにする(無限)
     if (!existAppearObj) {
-      remainMergeCount = 5;
+      remainMergeCount = Config().mergeCountForFinalLoop;
     }
     nextMergeItems.clear();
     for (final tl in tls) {

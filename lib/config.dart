@@ -278,6 +278,8 @@ class Config {
     consumeTrap = jsonData['consumeTrap']['value'];
     hideGameToMenu = jsonData['hideGameToMenu']['value'];
     spawnItemAroundPlayer = jsonData['spawnItemAroundPlayer']['value'];
+    mergeDamageBasedMergePower =
+        jsonData['mergeDamageBasedMergePower']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
     addedScoreEffectMove = Vector2(vectorData['x'], vectorData['y']);
     vectorData = jsonData['updateRange']['value'];
@@ -286,6 +288,7 @@ class Config {
     bombNotStartAreaWidth = jsonData['bombNotStartAreaWidth']['value'];
     bombExplodingAreaWidth = jsonData['bombExplodingAreaWidth']['value'];
     builderBuildBlockTurn = jsonData['builderBuildBlockTurn']['value'];
+    mergeCountForFinalLoop = jsonData['mergeCountForFinalLoop']['value'];
     blockFloorMap =
         loadBlockFloorMap(await _importCSV(blockFloorMapConfigFileName));
     objInBlockMap =
@@ -360,10 +363,13 @@ class Config {
   late bool consumeTrap;
 
   /// ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか
-  late bool hideGameToMenu = true;
+  late bool hideGameToMenu;
 
   /// マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))
-  late bool spawnItemAroundPlayer = true;
+  late bool spawnItemAroundPlayer;
+
+  /// マージ能力で与える敵へのダメージを、マージしたレベルに応じた値にするかどうか
+  late bool mergeDamageBasedMergePower;
 
   /// スコア加算表示(+100とか)エフェクトの移動量
   late Vector2 addedScoreEffectMove;
@@ -382,6 +388,9 @@ class Config {
 
   /// ブロックを置く敵がブロックを置く間隔（ターン数）
   late int builderBuildBlockTurn;
+
+  /// マージ回数で出現するアイテムが最終的に無限ループする際、アイテムが出現するまでのマージ回数
+  late int mergeCountForFinalLoop;
 
   /// ステージ上範囲->出現床/ブロックのマップ（範囲が重複する場合は先に存在するキーを優先）
   late Map<PointRange, BlockFloorPattern> blockFloorMap;

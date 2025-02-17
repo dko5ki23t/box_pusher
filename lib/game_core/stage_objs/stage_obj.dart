@@ -1305,12 +1305,14 @@ abstract class StageObj {
 
   /// 押し終わったときの処理
   /// ※押した者の位置(pos)は移動済みの座標にしてから呼ぶこと
+  /// * mergeDamageBasedMergePower = trueならば、ブロック破壊レベルと同じ値だけ敵にダメージを与えられる
   void endPushing(
     Stage stage,
     World gameWorld, {
     PointRange Function(Point)? mergeRangeFunc,
     int mergeDamageBase = 0,
     int mergePowerBase = 0,
+    bool mergeDamageBasedMergePower = false,
   }) {
     // 押したオブジェクトの中でマージするインデックスを探す
     int mergeIndex = -1; // -1はマージなし
@@ -1372,7 +1374,9 @@ abstract class StageObj {
           basePoint: toTo,
           range: mergeRange,
           canBreakBlockFunc: (block) => Config.canBreakBlock(block, mergePow),
-          enemyDamage: mergeDamageBase + Config().debugEnemyDamageInMerge,
+          enemyDamage: mergeDamageBasedMergePower
+              ? Config.getMergePower(0, pushing)
+              : mergeDamageBase + Config().debugEnemyDamageInMerge,
         );
         stage.merge(
           toTo,

@@ -1,4 +1,5 @@
 import 'package:box_pusher/audio.dart';
+import 'package:box_pusher/config.dart';
 import 'package:box_pusher/game_core/common.dart';
 import 'package:box_pusher/game_core/stage.dart';
 import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
@@ -236,6 +237,8 @@ class Player extends StageObj {
               : null,
           mergeDamageBase: isAbilityAvailable(PlayerAbility.merge) ? 1 : 0,
           mergePowerBase: isAbilityAvailable(PlayerAbility.merge) ? 1 : 0,
+          mergeDamageBasedMergePower: Config().mergeDamageBasedMergePower &&
+              isAbilityAvailable(PlayerAbility.merge),
         );
 
         // 各種移動中変数初期化
