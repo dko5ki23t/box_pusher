@@ -48,9 +48,13 @@ class TreasureBox extends StageObj {
       },
       for (int i = 1; i <= levelToCoins.keys.length; i++)
         i: {
-          Move.none: SpriteAnimation.spriteList([
-            Sprite(baseImg, srcPosition: Vector2(0, 0), srcSize: Stage.cellSize)
-          ], stepTime: 1.0)
+          Move.none: SpriteAnimation.fromFrameData(
+            baseImg,
+            SpriteAnimationData.sequenced(
+                amount: 2,
+                stepTime: Stage.objectStepTime,
+                textureSize: Stage.cellSize),
+          ),
         },
     };
   }
