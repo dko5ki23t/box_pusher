@@ -53,7 +53,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     titleLogoImage = await Flame.images.load('title_logo.png');
     titleLogo = SpriteComponent.fromImage(
       titleLogoImage,
-      size: Vector2(280.0, 110.0),
+      size: Vector2(300.0, 110.0),
       position: Vector2(180.0, 220.0),
       anchor: Anchor.center,
     );
