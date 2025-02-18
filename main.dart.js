@@ -51715,7 +51715,7 @@ case 3:return 1
 case 4:return 0
 case 5:return 0.75
 case 6:return-0.75
-case 7:return 0.7853981633974483
+case 7:return 0.25
 case 8:return-0.25}},
 $S:315}
 A.qQ.prototype={
