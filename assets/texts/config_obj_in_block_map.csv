@@ -1,4 +1,4 @@
-ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先）
+ステージ上範囲->ブロック破壊時の出現オブジェクトのマップ（範囲が重複する場合は先に存在するキーを優先） ※パーセンテージは合計100でなくてよい。残りの割合は「何も出ない」として処理される
 rangeType, point1X, point1Y, point2X, point2Y, distance, jewels, maxNum, obj1, level1, min1, max1, percent1, obj2, level2, min2, max2, percent2, ...
 rect, 6, 6, 14, 14, 0, 60, 1, drill, 1, -1, 10, 10, guardian, 1, 1, 2, 10, swordsman, 1, 3, -1, 10
 rect, -14, -14, -6, -6, 0, 50, 1, drill, 1, -1, -1, 7, guardian, 1, 1, 2, 7, swordsman, 1, 2, -1, 7

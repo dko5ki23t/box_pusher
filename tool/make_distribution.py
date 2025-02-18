@@ -1,4 +1,6 @@
 import argparse
+import json
+import math
 import os
 
 from common import Point, PointRectRange, PointDistanceRange
@@ -6,6 +8,7 @@ from common import Point, PointRectRange, PointDistanceRange
 output_block_floor_default = 'config_block_floor_distribution.csv'
 output_obj_in_block_default = 'config_obj_in_block_distribution.csv'
 output_floor_in_block_default = 'config_floor_in_block_distribution.csv'
+config_base_file = os.path.join(os.path.dirname(__file__), '../assets/texts/config_base.json')
 
 class BlocksPoints:
     block_num = 0
@@ -25,6 +28,13 @@ def set_argparse():
 
 def main():
     args = set_argparse()
+
+    # ステージの最大範囲を取得する
+    json_open = open(config_base_file, encoding="utf-8")
+    json_load = json.load(json_open)
+    stageMaxLT = Point(int(json_load['stageMaxLT']['value']['x']), int(json_load['stageMaxLT']['value']['y']))
+    stageMaxRB = Point(int(json_load['stageMaxRB']['value']['x']), int(json_load['stageMaxRB']['value']['y']))
+    stageMaxRange = PointRectRange(stageMaxLT, stageMaxRB)
 
     # ブロック/床の割合CSVファイル読み込み
     line_text = ["rangeType, point1X, point1Y, point2X, point2Y, distance, total, floorNone, floorWater, floorMagma, blockL1, blockL2, blockL3, blockL4\n"]
@@ -54,7 +64,7 @@ def main():
             else:
                 # エラー
                 continue
-            target_points = [p for p in r.get_list() if p not in calced_points]
+            target_points = [p for p in r.get_list() if p not in calced_points and stageMaxRange.contains(p)]
             calced_points += target_points
 
             # 以下、出力する内容について
@@ -63,14 +73,25 @@ def main():
             for i in range(0, 6):
                 output.append(elements[i])
             total = len(target_points)  # 総計
+            total_ratio = sum([int(e) for e in elements[6:]])
+            mag = total / total_ratio
+            remaining = total
             output.append(total)
-            output.append(round(total * int(elements[6]) * 0.01))       # 床
-            output.append(round(total * int(elements[7]) * 0.01))       # 水
-            output.append(round(total * int(elements[8]) * 0.01))       # マグマ
-            output.append(round(total * int(elements[9]) * 0.01))       # ブロックLv.1
-            output.append(round(total * int(elements[10]) * 0.01))      # ブロックLv.2
-            output.append(round(total * int(elements[11]) * 0.01))      # ブロックLv.3
-            output.append(round(total * int(elements[12]) * 0.01))      # ブロックLv.4
+            output.append(math.floor(mag * int(elements[6])))       # 床
+            remaining -= output[-1]
+            output.append(math.floor(mag * int(elements[7])))       # 水
+            remaining -= output[-1]
+            output.append(math.floor(mag * int(elements[8])))       # マグマ
+            remaining -= output[-1]
+            output.append(math.floor(mag * int(elements[9])))       # ブロックLv.1
+            remaining -= output[-1]
+            output.append(math.floor(mag * int(elements[10])))      # ブロックLv.2
+            remaining -= output[-1]
+            output.append(math.floor(mag * int(elements[11])))      # ブロックLv.3
+            remaining -= output[-1]
+            output.append(math.floor(mag * int(elements[12])))      # ブロックLv.4
+            remaining -= output[-1]
+            output[7] += remaining  # 合計が正しくなるように、床を追加
             blocks_info_list.append(BlocksPoints(sum(output[-4:]), target_points))
             line_text.append(','.join(map(str, output)) + '\n')
     
@@ -106,7 +127,7 @@ def main():
             else:
                 # エラー
                 continue
-            target_points = [p for p in r.get_list() if p not in calced_points]
+            target_points = [p for p in r.get_list() if p not in calced_points and stageMaxRange.contains(p)]
             calced_points += target_points
 
             # 以下、出力する内容について
@@ -116,12 +137,13 @@ def main():
                 output.append(elements[i])
             total = 0
             for e in blocks_info_list:
-                ratio = len([p for p in target_points if p in e.points]) / len(e.points)
-                total += round(e.block_num * ratio)
+                if len(e.points) > 0:
+                    ratio = len([p for p in target_points if p in e.points]) / len(e.points)
+                    total += round(e.block_num * ratio)
             output.append(total)
-            output.append(round(total * int(elements[6]) * 0.01))       # 宝石
+            output.append(math.floor(total * int(elements[6]) * 0.01))       # 宝石
             for i in range(8, len(elements), 5):
-                num = round(total * int(elements[i + 4]) * 0.01)
+                num = math.floor(total * int(elements[i + 4]) * 0.01)
                 if int(elements[i + 2]) >= 0:
                     num = max(num, int(elements[i + 2]))
                 if int(elements[i + 3]) >= 0:
@@ -163,7 +185,7 @@ def main():
             else:
                 # エラー
                 continue
-            target_points = [p for p in r.get_list() if p not in calced_points]
+            target_points = [p for p in r.get_list() if p not in calced_points and stageMaxRange.contains(p)]
             calced_points += target_points
 
             # 以下、出力する内容について
@@ -173,12 +195,20 @@ def main():
                 output.append(elements[i])
             total = 0
             for e in blocks_info_list:
-                ratio = len([p for p in target_points if p in e.points]) / len(e.points)
-                total += round(e.block_num * ratio)
+                if len(e.points) > 0:
+                    ratio = len([p for p in target_points if p in e.points]) / len(e.points)
+                    total += round(e.block_num * ratio)
             output.append(total)
-            output.append(round(total * int(elements[6]) * 0.01))       # 床
-            output.append(round(total * int(elements[7]) * 0.01))       # 水
-            output.append(round(total * int(elements[8]) * 0.01))       # マグマ
+            total_ratio = sum([int(e) for e in elements[6:]])
+            mag = total / total_ratio
+            remaining = total
+            output.append(math.floor(mag * int(elements[6])))       # 床
+            remaining -= output[-1]
+            output.append(math.floor(mag * int(elements[7])))       # 水
+            remaining -= output[-1]
+            output.append(math.floor(mag * int(elements[8])))       # マグマ
+            remaining -= output[-1]
+            output[7] += remaining  # 合計が正しくなるように、床を追加
             line_text.append(','.join(map(str, output)) + '\n')
     
     # CSVファイルに書き込み

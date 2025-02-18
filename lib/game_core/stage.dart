@@ -274,10 +274,10 @@ class Stage {
   Point stageRB = Point(0, 0);
 
   /// ステージの左上上限座標
-  Point stageMaxLT = Point(-50, -50);
+  final Point stageMaxLT;
 
   /// ステージの右下上限座標
-  Point stageMaxRB = Point(50, 50);
+  final Point stageMaxRB;
 
   /// ステージの最大範囲
   PointRectRange get stageMaxRange => PointRectRange(stageMaxLT, stageMaxRB);
@@ -330,9 +330,9 @@ class Stage {
   final Map<Point, int> enemyAttackPoints = {};
 
   Stage(
-      {required this.testMode,
-      required this.gameWorld,
-      required this.tutorial}) {
+      {required this.testMode, required this.gameWorld, required this.tutorial})
+      : stageMaxLT = Config().stageMaxLT,
+        stageMaxRB = Config().stageMaxRB {
     _objFactory = StageObjFactory();
     // TODO
     if (kDebugMode) {
@@ -488,6 +488,7 @@ class Stage {
     ret['maxJewelLevel'] = maxJewelLevel;
     ret['maxFoundTreasureNum'] = foundTreasureCount;
     int total = 0;
+    int rate = 0;
     for (final entry in blockFloorDistribution.entries) {
       total += entry.value.getTotalNum(
               StageObjTypeLevel(type: StageObjType.block, level: 1)) +
@@ -498,9 +499,28 @@ class Stage {
           entry.value.getTotalNum(
               StageObjTypeLevel(type: StageObjType.block, level: 4));
     }
-    int rate = brokeBlockCount == total
-        ? 100
-        : ((brokeBlockCount / total) * 100).floor();
+    if ((!contains(stageLT) && !contains(stageRB)) ||
+        (stageLT == stageMaxLT && stageRB == stageMaxRB)) {
+      // 残りブロック数から破壊率を求める
+      // （分布のブロックが必ずしもステージ上に出るかわからない＝正確な総ブロック数がわからないので正確な値は出せないが、
+      // 残りブロック数が0なら100%というふうに判定できるようにする）
+      int remainBlocks = 0;
+      for (int y = stageMaxLT.y; y <= stageMaxRB.y; y++) {
+        for (int x = stageMaxLT.x; x <= stageMaxRB.x; x++) {
+          final obj = safeGetStaticObj(Point(x, y));
+          if (obj.type == StageObjType.block && obj.level <= 4) {
+            remainBlocks++;
+          }
+        }
+      }
+      int remainRate = (remainBlocks / total).ceil();
+      // 100%になるように念には念を
+      rate = remainBlocks == 0 ? 100 : 100 - remainRate;
+    } else {
+      rate = brokeBlockCount == total
+          ? 100
+          : ((brokeBlockCount / total) * 100).floor();
+    }
     ret['maxBreakBlockRate'] = rate;
     return ret;
   }
@@ -659,12 +679,11 @@ class Stage {
     /// 破壊されたブロックの位置のリスト
     final List<Point> breaked = [];
     final List<Component> breakingAnimations = [];
-    final stageMaxRange = PointRectRange(stageMaxLT, stageMaxRB);
 
     for (final p in range.set) {
       //if (p == basePoint) continue;
       // ステージ範囲内チェック
-      if (!stageMaxRange.contains(p)) {
+      if (!contains(p)) {
         continue;
       }
       final obj = get(p);
@@ -1800,6 +1819,7 @@ class Stage {
   /// 引数で指定した位置に、パターンに従った静止物を生成する
   void createAndSetStaticObjWithPattern(Point pos,
       {bool addToGameWorld = true}) {
+    if (!contains(pos)) return;
     if (Config().fixedStaticObjMap.containsKey(pos)) {
       // 固定位置のオブジェクト
       final staticObj = createObject(

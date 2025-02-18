@@ -892,12 +892,13 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     isReady = false;
     game.world.removeAll(game.world.children);
     // デバッグモードのときはステージの最大幅・高さを指定する
-    if (game.testMode) {
-      stage.stageMaxLT = Point(-(Config().debugStageWidth / 2).ceil(),
-          -(Config().debugStageHeight / 2).ceil());
-      stage.stageMaxRB = Point((Config().debugStageWidth / 2).ceil(),
-          (Config().debugStageHeight / 2).ceil());
-    }
+    // ↑configで変えれるから無しにした
+    //if (game.testMode) {
+    //  stage.stageMaxLT.x = -(Config().debugStageWidth / 2).ceil();
+    //  stage.stageMaxLT.y = -(Config().debugStageHeight / 2).ceil();
+    //  stage.stageMaxRB.x = (Config().debugStageWidth / 2).ceil();
+    //  stage.stageMaxRB.y = (Config().debugStageHeight / 2).ceil();
+    //}
     // カメラズームをリセット
     game.camera.viewfinder.zoom = 1.0;
     // ステージ初期化

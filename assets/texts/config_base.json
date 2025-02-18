@@ -73,6 +73,20 @@
             "y": 25
         }
     },
+    "stageMaxLT": {
+        "desc": "ステージ最大範囲の左上座標",
+        "value": {
+            "x": -50,
+            "y": -50
+        }
+    },
+    "stageMaxRB": {
+        "desc": "ステージ最大範囲の右下座標",
+        "value": {
+            "x": 50,
+            "y": 50
+        }
+    },
     "updateNearWarpDistance": {
         "desc": "update()で更新する各ワープからの距離",
         "value": 6
