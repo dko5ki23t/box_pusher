@@ -402,7 +402,7 @@ extension MoveExtent on Move {
         case Move.upRight:
           return -0.75;
         case Move.downLeft:
-          return 0.25 * pi;
+          return 0.25;
         case Move.downRight:
           return -0.25;
       }
