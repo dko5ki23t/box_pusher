@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:box_pusher/game_core/common.dart';
+import 'package:push_and_merge/game_core/common.dart';
 
 void main() {
   group('Point class の単体テスト', () {

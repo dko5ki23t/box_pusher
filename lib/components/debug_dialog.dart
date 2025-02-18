@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:box_pusher/box_pusher_game.dart';
-import 'package:box_pusher/config.dart';
+import 'package:push_and_merge/box_pusher_game.dart';
+import 'package:push_and_merge/config.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';

@@ -1,5 +1,5 @@
-import 'package:box_pusher/box_pusher_game.dart';
-import 'package:box_pusher/sequences/sequence.dart';
+import 'package:push_and_merge/box_pusher_game.dart';
+import 'package:push_and_merge/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/input.dart';

@@ -1,4 +1,4 @@
-import 'package:box_pusher/box_pusher_game.dart';
+import 'package:push_and_merge/box_pusher_game.dart';
 import 'package:flame/components.dart';
 
 abstract class Sequence extends Component with HasGameReference<BoxPusherGame> {

@@ -1,6 +1,6 @@
-import 'package:box_pusher/audio.dart';
-import 'package:box_pusher/components/rounded_component.dart';
-import 'package:box_pusher/config.dart';
+import 'package:push_and_merge/audio.dart';
+import 'package:push_and_merge/components/rounded_component.dart';
+import 'package:push_and_merge/config.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/input.dart';

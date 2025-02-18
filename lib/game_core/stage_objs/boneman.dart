@@ -1,7 +1,7 @@
-import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/config.dart';
-import 'package:box_pusher/game_core/stage.dart';
-import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
+import 'package:push_and_merge/game_core/common.dart';
+import 'package:push_and_merge/config.dart';
+import 'package:push_and_merge/game_core/stage.dart';
+import 'package:push_and_merge/game_core/stage_objs/stage_obj.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/extensions.dart';

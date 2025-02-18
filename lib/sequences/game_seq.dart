@@ -1,16 +1,16 @@
 import 'dart:math';
 
-import 'package:box_pusher/audio.dart';
-import 'package:box_pusher/box_pusher_game.dart';
-import 'package:box_pusher/components/joy_stick_component.dart';
-import 'package:box_pusher/components/opacity_effect_text_component.dart';
-import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/config.dart';
-import 'package:box_pusher/game_core/stage.dart';
-import 'package:box_pusher/game_core/stage_objs/player.dart';
-import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
-import 'package:box_pusher/game_core/tutorial.dart';
-import 'package:box_pusher/sequences/sequence.dart';
+import 'package:push_and_merge/audio.dart';
+import 'package:push_and_merge/box_pusher_game.dart';
+import 'package:push_and_merge/components/joy_stick_component.dart';
+import 'package:push_and_merge/components/opacity_effect_text_component.dart';
+import 'package:push_and_merge/game_core/common.dart';
+import 'package:push_and_merge/config.dart';
+import 'package:push_and_merge/game_core/stage.dart';
+import 'package:push_and_merge/game_core/stage_objs/player.dart';
+import 'package:push_and_merge/game_core/stage_objs/stage_obj.dart';
+import 'package:push_and_merge/game_core/tutorial.dart';
+import 'package:push_and_merge/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';

@@ -1,4 +1,4 @@
-import 'package:box_pusher/game_core/common.dart';
+import 'package:push_and_merge/game_core/common.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/experimental.dart';

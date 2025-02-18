@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:box_pusher/ad_helper.dart';
+import 'package:push_and_merge/ad_helper.dart';
 
 class AdBanner extends StatefulWidget {
   const AdBanner({

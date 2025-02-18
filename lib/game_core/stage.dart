@@ -1,17 +1,17 @@
 import 'dart:developer';
 import 'dart:math' hide log;
 
-import 'package:box_pusher/audio.dart';
-import 'package:box_pusher/components/opacity_effect_text_component.dart';
-import 'package:box_pusher/config.dart';
-import 'package:box_pusher/game_core/common.dart';
-import 'package:box_pusher/game_core/stage_objs/belt.dart';
-import 'package:box_pusher/game_core/stage_objs/player.dart';
-import 'package:box_pusher/game_core/stage_objs/stage_obj.dart';
-import 'package:box_pusher/game_core/stage_objs/block.dart';
-import 'package:box_pusher/game_core/stage_objs/stage_obj_factory.dart';
-import 'package:box_pusher/game_core/stage_objs/warp.dart';
-import 'package:box_pusher/game_core/tutorial.dart';
+import 'package:push_and_merge/audio.dart';
+import 'package:push_and_merge/components/opacity_effect_text_component.dart';
+import 'package:push_and_merge/config.dart';
+import 'package:push_and_merge/game_core/common.dart';
+import 'package:push_and_merge/game_core/stage_objs/belt.dart';
+import 'package:push_and_merge/game_core/stage_objs/player.dart';
+import 'package:push_and_merge/game_core/stage_objs/stage_obj.dart';
+import 'package:push_and_merge/game_core/stage_objs/block.dart';
+import 'package:push_and_merge/game_core/stage_objs/stage_obj_factory.dart';
+import 'package:push_and_merge/game_core/stage_objs/warp.dart';
+import 'package:push_and_merge/game_core/tutorial.dart';
 import 'package:collection/collection.dart';
 import 'package:flame/components.dart' hide Block;
 import 'package:flame/effects.dart';

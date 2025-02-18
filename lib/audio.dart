@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:box_pusher/config.dart';
+import 'package:push_and_merge/config.dart';
 
 /// 効果音
 enum Sound {

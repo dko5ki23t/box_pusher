@@ -1,5 +1,5 @@
-import 'package:box_pusher/box_pusher_game.dart';
-import 'package:box_pusher/config.dart';
+import 'package:push_and_merge/box_pusher_game.dart';
+import 'package:push_and_merge/config.dart';
 import 'package:flutter/material.dart';
 
 class DebugViewDistributionsDialog extends StatefulWidget {

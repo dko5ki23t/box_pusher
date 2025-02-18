@@ -1,6 +1,6 @@
-import 'package:box_pusher/ad_banner.dart';
-import 'package:box_pusher/box_pusher_game.dart';
-import 'package:box_pusher/config.dart';
+import 'package:push_and_merge/ad_banner.dart';
+import 'package:push_and_merge/box_pusher_game.dart';
+import 'package:push_and_merge/config.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Route;

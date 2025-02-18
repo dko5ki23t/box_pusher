@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:math';
 
-import 'package:box_pusher/config.dart';
+import 'package:push_and_merge/config.dart';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart' as flame_geo;
 

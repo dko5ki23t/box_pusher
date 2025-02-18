@@ -1,6 +1,6 @@
-import 'package:box_pusher/components/opacity_effect_text_component.dart';
-import 'package:box_pusher/config.dart';
-import 'package:box_pusher/game_core/stage.dart';
+import 'package:push_and_merge/components/opacity_effect_text_component.dart';
+import 'package:push_and_merge/config.dart';
+import 'package:push_and_merge/game_core/stage.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
