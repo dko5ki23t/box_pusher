@@ -22,7 +22,8 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   late final GameTextButton continueButton;
   late final GameTextButton continueFromTreasureButton;
   late final GameTextButton languageButton;
-  late final GameTextButton versionLogButton;
+  late final GameTextButton creditButton;
+  //late final GameTextButton versionLogButton;
   late final GameTextButton achievementsButton;
   late final RectangleComponent highScoreRectangle;
   late final TextComponent versionText;
@@ -119,13 +120,23 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     );
     languageButton = GameTextButton(
       size: Vector2(80.0, 20.0),
-      position: Vector2(300.0, 40.0),
+      position: Vector2(300.0, 30.0),
       anchor: Anchor.center,
       text: loc.language,
       onReleased: () => game.changeLocale(),
     );
+    creditButton = GameTextButton(
+      size: Vector2(80.0, 20.0),
+      position: Vector2(300.0, 60.0),
+      anchor: Anchor.center,
+      text: loc.credit,
+      onReleased: () async {
+        game.pushSeqOverlay('credit_notation_dialog');
+      },
+    );
     buttonGroup = GameButtonGroup(buttons: [
       languageButton,
+      creditButton,
       newGameButton,
       continueButton,
       if (_existLastTreasureStageData) continueFromTreasureButton,
@@ -187,6 +198,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       continueButton,
       if (_existLastTreasureStageData) continueFromTreasureButton,
       languageButton,
+      creditButton,
       //versionLogButton,
       achievementsButton,
       //GameSpriteOnOffButton(
@@ -264,11 +276,11 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     if (game.getCurrentSeqName() != 'title') return true;
     if ((keysPressed.contains(LogicalKeyboardKey.arrowUp)) ||
         keysPressed.contains(LogicalKeyboardKey.keyW)) {
-      buttonGroup.focusPrev(focusIdIfNull: 1);
+      buttonGroup.focusPrev(focusIdIfNull: 2);
     }
     if ((keysPressed.contains(LogicalKeyboardKey.arrowDown)) ||
         keysPressed.contains(LogicalKeyboardKey.keyS)) {
-      buttonGroup.focusNext(focusIdIfNull: 1);
+      buttonGroup.focusNext(focusIdIfNull: 2);
     }
 
     // スペースキー->フォーカスしているボタンを押す
@@ -361,6 +373,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     continueButton.text = loc.loadGame;
     continueFromTreasureButton.text = "${loc.loadGame} +";
     languageButton.text = loc.language;
+    creditButton.text = loc.credit;
     //versionLogButton.text = loc.versionLog;
     achievementsButton.text = loc.achievements;
     //debugButton.text = loc.debug;

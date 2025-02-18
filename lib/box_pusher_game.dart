@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:push_and_merge/audio.dart';
+import 'package:push_and_merge/components/credit_notation_dialog.dart';
 import 'package:push_and_merge/components/debug_dialog.dart';
 import 'package:push_and_merge/components/debug_view_distributions_dialog.dart';
 import 'package:push_and_merge/components/version_log_dialog.dart';
@@ -192,6 +193,13 @@ class BoxPusherGame extends FlameGame
 
     // 各シーケンス（ルート）を追加
     _overlays = {
+      'credit_notation_dialog': OverlayRoute(
+        (context, game) {
+          return CreditNotationDialog(
+            game: this,
+          );
+        },
+      ),
       'version_log_dialog': OverlayRoute(
         (context, game) {
           return VersionLogDialog(
