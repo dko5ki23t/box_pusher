@@ -3,6 +3,7 @@ import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:math';
 
+import 'package:firebase_database/firebase_database.dart';
 import 'package:push_and_merge/audio.dart';
 import 'package:push_and_merge/components/credit_notation_dialog.dart';
 import 'package:push_and_merge/components/debug_dialog.dart';
@@ -75,6 +76,9 @@ class BoxPusherGame extends FlameGame
   late Point debugTargetPos;
   late Distribution<StageObjTypeLevel> debugBlockFloorDistribution;
   late Distribution<StageObjTypeLevel> debugObjInBlockDistribution;
+
+  /// Firebaseのインスタンス
+  final FirebaseDatabase firebaseDatabase;
 
   /// ゲームでキーボードを使うためのフォーカス
   final FocusNode gameFocus;
@@ -152,7 +156,8 @@ class BoxPusherGame extends FlameGame
     this.testMode = false,
     required this.gameFocus,
     required Locale initialLocale,
-  }) : super(
+  })  : firebaseDatabase = FirebaseDatabase.instance,
+        super(
             camera: CameraComponent.withFixedResolution(
                 width: baseSize.x, height: baseSize.y)) {
     if (initialLocale.languageCode == 'en') {
@@ -244,6 +249,8 @@ class BoxPusherGame extends FlameGame
 
     // アプリバージョン等取得
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    // Firebaseに登録
+    await registerDatabase();
     // セーブデータファイル準備
     if (kIsWeb) {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -313,6 +320,36 @@ class BoxPusherGame extends FlameGame
       dev.log(e.toString());
     }
     Config().showTutorial = showTutorial;
+  }
+
+  Future<void> registerDatabase() async {
+    // 新規ユーザとしてFirebaseに登録
+    final userRef = firebaseDatabase.ref('users');
+    final newRef = userRef.push();
+    await newRef.set({
+      'highScore': {
+        'score': _highScore,
+      },
+      'achievements': {
+        'girl': _achievementData['hasHelpedGirl'],
+        'jewel': _achievementData['maxJewelLevel'],
+        'treasure': _achievementData['maxFoundTreasureNum'],
+        'brokeBlock': _achievementData['maxBreakBlockRate'],
+      },
+      'version': _saveDataVersion,
+    });
+    final countsRef = firebaseDatabase.ref('counts');
+    await countsRef.runTransaction((Object? post) {
+      // Ensure a post at the ref exists.
+      if (post == null) {
+        return Transaction.abort();
+      }
+      Map<String, dynamic> newPost = Map<String, dynamic>.from(post as Map);
+      newPost["user_count"] = (newPost["user_count"] ?? 0) + 1;
+
+      // Return the new data.
+      return Transaction.success(newPost);
+    });
   }
 
   /// 【デバッグ】文字列からセーブデータをインポート->成功したかどうかを返す

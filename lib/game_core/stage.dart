@@ -1409,10 +1409,10 @@ class Stage {
     for (final p in updateTargetRangeSet) {
       _staticObjs[p]?.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
-      // 以下をしても良い(処理は軽いはず)
-      //if (playerEndMoving && _staticObjs[p] != null) {
-      //  _staticObjs[p]!.addToGameWorld(gameWorld);
-      //}
+      // タイミングによっては画面に追加されていない場合があるので、追加(処理は軽いはず)
+      if ((playerStartMoving || playerEndMoving) && _staticObjs[p] != null) {
+        _staticObjs[p]!.addToGameWorld(gameWorld);
+      }
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
@@ -1429,10 +1429,10 @@ class Stage {
     for (final enemy in currentEnemies) {
       enemy.update(dt, player.moving, gameWorld, camera, this,
           playerStartMoving, playerEndMoving, prohibitedPoints);
-      // 以下をしても良い(処理は軽いはず)
-      //if (playerEndMoving) {
-      //  enemy.addToGameWorld(gameWorld);
-      //}
+      // タイミングによっては画面に追加されていない場合があるので、追加(処理は軽いはず)
+      if (playerStartMoving || playerEndMoving) {
+        enemy.addToGameWorld(gameWorld);
+      }
     }
     if (playerStartMoving) {
       // 動き始めたらプレイヤーに再フォーカス
@@ -1486,10 +1486,10 @@ class Stage {
     for (final box in currentBoxes) {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           playerEndMoving, prohibitedPoints);
-      // 以下をしても良い(処理は軽いはず)
-      //if (playerEndMoving) {
-      //  box.addToGameWorld(gameWorld);
-      //}
+      // タイミングによっては画面に追加されていない場合があるので、追加(処理は軽いはず)
+      if (playerStartMoving || playerEndMoving) {
+        box.addToGameWorld(gameWorld);
+      }
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了

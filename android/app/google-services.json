@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "1060105225005",
+    "firebase_url": "https://box-pusher-2fddc-default-rtdb.firebaseio.com",
     "project_id": "box-pusher-2fddc",
     "storage_bucket": "box-pusher-2fddc.firebasestorage.app"
   },

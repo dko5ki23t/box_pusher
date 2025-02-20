@@ -46,6 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1060105225005',
     projectId: 'box-pusher-2fddc',
     authDomain: 'box-pusher-2fddc.firebaseapp.com',
+    databaseURL: 'https://box-pusher-2fddc-default-rtdb.firebaseio.com',
     storageBucket: 'box-pusher-2fddc.firebasestorage.app',
     measurementId: 'G-5PCCYW3EDF',
   );
@@ -55,6 +56,7 @@ class DefaultFirebaseOptions {
     appId: '1:1060105225005:android:41f11be2593cb4582809a4',
     messagingSenderId: '1060105225005',
     projectId: 'box-pusher-2fddc',
+    databaseURL: 'https://box-pusher-2fddc-default-rtdb.firebaseio.com',
     storageBucket: 'box-pusher-2fddc.firebasestorage.app',
   );
 
@@ -63,6 +65,7 @@ class DefaultFirebaseOptions {
     appId: '1:1060105225005:ios:b1019093343e18682809a4',
     messagingSenderId: '1060105225005',
     projectId: 'box-pusher-2fddc',
+    databaseURL: 'https://box-pusher-2fddc-default-rtdb.firebaseio.com',
     storageBucket: 'box-pusher-2fddc.firebasestorage.app',
     iosBundleId: 'com.example.boxPusher',
   );
@@ -72,6 +75,7 @@ class DefaultFirebaseOptions {
     appId: '1:1060105225005:ios:b1019093343e18682809a4',
     messagingSenderId: '1060105225005',
     projectId: 'box-pusher-2fddc',
+    databaseURL: 'https://box-pusher-2fddc-default-rtdb.firebaseio.com',
     storageBucket: 'box-pusher-2fddc.firebasestorage.app',
     iosBundleId: 'com.example.boxPusher',
   );
@@ -82,6 +86,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1060105225005',
     projectId: 'box-pusher-2fddc',
     authDomain: 'box-pusher-2fddc.firebaseapp.com',
+    databaseURL: 'https://box-pusher-2fddc-default-rtdb.firebaseio.com',
     storageBucket: 'box-pusher-2fddc.firebasestorage.app',
     measurementId: 'G-EHFZVM3YZQ',
   );

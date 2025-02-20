@@ -54,7 +54,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       640.0 - topPaddingSize.y - yButtonAreaSize.y * 2 - menuButtonAreaSize.y);
 
   /// プレイヤー操作ボタン領域2
-  static Vector2 get xButtonAreaSize2 => Vector2(50.0, 50.0);
+  static Vector2 get xButtonAreaSize2 => Vector2(60.0, 60.0);
 
   /// 各ボタンタイプ、向きごとの移動ボタンのサイズ
   static final Map<PlayerControllButtonType, Map<Move, Vector2>>
