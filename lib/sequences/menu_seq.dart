@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:push_and_merge/box_pusher_game.dart';
 import 'package:push_and_merge/components/button.dart';
 import 'package:push_and_merge/config.dart';
@@ -96,6 +97,9 @@ class MenuSeq extends Sequence with KeyboardHandler {
       text: "${loc.controller}${Config().playerControllButtonType.index + 1}",
       onReleased: () {
         int index = Config().playerControllButtonType.index + 1;
+        if (!kIsWeb && index == PlayerControllButtonType.noButton.index) {
+          ++index;
+        }
         if (index >= PlayerControllButtonType.values.length) {
           index = 0;
         }

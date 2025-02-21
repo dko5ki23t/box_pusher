@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:push_and_merge/box_pusher_game.dart';
 import 'package:push_and_merge/components/opacity_effect_text_component.dart';
 import 'package:push_and_merge/components/rounded_component.dart';
@@ -77,8 +78,9 @@ class Tutorial {
     Vector2 position,
     BoxPusherGame game,
   ) {
-    final tapOrSpaceToNextSize =
-        game.lang == Language.japanese ? Vector2(250, 40) : Vector2(200, 40);
+    final tapOrSpaceToNextSize = game.lang == Language.japanese
+        ? (kIsWeb ? Vector2(250, 40) : Vector2(110, 40))
+        : (kIsWeb ? Vector2(200, 40) : Vector2(120, 40));
     const tapOrSpaceToNextTextStyle = TextStyle(
       fontFamily: Config.gameTextFamily,
       color: Colors.white,
@@ -107,36 +109,39 @@ class Tutorial {
           infinite: true,
         );
 
+    // web(キーボードが使える)場合とそれ以外で表示内容変えてる
     return PositionComponent(
       position: position,
       size: tapOrSpaceToNextSize,
       anchor: Anchor.center,
       children: [
         OpacityEffectTextComponent(
-          text: game.localization.tapOr,
+          text: kIsWeb ? game.localization.tapOr : game.localization.tapToNext,
           textRenderer: TextPaint(
             style: tapOrSpaceToNextTextStyle,
           ),
           children: [tapOrSpaceToNextEffect()],
         ),
-        SpriteAnimationComponent.fromFrameData(
-          spaceKeyImg,
-          SpriteAnimationData.sequenced(
-              amount: 2,
-              stepTime: Stage.objectStepTime,
-              textureSize: Vector2(34, 15)),
-          position: tapOrSpaceToNextPosList[1],
-          size: Vector2(60, 30),
-          children: [tapOrSpaceToNextEffect()],
-        ),
-        OpacityEffectTextComponent(
-          text: game.localization.toNext,
-          textRenderer: TextPaint(
-            style: tapOrSpaceToNextTextStyle,
+        if (kIsWeb)
+          SpriteAnimationComponent.fromFrameData(
+            spaceKeyImg,
+            SpriteAnimationData.sequenced(
+                amount: 2,
+                stepTime: Stage.objectStepTime,
+                textureSize: Vector2(34, 15)),
+            position: tapOrSpaceToNextPosList[1],
+            size: Vector2(60, 30),
+            children: [tapOrSpaceToNextEffect()],
           ),
-          position: tapOrSpaceToNextPosList[2],
-          children: [tapOrSpaceToNextEffect()],
-        ),
+        if (kIsWeb)
+          OpacityEffectTextComponent(
+            text: game.localization.toNext,
+            textRenderer: TextPaint(
+              style: tapOrSpaceToNextTextStyle,
+            ),
+            position: tapOrSpaceToNextPosList[2],
+            children: [tapOrSpaceToNextEffect()],
+          ),
       ],
     );
   }
@@ -146,8 +151,9 @@ class Tutorial {
     Vector2 position,
     BoxPusherGame game,
   ) {
-    final tapOrSpaceToReturnSize =
-        game.lang == Language.japanese ? Vector2(250, 80) : Vector2(200, 80);
+    final tapOrSpaceToReturnSize = game.lang == Language.japanese
+        ? (kIsWeb ? Vector2(250, 80) : Vector2(200, 80))
+        : (kIsWeb ? Vector2(200, 80) : Vector2(180, 80));
     const tapOrSpaceToReturnTextStyle = TextStyle(
       fontFamily: Config.gameTextFamily,
       color: Colors.white,
@@ -155,12 +161,12 @@ class Tutorial {
     );
     final tapOrSpaceToReturnPosList = game.lang == Language.japanese
         ? [
-            Vector2(20, 0),
+            kIsWeb ? Vector2(20, 0) : Vector2(0, 40),
             Vector2(145, 0),
             Vector2(210, 0),
           ]
         : [
-            Vector2(40, 0),
+            kIsWeb ? Vector2(40, 0) : Vector2(0, 40),
             Vector2(108, 0),
             Vector2(140, 0),
           ];
@@ -182,40 +188,45 @@ class Tutorial {
       anchor: Anchor.center,
       children: [
         OpacityEffectTextComponent(
-          text: game.localization.tapOr,
+          text: kIsWeb
+              ? game.localization.tapOr
+              : game.localization.tapToReturnGame,
           position: tapOrSpaceToReturnPosList[0],
           textRenderer: TextPaint(
             style: tapOrSpaceToReturnTextStyle,
           ),
           children: [tapOrSpaceToReturnEffect()],
         ),
-        SpriteAnimationComponent.fromFrameData(
-          spaceKeyImg,
-          SpriteAnimationData.sequenced(
-              amount: 2,
-              stepTime: Stage.objectStepTime,
-              textureSize: Vector2(34, 15)),
-          position: tapOrSpaceToReturnPosList[1],
-          size: Vector2(60, 30),
-          children: [tapOrSpaceToReturnEffect()],
-        ),
-        OpacityEffectTextComponent(
-          text: game.localization.to,
-          textRenderer: TextPaint(
-            style: tapOrSpaceToReturnTextStyle,
+        if (kIsWeb)
+          SpriteAnimationComponent.fromFrameData(
+            spaceKeyImg,
+            SpriteAnimationData.sequenced(
+                amount: 2,
+                stepTime: Stage.objectStepTime,
+                textureSize: Vector2(34, 15)),
+            position: tapOrSpaceToReturnPosList[1],
+            size: Vector2(60, 30),
+            children: [tapOrSpaceToReturnEffect()],
           ),
-          position: tapOrSpaceToReturnPosList[2],
-          children: [tapOrSpaceToReturnEffect()],
-        ),
-        OpacityEffectTextComponent(
-          text: game.localization.returnGame,
-          textRenderer: TextPaint(
-            style: tapOrSpaceToReturnTextStyle,
+        if (kIsWeb)
+          OpacityEffectTextComponent(
+            text: game.localization.to,
+            textRenderer: TextPaint(
+              style: tapOrSpaceToReturnTextStyle,
+            ),
+            position: tapOrSpaceToReturnPosList[2],
+            children: [tapOrSpaceToReturnEffect()],
           ),
-          position: tapOrSpaceToReturnSize * 0.5,
-          anchor: Anchor.topCenter,
-          children: [tapOrSpaceToReturnEffect()],
-        ),
+        if (kIsWeb)
+          OpacityEffectTextComponent(
+            text: game.localization.returnGame,
+            textRenderer: TextPaint(
+              style: tapOrSpaceToReturnTextStyle,
+            ),
+            position: tapOrSpaceToReturnSize * 0.5,
+            anchor: Anchor.topCenter,
+            children: [tapOrSpaceToReturnEffect()],
+          ),
       ],
     );
   }
@@ -727,67 +738,68 @@ class Tutorial {
                           fontSize: 20),
                     ),
                   ),
-                  PositionComponent(
-                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 410),
-                    size: Vector2(234, 34),
-                    anchor: Anchor.center,
-                    children: [
-                      SpriteAnimationComponent.fromFrameData(
-                        shiftKeyImg,
-                        SpriteAnimationData.sequenced(
-                            amount: 2,
-                            stepTime: Stage.objectStepTime,
-                            textureSize: Vector2(34, 17)),
-                        size: Vector2(68, 34),
-                      ),
-                      TextComponent(
-                        text: '+',
-                        position: Vector2(74, 0),
-                        textRenderer: TextPaint(
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontFamily: Config.gameTextFamily,
-                              fontSize: 20),
+                  if (kIsWeb)
+                    PositionComponent(
+                      position: Vector2(BoxPusherGame.baseSize.x * 0.5, 410),
+                      size: Vector2(234, 34),
+                      anchor: Anchor.center,
+                      children: [
+                        SpriteAnimationComponent.fromFrameData(
+                          shiftKeyImg,
+                          SpriteAnimationData.sequenced(
+                              amount: 2,
+                              stepTime: Stage.objectStepTime,
+                              textureSize: Vector2(34, 17)),
+                          size: Vector2(68, 34),
                         ),
-                      ),
-                      SpriteAnimationComponent.fromFrameData(
-                        upKeyImg,
-                        position: Vector2(92, 0),
-                        SpriteAnimationData.sequenced(
-                            amount: 2,
-                            stepTime: Stage.objectStepTime,
-                            textureSize: Vector2(21, 20)),
-                        size: Vector2(34, 34),
-                      ),
-                      SpriteAnimationComponent.fromFrameData(
-                        downKeyImg,
-                        position: Vector2(128, 0),
-                        SpriteAnimationData.sequenced(
-                            amount: 2,
-                            stepTime: Stage.objectStepTime,
-                            textureSize: Vector2(21, 20)),
-                        size: Vector2(34, 34),
-                      ),
-                      SpriteAnimationComponent.fromFrameData(
-                        leftKeyImg,
-                        position: Vector2(164, 0),
-                        SpriteAnimationData.sequenced(
-                            amount: 2,
-                            stepTime: Stage.objectStepTime,
-                            textureSize: Vector2(21, 20)),
-                        size: Vector2(34, 34),
-                      ),
-                      SpriteAnimationComponent.fromFrameData(
-                        rightKeyImg,
-                        position: Vector2(200, 0),
-                        SpriteAnimationData.sequenced(
-                            amount: 2,
-                            stepTime: Stage.objectStepTime,
-                            textureSize: Vector2(21, 20)),
-                        size: Vector2(34, 34),
-                      ),
-                    ],
-                  ),
+                        TextComponent(
+                          text: '+',
+                          position: Vector2(74, 0),
+                          textRenderer: TextPaint(
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: Config.gameTextFamily,
+                                fontSize: 20),
+                          ),
+                        ),
+                        SpriteAnimationComponent.fromFrameData(
+                          upKeyImg,
+                          position: Vector2(92, 0),
+                          SpriteAnimationData.sequenced(
+                              amount: 2,
+                              stepTime: Stage.objectStepTime,
+                              textureSize: Vector2(21, 20)),
+                          size: Vector2(34, 34),
+                        ),
+                        SpriteAnimationComponent.fromFrameData(
+                          downKeyImg,
+                          position: Vector2(128, 0),
+                          SpriteAnimationData.sequenced(
+                              amount: 2,
+                              stepTime: Stage.objectStepTime,
+                              textureSize: Vector2(21, 20)),
+                          size: Vector2(34, 34),
+                        ),
+                        SpriteAnimationComponent.fromFrameData(
+                          leftKeyImg,
+                          position: Vector2(164, 0),
+                          SpriteAnimationData.sequenced(
+                              amount: 2,
+                              stepTime: Stage.objectStepTime,
+                              textureSize: Vector2(21, 20)),
+                          size: Vector2(34, 34),
+                        ),
+                        SpriteAnimationComponent.fromFrameData(
+                          rightKeyImg,
+                          position: Vector2(200, 0),
+                          SpriteAnimationData.sequenced(
+                              amount: 2,
+                              stepTime: Stage.objectStepTime,
+                              textureSize: Vector2(21, 20)),
+                          size: Vector2(34, 34),
+                        ),
+                      ],
+                    ),
                 ]),
           );
           break;
@@ -837,17 +849,20 @@ class Tutorial {
                       size: Vector2(300, 60),
                       anchor: Anchor.center,
                       children: [
-                        SpriteAnimationComponent.fromFrameData(
-                          pKeyImg,
-                          SpriteAnimationData.sequenced(
-                              amount: 2,
-                              stepTime: Stage.objectStepTime,
-                              textureSize: Vector2(21, 20)),
-                          size: Vector2(34, 34),
-                        ),
+                        if (kIsWeb)
+                          SpriteAnimationComponent.fromFrameData(
+                            pKeyImg,
+                            SpriteAnimationData.sequenced(
+                                amount: 2,
+                                stepTime: Stage.objectStepTime,
+                                textureSize: Vector2(21, 20)),
+                            size: Vector2(34, 34),
+                          ),
                         TextComponent(
-                          text: loc.pocketAbilityTutorial4,
-                          position: Vector2(40, 5),
+                          text: kIsWeb
+                              ? loc.pocketAbilityTutorial4
+                              : loc.pocketAbilityTutorial4_2,
+                          position: kIsWeb ? Vector2(40, 5) : Vector2(50, 5),
                           textRenderer: TextPaint(
                             style: const TextStyle(
                                 color: Colors.white,
@@ -914,18 +929,19 @@ class Tutorial {
                       size: Vector2(300, 60),
                       anchor: Anchor.center,
                       children: [
-                        SpriteAnimationComponent.fromFrameData(
-                          pKeyImg,
-                          SpriteAnimationData.sequenced(
-                              amount: 2,
-                              stepTime: Stage.objectStepTime,
-                              textureSize: Vector2(21, 20)),
-                          position: Vector2(210, 0),
-                          size: Vector2(34, 34),
-                        ),
+                        if (kIsWeb)
+                          SpriteAnimationComponent.fromFrameData(
+                            pKeyImg,
+                            SpriteAnimationData.sequenced(
+                                amount: 2,
+                                stepTime: Stage.objectStepTime,
+                                textureSize: Vector2(21, 20)),
+                            position: Vector2(210, 0),
+                            size: Vector2(34, 34),
+                          ),
                         TextComponent(
                           text: loc.pocketAbilityTutorial4,
-                          position: Vector2(28, 5),
+                          position: kIsWeb ? Vector2(28, 5) : Vector2(60, 5),
                           textRenderer: TextPaint(
                             style: const TextStyle(
                                 color: Colors.white,
@@ -933,16 +949,17 @@ class Tutorial {
                                 fontSize: 15),
                           ),
                         ),
-                        TextComponent(
-                          text: "or",
-                          position: Vector2(250, 5),
-                          textRenderer: TextPaint(
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontFamily: Config.gameTextFamily,
-                                fontSize: 15),
+                        if (kIsWeb)
+                          TextComponent(
+                            text: "or",
+                            position: Vector2(250, 5),
+                            textRenderer: TextPaint(
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: Config.gameTextFamily,
+                                  fontSize: 15),
+                            ),
                           ),
-                        ),
                         TextComponent(
                           text: loc.pocketAbilityTutorial5,
                           position: Vector2(150, 45),
@@ -1255,11 +1272,13 @@ class Tutorial {
     if (current == TutorialState.move) {
       tutorialArea.removeAll(tutorialArea.children);
       CustomPainter? painter;
+      // キーボード表示はwebのみ
       List<Component> components = [
-        SpriteAnimationComponent(
-            animation: tutorial1KeyboardAnimation,
-            position: Vector2(180, 345),
-            anchor: Anchor.topCenter)
+        if (kIsWeb)
+          SpriteAnimationComponent(
+              animation: tutorial1KeyboardAnimation,
+              position: Vector2(180, 345),
+              anchor: Anchor.topCenter)
       ];
       switch (Config().playerControllButtonType) {
         case PlayerControllButtonType.joyStick:
@@ -1269,10 +1288,11 @@ class Tutorial {
                 Vector2(0, GameSeq.topPaddingSize.y) + GameSeq.joyStickPosition,
           );
           components.addAll([
-            SpriteComponent(
-                sprite: tutorial1OrAndArrowSprite,
-                position: Vector2(180, 395),
-                anchor: Anchor.topCenter),
+            if (kIsWeb)
+              SpriteComponent(
+                  sprite: tutorial1OrAndArrowSprite,
+                  position: Vector2(180, 395),
+                  anchor: Anchor.topCenter),
             CircleComponent(
               radius: GameSeq.joyStickRadius,
               anchor: Anchor.center,
@@ -1372,10 +1392,11 @@ class Tutorial {
             radius: 3,
           );
           components.addAll([
-            SpriteComponent(
-                sprite: tutorial1OrSprite,
-                position: Vector2(180, 405),
-                anchor: Anchor.topCenter),
+            if (kIsWeb)
+              SpriteComponent(
+                  sprite: tutorial1OrSprite,
+                  position: Vector2(180, 405),
+                  anchor: Anchor.topCenter),
             SpriteComponent(
                 sprite: tutorial1TapToMoveSprite,
                 position: Vector2(180, 600),
@@ -1405,10 +1426,11 @@ class Tutorial {
             radius: 3,
           );
           components.addAll([
-            SpriteComponent(
-                sprite: tutorial1OrSprite,
-                position: Vector2(180, 405),
-                anchor: Anchor.topCenter),
+            if (kIsWeb)
+              SpriteComponent(
+                  sprite: tutorial1OrSprite,
+                  position: Vector2(180, 405),
+                  anchor: Anchor.topCenter),
             SpriteComponent(
                 sprite: tutorial1TapToMoveSprite,
                 position: Vector2(180, 440),
