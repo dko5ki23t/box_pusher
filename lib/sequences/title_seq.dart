@@ -12,6 +12,7 @@ import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
 //import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   //late final TextComponent titleText;
@@ -23,6 +24,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
   late final GameTextButton continueFromTreasureButton;
   late final GameTextButton languageButton;
   late final GameTextButton creditButton;
+  late final GameTextButton privacyPolicyButton;
   //late final GameTextButton versionLogButton;
   late final GameTextButton achievementsButton;
   late final RectangleComponent highScoreRectangle;
@@ -134,6 +136,15 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
         game.pushSeqOverlay('credit_notation_dialog');
       },
     );
+    privacyPolicyButton = GameTextButton(
+      size: Vector2(150.0, 20.0),
+      position: Vector2(180.0, 600.0),
+      anchor: Anchor.center,
+      text: loc.privacyPolicy,
+      onReleased: () async {
+        await launchUrl(Uri.https('shimarinapps.com', '/privacy-policy'));
+      },
+    );
     buttonGroup = GameButtonGroup(buttons: [
       languageButton,
       creditButton,
@@ -141,6 +152,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       continueButton,
       if (_existLastTreasureStageData) continueFromTreasureButton,
       achievementsButton,
+      privacyPolicyButton,
     ]);
     highScoreRectangle = RectangleComponent(
       size: Vector2(120.0, 30.0),
@@ -213,6 +225,7 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       //debugButton,
       highScoreRectangle,
       versionText,
+      privacyPolicyButton,
       // TODO: 例外発生 -> MissingPluginException (MissingPluginException(No implementation found for method share on channel dev.fluttercommunity.plus/share))
       // 当面必要ないと思うのでコメントアウト
       /*GameTextButton(
@@ -377,5 +390,6 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     //versionLogButton.text = loc.versionLog;
     achievementsButton.text = loc.achievements;
     //debugButton.text = loc.debug;
+    privacyPolicyButton.text = loc.privacyPolicy;
   }
 }

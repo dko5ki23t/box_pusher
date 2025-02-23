@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:url_launcher/url_launcher.dart';
 
 /// HR
 class CustomHorizonBuilder extends MarkdownElementBuilder {
@@ -53,6 +54,7 @@ class CreditNotationDialogState extends State<CreditNotationDialog> {
                 'hhrr': CustomHorizonBuilder(),
               },
               data: creditNotation,
+              onTapLink: (text, href, title) => launchUrl(Uri.parse(href!)),
               listItemCrossAxisAlignment:
                   MarkdownListItemCrossAxisAlignment.start,
             ),

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:push_and_merge/ad_banner.dart';
 import 'package:push_and_merge/box_pusher_game.dart';
 import 'package:push_and_merge/config.dart';
@@ -12,11 +13,13 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void main({
   bool testMode = kDebugMode,
-  bool showAd = false,
+  bool showAd = true,
   bool firebase = true,
 }) async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (showAd) {
+  // ナビゲーションバーやステータスバーを表示しない
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  if (!kIsWeb && showAd) {
     MobileAds.instance.initialize();
   }
   if (firebase) {
