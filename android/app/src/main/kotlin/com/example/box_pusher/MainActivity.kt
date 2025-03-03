@@ -1,4 +1,4 @@
-package com.example.box_pusher
+package com.shimarinapps.oshigoto
 
 import io.flutter.embedding.android.FlutterActivity
 

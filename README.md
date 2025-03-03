@@ -46,3 +46,4 @@ Play with
 - マージ力アップ能力のアイコン：[Combine](https://icons8.com/icon/ZKMlZLbgN6Tn/combine) アイコン by [Icons8](https://icons8.com)
 - トロフィーのアイコン：[優勝トロフィーのシルエット | 無料の Ai・PNG 白黒シルエットイラスト](https://www.silhouette-illust.com/illust/49259)
 - チェックマークのアイコン：[チェックマークのシルエット | 無料の Ai・PNG 白黒シルエットイラスト](https://www.silhouette-illust.com/illust/1712)
+- フィーチャーグラフィックの背景素材：[シンプルなフレームの背景(8 種) | OKUMONO](https://sozaino.site/archives/5840)
