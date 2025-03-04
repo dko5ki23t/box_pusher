@@ -125,7 +125,10 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       position: Vector2(300.0, 30.0),
       anchor: Anchor.center,
       text: loc.language,
-      onReleased: () => game.changeLocale(),
+      onReleased: () async {
+        game.changeLocale();
+        await game.saveUserConfigData();
+      },
     );
     creditButton = GameTextButton(
       size: Vector2(80.0, 20.0),

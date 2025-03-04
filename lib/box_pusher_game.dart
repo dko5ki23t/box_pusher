@@ -314,6 +314,17 @@ class BoxPusherGame extends FlameGame
       dev.log(e.toString());
     }
     Config().showTutorial = showTutorial;
+    try {
+      final String langName = _userConfigData['language'];
+      for (final l in Language.values) {
+        if (l.name == langName) {
+          lang = l;
+          break;
+        }
+      }
+    } catch (e) {
+      dev.log(e.toString());
+    }
   }
 
   /// 【デバッグ】文字列からセーブデータをインポート->成功したかどうかを返す
@@ -389,6 +400,7 @@ class BoxPusherGame extends FlameGame
     _userConfigData['controller'] = Config().playerControllButtonType.index;
     _userConfigData['volume'] = Config().audioVolume;
     _userConfigData['showTutorial'] = Config().showTutorial;
+    _userConfigData['language'] = lang.name;
     await _saveSaveData();
   }
 
@@ -397,6 +409,7 @@ class BoxPusherGame extends FlameGame
       'controller': PlayerControllButtonType.onScreenBottom.index,
       'volume': 100,
       'showTutorial': true,
+      'language': lang.name,
     };
   }
 
