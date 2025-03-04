@@ -83,6 +83,9 @@ class BoxPusherGame extends FlameGame
   /// ゲームシーケンスでのズーム倍率
   double gameZoom = 1.0;
 
+  /// ズーム操作し始めのズーム
+  late double startZoom;
+
   /// セーブデータファイル
   late final File saveDataFile;
 
@@ -116,9 +119,6 @@ class BoxPusherGame extends FlameGame
   static Vector2 get baseSize => Vector2(360.0, 640.0);
   Vector2 contentSize = Vector2(0.0, 0.0);
   double contentScale = 0.0;
-
-  /// ズーム操作し始めのズーム
-  late double startZoom;
 
   /// ドラッグ操作でカメラ移動できるか(ジョイスティックをドラッグ中ならfalseにする)
   bool canMoveCamera = true;
@@ -532,6 +532,7 @@ class BoxPusherGame extends FlameGame
       return;
     }
     gameZoom = camera.viewfinder.zoom;
+    startZoom = gameZoom;
   }
 
   @override
@@ -544,7 +545,7 @@ class BoxPusherGame extends FlameGame
     }
     final currentScale = info.scale.global;
     if (!currentScale.isIdentity()) {
-      gameZoom *= currentScale.y;
+      gameZoom = startZoom + (currentScale.y - 1.0);
       clampZoom();
     } else {
       // 実行されない（CostomScaleDetectorを使用した弊害？ https://github.com/flame-engine/flame/issues/2635）
