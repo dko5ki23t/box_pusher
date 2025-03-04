@@ -11,6 +11,7 @@ import 'package:push_and_merge/components/version_log_dialog.dart';
 import 'package:push_and_merge/config.dart';
 import 'package:push_and_merge/custom_scale_detector.dart';
 import 'package:push_and_merge/game_core/common.dart';
+import 'package:push_and_merge/game_core/stage_objs/player.dart';
 import 'package:push_and_merge/game_core/stage_objs/stage_obj.dart';
 import 'package:push_and_merge/sequences/achievements_seq.dart';
 import 'package:push_and_merge/sequences/clear_seq.dart';
@@ -456,6 +457,15 @@ class BoxPusherGame extends FlameGame
       // 移動チュートリアル中ならその画面も変更
       gameSeq.tutorial.updateMoveTutorial();
     }
+  }
+
+  bool isPlayerAbilityAquired(PlayerAbility ability) {
+    if (_router.routes['game']!.firstChild() != null) {
+      final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+      return gameSeq.stage.player.isAbilityAquired[ability]!;
+    }
+    // ゲームシーケンスが無いのでfalseを返す
+    return false;
   }
 
   void setGameover() {

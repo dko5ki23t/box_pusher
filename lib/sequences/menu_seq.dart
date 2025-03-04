@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:push_and_merge/box_pusher_game.dart';
 import 'package:push_and_merge/components/button.dart';
 import 'package:push_and_merge/config.dart';
+import 'package:push_and_merge/game_core/stage_objs/player.dart';
 import 'package:push_and_merge/sequences/sequence.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
@@ -97,11 +98,24 @@ class MenuSeq extends Sequence with KeyboardHandler {
       text: "${loc.controller}${Config().playerControllButtonType.index + 1}",
       onReleased: () {
         int index = Config().playerControllButtonType.index + 1;
-        if (!kIsWeb && index == PlayerControllButtonType.noButton.index) {
-          ++index;
-        }
-        if (index >= PlayerControllButtonType.values.length) {
-          index = 0;
+        bool canSelect = false;
+        while (!canSelect) {
+          canSelect = true;
+          // モバイル版ではキーボード使えないため、「操作ボタンなし」は選べないようにする
+          if (!kIsWeb && index == PlayerControllButtonType.noButton.index) {
+            ++index;
+            canSelect = false;
+          }
+          // 斜め移動能力が無い場合は操作ボタン「画面下部2」を選べないようにする
+          if (index == PlayerControllButtonType.onScreenBottom2.index &&
+              !game.isPlayerAbilityAquired(PlayerAbility.leg)) {
+            ++index;
+            canSelect = false;
+          }
+          if (index >= PlayerControllButtonType.values.length) {
+            index = 0;
+            canSelect = false;
+          }
         }
         Config().playerControllButtonType =
             PlayerControllButtonType.values[index];
