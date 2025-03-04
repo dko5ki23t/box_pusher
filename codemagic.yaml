@@ -5,13 +5,13 @@ workflows:
     max_build_duration: 120
     environment:
       android_signing:
-        - keystore_reference
+        - oshigoto_key
       groups:
         - google_play # <-- (Includes GCLOUD_SERVICE_ACCOUNT_CREDENTIALS)
       vars:
-        PACKAGE_NAME: "io.codemagic.flutteryaml" # <-- Put your package name here
+        PACKAGE_NAME: "com.shimarinapps.oshigoto" # <-- Put your package name here
         GOOGLE_PLAY_TRACK: "alpha"
-      flutter: stable
+      flutter: 3.27.3
     scripts:
       - name: Set up local.properties
         script: |
@@ -39,8 +39,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - user_1@example.com
-          - user_2@example.com
+          - dwo5rk23t@gmail.com
         notify:
           success: true
           failure: false
@@ -57,11 +56,11 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: io.codemagic.flutteryaml
+        bundle_identifier: com.shimarinapps.oshigoto
       vars:
         APP_ID: 1111111111 # <-- Put your APP ID here
-      flutter: stable
-      xcode: latest # <-- set to specific version e.g. 14.3, 15.0 to avoid unexpected updates.
+      flutter: 3.27.3
+      xcode: 15.4 # <-- set to specific version e.g. 14.3, 15.0 to avoid unexpected updates.
       cocoapods: default
     scripts:
       - name: Set up code signing settings on Xcode project
