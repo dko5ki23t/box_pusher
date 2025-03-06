@@ -59,6 +59,9 @@ enum TutorialState {
 
   /// マージの能力
   mergeAbility,
+
+  /// 宝箱を開けた
+  openTreasureBox,
 }
 
 /// チュートリアルを管理するclass
@@ -324,6 +327,7 @@ class Tutorial {
   late final Image rabbitImg;
   late final Image kangarooImg;
   late final Image turtleImg;
+  late final Image treasureBoxImg;
   late final Image shiftKeyImg;
   late final Image upKeyImg;
   late final Image downKeyImg;
@@ -359,6 +363,7 @@ class Tutorial {
     rabbitImg = await Flame.images.load('rabbit_org.png');
     kangarooImg = await Flame.images.load('kangaroo_org.png');
     turtleImg = await Flame.images.load('turtle_org.png');
+    treasureBoxImg = await Flame.images.load('treasure_box_opened.png');
     shiftKeyImg = await Flame.images.load('shift_key_icon.png');
     upKeyImg = await Flame.images.load('up_key_icon.png');
     downKeyImg = await Flame.images.load('down_key_icon.png');
@@ -1269,6 +1274,143 @@ class Tutorial {
                 ]),
           );
           break;
+        case TutorialState.openTreasureBox:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = null;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              CircleComponent(
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(0, 90),
+                anchor: Anchor.center,
+                scale: Vector2.all(1.4),
+                radius: 20,
+                paint: Paint()..color = const Color(0xc0ffffff),
+              ),
+              SpriteAnimationComponent.fromFrameData(
+                treasureBoxImg,
+                SpriteAnimationData.sequenced(
+                    amount: 2,
+                    stepTime: Stage.objectStepTime,
+                    textureSize: Stage.cellSize),
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(0, 90),
+                anchor: Anchor.center,
+                scale: Vector2.all(1.2),
+              ),
+              TextComponent(
+                text: game.localization.treasureBoxTutorial1,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(0, 40),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 25,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.treasureBoxTutorial2,
+                position: Vector2(
+                        BoxPusherGame.baseSize.x,
+                        640.0 -
+                            GameSeq.topPaddingSize.y -
+                            GameSeq.menuButtonAreaSize.y) *
+                    0.5,
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 22,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.treasureBoxTutorial3,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 +
+                    Vector2(0, 50),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.treasureBoxTutorial4,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 +
+                    Vector2(0, 90),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.treasureBoxTutorial5,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 +
+                    Vector2(0, 130),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              tapOrSpaceToReturnComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
+                game,
+              ),
+            ],
+          );
+          break;
         default:
           break;
       }
@@ -1393,6 +1535,7 @@ class Tutorial {
         return true;
       case TutorialState.animals:
       case TutorialState.girl:
+      case TutorialState.enemy:
       case TutorialState.other:
       case TutorialState.handAbility:
       case TutorialState.legAbility:
@@ -1400,6 +1543,7 @@ class Tutorial {
       case TutorialState.armerAbility:
       case TutorialState.mergeAbility:
       case TutorialState.eyeAbility:
+      case TutorialState.openTreasureBox:
         return true;
       default:
         break;
@@ -1425,6 +1569,9 @@ class Tutorial {
         current = TutorialState.girl;
         return true;
       case TutorialState.girl:
+        current = TutorialState.enemy;
+        return true;
+      case TutorialState.enemy:
         current = TutorialState.other;
         return true;
       case TutorialState.other:
@@ -1434,6 +1581,7 @@ class Tutorial {
       case TutorialState.armerAbility:
       case TutorialState.eyeAbility:
       case TutorialState.mergeAbility:
+      case TutorialState.openTreasureBox:
         current = null;
         return true;
       default:

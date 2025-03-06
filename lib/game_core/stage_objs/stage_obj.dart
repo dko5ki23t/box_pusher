@@ -1455,6 +1455,8 @@ abstract class StageObj {
         stage.foundTreasureCount++;
         // 最後に宝箱を開けた状況として保存（スコアは0で保存される）
         stage.openTreasureBoxInUpdate = true;
+        // 宝箱を開けた際のチュートリアル表示
+        stage.tutorial.current = TutorialState.openTreasureBox;
       } else if (obj.type == StageObjType.gorilla) {
         // 移動先がゴリラだった場合
         // 手の能力を習得
