@@ -77,8 +77,8 @@ rect, -50, -50, -50, 50, 0,101,101
 rect, -49, -50, 49, -50, 0,99,99
 rect, 50, -50, 50, 50, 0,101,101
 rect, -49, 50, 49, 50, 0,99,99
-distance, 0, 0, 0, 0, 4,41,26
-distance, 0, 0, 0, 0, 8,104,67, spike, 1,4, trap, 1,5
+distance, 0, 0, 0, 0, 4,41,26, bomb, 1,1
+distance, 0, 0, 0, 0, 8,104,67, spike, 1,4, trap, 1,5, bomb, 1,1
 distance, 0, 0, 0, 0, 10,74,48, spike, 1,5, trap, 1,3
 distance, 0, 0, 0, 0, 20,281,140, swordsman, 1,19, guardian, 1,5, bomb, 1,2
 distance, 0, 0, 0, 0, 25,111,55, swordsman, 2,7, archer, 1,7, drill, 1,7, trap, 1,7, bomb, 1,2
