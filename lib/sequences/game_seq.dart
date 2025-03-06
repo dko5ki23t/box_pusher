@@ -902,10 +902,11 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     // カメラズームをリセット
     game.camera.viewfinder.zoom = 1.0;
     // ステージ初期化
-    stage.initialize(game.camera,
+    bool isContinue = stage.initialize(game.camera,
         game.useLastTreasureData ? game.lastTreasureStageData : game.stageData);
+    tutorial.current = TutorialState.move;
     // 今回初めてプレイではない場合はチュートリアルスキップ
-    if (!Config().showTutorial) {
+    if (isContinue || !Config().showTutorial) {
       tutorial.current = null;
     }
 

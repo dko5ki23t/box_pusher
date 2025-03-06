@@ -57,6 +57,17 @@ class Version {
 
   @override
   String toString() => '$major.$minor.$patch';
+
+  bool isNewer(Version other) {
+    if (major > other.major) return true;
+    if (major == other.major) {
+      if (minor > other.minor) return true;
+      if (minor == other.minor) {
+        if (patch > other.patch) return true;
+      }
+    }
+    return false;
+  }
 }
 
 class BoxPusherGame extends FlameGame
@@ -308,10 +319,13 @@ class BoxPusherGame extends FlameGame
     }
     Config().audioVolume = volume;
     bool showTutorial = true;
-    try {
-      showTutorial = _userConfigData['showTutorial'];
-    } catch (e) {
-      dev.log(e.toString());
+    // 1.1.0以前のバージョンのセーブデータがある場合は必ずチュートリアルを挟む
+    if (_saveDataVersion.isNewer(Version(1, 1, 0))) {
+      try {
+        showTutorial = _userConfigData['showTutorial'];
+      } catch (e) {
+        dev.log(e.toString());
+      }
     }
     Config().showTutorial = showTutorial;
     try {

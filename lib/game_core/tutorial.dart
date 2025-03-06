@@ -9,6 +9,7 @@ import 'package:push_and_merge/game_core/common.dart';
 import 'package:push_and_merge/game_core/stage.dart';
 import 'package:push_and_merge/game_core/stage_objs/girl.dart';
 import 'package:push_and_merge/game_core/stage_objs/player.dart';
+import 'package:push_and_merge/game_core/stage_objs/swordsman.dart';
 import 'package:push_and_merge/sequences/game_seq.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
@@ -34,6 +35,9 @@ enum TutorialState {
 
   /// 女の子を助けよう
   girl,
+
+  /// 敵に触れるとゲームオーバー
+  enemy,
 
   /// その他操作
   other,
@@ -310,6 +314,9 @@ class Tutorial {
   late final Image tutorial3Img;
   late final Image spaceKeyImg;
   late final Image girlImg;
+  late final Image spikeImg;
+  late final Image swordsmanImg;
+  late final Image swordsmanAttackImg;
   late final Image pinchInOutImg;
   late final Image mouseWheelImg;
   late final Image gotAbilityImg;
@@ -342,6 +349,9 @@ class Tutorial {
     tutorial3Img = await Flame.images.load('tutorial3.png');
     spaceKeyImg = await Flame.images.load('space_key_icon.png');
     girlImg = await Flame.images.load('girl_org.png');
+    spikeImg = await Flame.images.load('spike.png');
+    swordsmanImg = await Flame.images.load('swordsman.png');
+    swordsmanAttackImg = await Flame.images.load('swordsman_attackD1.png');
     pinchInOutImg = await Flame.images.load('pinch_inout.png');
     mouseWheelImg = await Flame.images.load('mouse_wheel.png');
     gotAbilityImg = await Flame.images.load('tutorial_ability.png');
@@ -492,7 +502,7 @@ class Tutorial {
             [
               ButtonComponent(
                 onReleased: () {
-                  current = TutorialState.other;
+                  current = TutorialState.enemy;
                 },
                 size: BoxPusherGame.baseSize,
                 button: RectangleComponent(
@@ -560,6 +570,149 @@ class Tutorial {
                     fontFamily: Config.gameTextFamily,
                     color: Colors.white,
                     fontSize: 25,
+                  ),
+                ),
+              ),
+              tapOrSpaceToNextComponent(
+                Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
+                game,
+              ),
+            ],
+          );
+          break;
+        case TutorialState.enemy:
+          tutorialArea.addAll(
+            [
+              ButtonComponent(
+                onReleased: () {
+                  current = TutorialState.other;
+                },
+                size: BoxPusherGame.baseSize,
+                button: RectangleComponent(
+                    size: BoxPusherGame.baseSize,
+                    paint: Paint()..color = const Color(0x80000000)),
+              ),
+              CircleComponent(
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(40, 90),
+                anchor: Anchor.center,
+                scale: Vector2.all(1.4),
+                radius: 20,
+                paint: Paint()..color = const Color(0xc0ffffff),
+              ),
+              SpriteAnimationComponent.fromFrameData(
+                spikeImg,
+                SpriteAnimationData.sequenced(
+                    amount: 2,
+                    stepTime: Stage.objectStepTime,
+                    textureSize: Stage.cellSize),
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(40, 90),
+                anchor: Anchor.center,
+                scale: Vector2.all(1.2),
+              ),
+              CircleComponent(
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(-40, 90),
+                anchor: Anchor.center,
+                scale: Vector2.all(1.4),
+                radius: 30,
+                paint: Paint()..color = const Color(0xc0ffffff),
+              ),
+              SpriteAnimationComponent(
+                animation: SpriteAnimation.spriteList(
+                  [
+                    for (int i = 0; i < 5; i++)
+                      Sprite(swordsmanAttackImg,
+                          srcPosition: Vector2(i * 96, 0),
+                          srcSize: Vector2(96, 64)),
+                    for (int i = 0; i < 3; i++) ...[
+                      for (int j = 0; j < 3; j++)
+                        Sprite(swordsmanImg, srcSize: Stage.cellSize),
+                      for (int j = 0; j < 3; j++)
+                        Sprite(swordsmanImg,
+                            srcPosition: Vector2(32, 0),
+                            srcSize: Stage.cellSize),
+                    ],
+                  ],
+                  stepTime: Swordsman.attackStepTime,
+                ),
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(-38, 124),
+                anchor: Anchor.topCenter,
+                scale: Vector2.all(1.2),
+              ),
+              TextComponent(
+                text: game.localization.caution,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 -
+                    Vector2(0, 20),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 25,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.enemyTutorial1,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 +
+                    Vector2(0, 20),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 22,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.enemyTutorial2,
+                position: Vector2(
+                            BoxPusherGame.baseSize.x,
+                            640.0 -
+                                GameSeq.topPaddingSize.y -
+                                GameSeq.menuButtonAreaSize.y) *
+                        0.5 +
+                    Vector2(0, 60),
+                anchor: Anchor.center,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 22,
                   ),
                 ),
               ),
@@ -1015,6 +1168,28 @@ class Tutorial {
                           color: Colors.white,
                           fontFamily: Config.gameTextFamily,
                           fontSize: 15),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 430),
+                    anchor: Anchor.center,
+                    text: loc.armerAbilityTutorial4,
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 15),
+                    ),
+                  ),
+                  TextComponent(
+                    position: Vector2(BoxPusherGame.baseSize.x * 0.5, 460),
+                    anchor: Anchor.center,
+                    text: loc.armerAbilityTutorial5,
+                    textRenderer: TextPaint(
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: Config.gameTextFamily,
+                          fontSize: 12),
                     ),
                   ),
                 ]),
