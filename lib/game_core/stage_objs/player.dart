@@ -235,7 +235,10 @@ class Player extends StageObj {
           mergeRangeFunc: isAbilityAvailable(PlayerAbility.merge)
               ? (pos) => PointDistanceRange(pos, 2)
               : null,
-          mergeDamageBase: isAbilityAvailable(PlayerAbility.merge) ? 1 : 0,
+          mergeDamageBase: isAbilityAvailable(PlayerAbility.merge) ||
+                  Config().mergeDamageFromBeginning
+              ? 1
+              : 0,
           mergePowerBase: isAbilityAvailable(PlayerAbility.merge) ? 1 : 0,
           mergeDamageBasedMergePower: Config().mergeDamageBasedMergePower &&
               isAbilityAvailable(PlayerAbility.merge),

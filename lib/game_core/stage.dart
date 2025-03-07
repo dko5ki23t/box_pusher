@@ -317,8 +317,8 @@ class Stage {
   //List<Component> objInBlockMapView = [];
 
   /// 【テストモード】時間計測
-  StopWatchLog? _stopWatchLog1;
-  StopWatchLog? _stopWatchLog2;
+  StopWatchLog? stopWatchLog1;
+  StopWatchLog? stopWatchLog2;
 
   /// ゲームワールド
   final World gameWorld;
@@ -336,8 +336,8 @@ class Stage {
     _objFactory = StageObjFactory();
     // TODO
     if (kDebugMode) {
-      _stopWatchLog1 = StopWatchLog();
-      _stopWatchLog2 = StopWatchLog();
+      stopWatchLog1 = StopWatchLog();
+      stopWatchLog2 = StopWatchLog();
     }
   }
 
@@ -1373,7 +1373,8 @@ class Stage {
     bool playerEndMoving = (before != Move.none && player.moving == Move.none);
     if (playerStartMoving || playerEndMoving) {
       // 時間計測開始
-      _stopWatchLog1?.start();
+      stopWatchLog1?.clearStoredMessages();
+      stopWatchLog1?.start();
     }
     // コンベア更新
     for (final belt in beltPoints) {
@@ -1402,8 +1403,9 @@ class Stage {
     _setCameraBounds(camera);
 
     if (playerStartMoving || playerEndMoving) {
+      stopWatchLog2?.clearStoredMessages();
       // 時間計測開始
-      _stopWatchLog2?.start();
+      stopWatchLog2?.start();
     }
     // 床類更新（氷でアイテムを滑らす等）
     for (final p in updateTargetRangeSet) {
@@ -1416,12 +1418,12 @@ class Stage {
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
-      _stopWatchLog2?.stop("Stage.update() sec1");
+      stopWatchLog2?.stop("Stage.update() sec1", store: true);
     }
 
     if (playerStartMoving || playerEndMoving) {
       // 時間計測開始
-      _stopWatchLog2?.start();
+      stopWatchLog2?.start();
     }
     // 敵更新
     final currentEnemies = [...enemies.iterable]
@@ -1443,11 +1445,11 @@ class Stage {
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
-      _stopWatchLog2?.stop("Stage.update() sec2");
+      stopWatchLog2?.stop("Stage.update() sec2", store: true);
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測開始
-      _stopWatchLog2?.start();
+      stopWatchLog2?.start();
     }
     {
       // 同じレベルの敵同士が同じ位置になったらマージしてレベルアップ
@@ -1474,11 +1476,11 @@ class Stage {
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
-      _stopWatchLog2?.stop("Stage.update() sec3");
+      stopWatchLog2?.stop("Stage.update() sec3", store: true);
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測開始
-      _stopWatchLog2?.start();
+      stopWatchLog2?.start();
     }
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
     final currentBoxes = [...boxes.iterable]
@@ -1493,11 +1495,11 @@ class Stage {
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
-      _stopWatchLog2?.stop("Stage.update() sec4");
+      stopWatchLog2?.stop("Stage.update() sec4", store: true);
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測開始
-      _stopWatchLog2?.start();
+      stopWatchLog2?.start();
     }
 
     // プレイヤーがポケットに入れているオブジェクトも、対応しているなら更新
@@ -1519,7 +1521,7 @@ class Stage {
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
-      _stopWatchLog2?.stop("Stage.update() sec5");
+      stopWatchLog2?.stop("Stage.update() sec5", store: true);
     }
 
     // 敵の攻撃について処理
@@ -1573,7 +1575,7 @@ class Stage {
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測開始
-      _stopWatchLog2?.start();
+      stopWatchLog2?.start();
     }
 
     // マージによる影響をクリア
@@ -1622,11 +1624,11 @@ class Stage {
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
-      _stopWatchLog2?.stop("Stage.update() sec6");
+      stopWatchLog2?.stop("Stage.update() sec6", store: true);
     }
     if (playerStartMoving || playerEndMoving) {
       // 時間計測終了
-      _stopWatchLog1?.stop("Stage.update()");
+      stopWatchLog1?.stop("Stage.update()", store: true);
     }
   }
 

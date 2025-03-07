@@ -278,6 +278,7 @@ class Config {
     consumeTrap = jsonData['consumeTrap']['value'];
     hideGameToMenu = jsonData['hideGameToMenu']['value'];
     spawnItemAroundPlayer = jsonData['spawnItemAroundPlayer']['value'];
+    mergeDamageFromBeginning = jsonData['mergeDamageFromBeginning']['value'];
     mergeDamageBasedMergePower =
         jsonData['mergeDamageBasedMergePower']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
@@ -371,6 +372,9 @@ class Config {
 
   /// マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))
   late bool spawnItemAroundPlayer;
+
+  /// 最初から、マージでダメージを与えられるようにするかどうか
+  late bool mergeDamageFromBeginning;
 
   /// マージ能力で与える敵へのダメージを、マージしたレベルに応じた値にするかどうか
   late bool mergeDamageBasedMergePower;

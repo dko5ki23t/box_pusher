@@ -237,6 +237,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final SpriteAnimation loadingAnimation;
   late final TextComponent currentPosText;
   late final TextComponent mergedCountText;
+  late final FpsTextComponent fpsText;
   late final TextComponent remainMergeCountText;
   late final SpriteAnimationComponent nextMergeItem;
   late final SpriteAnimationComponent nextMergeItem2;
@@ -871,6 +872,17 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           ),
         ),
       );
+      // 【テストモード時】FPS
+      fpsText = FpsTextComponent(
+        size: currentPosAreaSize,
+        position: Vector2(0, yPaddingSize.y + currentPosAreaSize.y * 2),
+        textRenderer: TextPaint(
+          style: const TextStyle(
+            fontFamily: Config.gameTextFamily,
+            color: Color(0xffffffff),
+          ),
+        ),
+      );
       /*
       // 【テストモード】現在の表示モード切り替えボタン
       viewModeButton = GameTextButton(
@@ -940,6 +952,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         add(currentPosText);
         // 【テストモード時】累計マージ数表示領域
         add(mergedCountText);
+        // 【テストモード時】FPS
+        add(fpsText);
         // 【テストモード】現在の表示モード切り替えボタン
         //add(viewModeButton);
       }
@@ -977,6 +991,11 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     final Map<PlayerAbility, bool> beforeAquiredAbilities = {};
     beforeAquiredAbilities.addEntries(stage.player.isAbilityAquired.entries);
     stage.update(dt, pushingMoveButton, game.world, game.camera);
+    // 【テストモード】FPSが一定値を下回ったらログ出力
+    if (game.testMode && fpsText.fpsComponent.fps < 30) {
+      stage.stopWatchLog1?.outputStoredMessages();
+      stage.stopWatchLog2?.outputStoredMessages();
+    }
     // 能力の習得状況に変化があれば、下のメニュー領域を更新
     bool existNewAbility = false;
     for (final entry in stage.player.isAbilityAquired.entries) {

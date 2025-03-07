@@ -826,6 +826,7 @@ class ValueWithAddingTime {
 class StopWatchLog {
   final Stopwatch _stopwatch;
   int startMilliseconds = 0;
+  List<String> logMessages = [];
 
   StopWatchLog() : _stopwatch = Stopwatch();
 
@@ -834,9 +835,32 @@ class StopWatchLog {
     _stopwatch.start();
   }
 
-  void stop(String logTitle) {
+  void stop(
+    String logTitle, {
+    bool store = false,
+  }) {
     _stopwatch.stop();
     int elapsed = _stopwatch.elapsedMilliseconds - startMilliseconds;
-    dev.log('[$logTitle]計測時間(ミリ秒)：$elapsed');
+    final msg = '[$logTitle]計測時間(ミリ秒)：$elapsed';
+    if (store) {
+      logMessages.add(msg);
+    } else {
+      dev.log(msg);
+    }
+  }
+
+  void outputStoredMessages({
+    bool clear = true,
+  }) {
+    for (final msg in logMessages) {
+      dev.log(msg);
+    }
+    if (clear) {
+      clearStoredMessages();
+    }
+  }
+
+  void clearStoredMessages() {
+    logMessages.clear();
   }
 }
