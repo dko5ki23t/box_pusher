@@ -217,6 +217,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   bool isDiagonalButtonMode = false;
   bool prevIsDiagonalButtonMode = false;
 
+  /// 前回オートセーブしたときの移動カウント
+  int prevAutoSavedMoveCount = 0;
+
   /// 現在押されている移動ボタンの移動方向
   Move pushingMoveButton = Move.none;
 
@@ -231,6 +234,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final Image forbiddenImg;
   late final Image settingsImg;
   late final Image diagonalMoveImg;
+  late final SpriteAnimation loadingAnimation;
   late final TextComponent currentPosText;
   late final TextComponent mergedCountText;
   late final TextComponent remainMergeCountText;
@@ -255,6 +259,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final ButtonComponent eyeAbilityButton;
   late final ButtonComponent mergeAbilityButton;
   late final ButtonComponent menuButton;
+  late final SpriteAnimationComponent loadingComponent;
   //late final GameTextButton viewModeButton;
 
   final Blink nextMergeItemBlink = Blink(showDuration: 0.4, hideDuration: 0.1);
@@ -277,6 +282,10 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     forbiddenImg = await Flame.images.load('forbidden_ability.png');
     settingsImg = await Flame.images.load('settings.png');
     diagonalMoveImg = await Flame.images.load('arrows_output.png');
+    loadingAnimation = SpriteAnimation.fromFrameData(
+        await Flame.images.load('loading.png'),
+        SpriteAnimationData.sequenced(
+            amount: 8, stepTime: 0.1, textureSize: Vector2(63, 64)));
     _stopWatchLog?.stop("GameSeq.onLoad()画像読み込み");
     // チュートリアルの画像読み込み
     _stopWatchLog?.start();
@@ -833,6 +842,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       onReleased: () => game.pushSeqNamed("menu"),
     );
     menuArea.add(menuButton);
+    // オートセーブ中領域
+    loadingComponent = SpriteAnimationComponent(
+      //animation: loadingAnimation,
+      size: Vector2(25, 25),
+      position: Vector2(330.0, 640.0 - menuButtonAreaSize.y - 30),
+    );
     if (game.testMode) {
       // 【テストモード時】現在座標表示領域
       currentPosText = TextComponent(
@@ -909,6 +924,9 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     if (isContinue || !Config().showTutorial) {
       tutorial.current = null;
     }
+    if (isContinue) {
+      prevAutoSavedMoveCount = stage.totalMoveCount;
+    }
 
     if (addComponents) {
       // 画面上部ゲーム情報領域
@@ -927,6 +945,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       }
       // チュートリアル表示領域
       add(tutorial.tutorialArea);
+      // オートセーブ中領域
+      add(loadingComponent);
     }
     // メニュー領域更新
     updateMenuArea();
@@ -1137,6 +1157,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           ]),
         ],
       ));
+    }
+    // オートセーブ
+    if (stage.totalMoveCount >= prevAutoSavedMoveCount + 10) {
+      showLoading();
+      game.setAndSaveStageData().then((value) => hideLoading());
+      prevAutoSavedMoveCount = stage.totalMoveCount;
     }
     // 【テストモード】現在座標表示
     if (game.testMode) {
@@ -1417,6 +1443,16 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       default:
         return ret.clone();
     }
+  }
+
+  /// 右下に小さくローディング中のアニメーションを表示
+  void showLoading() {
+    loadingComponent.animation = loadingAnimation;
+  }
+
+  /// 右下のローディング中アニメーションを非表示
+  void hideLoading() {
+    loadingComponent.animation = null;
   }
 
   // TapCallbacks実装時には必要(PositionComponentでは不要)
