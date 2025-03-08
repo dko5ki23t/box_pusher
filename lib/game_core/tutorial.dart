@@ -699,7 +699,7 @@ class Tutorial {
                   style: const TextStyle(
                     fontFamily: Config.gameTextFamily,
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 20,
                   ),
                 ),
               ),
@@ -717,10 +717,48 @@ class Tutorial {
                   style: const TextStyle(
                     fontFamily: Config.gameTextFamily,
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 20,
                   ),
                 ),
               ),
+              if (Config().mergeDamageFromBeginning)
+                TextComponent(
+                  text: game.localization.enemyTutorial3,
+                  position: Vector2(
+                              BoxPusherGame.baseSize.x,
+                              640.0 -
+                                  GameSeq.topPaddingSize.y -
+                                  GameSeq.menuButtonAreaSize.y) *
+                          0.5 +
+                      Vector2(0, 120),
+                  anchor: Anchor.center,
+                  textRenderer: TextPaint(
+                    style: const TextStyle(
+                      fontFamily: Config.gameTextFamily,
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              if (Config().mergeDamageFromBeginning)
+                TextComponent(
+                  text: game.localization.enemyTutorial4,
+                  position: Vector2(
+                              BoxPusherGame.baseSize.x,
+                              640.0 -
+                                  GameSeq.topPaddingSize.y -
+                                  GameSeq.menuButtonAreaSize.y) *
+                          0.5 +
+                      Vector2(0, 160),
+                  anchor: Anchor.center,
+                  textRenderer: TextPaint(
+                    style: const TextStyle(
+                      fontFamily: Config.gameTextFamily,
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
               tapOrSpaceToNextComponent(
                 Vector2(BoxPusherGame.baseSize.x * 0.5, 550),
                 game,
@@ -1252,7 +1290,9 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 400),
                     anchor: Anchor.center,
-                    text: loc.mergeAbilityTutorial3,
+                    text: Config().mergeDamageFromBeginning
+                        ? loc.mergeAbilityTutorial3_2
+                        : loc.mergeAbilityTutorial3,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,
@@ -1263,7 +1303,9 @@ class Tutorial {
                   TextComponent(
                     position: Vector2(BoxPusherGame.baseSize.x * 0.5, 430),
                     anchor: Anchor.center,
-                    text: loc.mergeAbilityTutorial4,
+                    text: Config().mergeDamageFromBeginning
+                        ? loc.mergeAbilityTutorial4_2
+                        : loc.mergeAbilityTutorial4,
                     textRenderer: TextPaint(
                       style: const TextStyle(
                           color: Colors.white,

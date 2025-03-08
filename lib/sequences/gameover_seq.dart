@@ -131,7 +131,13 @@ class GameoverSeq extends Sequence with KeyboardHandler {
     final loc = game.localization;
     takeOneStepBackButton.text =
         '${loc.takeOneStepBack}\n${loc.score} -${game.requiredScoreToUndo}';
-    takeOneStepBackButton.enabled = game.canTakeOneStepBack();
+    // あきらめるボタンから遷移したなら一手戻すボタンは機能させない
+    if (game.isGiveuping) {
+      takeOneStepBackButton.enabled = false;
+    } else {
+      takeOneStepBackButton.enabled = game.canTakeOneStepBack();
+    }
+    game.isGiveuping = false;
   }
 
   @override

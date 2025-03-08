@@ -134,6 +134,9 @@ class BoxPusherGame extends FlameGame
   /// ドラッグ操作でカメラ移動できるか(ジョイスティックをドラッグ中ならfalseにする)
   bool canMoveCamera = true;
 
+  /// メニューの「あきらめる」でゲームオーバーになったかどうか(一手戻すボタンを表示するかどうかに関わる)
+  bool isGiveuping = false;
+
   /// 言語
   Language lang = Language.japanese;
 

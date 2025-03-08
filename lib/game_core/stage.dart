@@ -1309,6 +1309,8 @@ class Stage {
     appearedItemsMap.clear();
     // 次マージ時に出現するアイテム初期化
     _updateNextMergeItem();
+    // 一手前の状態初期化
+    oneStepBeforeData = {};
     // 各分布の初期化
     if (Config().setObjInBlockWithDistributionAlgorithm) {
       prepareDistributions();

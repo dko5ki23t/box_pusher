@@ -69,6 +69,7 @@ class ConfirmExitSeq extends Sequence with KeyboardHandler {
       position: Vector2(0.0, 130.0),
       text: loc.dialogYes,
       onReleased: () {
+        game.isGiveuping = true;
         game.setGameover();
         game.popSeq();
       },
