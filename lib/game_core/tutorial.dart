@@ -783,6 +783,7 @@ class Tutorial {
                         Vector2(10, 5): Vector2(110, 40),
                         Vector2(135, 5): Vector2(90, 40),
                         Vector2(290, 5): Vector2(60, 40),
+                        Vector2(300, 600): Vector2(40, 40),
                       },
                       radius: 8,
                     )),
@@ -835,6 +836,18 @@ class Tutorial {
               TextComponent(
                 text: game.localization.otherTutorial5,
                 position: Vector2(BoxPusherGame.baseSize.x - 5, 55),
+                anchor: Anchor.topRight,
+                textRenderer: TextPaint(
+                  style: const TextStyle(
+                    fontFamily: Config.gameTextFamily,
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              TextComponent(
+                text: game.localization.otherTutorial7,
+                position: Vector2(290, 580),
                 anchor: Anchor.topRight,
                 textRenderer: TextPaint(
                   style: const TextStyle(
