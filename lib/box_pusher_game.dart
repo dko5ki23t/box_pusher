@@ -397,15 +397,38 @@ class BoxPusherGame extends FlameGame
   /// プレイ中ステージの更新・セーブデータに保存
   Future<void> setAndSaveStageData() async {
     final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-    _stageData = await gameSeq.stage.encodeStageData();
+    _stageData = gameSeq.stage.encodeStageData();
     await _saveSaveData();
   }
 
   /// 最後に宝箱を開けた状況の更新・セーブデータに保存
   Future<void> setAndSaveLastTreasureStageData() async {
     final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
-    _lastTreasureStageData = await gameSeq.stage.encodeStageData();
+    _lastTreasureStageData = gameSeq.stage.encodeStageData();
     _lastTreasureStageData['score'] = 0;
+    await _saveSaveData();
+  }
+
+  /// 一手前に戻すために必要なスコア
+  int get requiredScoreToUndo {
+    final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+    return gameSeq.stage.requiredScoreToUndo;
+  }
+
+  /// 一手前に戻せるかどうか
+  bool canTakeOneStepBack() {
+    final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+    return (gameSeq.stage.oneStepBeforeData['score'] ?? 0) >=
+        gameSeq.stage.requiredScoreToUndo;
+  }
+
+  /// 一手前のステージデータをセーブデータに保存
+  Future<void> setAndSaveOneStepBeforeStageData() async {
+    final gameSeq = _router.routes['game']!.firstChild() as GameSeq;
+    _stageData = gameSeq.stage.oneStepBeforeData;
+    _stageData['score'] =
+        _stageData['score'] - gameSeq.stage.requiredScoreToUndo;
+    _stageData['requiredScoreToUndo'] = _stageData['requiredScoreToUndo'] * 2;
     await _saveSaveData();
   }
 

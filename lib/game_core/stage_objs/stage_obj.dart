@@ -1457,6 +1457,8 @@ abstract class StageObj {
         stage.openTreasureBoxInUpdate = true;
         // 宝箱を開けた際のチュートリアル表示
         stage.tutorial.current = TutorialState.openTreasureBox;
+        // 一手戻すのに必要なスコアを更新
+        stage.updateRequiredScoreToUndo();
       } else if (obj.type == StageObjType.gorilla) {
         // 移動先がゴリラだった場合
         // 手の能力を習得
@@ -1468,6 +1470,8 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
+        // 一手戻すのに必要なスコアを更新
+        stage.updateRequiredScoreToUndo();
       } else if (obj.type == StageObjType.rabbit) {
         // 移動先がうさぎだった場合
         // 足の能力を習得
@@ -1478,6 +1482,8 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
+        // 一手戻すのに必要なスコアを更新
+        stage.updateRequiredScoreToUndo();
       } else if (obj.type == StageObjType.kangaroo) {
         // 移動先がカンガルーだった場合
         // ポケットの能力を習得
@@ -1488,6 +1494,8 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
+        // 一手戻すのに必要なスコアを更新
+        stage.updateRequiredScoreToUndo();
       } else if (obj.type == StageObjType.turtle) {
         // 移動先が亀だった場合
         // アーマーの能力を習得
@@ -1498,6 +1506,8 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
+        // 一手戻すのに必要なスコアを更新
+        stage.updateRequiredScoreToUndo();
       } else if (obj.type == StageObjType.girl) {
         // 移動先が女の子だった場合
         // マージの能力を習得
@@ -1508,6 +1518,8 @@ abstract class StageObj {
         stage.setStaticType(pos, StageObjType.none);
         // 効果音を鳴らす
         Audio().playSound(Sound.getSkill);
+        // 一手戻すのに必要なスコアを更新
+        stage.updateRequiredScoreToUndo();
       } else if (obj.type == StageObjType.shop && (obj as Shop).isPayPlace) {
         // ショップの葉っぱマーク上に立ったとき
         // ショップで支払いを要求されているのがコインの場合は

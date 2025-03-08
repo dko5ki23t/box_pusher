@@ -249,6 +249,22 @@ class Stage {
   /// 本ターンでワープしたオブジェクトのリスト(gameWorldに追加/削除の処理を行う)
   final List<StageObj> warpingObjs = [];
 
+  /// 一手前の状態
+  Map<String, dynamic> oneStepBeforeData = {};
+
+  /// 一手前に戻すのに必要なスコア
+  int requiredScoreToUndo = 100;
+
+  /// 能力ゲット、宝箱開封ごとに増える「一手前に戻すのに必要なスコア」
+  /// リスト最後以降は100000ずつ増える
+  final List<int> requiredScoreToUndoCheckPoints = [
+    500,
+    2500,
+    10000,
+    50000,
+    100000
+  ];
+
   /// プレイヤー
   late Player player;
 
@@ -417,7 +433,7 @@ class Stage {
     return ret;
   }
 
-  Future<Map<String, dynamic>> encodeStageData() async {
+  Map<String, dynamic> encodeStageData() {
     final Map<String, dynamic> ret = {};
     ret['score'] = score.actual;
     ret['coin'] = coins.actual;
@@ -472,6 +488,7 @@ class Stage {
       for (final e in nextMergeItems) e.encode()
     ];
     ret['nextMergeItems'] = nextMergeItemsList;
+    ret['requiredScoreToUndo'] = requiredScoreToUndo;
     // ここから実績用
     ret['totalGotCoins'] = coins.totalGotCoins;
     ret['totalConsumedCoins'] = coins.totalConsumedCoins;
@@ -1268,6 +1285,8 @@ class Stage {
       // マージによる出現アイテム更新
       _updateNextMergeItem();
     }
+    requiredScoreToUndo = stageData['requiredScoreToUndo'] ?? 0;
+    updateRequiredScoreToUndo();
     // ここから実績用
     coins.totalGotCoins = stageData['totalGotCoins'] ?? 0;
     coins.totalConsumedCoins = stageData['totalConsumedCoins'] ?? 0;
@@ -1306,6 +1325,7 @@ class Stage {
     // カメラの可動域設定
     _setCameraBounds(camera);
     // 各種オブジェクト作成
+    warpPoints.clear();
     _staticObjs.clear();
     animals.clear();
     spawners.clear();
@@ -1339,6 +1359,8 @@ class Stage {
         }
       }
     }
+    // 一手戻すのに必要なスコア
+    requiredScoreToUndo = 100;
     // ここから実績用
     totalMoveCount = 0;
     foundTreasureCount = 0;
@@ -1596,6 +1618,10 @@ class Stage {
     if (playerEndMoving) {
       // 【実績用】総移動数を加算
       totalMoveCount++;
+      // 一手前の状態保存
+      if (!isGameover && Config().canGoOneTurnBack) {
+        oneStepBeforeData = encodeStageData();
+      }
       // 移動によって新たな座標が見えそうなら追加する
       Point newLT = stageLT.copy();
       Point newRB = stageRB.copy();
@@ -1734,6 +1760,29 @@ class Stage {
       }
     }
     warpingObjs.clear();
+  }
+
+  /// 一手戻すのに必要なスコアを更新
+  void updateRequiredScoreToUndo() {
+    int count = 0;
+    int threshold = 0;
+    // 習得している能力の数
+    for (final aquired in player.isAbilityAquired.values) {
+      if (aquired) {
+        count++;
+      }
+    }
+    // 開けた宝箱の数
+    count += foundTreasureCount;
+    if (count > requiredScoreToUndoCheckPoints.length) {
+      threshold = requiredScoreToUndoCheckPoints.last +
+          (count - requiredScoreToUndoCheckPoints.length) * 100000;
+    } else if (count > 0) {
+      threshold = requiredScoreToUndoCheckPoints[count - 1];
+    }
+    if (threshold > requiredScoreToUndo) {
+      requiredScoreToUndo = threshold;
+    }
   }
 
   void prepareDistributions() {

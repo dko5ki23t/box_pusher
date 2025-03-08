@@ -59,6 +59,10 @@
         "desc": "最初から、マージでダメージを与えられるようにするかどうか",
         "value": true
     },
+    "canGoOneTurnBack": {
+        "desc": "一手前に戻せるようにするかどうか",
+        "value": true
+    },
     "mergeDamageBasedMergePower": {
         "desc": "マージ能力で与える敵へのダメージを、マージしたレベルに応じた値にするかどうか",
         "value": true

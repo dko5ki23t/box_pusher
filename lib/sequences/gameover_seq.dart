@@ -13,6 +13,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
   late final GameButtonGroup buttonGroup;
   late final GameMenuButton restartButton;
   late final GameMenuButton toTitleButton;
+  late final GameMenuButton takeOneStepBackButton;
 
   @override
   Future<void> onLoad() async {
@@ -59,9 +60,20 @@ class GameoverSeq extends Sequence with KeyboardHandler {
         onReleased: () async {
           game.pushSeqNamed('title');
         });
+    takeOneStepBackButton = GameMenuButton(
+        size: Vector2(120.0, 60.0),
+        position: Vector2(180.0, 445.0),
+        anchor: Anchor.center,
+        text:
+            '${loc.takeOneStepBack}\n${loc.score} -${game.requiredScoreToUndo}',
+        onReleased: () async {
+          await game.setAndSaveOneStepBeforeStageData();
+          game.pushAndInitGame(useLastTreasureData: false);
+        });
     buttonGroup = GameButtonGroup(buttons: [
       restartButton,
       toTitleButton,
+      if (Config().canGoOneTurnBack) takeOneStepBackButton,
     ]);
     addAll([
       // 背景をボタンにする(しかし押しても何も起きない)にすることで、背後のゲーム画面での操作を不可能にする
@@ -78,6 +90,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
       scoreText,
       restartButton,
       toTitleButton,
+      if (Config().canGoOneTurnBack) takeOneStepBackButton,
     ]);
   }
 
@@ -114,6 +127,14 @@ class GameoverSeq extends Sequence with KeyboardHandler {
   }
 
   @override
+  void onFocus(String? before) {
+    final loc = game.localization;
+    takeOneStepBackButton.text =
+        '${loc.takeOneStepBack}\n${loc.score} -${game.requiredScoreToUndo}';
+    takeOneStepBackButton.enabled = game.canTakeOneStepBack();
+  }
+
+  @override
   void onUnFocus() {
     // ボタン群のフォーカスをクリア
     buttonGroup.unFocus();
@@ -125,5 +146,7 @@ class GameoverSeq extends Sequence with KeyboardHandler {
     gameoverText.text = loc.gameover;
     restartButton.text = loc.tryAgain;
     toTitleButton.text = loc.toTitle;
+    takeOneStepBackButton.text =
+        '${loc.takeOneStepBack}\n${loc.score} -${game.requiredScoreToUndo}';
   }
 }

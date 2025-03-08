@@ -279,6 +279,7 @@ class Config {
     hideGameToMenu = jsonData['hideGameToMenu']['value'];
     spawnItemAroundPlayer = jsonData['spawnItemAroundPlayer']['value'];
     mergeDamageFromBeginning = jsonData['mergeDamageFromBeginning']['value'];
+    canGoOneTurnBack = jsonData['canGoOneTurnBack']['value'];
     mergeDamageBasedMergePower =
         jsonData['mergeDamageBasedMergePower']['value'];
     var vectorData = jsonData['addedScoreEffectMove']['value'];
@@ -375,6 +376,9 @@ class Config {
 
   /// 最初から、マージでダメージを与えられるようにするかどうか
   late bool mergeDamageFromBeginning;
+
+  /// 一手前に戻せるようにするかどうか
+  late bool canGoOneTurnBack;
 
   /// マージ能力で与える敵へのダメージを、マージしたレベルに応じた値にするかどうか
   late bool mergeDamageBasedMergePower;
