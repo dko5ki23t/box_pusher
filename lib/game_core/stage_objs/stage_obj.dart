@@ -1193,6 +1193,19 @@ abstract class StageObj {
         // ドリルの場合は少し違う処理
         if (toObj.type == StageObjType.drill &&
             toToObj.type == StageObjType.block) {
+          // 画面外にドリルを押す行為
+          if (toToObj == stage.mienaikabe) {
+            // これまでにpushingsに追加したものも含めて一切押せない
+            // ただし、途中でマージできるものがあるならそこまでは押せる
+            pushingsList.clear();
+            executingsList.clear();
+            if (pushingsSave.isNotEmpty) {
+              pushingsList.addAll(pushingsSave);
+              executingsList.addAll(executingsSave);
+              break;
+            }
+            return false;
+          }
           if (pushingsSave.isEmpty) {
             // ここまでpushingsに加えた中でマージしていないのであれば、
             // 押した先がブロックなら即座に破壊、かつマージと同様、一気に押せるオブジェクト（pushings）はここまで

@@ -1256,6 +1256,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
       angle: angle,
       position: position,
       button: RectangleComponent(
+        key: GameUniqueKey('PlayerControll${move.name}'),
         size: size,
         paint: Paint()
           ..color = const Color(0x80000000)
@@ -1264,7 +1265,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           AlignComponent(
             alignment: Anchor.center,
             child: SpriteComponent(
-              key: GameUniqueKey('PlayerControll'),
+              key: GameUniqueKey('PlayerControll${move.name}'),
               sprite: Sprite(playerControllArrowImg),
               size: Vector2(24.0, 24.0),
               anchor: Anchor.center,
@@ -1274,6 +1275,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         ],
       ),
       buttonDown: RectangleComponent(
+        key: GameUniqueKey('PlayerControll'),
         size: size,
         paint: Paint()
           ..color = const Color(0xC0000000)
@@ -1348,18 +1350,34 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         }
         if (stage.getLegAbility()) {
           if (Config().wideDiagonalMoveButton) {
-            clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!.values);
-            playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
-            playerControllButtonsArea!
-                .addAll(playerDiagonalMoveButtons!.values);
+            for (final c in playerStraightMoveButtons!.values) {
+              c.parent = clipByDiagonalMoveButton!;
+            }
+            //clipByDiagonalMoveButton!.addAll(playerStraightMoveButtons!.values);
+            clipByDiagonalMoveButton!.parent = playerControllButtonsArea!;
+            //playerControllButtonsArea!.add(clipByDiagonalMoveButton!);
+            for (final c in playerDiagonalMoveButtons!.values) {
+              c.parent = playerControllButtonsArea!;
+            }
+            //playerControllButtonsArea!
+            //    .addAll(playerDiagonalMoveButtons!.values);
           } else {
-            playerControllButtonsArea!
-                .addAll(playerStraightMoveButtons!.values);
-            playerControllButtonsArea!
-                .addAll(playerDiagonalMoveButtons!.values);
+            //playerControllButtonsArea!
+            //    .addAll(playerStraightMoveButtons!.values);
+            for (final c in playerStraightMoveButtons!.values) {
+              c.parent = playerControllButtonsArea!;
+            }
+            //playerControllButtonsArea!
+            //    .addAll(playerDiagonalMoveButtons!.values);
+            for (final c in playerDiagonalMoveButtons!.values) {
+              c.parent = playerControllButtonsArea!;
+            }
           }
         } else {
-          playerControllButtonsArea!.addAll(playerStraightMoveButtons!.values);
+          //playerControllButtonsArea!.addAll(playerStraightMoveButtons!.values);
+          for (final c in playerStraightMoveButtons!.values) {
+            c.parent = playerControllButtonsArea!;
+          }
         }
         break;
       case PlayerControllButtonType.onScreenBottom:
@@ -1379,9 +1397,15 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             ..position = moveButtonPosMap[type]![move]!
             ..release(); // ボタンは離す
         }
-        playerControllButtonsArea!.addAll(playerStraightMoveButtons!.values);
+        //playerControllButtonsArea!.addAll(playerStraightMoveButtons!.values);
+        for (final c in playerStraightMoveButtons!.values) {
+          c.parent = playerControllButtonsArea!;
+        }
         if (stage.getLegAbility()) {
-          playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!.values);
+          //playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!.values);
+          for (final c in playerDiagonalMoveButtons!.values) {
+            c.parent = playerControllButtonsArea!;
+          }
         }
         break;
       case PlayerControllButtonType.onScreenBottom2:
@@ -1402,12 +1426,19 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             ..release(); // ボタンは離す
         }
         if (stage.getLegAbility()) {
-          playerControllButtonsArea!.add(playerControllDiagonalModeButton);
+          //playerControllButtonsArea!.add(playerControllDiagonalModeButton);
+          playerControllDiagonalModeButton.parent = playerControllButtonsArea!;
         }
         if (stage.getLegAbility() && isDiagonalButtonMode) {
           playerControllButtonsArea!.addAll(playerDiagonalMoveButtons!.values);
+          for (final c in playerDiagonalMoveButtons!.values) {
+            c.parent = playerControllButtonsArea!;
+          }
         } else {
           playerControllButtonsArea!.addAll(playerStraightMoveButtons!.values);
+          for (final c in playerStraightMoveButtons!.values) {
+            c.parent = playerControllButtonsArea!;
+          }
         }
         break;
       case PlayerControllButtonType.joyStick:
