@@ -55,6 +55,7 @@ class Smoke extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Smoke'),
             priority: Stage.frontMovingPriority,
             size: Stage.cellSize * 5,
             anchor: Anchor.center,
@@ -89,7 +90,7 @@ class Smoke extends StageObj {
       ++turns;
       if (turns >= lastingTurns) {
         // オブジェクト削除
-        validAfterFrame = false;
+        removeAfterFrame();
       }
       // 透明度変更
       animationComponent.add(OpacityEffect.to(

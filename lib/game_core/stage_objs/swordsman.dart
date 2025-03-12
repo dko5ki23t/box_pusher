@@ -209,6 +209,7 @@ class Swordsman extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Swordsman'),
             priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

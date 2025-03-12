@@ -268,6 +268,7 @@ class Guardian extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Guardian'),
             priority: Stage.movingPriority,
             size: Stage.cellSize,
             scale: scale,

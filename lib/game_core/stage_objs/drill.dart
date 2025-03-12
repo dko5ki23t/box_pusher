@@ -44,6 +44,7 @@ class Drill extends StageObj {
   }) : super(
           vector: Move.up,
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Drill'),
             priority: Stage.dynamicPriority,
             size: Stage.cellSize,
             scale: scale,

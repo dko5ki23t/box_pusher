@@ -51,6 +51,7 @@ class Girl extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Girl'),
             priority: Stage.staticPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

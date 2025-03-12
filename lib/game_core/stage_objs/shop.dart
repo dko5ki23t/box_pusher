@@ -70,6 +70,7 @@ class Shop extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Shop'),
             priority: Stage.staticPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

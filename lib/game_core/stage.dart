@@ -59,6 +59,8 @@ class StageObjList {
   void removeAllInvalidObjects(World gameWorld) {
     for (final obj in _objs
         .where((element) => !element.valid || !element.validAfterFrame)) {
+      // element.validAfterFrame=falseならばvalid=falseにもする
+      obj.remove();
       obj.onRemove(gameWorld);
       obj.removeFromGameWorld(gameWorld);
     }
@@ -621,6 +623,7 @@ class Stage {
         ),
       );
       gameWorld.add(RectangleComponent(
+        key: GameUniqueKey('CoinAdd'),
         priority: Stage.frontPriority,
         size: Vector2(32.0, 16.0),
         anchor: Anchor.center,
@@ -664,6 +667,7 @@ class Stage {
     // 出現エフェクトを描画
     gameWorld.add(
       SpriteComponent(
+        key: GameUniqueKey('SpawnEffect'),
         sprite: Sprite(spawnEffectImg),
         priority: Stage.dynamicPriority,
         scale: Vector2(0.8, 1.0),
@@ -885,6 +889,7 @@ class Stage {
           ),
         );
         gameWorld.add(RectangleComponent(
+          key: GameUniqueKey('ScoreAdd'),
           priority: frontPriority,
           anchor: Anchor.center,
           position: Vector2(pos.x * cellSize.x, pos.y * cellSize.y) +
@@ -937,6 +942,7 @@ class Stage {
       // マージエフェクトを描画
       gameWorld.add(
         SpriteComponent(
+          key: GameUniqueKey('MergeEffect'),
           sprite: Sprite(mergeEffectImg),
           priority: Stage.dynamicPriority,
           scale: Vector2.all(0.8),

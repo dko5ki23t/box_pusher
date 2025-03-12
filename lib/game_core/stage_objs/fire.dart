@@ -55,6 +55,7 @@ class Fire extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Fire'),
             priority: Stage.frontMovingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,
@@ -90,11 +91,11 @@ class Fire extends StageObj {
       if (stage.safeGetStaticObj(pos).type == StageObjType.water) {
         // 氷は溶かして消滅
         stage.setStaticType(pos, StageObjType.none);
-        validAfterFrame = false;
+        removeAfterFrame();
       }
       if (turns >= lastingTurns) {
         // オブジェクト削除
-        validAfterFrame = false;
+        removeAfterFrame();
       }
       // 透明度変更
       if (turns >= lastingTurns - 1) {

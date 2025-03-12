@@ -50,6 +50,7 @@ class Warp extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Warp'),
             priority: Stage.staticPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

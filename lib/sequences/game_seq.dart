@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:push_and_merge/audio.dart';
 import 'package:push_and_merge/box_pusher_game.dart';
+import 'package:push_and_merge/components/button.dart';
 import 'package:push_and_merge/components/joy_stick_component.dart';
 import 'package:push_and_merge/components/opacity_effect_text_component.dart';
 import 'package:push_and_merge/game_core/common.dart';
@@ -247,7 +248,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   late final ButtonComponent topGameInfoArea;
   ClipComponent? playerControllButtonsArea;
   ClipComponent? clipByDiagonalMoveButton;
-  Map<Move, ButtonComponent>? playerStraightMoveButtons;
+  Map<Move, ManuallyTappableButton>? playerStraightMoveButtons;
   Map<Move, PositionComponent>? playerDiagonalMoveButtons;
   late final ButtonComponent playerControllDiagonalModeButton;
   late final JoyStickComponent playerControllJoyStick;
@@ -412,6 +413,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           AlignComponent(
             alignment: Anchor.center,
             child: SpriteComponent(
+              key: GameUniqueKey('DiagonalMove'),
               sprite: Sprite(diagonalMoveImg),
               size: Vector2(24.0, 24.0),
               anchor: Anchor.center,
@@ -428,6 +430,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           AlignComponent(
             alignment: Anchor.center,
             child: SpriteComponent(
+              key: GameUniqueKey('DiagonalMove'),
               sprite: Sprite(diagonalMoveImg),
               size: Vector2(16.0, 16.0),
               anchor: Anchor.center,
@@ -1224,7 +1227,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     stage.resetCameraPos(game.camera);
   }
 
-  ButtonComponent playerControllButton({
+  ManuallyTappableButton playerControllButton({
     required Vector2 size,
     Vector2? position,
     Anchor? anchor,
@@ -1232,7 +1235,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     double? arrowAngle,
     required Move move,
   }) {
-    return ButtonComponent(
+    return ManuallyTappableButton(
       onPressed: () {
         if (pushingMoveButton == Move.none) {
           pushingMoveButton = move;
@@ -1261,6 +1264,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           AlignComponent(
             alignment: Anchor.center,
             child: SpriteComponent(
+              key: GameUniqueKey('PlayerControll'),
               sprite: Sprite(playerControllArrowImg),
               size: Vector2(24.0, 24.0),
               anchor: Anchor.center,
@@ -1278,6 +1282,7 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
           AlignComponent(
             alignment: Anchor.center,
             child: SpriteComponent(
+              key: GameUniqueKey('PlayerControll'),
               sprite: Sprite(playerControllArrowImg),
               size: Vector2(24.0, 24.0),
               anchor: Anchor.center,
@@ -1290,7 +1295,11 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
   }
 
   void updatePlayerControllButtons() {
-    playerControllButtonsArea!.removeAll(playerControllButtonsArea!.children);
+    // 押されたボタンが除外される場合等があるため、「押している向き」はリセット
+    pushingMoveButton = Move.none;
+    for (final c in playerControllButtonsArea!.children) {
+      c.removeFromParent();
+    }
     final type = Config().playerControllButtonType;
     switch (type) {
       case PlayerControllButtonType.onScreenEdge:
@@ -1299,7 +1308,8 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             ..size = moveButtonSizeMap[type]![move]!
             ..button?.size = moveButtonSizeMap[type]![move]!
             ..buttonDown?.size = moveButtonSizeMap[type]![move]!
-            ..position = moveButtonPosMap[type]![move]!;
+            ..position = moveButtonPosMap[type]![move]!
+            ..release(); // ボタンは離す
         }
         if (Config().wideDiagonalMoveButton) {
           /*
@@ -1328,11 +1338,12 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
         */
         } else {
           for (final move in MoveExtent.diagonals) {
-            (playerDiagonalMoveButtons![move]! as ButtonComponent)
+            (playerDiagonalMoveButtons![move]! as ManuallyTappableButton)
               ..size = moveButtonSizeMap[type]![move]!
               ..button?.size = moveButtonSizeMap[type]![move]!
               ..buttonDown?.size = moveButtonSizeMap[type]![move]!
-              ..position = moveButtonPosMap[type]![move]!;
+              ..position = moveButtonPosMap[type]![move]!
+              ..release(); // ボタンは離す
           }
         }
         if (stage.getLegAbility()) {
@@ -1357,14 +1368,16 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             ..size = moveButtonSizeMap[type]![move]!
             ..button?.size = moveButtonSizeMap[type]![move]!
             ..buttonDown?.size = moveButtonSizeMap[type]![move]!
-            ..position = moveButtonPosMap[type]![move]!;
+            ..position = moveButtonPosMap[type]![move]!
+            ..release(); // ボタンは離す
         }
         for (final move in MoveExtent.diagonals) {
-          (playerDiagonalMoveButtons![move]! as ButtonComponent)
+          (playerDiagonalMoveButtons![move]! as ManuallyTappableButton)
             ..size = moveButtonSizeMap[type]![move]!
             ..button?.size = moveButtonSizeMap[type]![move]!
             ..buttonDown?.size = moveButtonSizeMap[type]![move]!
-            ..position = moveButtonPosMap[type]![move]!;
+            ..position = moveButtonPosMap[type]![move]!
+            ..release(); // ボタンは離す
         }
         playerControllButtonsArea!.addAll(playerStraightMoveButtons!.values);
         if (stage.getLegAbility()) {
@@ -1377,14 +1390,16 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
             ..size = moveButtonSizeMap[type]![move]!
             ..button?.size = moveButtonSizeMap[type]![move]!
             ..buttonDown?.size = moveButtonSizeMap[type]![move]!
-            ..position = moveButtonPosMap[type]![move]!;
+            ..position = moveButtonPosMap[type]![move]!
+            ..release(); // ボタンは離す
         }
         for (final move in MoveExtent.diagonals) {
-          (playerDiagonalMoveButtons![move]! as ButtonComponent)
+          (playerDiagonalMoveButtons![move]! as ManuallyTappableButton)
             ..size = moveButtonSizeMap[type]![move]!
             ..button?.size = moveButtonSizeMap[type]![move]!
             ..buttonDown?.size = moveButtonSizeMap[type]![move]!
-            ..position = moveButtonPosMap[type]![move]!;
+            ..position = moveButtonPosMap[type]![move]!
+            ..release(); // ボタンは離す
         }
         if (stage.getLegAbility()) {
           playerControllButtonsArea!.add(playerControllDiagonalModeButton);

@@ -38,6 +38,7 @@ class Magma extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Magma'),
             priority: Stage.staticPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

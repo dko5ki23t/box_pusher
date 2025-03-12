@@ -59,6 +59,7 @@ class Weight extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Weight'),
             priority: Stage.dynamicPriority,
             size: Stage.cellSize,
             scale: scale,

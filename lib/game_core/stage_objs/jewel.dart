@@ -41,6 +41,7 @@ class Jewel extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Jewel'),
             priority: Stage.dynamicPriority,
             size: Stage.cellSize,
             scale: scale,

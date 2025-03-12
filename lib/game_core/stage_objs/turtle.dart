@@ -49,6 +49,7 @@ class Turtle extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Turtle'),
             priority: Stage.staticPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

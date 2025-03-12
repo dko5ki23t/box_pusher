@@ -50,6 +50,7 @@ class Trap extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Trap'),
             priority: Stage.dynamicPriority,
             size: Stage.cellSize,
             scale: scale,

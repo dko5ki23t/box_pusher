@@ -582,3 +582,54 @@ class GameSpriteOnOffButton extends ButtonComponent {
         .sprite = _sprite;
   }
 }
+
+/// fire(),press(),release(),cancel()で手動で押せるボタン
+class ManuallyTappableButton extends ButtonComponent {
+  ManuallyTappableButton({
+    super.button,
+    super.buttonDown,
+    super.onPressed,
+    super.onReleased,
+    super.onCancelled,
+    super.position,
+    super.size,
+    super.scale,
+    super.angle,
+    super.anchor,
+    super.children,
+    super.priority,
+  });
+
+  /// ボタンを押して離した時と同じ挙動をする
+  void fire() {
+    onPressed?.call();
+    onReleased?.call();
+  }
+
+  /// ボタンを押した時と同じ挙動をする
+  void press() {
+    if (buttonDown != null) {
+      button!.removeFromParent();
+      buttonDown!.parent = this;
+    }
+    onPressed?.call();
+  }
+
+  /// ボタンを離した時と同じ挙動をする
+  void release() {
+    if (buttonDown != null) {
+      buttonDown!.removeFromParent();
+      button!.parent = this;
+    }
+    onReleased?.call();
+  }
+
+  /// ボタンを押すのをキャンセルした時と同じ挙動をする
+  void cancel() {
+    if (buttonDown != null) {
+      buttonDown!.removeFromParent();
+      button!.parent = this;
+    }
+    onCancelled?.call();
+  }
+}

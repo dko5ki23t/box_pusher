@@ -49,6 +49,7 @@ class Rabbit extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Rabbit'),
             priority: Stage.staticPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

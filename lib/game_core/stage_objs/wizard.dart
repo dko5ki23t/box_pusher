@@ -175,6 +175,7 @@ class Wizard extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Wizard'),
             priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

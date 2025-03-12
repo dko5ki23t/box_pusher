@@ -49,6 +49,7 @@ class Gorilla extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Gorilla'),
             priority: Stage.staticPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,

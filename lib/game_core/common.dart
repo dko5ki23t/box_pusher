@@ -864,3 +864,19 @@ class StopWatchLog {
     logMessages.clear();
   }
 }
+
+Map<String, int> _keys = {};
+
+class GameUniqueKey implements ComponentKey {
+  final String name;
+  GameUniqueKey(String name)
+      : name = name + (_keys[name] ?? -1 + 1).toString() {
+    String newName = '';
+    if (_keys.containsKey(name)) {
+      _keys[name] = _keys[name]! + 1;
+    } else {
+      _keys[name] = 0;
+    }
+    ComponentKey.named(newName);
+  }
+}

@@ -61,6 +61,7 @@ class Bomb extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Bomb'),
             priority: Stage.dynamicPriority,
             size: Stage.cellSize,
             scale: scale,

@@ -74,6 +74,7 @@ class Ghost extends StageObj {
     int level = 1,
   }) : super(
           animationComponent: SpriteAnimationComponent(
+            key: GameUniqueKey('Ghost'),
             priority: Stage.movingPriority,
             size: Stage.cellSize,
             anchor: Anchor.center,
