@@ -1,0 +1,118 @@
+{
+    "allowEnemyMoveToPushingObjectPoint": {
+        "desc": "「今はオブジェクトがある位置だが、プレイヤーがそれを押すことで、プレイヤーの移動先となる座標」に敵が移動することを許すかどうか",
+        "value":false
+    },
+    "allowEnemyMoveToMovingEnemyPoint": {
+        "desc": "「今は敵または移動するオブジェクトがある位置だが、その敵やオブジェクトが移動することが確定しているため、実際には移動可能な座標」に敵が移動することを許すかどうか",
+        "value": true
+    },
+    "wideDiagonalMoveButton": {
+        "desc": "斜め移動ボタンの範囲を広く取るかどうか（広く取ると上下左右のボタンを台形にして小さくするので複雑になるし、斜めボタンを誤タップしやすくなる）",
+        "value": false
+    },
+    "showAddedScoreOnScore": {
+        "desc": "スコア加算表示(+100とか)を現在のスコアの上に表示するかどうか",
+        "value": false
+    },
+    "showAddedScoreOnMergePos": {
+        "desc": "スコア加算表示(+100とか)をマージ位置に表示するかどうか",
+        "value": true
+    },
+    "showAddedCoinOnCoin": {
+        "desc": "コイン加算表示(+1とか)を現在のコインの上に表示するかどうか",
+        "value": false
+    },
+    "showGotCoinsOnEnemyPos": {
+        "desc": "コイン加算表示(+1とか)を敵位置に表示するかどうか",
+        "value": true
+    },
+    "allowMoveStraightWithoutLegAbility": {
+        "desc": "足の能力がオフなのに斜め移動をしたとき、上下左右いずれかの移動に切り替えるかどうか(falseなら移動できない)",
+        "value": true
+    },
+    "setObjInBlockWithDistributionAlgorithm": {
+        "desc": "ブロック破壊時出現オブジェクトを分布で計算するアルゴリズムで決めるか(falseの場合、破壊時に毎回確率で出現オブジェクトを決める)",
+        "value": true
+    },
+    "isArrowPathThrough": {
+        "desc": "弓が各オブジェクト（トラップ・敵除く）を貫通するかどうか",
+        "value": false
+    },
+    "sumUpEnemyAttackDamage": {
+        "desc": "同じマスに複数の敵の攻撃が重なった時、威力を合算するか（falseなら最大値を採用する）",
+        "value": true
+    },
+    "consumeTrap": {
+        "desc": "トラップで敵を倒すとトラップを消費（レベル下げ）するか",
+        "value": true
+    },
+    "hideGameToMenu": {
+        "desc": "ゲームシーケンスで画面が非表示になるとメニュー画面に遷移するかどうか",
+        "value": true
+    },
+    "spawnItemAroundPlayer": {
+        "desc": "マージ数一定回数達成時出現アイテムをプレイヤーの現在位置周辺にするかどうか(falseなら座標(0,0))",
+        "value": true
+    },
+    "mergeDamageFromBeginning": {
+        "desc": "最初から、マージでダメージを与えられるようにするかどうか",
+        "value": true
+    },
+    "canGoOneTurnBack": {
+        "desc": "一手前に戻せるようにするかどうか",
+        "value": true
+    },
+    "mergeDamageBasedMergePower": {
+        "desc": "マージ能力で与える敵へのダメージを、マージしたレベルに応じた値にするかどうか",
+        "value": true
+    },
+    "addedScoreEffectMove": {
+        "desc": "スコア加算表示(+100とか)エフェクトの移動量",
+        "value": {
+            "x": 0.0,
+            "y": -10.0
+        }
+    },
+    "updateRange": {
+        "desc": "update()で更新する範囲（プレイヤー位置を起点としてこの分だけ左上、右下に移動した点で四角形を作る）",
+        "value": {
+            "x": 15,
+            "y": 25
+        }
+    },
+    "stageMaxLT": {
+        "desc": "ステージ最大範囲の左上座標",
+        "value": {
+            "x": -50,
+            "y": -50
+        }
+    },
+    "stageMaxRB": {
+        "desc": "ステージ最大範囲の右下座標",
+        "value": {
+            "x": 50,
+            "y": 50
+        }
+    },
+    "updateNearWarpDistance": {
+        "desc": "update()で更新する各ワープからの距離",
+        "value": 6
+    },
+    "bombNotStartAreaWidth": {
+        "desc": "ボムが起爆しない正方形範囲の辺の長さ(必ず奇数で)",
+        "value": 7
+    },
+    "bombExplodingAreaWidth": {
+        "desc": "ボムの爆発正方形範囲の辺の長さ(必ず奇数で)",
+        "value": 7
+    },
+    "builderBuildBlockTurn": {
+        "desc": "ブロックを置く敵がブロックを置く間隔（ターン数）",
+        "value": 7
+    },
+    "mergeCountForFinalLoop": {
+        "desc": "マージ回数で出現するアイテムが最終的に無限ループする際、アイテムが出現するまでのマージ回数",
+        "value": 7
+    }
+}
