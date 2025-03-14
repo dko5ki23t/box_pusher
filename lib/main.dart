@@ -42,7 +42,7 @@ void main({
       ],
       home: MyApp(
         testMode: testMode,
-        showAd: showAd,
+        showAd: kIsWeb ? false : showAd, // web版では広告出さない
       ),
     ),
   );
