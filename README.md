@@ -6,7 +6,7 @@
 
 ステージ上のオブジェクトを押して同じオブジェクトと合体してマージさせよう。
 
-Play with
+Play on:
 
 - GitHub Pages：https://dko5ki23t.github.io/box_pusher/
 - itch.io：https://dko5ki23t.itch.io/oshigoto-push-and-merge
