@@ -1,5 +1,7 @@
 # 押しごと -Push & Merge-
 
+![game_feature](for_play_store/feature2.png)
+
 箱押し＋マージゲーム
 
 ステージ上のオブジェクトを押して同じオブジェクトと合体してマージさせよう。
