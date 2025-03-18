@@ -8,7 +8,8 @@ class AdHelper {
       //return 'ca-app-pub-5298352571661081/8543241986';
     } else if (Platform.isIOS) {
       // テスト用広告
-      return 'ca-app-pub-3940256099942544/2934735716';
+      //return 'ca-app-pub-3940256099942544/1458002511';
+      return 'ca-app-pub-5298352571661081/4328496934';
     } else {
       throw UnsupportedError('Unsupported platform');
     }
