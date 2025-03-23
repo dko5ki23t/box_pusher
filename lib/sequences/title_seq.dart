@@ -76,6 +76,11 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       ),
     );
     Vector2 buttonPos = Vector2(180.0, 360.0);
+    _existLastTreasureStageData =
+        game.lastTreasureStageData.containsKey('score');
+    if (_existLastTreasureStageData) {
+      buttonPos -= spaceBetweenButtons;
+    }
     newGameButton = GameTextButton(
       size: buttonSize,
       position: buttonPos.clone(),
@@ -98,8 +103,6 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
       enabled: game.stageData.isNotEmpty,
       onReleased: () => game.pushAndInitGame(useLastTreasureData: false),
     );
-    _existLastTreasureStageData =
-        game.lastTreasureStageData.containsKey('score');
     if (_existLastTreasureStageData) {
       buttonPos += spaceBetweenButtons;
     }
@@ -173,10 +176,13 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     versionText = TextComponent(
       text: 'Ver.${packageInfo.version}',
       size: Vector2(120.0, 30.0),
-      position: buttonPos + Vector2(0, 90.0),
+      position: buttonPos + Vector2(0, 80.0),
       anchor: Anchor.center,
       textRenderer: TextPaint(
-        style: Config.gameTextStyle,
+        style: const TextStyle(
+            fontFamily: Config.gameTextFamily,
+            color: Color(0xff000000),
+            fontSize: 12),
       ),
     );
     //versionLogButton = GameTextButton(
@@ -253,6 +259,9 @@ class TitleSeq extends Sequence with /*TapCallbacks,*/ KeyboardHandler {
     if (_existLastTreasureStageData != prev) {
       // ボタン位置更新
       Vector2 buttonPos = Vector2(180.0, 360.0);
+      if (_existLastTreasureStageData) {
+        buttonPos -= spaceBetweenButtons;
+      }
       newGameButton.position = buttonPos.clone();
       buttonPos += spaceBetweenButtons;
       continueButton.position = buttonPos.clone();
