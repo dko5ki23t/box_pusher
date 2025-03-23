@@ -379,6 +379,9 @@ abstract class StageObj {
   /// バリア範囲内にいることでカットするダメージ（敵用、Stage.update()で毎回0にリセットされる）
   int cutDamage = 0;
 
+  /// 誰かに押されているか(trueの場合は他の人は押せない)
+  bool isPushed = false;
+
   /// その他保存しておきたいint値(攻撃後ターン数等)
   /// 使用したい場合はoverrideすること
   int get arg => 0;
@@ -731,6 +734,9 @@ abstract class StageObj {
       prohibitedPoints.addAll(cand[move]!["prohibitedPoints"]!);
       pushings.clear();
       pushings.addAll(cand[move]!["pushings"]!);
+      for (final e in cand[move]!["pushings"]!) {
+        (e as StageObj).isPushed = true;
+      }
       executings.clear();
       executings.addAll(cand[move]!["executings"]!);
     }
@@ -1226,6 +1232,9 @@ abstract class StageObj {
               (prohibitedPoints[toTo]! == Move.none ||
                   prohibitedPoints[toTo]! == moveInput)) {
             // 押した先には移動不可
+            breakPushing = true;
+          } else if (toObj.isPushed) {
+            // すでに押されている
             breakPushing = true;
           } else if (toToObj.isEnemy && toObj.enemyMovable) {
             // 押した先が敵かつ押すオブジェクトに敵が移動可能(->敵にオブジェクトを重ねる（トラップ等）)

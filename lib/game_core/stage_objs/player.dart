@@ -191,6 +191,10 @@ class Player extends StageObj {
         // 押せない等で移動できないならreturn
         return;
       }
+      // 押すオブジェクトにフラグを立てる
+      for (final pushing in pushings) {
+        pushing.isPushed = true;
+      }
       moving = actualMove;
       movingAmount = 0.0;
       // 移動先に他のオブジェクトが移動できないようにする
@@ -248,6 +252,10 @@ class Player extends StageObj {
         // 各種移動中変数初期化
         moving = Move.none;
         pushings.clear();
+        // 押すオブジェクトのフラグを戻す
+        for (final pushing in pushings) {
+          pushing.isPushed = false;
+        }
         movingAmount = 0;
         executings.clear();
 
