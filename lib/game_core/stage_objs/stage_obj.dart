@@ -1450,7 +1450,6 @@ abstract class StageObj {
     if (type == StageObjType.player) {
       // プレイヤー限定の処理
       final player = this as Player;
-      //final obj = stage.get(pos);
       // get()だと、アイテムを押してる場合はそのアイテムを取得してしまうので、staticObjをgetする
       final obj = stage.safeGetStaticObj(pos);
       if (obj.type == StageObjType.treasureBox) {
@@ -1472,90 +1471,49 @@ abstract class StageObj {
         stage.tutorial.current = TutorialState.openTreasureBox;
         // 一手戻すのに必要なスコアを更新
         stage.updateRequiredScoreToUndo();
-      } else if (obj.type == StageObjType.gorilla) {
-        // 移動先がゴリラだった場合
-        // 手の能力を習得
-        player.isAbilityAquired[PlayerAbility.hand] = true;
-        player.pushableNum = -1;
-        // 手の能力のチュートリアル表示
-        stage.tutorial.current = TutorialState.handAbility;
-        // ゴリラ、いなくなる
-        stage.setStaticType(pos, StageObjType.none);
-        // 効果音を鳴らす
-        Audio().playSound(Sound.getSkill);
-        // 一手戻すのに必要なスコアを更新
-        stage.updateRequiredScoreToUndo();
-      } else if (obj.type == StageObjType.rabbit) {
-        // 移動先がうさぎだった場合
-        // 足の能力を習得
-        player.isAbilityAquired[PlayerAbility.leg] = true;
-        // 足の能力のチュートリアル表示
-        stage.tutorial.current = TutorialState.legAbility;
-        // うさぎ、いなくなる
-        stage.setStaticType(pos, StageObjType.none);
-        // 効果音を鳴らす
-        Audio().playSound(Sound.getSkill);
-        // 一手戻すのに必要なスコアを更新
-        stage.updateRequiredScoreToUndo();
-      } else if (obj.type == StageObjType.kangaroo) {
-        // 移動先がカンガルーだった場合
-        // ポケットの能力を習得
-        player.isAbilityAquired[PlayerAbility.pocket] = true;
-        // ポケットの能力のチュートリアル表示
-        stage.tutorial.current = TutorialState.pocketAbility;
-        // カンガルー、いなくなる
-        stage.setStaticType(pos, StageObjType.none);
-        // 効果音を鳴らす
-        Audio().playSound(Sound.getSkill);
-        // 一手戻すのに必要なスコアを更新
-        stage.updateRequiredScoreToUndo();
-      } else if (obj.type == StageObjType.turtle) {
-        // 移動先が亀だった場合
-        // アーマーの能力を習得
-        player.isAbilityAquired[PlayerAbility.armer] = true;
-        // アーマーの能力のチュートリアル表示
-        stage.tutorial.current = TutorialState.armerAbility;
-        // 亀、いなくなる
-        stage.setStaticType(pos, StageObjType.none);
-        // 効果音を鳴らす
-        Audio().playSound(Sound.getSkill);
-        // 一手戻すのに必要なスコアを更新
-        stage.updateRequiredScoreToUndo();
-      } else if (obj.type == StageObjType.girl) {
-        // 移動先が女の子だった場合
-        // マージの能力を習得
-        player.isAbilityAquired[PlayerAbility.merge] = true;
-        // マージの能力のチュートリアル表示
-        stage.tutorial.current = TutorialState.mergeAbility;
-        // 女の子、いなくなる
-        stage.setStaticType(pos, StageObjType.none);
-        // 効果音を鳴らす
-        Audio().playSound(Sound.getSkill);
-        // 一手戻すのに必要なスコアを更新
-        stage.updateRequiredScoreToUndo();
-      } else if (obj.type == StageObjType.shop && (obj as Shop).isPayPlace) {
-        // ショップの葉っぱマーク上に立ったとき
-        // ショップで支払いを要求されているのがコインの場合は
-        if (obj.shopInfo.payCoins > 0) {
-          // コインを支払える、かつオブジェクト出現位置が空いてるなら
-          final getItemPos = pos + Point(2, 0);
-          assert(stage.contains(getItemPos));
-          final getItemObj = stage.get(getItemPos);
-          if (stage.coins.actual >= obj.shopInfo.payCoins &&
-              getItemObj.type == StageObjType.shop &&
-              (getItemObj as Shop).isItemPlace) {
-            // コインを支払ってオブジェクト出現
-            stage.coins.actual -= obj.shopInfo.payCoins;
-            if (obj.shopInfo.getObj.type == StageObjType.warp) {
-              stage.setStaticType(getItemPos, StageObjType.warp);
-            } else {
-              stage.boxes.add(stage.createObject(
-                  typeLevel: obj.shopInfo.getObj, pos: getItemPos));
-            }
-            // オブジェクト出現エフェクトを表示
-            stage.showSpawnEffect(getItemPos);
-          }
+      } else if (obj.isAnimals) {
+        // 移動先が動物だった場合
+        switch (obj.type) {
+          case StageObjType.gorilla:
+            // 手の能力を習得
+            player.isAbilityAquired[PlayerAbility.hand] = true;
+            player.pushableNum = -1;
+            // 手の能力のチュートリアル表示
+            stage.tutorial.current = TutorialState.handAbility;
+            break;
+          case StageObjType.rabbit:
+            // 足の能力を習得
+            player.isAbilityAquired[PlayerAbility.leg] = true;
+            // 足の能力のチュートリアル表示
+            stage.tutorial.current = TutorialState.legAbility;
+            break;
+          case StageObjType.kangaroo:
+            // ポケットの能力を習得
+            player.isAbilityAquired[PlayerAbility.pocket] = true;
+            // ポケットの能力のチュートリアル表示
+            stage.tutorial.current = TutorialState.pocketAbility;
+            break;
+          case StageObjType.turtle:
+            // アーマーの能力を習得
+            player.isAbilityAquired[PlayerAbility.armer] = true;
+            // アーマーの能力のチュートリアル表示
+            stage.tutorial.current = TutorialState.armerAbility;
+            break;
+          case StageObjType.girl:
+            // マージの能力を習得
+            player.isAbilityAquired[PlayerAbility.merge] = true;
+            // マージの能力のチュートリアル表示
+            stage.tutorial.current = TutorialState.mergeAbility;
+            break;
+          default:
+            break;
         }
+        // 動物はいなくなる
+        stage.setStaticType(pos, StageObjType.none);
+        // 効果音を鳴らす
+        Audio().playSound(Sound.getSkill);
+        // 一手戻すのに必要なスコアを更新
+        stage.updateRequiredScoreToUndo();
       }
     }
     // 敵がget()すると敵自身が返ってくるのでstaticObjsで取得している
