@@ -1469,28 +1469,30 @@ class Stage {
     }
     // ショップ処理(敵移動後に処理しないと、敵が移動して場所が空いたのにアイテムが出現しない場合がある)
     // get()だと、アイテムを押してる場合はそのアイテムを取得してしまうので、staticObjをgetする
-    final obj = safeGetStaticObj(player.pos);
-    if (obj.type == StageObjType.shop && (obj as Shop).isPayPlace) {
-      // ショップの葉っぱマーク上に立ったとき
-      // ショップで支払いを要求されているのがコインの場合は
-      if (obj.shopInfo.payCoins > 0) {
-        // コインを支払える、かつオブジェクト出現位置が空いてるなら
-        final getItemPos = player.pos + Point(2, 0);
-        assert(contains(getItemPos));
-        final getItemObj = get(getItemPos);
-        if (coins.actual >= obj.shopInfo.payCoins &&
-            getItemObj.type == StageObjType.shop &&
-            (getItemObj as Shop).isItemPlace) {
-          // コインを支払ってオブジェクト出現
-          coins.actual -= obj.shopInfo.payCoins;
-          if (obj.shopInfo.getObj.type == StageObjType.warp) {
-            setStaticType(getItemPos, StageObjType.warp);
-          } else {
-            boxes.add(
-                createObject(typeLevel: obj.shopInfo.getObj, pos: getItemPos));
+    if (playerEndMoving) {
+      final obj = safeGetStaticObj(player.pos);
+      if (obj.type == StageObjType.shop && (obj as Shop).isPayPlace) {
+        // ショップの葉っぱマーク上に立ったとき
+        // ショップで支払いを要求されているのがコインの場合は
+        if (obj.shopInfo.payCoins > 0) {
+          // コインを支払える、かつオブジェクト出現位置が空いてるなら
+          final getItemPos = player.pos + Point(2, 0);
+          assert(contains(getItemPos));
+          final getItemObj = get(getItemPos);
+          if (coins.actual >= obj.shopInfo.payCoins &&
+              getItemObj.type == StageObjType.shop &&
+              (getItemObj as Shop).isItemPlace) {
+            // コインを支払ってオブジェクト出現
+            coins.actual -= obj.shopInfo.payCoins;
+            if (obj.shopInfo.getObj.type == StageObjType.warp) {
+              setStaticType(getItemPos, StageObjType.warp);
+            } else {
+              boxes.add(createObject(
+                  typeLevel: obj.shopInfo.getObj, pos: getItemPos));
+            }
+            // オブジェクト出現エフェクトを表示
+            showSpawnEffect(getItemPos);
           }
-          // オブジェクト出現エフェクトを表示
-          showSpawnEffect(getItemPos);
         }
       }
     }

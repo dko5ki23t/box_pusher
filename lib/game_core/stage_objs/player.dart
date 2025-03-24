@@ -251,11 +251,11 @@ class Player extends StageObj {
 
         // 各種移動中変数初期化
         moving = Move.none;
-        pushings.clear();
         // 押すオブジェクトのフラグを戻す
         for (final pushing in pushings) {
           pushing.isPushed = false;
         }
+        pushings.clear();
         movingAmount = 0;
         executings.clear();
 

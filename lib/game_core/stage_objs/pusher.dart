@@ -156,11 +156,11 @@ class Pusher extends StageObj {
         }
         moving = Move.none;
         movingAmount = 0;
-        pushings.clear();
         // 押すオブジェクトのフラグを戻す
         for (final pushing in pushings) {
           pushing.isPushed = false;
         }
+        pushings.clear();
         playerStartMovingFlag = false;
       }
     }

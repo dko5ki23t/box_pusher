@@ -1480,7 +1480,7 @@ abstract class StageObj {
         stage.tutorial.current = TutorialState.openTreasureBox;
         // 一手戻すのに必要なスコアを更新
         stage.updateRequiredScoreToUndo();
-      } else if (obj.isAnimals) {
+      } else if (obj.isAnimals && obj.type != StageObjType.shop) {
         // 移動先が動物だった場合
         switch (obj.type) {
           case StageObjType.gorilla:
