@@ -1,0 +1,5 @@
+アプリリリース手順
+https://prody03.com/ios_release/
+
+audio_playerについてのビルドエラー発生時の対処法
+https://stackoverflow.com/questions/79287703/module-audioplayers-darwin-not-found-in-flutter-project-on-macos-sequoia-15-w
