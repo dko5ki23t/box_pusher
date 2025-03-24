@@ -1042,9 +1042,9 @@ class Stage {
   }
 
   /// 対象座標位置にあるオブジェクトを取得する
-  /// 複数重なっている場合、優先順位は敵>押せるもの等>床類
+  /// 複数重なっている場合、優先順位は敵>押せるもの等>床類(priorBox=trueの場合は押せるもの等>敵>床類)
   /// ただし、ゴースト化した敵や煙などは対象から除外する
-  StageObj get(Point p, {bool detectPlayer = false}) {
+  StageObj get(Point p, {bool detectPlayer = false, bool priorBox = false}) {
     if (detectPlayer && player.pos == p) {
       return player;
     }
@@ -1052,12 +1052,22 @@ class Stage {
         .firstWhereOrNull((element) => element.pos == p && !element.isOverlay);
     final enemy = enemies
         .firstWhereOrNull((element) => element.pos == p && !element.isOverlay);
-    if (enemy != null) {
-      return enemy;
-    } else if (box != null) {
-      return box;
+    if (priorBox) {
+      if (box != null) {
+        return box;
+      } else if (enemy != null) {
+        return enemy;
+      } else {
+        return safeGetStaticObj(p);
+      }
     } else {
-      return safeGetStaticObj(p);
+      if (enemy != null) {
+        return enemy;
+      } else if (box != null) {
+        return box;
+      } else {
+        return safeGetStaticObj(p);
+      }
     }
   }
 
@@ -1545,7 +1555,19 @@ class Stage {
     // オブジェクト更新(罠：敵を倒す、ガーディアン：周囲の敵を倒す)
     final currentBoxes = [...boxes.iterable]
         .where((element) => updateTargetRangeSet.contains(element.pos));
-    for (final box in currentBoxes) {
+    // 骨の敵をガーディアン等が倒したとしても罠の効果を優先（倒すじゃなく消す）するために、
+    // 罠の処理を後にする
+    final notTraps = currentBoxes.where((e) => e.type != StageObjType.trap);
+    for (final box in notTraps) {
+      box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
+          playerEndMoving, prohibitedPoints);
+      // タイミングによっては画面に追加されていない場合があるので、追加(処理は軽いはず)
+      if (playerStartMoving || playerEndMoving) {
+        box.addToGameWorld(gameWorld);
+      }
+    }
+    final traps = currentBoxes.where((e) => e.type == StageObjType.trap);
+    for (final box in traps) {
       box.update(dt, player.moving, gameWorld, camera, this, playerStartMoving,
           playerEndMoving, prohibitedPoints);
       // タイミングによっては画面に追加されていない場合があるので、追加(処理は軽いはず)

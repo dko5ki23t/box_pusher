@@ -1241,7 +1241,7 @@ abstract class StageObj {
           } else if (toToObj.puttable) {
             // 押した先が、何かを置けるオブジェクト
           } else if (toObj.isSameTypeLevel(toToObj) && toObj.mergable) {
-            // 押した先とマージ できる
+            // 押した先とマージできる
           } else if (i < end - 1 && toToObj.pushable) {
             // 押した先も押せる
           } else {
