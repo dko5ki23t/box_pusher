@@ -1163,6 +1163,7 @@ abstract class StageObj {
       to = stage.getWarpedPoint(to);
     }
     StageObj toObj = stage.get(to);
+    StageObj toBox = stage.get(to, priorBox: true);
     // 押すオブジェクトの移動先の座標、オブジェクト
     Point toTo = to + moveInput.point;
     // 押す先が範囲外に出る場合は、プレイヤーが移動できるかどうかを返すのみ
@@ -1174,6 +1175,7 @@ abstract class StageObj {
       toTo = stage.getWarpedPoint(toTo);
     }
     StageObj toToObj = stage.get(toTo);
+    StageObj toToBox = stage.get(toTo, priorBox: true);
     // 動かないならreturn
     if (moveInput == Move.none) {
       return false;
@@ -1240,7 +1242,7 @@ abstract class StageObj {
             // 押した先が敵かつ押すオブジェクトに敵が移動可能(->敵にオブジェクトを重ねる（トラップ等）)
           } else if (toToObj.puttable) {
             // 押した先が、何かを置けるオブジェクト
-          } else if (toObj.isSameTypeLevel(toToObj) && toObj.mergable) {
+          } else if (toBox.isSameTypeLevel(toToBox) && toBox.mergable) {
             // 押した先とマージできる
           } else if (i < end - 1 && toToObj.pushable) {
             // 押した先も押せる
@@ -1261,7 +1263,7 @@ abstract class StageObj {
           }
         }
         // マージできる場合は、pushingsをセーブする
-        if (toToObj.isSameTypeLevel(toObj) && toObj.mergable) {
+        if (toToBox.isSameTypeLevel(toBox) && toBox.mergable) {
           needSave = true;
         }
       } else {
@@ -1294,14 +1296,18 @@ abstract class StageObj {
       // 範囲外に出る場合は、そこに破壊不能なブロックがあるとする
       if (!stage.contains(toTo)) {
         toObj = stage.get(to);
+        toBox = stage.get(to, priorBox: true);
         toToObj = stage.mienaikabe!;
+        toToBox = stage.mienaikabe!;
       } else {
         // 押すオブジェクトの移動先がワープなら（ただし、その上にオブジェクトがあれば気にしない）
         if (stage.get(toTo).type == StageObjType.warp) {
           toTo = stage.getWarpedPoint(toTo);
         }
         toObj = stage.get(to);
+        toBox = stage.get(to, priorBox: true);
         toToObj = stage.get(toTo);
+        toToBox = stage.get(toTo, priorBox: true);
       }
     }
     // 押せる可能範囲全て押せるとしても、途中でマージするならそこまでしか押せない
@@ -1350,7 +1356,7 @@ abstract class StageObj {
     // 押すオブジェクトのうち、なるべく遠くのオブジェクトをマージするために逆順でforループ
     for (int i = pushings.length - 1; i >= 0; i--) {
       final pushing = pushings[i];
-      final toToObj = stage.get(toTo);
+      final toToObj = stage.get(toTo, priorBox: true);
       // 押した先のオブジェクトを調べる
       if (pushing.mergable && pushing.isSameTypeLevel(toToObj)) {
         // マージするインデックスを保存

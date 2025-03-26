@@ -10,8 +10,8 @@ Play on:
 
 - GitHub Pages：https://dko5ki23t.github.io/box_pusher/
 - itch.io：https://dko5ki23t.itch.io/oshigoto-push-and-merge
-- (予定)Google Play
-- (予定)Apple Store
+- Google Play：https://play.google.com/store/apps/details?id=com.shimarinapps.oshigoto
+- Apple Store：https://apps.apple.com/us/app/%E6%8A%BC%E3%81%97%E3%81%94%E3%81%A8/id6743694606
 
 ## ゲームの目的
 
@@ -31,6 +31,7 @@ Play on:
 - 広大なマップを探索できる楽しさがある
 
   以下プレイヤーからのフィードバック
+
 - シンプルなゲームなので没頭した
 - (序盤の難易度調整後)序盤の難易度が下がって、ゲームが得意でない自分にとって、とてもプレイしやすくなりました！
 - パズルゲームに見えて後半の無双状態が癖になります！！
