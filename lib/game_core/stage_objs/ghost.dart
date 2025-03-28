@@ -88,7 +88,11 @@ class Ghost extends StageObj {
             type: StageObjType.ghost,
             level: level,
           ),
-        );
+        ) {
+    // ゴースト状態経過ターン数に応じて変数とアニメーションを変更
+    ghosting = ghostTurns > 0;
+    vector = vector;
+  }
 
   bool playerStartMovingFlag = false;
 

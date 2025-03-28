@@ -732,12 +732,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     );
     // 手の能力ボタン領域
     handAbilityButton = ButtonComponent(
-      onReleased: game.testMode
-          ? () {
-              stage.player.isAbilityAquired[PlayerAbility.hand] =
-                  !stage.player.isAbilityAquired[PlayerAbility.hand]!;
-            }
-          : null,
       size: abilityButtonAreaSize,
       button: SpriteAnimationComponent(
         animation:
@@ -747,13 +741,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     );
     // 足の能力ボタン領域
     legAbilityButton = ButtonComponent(
-      onReleased: game.testMode
-          ? () {
-              stage.player.isAbilityAquired[PlayerAbility.leg] =
-                  !stage.player.isAbilityAquired[PlayerAbility.leg]!;
-              updatePlayerControllButtons();
-            }
-          : null,
       size: abilityButtonAreaSize,
       button: SpriteAnimationComponent(
         animation:
@@ -763,12 +750,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     );
     // アーマー能力ボタン領域
     armerAbilityButton = ButtonComponent(
-      onReleased: game.testMode
-          ? () {
-              stage.player.isAbilityAquired[PlayerAbility.armer] =
-                  !stage.player.isAbilityAquired[PlayerAbility.armer]!;
-            }
-          : null,
       size: abilityButtonAreaSize,
       button: SpriteAnimationComponent(
         animation: SpriteAnimation.spriteList([
@@ -798,12 +779,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     );
     // 予知能力ボタン領域(未実装)
     eyeAbilityButton = ButtonComponent(
-      onReleased: game.testMode
-          ? () {
-              stage.player.isAbilityAquired[PlayerAbility.eye] =
-                  !stage.player.isAbilityAquired[PlayerAbility.eye]!;
-            }
-          : null,
       size: abilityButtonAreaSize,
       button: SpriteAnimationComponent(
         animation:
@@ -813,12 +788,6 @@ class GameSeq extends Sequence with TapCallbacks, KeyboardHandler {
     );
     // マージ能力ボタン領域
     mergeAbilityButton = ButtonComponent(
-      onReleased: game.testMode
-          ? () {
-              stage.player.isAbilityAquired[PlayerAbility.merge] =
-                  !stage.player.isAbilityAquired[PlayerAbility.merge]!;
-            }
-          : null,
       size: abilityButtonAreaSize,
       button: SpriteAnimationComponent(
         animation: SpriteAnimation.spriteList([Sprite(mergeAbilityImg)],
