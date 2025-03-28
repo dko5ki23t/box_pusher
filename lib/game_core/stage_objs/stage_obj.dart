@@ -887,32 +887,33 @@ abstract class StageObj {
     Map<Point, Move> prohibitedPoints,
     bool isGhost,
   ) {
+    // ゴースト解除できるかどうかの判定関数
+    bool canUnGhost(Point p, Move move) {
+      final obj = stage.get(p);
+      if (Config().allowEnemyMoveToPushingObjectPoint &&
+          player.pushings.isNotEmpty &&
+          player.pushings.first.pos == p) {
+        // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
+        return true;
+      } else if (!obj.enemyMovable && !(mergable && isSameTypeLevel(obj))) {
+        // 敵が移動可能でない、かつマージできない
+        return false;
+      }
+      if (!_isEnemyMoveAllowed(p, move, player, prohibitedPoints)) {
+        return false;
+      }
+      return true;
+    }
+
     // 今ターゲットの移動先にいるなら移動しない、ゴーストなら解除する
-    if (pos == target.pos + target.moving.point) {
+    if (pos == target.pos + target.moving.point &&
+        (!isGhost || canUnGhost(pos, Move.none))) {
       ret['move'] = Move.none;
       ret['ghost'] = false;
     } else if (Config().random.nextInt(6) == 0) {
       ret['move'] = Move.none;
       ret['ghost'] = isGhost;
     } else {
-      // ゴースト解除できるかどうかの判定
-      bool canUnGhost(Point p, Move move) {
-        final obj = stage.get(p);
-        if (Config().allowEnemyMoveToPushingObjectPoint &&
-            player.pushings.isNotEmpty &&
-            player.pushings.first.pos == p) {
-          // 移動先にあるオブジェクトをプレイヤーが押すなら移動可能とする
-          return true;
-        } else if (!obj.enemyMovable && !(mergable && isSameTypeLevel(obj))) {
-          // 敵が移動可能でない、かつマージできない
-          return false;
-        }
-        if (!_isEnemyMoveAllowed(p, move, player, prohibitedPoints)) {
-          return false;
-        }
-        return true;
-      }
-
       // 今いる位置でゴースト解除できるか
       bool canUnGhostNow = canUnGhost(pos, Move.none);
       // ターゲットの方へ移動する/向きを変える
