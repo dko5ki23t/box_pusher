@@ -11,7 +11,7 @@ Play on:
 - GitHub Pages：https://dko5ki23t.github.io/box_pusher/
 - itch.io：https://dko5ki23t.itch.io/oshigoto-push-and-merge
 - Google Play：https://play.google.com/store/apps/details?id=com.shimarinapps.oshigoto
-- Apple Store：https://apps.apple.com/us/app/%E6%8A%BC%E3%81%97%E3%81%94%E3%81%A8/id6743694606
+- App Store：https://apps.apple.com/us/app/%E6%8A%BC%E3%81%97%E3%81%94%E3%81%A8/id6743694606
 
 ## ゲームの目的
 

@@ -868,6 +868,8 @@ abstract class StageObj {
         warpPoint = cand.sample(1).first;
         // ターゲットの近くにワープする
         ret['warp'] = warpPoint;
+        // 自身の移動先は、他のオブジェクトの移動先にならないようにする
+        prohibitedPoints[warpPoint] = Move.none;
       }
     } else {
       _enemyMoveFollow(
