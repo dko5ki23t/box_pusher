@@ -126,6 +126,23 @@ class Smoke extends StageObj {
     }
   }
 
+  int encodeForbidedAbility() {
+    int ret = 0;
+    for (int i = 0; i < forbidedAbility.length; ++i) {
+      ret |= (1 << forbidedAbility[i].index);
+    }
+    return ret;
+  }
+
+  void decodeForbidedAbility(int val) {
+    forbidedAbility.clear();
+    for (int i = 0; i < PlayerAbility.values.length; ++i) {
+      if ((val & (1 << i)) != 0) {
+        forbidedAbility.add(PlayerAbility.values[i]);
+      }
+    }
+  }
+
   @override
   bool get pushable => false;
 
@@ -163,12 +180,17 @@ class Smoke extends StageObj {
   @override
   bool get isOverlay => true;
 
-  // turnsの保存/読み込み
+  // turns(下位4ビット)、forbidedAbility(上位)の保存/読み込み
   @override
-  int get arg => turns;
+  int get arg =>
+      turns | (forbidedAbility.isNotEmpty ? encodeForbidedAbility() << 4 : 0);
 
   @override
   void loadArg(int val) {
-    turns = val;
+    turns = val & 0x0F;
+    int forbidedAbilityVal = val >> 4;
+    if (forbidedAbilityVal != 0) {
+      decodeForbidedAbility(forbidedAbilityVal);
+    }
   }
 }
