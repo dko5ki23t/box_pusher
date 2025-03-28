@@ -104991,40 +104991,41 @@ if(k)continue}if(!f.vO(l,B.h,a0,a2))continue
 s.push(l)}if(s.length!==0){g=B.b.gO(A.fD(s,1,t.w1))
 a.m(0,"warp",g)
 a2.m(0,g,B.h)}}else f.nE(a,b,c,d,a0,a1,a2)},
-ae7(a,b,c,d,a0,a1,a2,a3){var s,r,q,p,o,n,m,l,k,j,i,h,g=this,f="move",e="ghost"
-if(g.b.k(0,d.b.C(0,A.aP(d.w)))){a.m(0,f,B.h)
-a.m(0,e,!1)}else{s=$.aN().as
+ae7(a,b,c,d,a0,a1,a2,a3){var s,r,q,p,o,n,m,l,k,j,i,h=this,g="move",f="ghost",e=new A.ave(h,a1,a0,a2)
+if(h.b.k(0,d.b.C(0,A.aP(d.w))))s=!a3||e.$2(h.b,B.h)
+else s=!1
+if(s){a.m(0,g,B.h)
+a.m(0,f,!1)}else{s=$.aN().as
 s===$&&A.b()
-if(s.ld(6)===0){a.m(0,f,B.h)
-a.m(0,e,a3)}else{r=new A.ave(g,a1,a0,a2)
-q=r.$2(g.b,B.h)
-p=d.b.a5(0,g.b)
+if(s.ld(6)===0){a.m(0,g,B.h)
+a.m(0,f,a3)}else{r=e.$2(h.b,B.h)
+q=d.b.a5(0,h.b)
 s=t.O
-o=A.i(s,t.y)
-n=p.a
-if(n>0)o.m(0,B.r,!0)
-else if(n<0)o.m(0,B.u,!0)
-n=p.b
-if(n>0)o.m(0,B.m,!0)
-else if(n<0)o.m(0,B.q,!0)
-for(n=o.gbQ(o),n=n.gU(n),m=a1.p3,l=a1.p4;n.t();){k=n.gJ(n).a
-j=g.b
-i=A.aP(k)
-h=new A.a_(j.a+i.a,j.b+i.b)
-j=new A.cS(m,l)
-j.dO(m,l)
-if(!j.q(0,h))continue
-if(r.$2(h,k))o.m(0,k,!1)}if(o.a!==0){k=B.b.gO(A.fD(new A.bp(o,o.$ti.j("bp<1>")),1,s))
-a.m(0,f,k)
-a.m(0,"vector",k)
-s=o.h(0,k)
+p=A.i(s,t.y)
+o=q.a
+if(o>0)p.m(0,B.r,!0)
+else if(o<0)p.m(0,B.u,!0)
+o=q.b
+if(o>0)p.m(0,B.m,!0)
+else if(o<0)p.m(0,B.q,!0)
+for(o=p.gbQ(p),o=o.gU(o),n=a1.p3,m=a1.p4;o.t();){l=o.gJ(o).a
+k=h.b
+j=A.aP(l)
+i=new A.a_(k.a+j.a,k.b+j.b)
+k=new A.cS(n,m)
+k.dO(n,m)
+if(!k.q(0,i))continue
+if(e.$2(i,l))p.m(0,l,!1)}if(p.a!==0){l=B.b.gO(A.fD(new A.bp(p,p.$ti.j("bp<1>")),1,s))
+a.m(0,g,l)
+a.m(0,"vector",l)
+s=p.h(0,l)
 s.toString
-a.m(0,e,s)
-if(a3&&!q)a.m(0,e,!0)
-s=a.h(0,e)
+a.m(0,f,s)
+if(a3&&!r)a.m(0,f,!0)
+s=a.h(0,f)
 s.toString
-if(!s){a2.m(0,g.b.C(0,A.aP(k)),B.h)
-if(!a2.Z(0,g.b))a2.m(0,g.b,A.lk(k))}}}}},
+if(!s){a2.m(0,h.b.C(0,A.aP(l)),B.h)
+if(!a2.Z(0,h.b))a2.m(0,h.b,A.lk(l))}}}}},
 rB(a,b,c){var s,r,q,p,o,n=J.aj(c),m=b.p3,l=b.p4,k=this.a
 while(!0){s=!0
 if(!n.t()){s=!1
